@@ -93,9 +93,10 @@
 .animated-mesh-bg {
   position: fixed;
   inset: 0;
-  z-index: -50;
-  background-color: #000;
+  z-index: 0;
+  background: #000;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .animated-mesh-bg::before,
