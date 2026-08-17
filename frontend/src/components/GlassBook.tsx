@@ -221,7 +221,10 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
 
   const renderMobileScreenContent = () => (
     <div className="w-full h-full flex flex-col pt-2 p-5 overflow-hidden relative">
-      <div className={`absolute inset-0 bg-gradient-to-b ${screenData.gradient} opacity-[0.15] pointer-events-none blur-2xl transition-all duration-700`} />
+      {/* Modern, sleek background without heavy blurs (Fixes Vercel/iOS Safari issues) */}
+      <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-black to-black z-0" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black pointer-events-none z-0" />
       
       {screenData.type === 'reviews' ? (
         <div className="relative z-10 flex flex-col h-full items-center justify-center pt-2">
