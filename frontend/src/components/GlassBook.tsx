@@ -159,7 +159,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
           >
             {/* Minimalist Glass Logo Mark */}
             <div className={`relative ${isMobile ? 'mb-4' : 'mb-8'}`}>
-              <div className={`${isMobile ? 'w-10 h-10 rounded-xl' : 'w-14 h-14 rounded-2xl'} border border-white/10 bg-white/[0.02] backdrop-blur-xl flex items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(34,211,238,0.15)]`}>
+              <div className={`${isMobile ? 'w-10 h-10 rounded-xl' : 'w-14 h-14 rounded-2xl'} border border-white/10 bg-white/[0.02] glass-blur-xl flex items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(34,211,238,0.15)]`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-blue-500/20 opacity-60" />
                 <span className={`font-medium ${isMobile ? 'text-[10px]' : 'text-lg'} text-white tracking-[0.1em] relative z-10`}>L2B</span>
               </div>
@@ -228,7 +228,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
       
       {screenData.type === 'reviews' ? (
         <div className="relative z-10 flex flex-col h-full items-center justify-center pt-2">
-          <div className="flex space-x-1 mb-4 bg-white/5 rounded-full px-3 py-1.5 border border-white/10 backdrop-blur-md">
+          <div className="flex space-x-1 mb-4 bg-white/5 rounded-full px-3 py-1.5 border border-white/10 glass-blur-md">
             {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />)}
           </div>
           

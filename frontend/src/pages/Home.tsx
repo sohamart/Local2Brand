@@ -80,7 +80,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
             initial={{ opacity: 0, scale: 0.5, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 1, type: "spring", bounce: 0.4 }}
-            className="liquid-glass inline-flex items-center px-5 py-2.5 rounded-full mb-8 shadow-[0_0_30px_rgba(34,211,238,0.25)] border border-cyan-400/30 backdrop-blur-3xl"
+            className="liquid-glass inline-flex items-center px-5 py-2.5 rounded-full mb-8 shadow-[0_0_30px_rgba(34,211,238,0.25)] border border-cyan-400/30 glass-blur-3xl"
           >
             <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse mr-3 shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
             <span className="text-xs md:text-sm text-cyan-50 font-bold tracking-[0.2em] uppercase">The Digital Frontier</span>
@@ -183,7 +183,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
                   </div>
                   
                   {/* Frosted Liquid Glass Timeline Card with Beautiful Colored Blur! */}
-                  <div className="w-[calc(100%-3rem)] md:w-[calc(100%-4rem)] p-6 md:p-8 rounded-[2rem] bg-white/5 backdrop-blur-3xl border border-white/10 group-hover:bg-white/10 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ml-6 md:ml-8 relative overflow-hidden">
+                  <div className="w-[calc(100%-3rem)] md:w-[calc(100%-4rem)] p-6 md:p-8 rounded-[2rem] bg-white/5 glass-blur-3xl border border-white/10 group-hover:bg-white/10 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ml-6 md:ml-8 relative overflow-hidden">
                     {/* The Blur Color Background inside the card */}
                     <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-600/20 via-transparent to-violet-600/20 blur-2xl pointer-events-none" />
                     

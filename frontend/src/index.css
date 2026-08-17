@@ -74,6 +74,20 @@
   box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
 }
 
+/* Bulletproof Blur Utilities (Bypasses Tailwind's empty variable bug in production) */
+.glass-blur-md {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.glass-blur-xl {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.glass-blur-3xl {
+  backdrop-filter: blur(64px);
+  -webkit-backdrop-filter: blur(64px);
+}
+
 /* Animated Mesh Background Base */
 .animated-mesh-bg {
   position: fixed;

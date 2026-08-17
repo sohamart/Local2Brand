@@ -75,7 +75,7 @@ export default function Navbar() {
                 {activeTab === link.name && (
                   <motion.div
                     layoutId="desktop-active-pill"
-                    className="absolute inset-0 bg-white/10 rounded-full border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.15)] backdrop-blur-md"
+                    className="absolute inset-0 bg-white/10 rounded-full border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.15)] glass-blur-md"
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
@@ -88,7 +88,7 @@ export default function Navbar() {
 
           {/* CTA BUTTON (Absolute Right) */}
           <div className="absolute right-12">
-            <Link to="/contact" className="group relative overflow-hidden px-6 py-2.5 rounded-full font-semibold text-sm text-white bg-black/40 backdrop-blur-md border border-white/10 hover:border-transparent hover:shadow-[0_0_30px_rgba(192,38,211,0.4)] transition-all duration-500 flex items-center outline-none">
+            <Link to="/contact" className="group relative overflow-hidden px-6 py-2.5 rounded-full font-semibold text-sm text-white bg-black/40 glass-blur-md border border-white/10 hover:border-transparent hover:shadow-[0_0_30px_rgba(192,38,211,0.4)] transition-all duration-500 flex items-center outline-none">
               <span className="relative z-10">Start Your Digital Journey</span>
               <ArrowRight className="w-4 h-4 ml-2 relative z-10 group-hover:translate-x-1 group-hover:rotate-[-45deg] transition-transform duration-300" />
               <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 via-violet-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -98,7 +98,7 @@ export default function Navbar() {
       </nav>
 
       {/* MOBILE TOP BAR */}
-      <nav className={`lg:hidden fixed top-0 inset-x-0 z-[60] transition-all duration-500 ${scrolled || isMobileMenuOpen ? 'py-4 bg-black/50 backdrop-blur-xl border-b border-white/5 shadow-lg' : 'py-6'}`}>
+      <nav className={`lg:hidden fixed top-0 inset-x-0 z-[60] transition-all duration-500 ${scrolled || isMobileMenuOpen ? 'py-4 bg-black/50 glass-blur-xl border-b border-white/5 shadow-lg' : 'py-6'}`}>
         <div className="px-6 flex items-center justify-between">
           <Link to="/" className="text-xl md:text-2xl font-black text-white tracking-tight outline-none relative z-50">
             Local<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">2</span>Brand
@@ -135,7 +135,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: "0%" }}
             exit={{ opacity: 0, y: "-10%" }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-0 z-50 lg:hidden bg-black/80 backdrop-blur-3xl pt-24 px-6 pb-6 flex flex-col"
+            className="fixed inset-0 z-50 lg:hidden bg-black/80 glass-blur-3xl pt-24 px-6 pb-6 flex flex-col"
           >
             <div className="flex-1 flex flex-col justify-center space-y-4">
               {navLinks.map((link, i) => (
