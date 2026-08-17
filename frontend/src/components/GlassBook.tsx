@@ -1,6 +1,28 @@
 import { useEffect, useState } from 'react';
 import { motion, useScroll, useTransform, useMotionValue, animate, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { FaApple } from 'react-icons/fa';
+import { Star } from 'lucide-react';
+
+const reviewsData = [
+  {
+    name: "Sarah Jenkins",
+    role: "CMO, TechFlow",
+    text: "They didn't just build a website. They engineered a revenue machine.",
+    gradient: "from-cyan-400 via-blue-500 to-violet-600"
+  },
+  {
+    name: "David Chen",
+    role: "Founder, Elevate",
+    text: "Aesthetic mastery that forced our competitors into complete irrelevance.",
+    gradient: "from-fuchsia-500 via-rose-500 to-orange-500"
+  },
+  {
+    name: "Marcus Aurelius",
+    role: "CEO, Stoic Brands",
+    text: "Absolute dominance. We capture 90% of local search intent now.",
+    gradient: "from-emerald-400 via-teal-500 to-cyan-500"
+  }
+];
 
 export default function GlassBook({ isBootComplete = false, onBootComplete }: { isBootComplete?: boolean, onBootComplete?: () => void }) {
   const { scrollYProgress } = useScroll();
@@ -89,22 +111,31 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
     title: "LOCAL2BRAND",
     subtitle: "Initializing digital footprint...",
     color: "text-cyan-400",
-    gradient: "from-blue-400 via-cyan-300 to-emerald-300"
+    gradient: "from-blue-400 via-cyan-300 to-emerald-300",
+    type: "terminal" as "terminal" | "reviews"
   });
+
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentReviewIndex((prev) => (prev + 1) % reviewsData.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (bootPhase < 4) return;
     const unsubscribe = scrollYProgress.on("change", (latest) => {
       if (latest > 0.85) {
-        setScreenData({ title: "SYSTEM READY", subtitle: "Commencing power down sequence...", color: "text-rose-400", gradient: "from-rose-500 via-red-400 to-orange-400" });
-      } else if (latest > 0.75) {
-        setScreenData({ title: "TRANSFORMATION", subtitle: "Awaiting final user authorization.", color: "text-orange-400", gradient: "from-orange-400 via-amber-300 to-yellow-300" });
+        setScreenData({ type: "terminal", title: "SYSTEM READY", subtitle: "Commencing power down sequence...", color: "text-rose-400", gradient: "from-rose-500 via-red-400 to-orange-400" });
+      } else if (latest > 0.65) {
+        setScreenData({ type: "reviews", title: "INDUSTRY CONSENSUS", subtitle: "Analyzing client data...", color: "text-orange-400", gradient: "from-orange-400 via-amber-300 to-yellow-300" });
       } else if (latest > 0.45) {
-        setScreenData({ title: "WEAPONS ONLINE", subtitle: "Deploying Web Engineering & SEO Dominance.", color: "text-emerald-400", gradient: "from-emerald-400 via-teal-300 to-cyan-400" });
+        setScreenData({ type: "terminal", title: "WEAPONS ONLINE", subtitle: "Deploying Web Engineering & SEO Dominance.", color: "text-emerald-400", gradient: "from-emerald-400 via-teal-300 to-cyan-400" });
       } else if (latest > 0.15) {
-        setScreenData({ title: "EVOLUTION PROTOCOL", subtitle: "Executing Phase 1: Strategic Market Audit.", color: "text-fuchsia-400", gradient: "from-fuchsia-500 via-purple-400 to-pink-400" });
+        setScreenData({ type: "terminal", title: "EVOLUTION PROTOCOL", subtitle: "Executing Phase 1: Strategic Market Audit.", color: "text-fuchsia-400", gradient: "from-fuchsia-500 via-purple-400 to-pink-400" });
       } else {
-        setScreenData({ title: "LOCAL2BRAND", subtitle: "Initializing digital footprint...", color: "text-cyan-400", gradient: "from-blue-400 via-cyan-300 to-emerald-300" });
+        setScreenData({ type: "terminal", title: "LOCAL2BRAND", subtitle: "Initializing digital footprint...", color: "text-cyan-400", gradient: "from-blue-400 via-cyan-300 to-emerald-300" });
       }
     });
     return () => unsubscribe();
@@ -192,22 +223,56 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
     <div className="w-full h-full flex flex-col pt-2 p-5 overflow-hidden relative">
       <div className={`absolute inset-0 bg-gradient-to-b ${screenData.gradient} opacity-[0.15] pointer-events-none blur-2xl transition-all duration-700`} />
       
-      <div className="relative z-10 flex flex-col h-full">
-        {/* Terminal Header */}
-        <div className="flex items-center gap-1.5 mb-5">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]" />
+      {screenData.type === 'reviews' ? (
+        <div className="relative z-10 flex flex-col h-full items-center justify-center pt-2">
+          <div className="flex space-x-1 mb-4 bg-white/5 rounded-full px-3 py-1.5 border border-white/10 backdrop-blur-md">
+            {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />)}
+          </div>
+          
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentReviewIndex}
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 1.05, y: -10 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col items-center text-center w-full mt-2"
+            >
+              <h3 className={`text-base font-black leading-[1.3] mb-6 text-transparent bg-clip-text bg-gradient-to-r ${reviewsData[currentReviewIndex].gradient} filter drop-shadow-md`}>
+                "{reviewsData[currentReviewIndex].text}"
+              </h3>
+              
+              <div className="flex items-center space-x-3 w-full justify-center mt-auto">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${reviewsData[currentReviewIndex].gradient} flex items-center justify-center shadow-inner shrink-0 border border-white/20`}>
+                  <span className="font-black text-white text-sm">{reviewsData[currentReviewIndex].name.charAt(0)}</span>
+                </div>
+                <div className="text-left overflow-hidden">
+                  <h4 className="font-bold text-white text-xs truncate">{reviewsData[currentReviewIndex].name}</h4>
+                  <p className="text-white/50 text-[9px] uppercase tracking-wider truncate">{reviewsData[currentReviewIndex].role}</p>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
-        
-        <div className={`${screenData.color} text-[11px] font-mono mb-1.5 transition-colors duration-500`}>~/core</div>
-        <div className="text-[11px] font-mono text-green-400 mb-1 leading-tight">$ {screenData.subtitle}</div>
-        <div className="text-[11px] font-mono text-blue-300/80 mb-6 animate-pulse">[INFO] Loading...</div>
-        
-        <h1 className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${screenData.gradient} mt-auto transition-all duration-700 leading-tight pb-2`}>
-          {screenData.title}
-        </h1>
-      </div>
+      ) : (
+        <div className="relative z-10 flex flex-col h-full">
+          {/* Terminal Header */}
+          <div className="flex items-center gap-1.5 mb-5">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]" />
+            <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]" />
+          </div>
+          
+          <div className={`${screenData.color} text-[11px] font-mono mb-1.5 transition-colors duration-500`}>~/core</div>
+          <div className="text-[11px] font-mono text-green-400 mb-1 leading-tight">$ {screenData.subtitle}</div>
+          <div className="text-[11px] font-mono text-blue-300/80 mb-6 animate-pulse">[INFO] Loading...</div>
+          
+          <h1 className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${screenData.gradient} mt-auto transition-all duration-700 leading-tight pb-2`}>
+            {screenData.title}
+          </h1>
+        </div>
+      )}
+
       <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-50 pointer-events-none transform -skew-x-12 translate-x-1/4" />
     </div>
   );
