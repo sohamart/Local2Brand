@@ -33,13 +33,15 @@
     --radius: 0.5rem;
   }
 }
-
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
+
   body {
-    @apply text-foreground font-sans bg-black;
+    color: hsl(var(--foreground));
+    font-family: sans-serif;
+    background: #000;
   }
 }
 /* iOS Liquid Glass Effect (Water Drop Style) */
