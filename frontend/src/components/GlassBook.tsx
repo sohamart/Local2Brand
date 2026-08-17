@@ -145,7 +145,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
     <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-[#030303] z-30 overflow-hidden">
       {/* Subtle ambient core glow */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[100px]" />
+        <div className={`w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[100px] ${isMobile ? 'opacity-50' : ''}`} />
       </div>
 
       <AnimatePresence>
@@ -155,23 +155,23 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 1.05 }} // Clean opacity exit (no blur) to maintain perfect 60fps during 3D shrink
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col items-center justify-center z-10 w-full px-8"
+            className={`flex flex-col items-center justify-center z-10 w-full ${isMobile ? 'px-4' : 'px-8'}`}
           >
             {/* Minimalist Glass Logo Mark */}
-            <div className="relative mb-8">
-              <div className="w-14 h-14 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl flex items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(34,211,238,0.15)]">
+            <div className={`relative ${isMobile ? 'mb-4' : 'mb-8'}`}>
+              <div className={`${isMobile ? 'w-10 h-10 rounded-xl' : 'w-14 h-14 rounded-2xl'} border border-white/10 bg-white/[0.02] backdrop-blur-xl flex items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(34,211,238,0.15)]`}>
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-blue-500/20 opacity-60" />
-                <span className="font-medium text-lg text-white tracking-[0.1em] relative z-10">L2B</span>
+                <span className={`font-medium ${isMobile ? 'text-[10px]' : 'text-lg'} text-white tracking-[0.1em] relative z-10`}>L2B</span>
               </div>
             </div>
 
             {/* Premium Typography */}
-            <h1 className="text-xl md:text-3xl font-light tracking-[0.3em] text-white/90 uppercase mb-12">
+            <h1 className={`${isMobile ? 'text-[11px] tracking-[0.2em] mb-6' : 'text-xl md:text-3xl tracking-[0.3em] mb-12'} font-light text-white/90 uppercase text-center whitespace-nowrap`}>
               Local<span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">2</span>Brand
             </h1>
             
             {/* Razor-thin glowing progress bar */}
-            <div className="w-48 md:w-64 h-[1px] bg-white/10 rounded-full overflow-hidden relative">
+            <div className={`${isMobile ? 'w-24' : 'w-48 md:w-64'} h-[1px] bg-white/10 rounded-full overflow-hidden relative`}>
               <motion.div 
                 initial={{ width: "0%" }}
                 animate={{ width: bootPhase === 2 ? "100%" : "35%" }}
@@ -181,7 +181,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
             </div>
 
             {/* Ultra-subtle status text */}
-            <div className="mt-6 font-mono text-[9px] md:text-[10px] tracking-[0.4em] text-white/30 uppercase">
+            <div className={`mt-4 font-mono ${isMobile ? 'text-[7px] tracking-[0.15em] opacity-80' : 'text-[9px] md:text-[10px] tracking-[0.4em] mt-6'} text-white/30 uppercase text-center`}>
               {bootPhase === 1 ? "Authenticating Session" : "Secure Connection Established"}
             </div>
           </motion.div>
