@@ -44,7 +44,6 @@
   }
 }
 
-/* iOS Liquid Glass Effect (Water Drop Style) */
 .liquid-glass {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
   backdrop-filter: blur(40px) saturate(200%);
@@ -54,6 +53,11 @@
     0 30px 60px rgba(0, 0, 0, 0.4), 
     inset 0 1px 0 0 rgba(255, 255, 255, 0.3),
     inset 0 0 20px rgba(255, 255, 255, 0.05);
+  /* iOS Safari Fixes */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  backface-visibility: hidden;
 }
 
 .liquid-glass-dark {
@@ -65,10 +69,21 @@
     0 30px 60px rgba(0, 0, 0, 0.6), 
     inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.5);
+  /* iOS Safari Fixes */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  backface-visibility: hidden;
 }
 
 .glow-blue {
   box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+}
+
+/* Global Safari Backdrop-Blur Fix */
+[class*="backdrop-blur"] {
+  -webkit-transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
 /* Animated Mesh Background Base */
