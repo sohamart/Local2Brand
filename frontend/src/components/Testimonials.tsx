@@ -39,16 +39,16 @@ export default function Testimonials() {
       <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[500px] lg:min-h-[70vh]">
         
         {/* LEFT COLUMN: The Review Card */}
-        <div className="relative w-full h-full liquid-glass-dark rounded-[3rem] border border-white/20 shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col justify-center py-12 px-6 md:px-12 z-10">
+        <div className="relative w-full h-full liquid-glass-dark rounded-[3rem] border-t border-cyan-500/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col justify-center py-12 px-6 md:px-12 z-10">
           
-          {/* Background Ambient Glow mapped to the current review - fast fade so it's not blank */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-50 pointer-events-none">
+          {/* Background Ambient Glow mapped to the current review - subtle premium glow */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
             <motion.div 
               key={`bg-${currentIndex}`}
-              initial={{ opacity: 0.5, scale: 0.9 }}
+              initial={{ opacity: 0.1, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0.5, scale: 1.1 }}
-              transition={{ duration: 0.5 }}
+              exit={{ opacity: 0.1, scale: 1.1 }}
+              transition={{ duration: 1 }}
               className={`w-[120%] h-[120%] bg-gradient-to-tr ${reviews[currentIndex].gradient} rounded-full blur-[100px] md:blur-[120px]`}
             />
           </div>
@@ -64,7 +64,7 @@ export default function Testimonials() {
             </div>
 
             {/* The Cinematic Review Crossfader */}
-            <div className="relative flex flex-col justify-center min-h-[300px]">
+            <div className="relative flex flex-col justify-center h-[350px]">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentIndex}

@@ -28,40 +28,60 @@ const staggerContainer: Variants = {
 };
 
 const fadeUpVariant: Variants = {
-  hidden: { opacity: 0, y: 40, scale: 0.95, filter: "blur(15px)" },
-  show: { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", transition: { type: "spring", stiffness: 100, damping: 20 } }
+  hidden: { opacity: 0, y: 40, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 100, damping: 20 } }
 };
 
 const flipUpVariant: Variants = {
-  hidden: { opacity: 0, rotateX: -30, y: 50, filter: "blur(20px)" },
-  show: { opacity: 1, rotateX: 0, y: 0, filter: "blur(0px)", transition: { type: "spring", stiffness: 80, damping: 20, duration: 0.8 } }
+  hidden: { opacity: 0, rotateX: -30, y: 50 },
+  show: { opacity: 1, rotateX: 0, y: 0, transition: { type: "spring", stiffness: 80, damping: 20, duration: 0.8 } }
 };
 
-const Home = () => {
+interface HomeProps {
+  isBootComplete: boolean;
+  onBootComplete: () => void;
+}
+
+const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
   const reviewRef = useRef<HTMLDivElement>(null);
   const isReviewInView = useInView(reviewRef, { margin: "-20%" });
 
   return (
-    <div className="w-full min-h-screen font-sans text-white relative">
+    <div className={`w-full font-sans text-white relative ${!isBootComplete ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       
-      {/* Modern Ambient Mesh Background */}
-      <AmbientBackground />
+      <motion.div 
+        initial={{ opacity: 0, filter: "blur(20px)" }}
+        animate={{ opacity: isBootComplete ? 1 : 0, filter: isBootComplete ? "blur(0px)" : "blur(20px)" }}
+        transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed inset-0 w-full h-full -z-20 pointer-events-none"
+      >
+        <AmbientBackground />
+      </motion.div>
 
-      {/* Framer Motion CSS GlassBook - Slides right to sit next to the review text! */}
+      {/* GlassBook (Internal 3D Scroll Logic) - Slides right to sit next to the review text! */}
       <motion.div 
         initial={{ x: "0%" }}
         animate={{ x: isReviewInView ? "25%" : "0%", scale: isReviewInView ? 1.2 : 1 }}
         transition={{ duration: 1.2, type: "spring", bounce: 0.15 }}
         className="fixed inset-0 w-full h-full -z-10 pointer-events-none flex items-center justify-center"
       >
-        <GlassBook />
+        <GlassBook onBootComplete={onBootComplete} />
       </motion.div>
       
       {/* HTML Content - Native Scrolling */}
-      <div className="w-full relative z-10">
-        
-        {/* HERO SECTION */}
-        <section className="relative h-[100vh] flex flex-col items-center justify-start pt-[15vh] md:pt-32 px-6 pointer-events-none">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isBootComplete ? 1 : 0 }}
+        transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full relative z-10"
+      >
+        {/* HERO SECTION - Blur fades beautifully during boot! */}
+        <motion.section 
+          initial={{ filter: "blur(20px)" }}
+          animate={{ filter: isBootComplete ? "blur(0px)" : "blur(20px)" }}
+          transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+          className="relative h-[100vh] flex flex-col items-center justify-start pt-[15vh] md:pt-32 px-6 pointer-events-none"
+        >
           <motion.div 
             initial={{ opacity: 0, scale: 0.5, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -93,7 +113,7 @@ const Home = () => {
               </span>
             </motion.h1>
           </motion.div>
-        </section>
+        </motion.section>
 
         {/* STATS */}
         <section className="py-20 relative mt-[5vh] md:mt-[20vh] z-20">
@@ -135,7 +155,9 @@ const Home = () => {
         {/* SCROLL REVEAL EVOLUTION (Right Aligned on Desktop) */}
         <section className="py-24 md:py-40 px-6 lg:px-12 max-w-7xl mx-auto relative pointer-events-none z-20">
           <div className="ml-auto w-full lg:w-[45%] pointer-events-auto">
-            <div className="mb-16 md:mb-20">
+            <div className="max-w-7xl mx-auto w-full relative z-10">
+              
+            <div className="mb-16 md:mb-24 relative">
               <motion.h2 
                 initial={{ opacity: 0, x: 30, filter: "blur(10px)" }}
                 whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
@@ -162,12 +184,16 @@ const Home = () => {
                   viewport={{ once: true, margin: "-15%" }}
                   className="relative flex items-center justify-normal group"
                 >
-                  <div className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full border-2 border-white/20 liquid-glass-dark shadow-[0_0_30px_rgba(217,70,239,0.5)] shrink-0 z-10 transition-transform duration-500 group-hover:scale-125 group-hover:border-fuchsia-400 bg-black">
+                  <div className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full border border-white/20 bg-gradient-to-br from-fuchsia-500 to-violet-600 shadow-[0_0_30px_rgba(217,70,239,0.5)] shrink-0 z-10 transition-transform duration-500 group-hover:scale-110">
                     <span className="font-bold text-white text-sm md:text-base">{item.step}</span>
                   </div>
                   
-                  <div className="w-[calc(100%-3rem)] md:w-[calc(100%-4rem)] p-6 md:p-8 rounded-[2rem] liquid-glass-dark border-t border-white/20 group-hover:bg-white/5 transition-all duration-500 shadow-2xl ml-6 md:ml-8 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/0 via-fuchsia-500/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                  {/* Frosted Liquid Glass Timeline Card with Beautiful Colored Blur! */}
+                  <div className="w-[calc(100%-3rem)] md:w-[calc(100%-4rem)] p-6 md:p-8 rounded-[2rem] bg-white/5 backdrop-blur-3xl border border-white/10 group-hover:bg-white/10 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ml-6 md:ml-8 relative overflow-hidden">
+                    {/* The Blur Color Background inside the card */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-600/20 via-transparent to-violet-600/20 blur-2xl pointer-events-none" />
+                    
+                    <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/0 via-fuchsia-500/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                     <h3 className="text-2xl md:text-3xl font-bold mb-2 md:mb-3 text-white group-hover:text-fuchsia-400 transition-colors relative z-10">{item.title}</h3>
                     <p className="text-white/70 text-sm md:text-lg leading-relaxed relative z-10">{item.desc}</p>
                   </div>
@@ -175,7 +201,8 @@ const Home = () => {
               ))}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
         {/* BENTO GRID SERVICES (Left Aligned on Desktop) */}
         <section className="py-24 md:py-32 px-6 lg:px-12 max-w-7xl mx-auto relative pointer-events-none z-20">
@@ -201,7 +228,7 @@ const Home = () => {
               viewport={{ once: true, margin: "-10%" }}
               className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 auto-rows-[240px] md:auto-rows-[280px]"
             >
-              {services.slice(0, 4).map((service, i) => (
+              {services.map((service, i) => (
                 <motion.div 
                   key={i}
                   variants={fadeUpVariant}
@@ -273,7 +300,7 @@ const Home = () => {
         <section className="relative z-50">
           <Footer />
         </section>
-      </div>
+      </motion.div>
     </div>
   );
 };
