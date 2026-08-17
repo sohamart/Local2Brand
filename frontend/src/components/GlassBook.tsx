@@ -20,7 +20,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
   // --- BOOT SEQUENCE MOTION VALUES ---
   const actualRotateX = useMotionValue(isBootComplete ? 90 : 0); // Starts open!
   const actualScale = useMotionValue(isBootComplete ? 1 : 1.5); // Starts massive!
-  const actualY = useMotionValue(isBootComplete ? (isMobile ? '25vh' : '-5vh') : '5vh'); // Shifted down just a little bit
+  const actualY = useMotionValue(isBootComplete ? (isMobile ? '18vh' : '-5vh') : '5vh'); // Shifted down just a little bit
 
   useEffect(() => {
     if (isBootComplete) return; // Skip boot sequence if already booted!
@@ -37,7 +37,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
       }
       animate(actualScale, 1, { duration: 1.5, ease: [0.22, 1, 0.36, 1] });
       
-      const finalY = isMobile ? '25vh' : '-5vh';
+      const finalY = isMobile ? '18vh' : '-5vh';
       animate(actualY, finalY, { duration: 1.5, ease: [0.22, 1, 0.36, 1], onComplete: () => {
          setBootPhase(4);
          if (onBootComplete) onBootComplete();
@@ -60,7 +60,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
   );
   const mobileScrollY = useTransform(scrollYProgress, 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
-    ['25vh', '15vh', '20vh', '20vh', '20vh', '20vh', '15vh', '15vh', '0vh', '0vh', '10vh']
+    ['18vh', '15vh', '20vh', '20vh', '20vh', '20vh', '15vh', '15vh', '0vh', '0vh', '10vh']
   );
   
   const laptopRotateY = useTransform(scrollYProgress, 
@@ -188,30 +188,25 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
     </motion.div>
   );
 
-  const MobilePhoneUI = ({ color, title, iconClass }: { color: string, title: string, iconClass: string }) => (
-    <div className="w-full h-full bg-black rounded-[2rem] border-[4px] border-zinc-700 overflow-hidden relative shadow-[inset_0_0_40px_rgba(0,0,0,1)] flex flex-col pt-8 p-4">
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-900 rounded-full z-20 flex items-center justify-end px-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
-      </div>
-      <div className={`absolute inset-0 bg-gradient-to-b ${color} opacity-20 pointer-events-none blur-xl`} />
+  const renderMobileScreenContent = () => (
+    <div className="w-full h-full flex flex-col pt-2 p-5 overflow-hidden relative">
+      <div className={`absolute inset-0 bg-gradient-to-b ${screenData.gradient} opacity-[0.15] pointer-events-none blur-2xl transition-all duration-700`} />
+      
       <div className="relative z-10 flex flex-col h-full">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-            <FaApple className="w-4 h-4 text-white" />
-          </div>
-          <div className="w-6 h-6 rounded-full border border-white/20" />
+        {/* Terminal Header */}
+        <div className="flex items-center gap-1.5 mb-5">
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.8)]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]" />
         </div>
-        <div className="w-full h-24 bg-white/5 border border-white/10 rounded-2xl mb-4 flex items-center justify-center">
-          <div className={`w-10 h-10 rounded-full ${iconClass} flex items-center justify-center`}>
-            <div className="w-4 h-4 bg-white/50 rounded-full" />
-          </div>
-        </div>
-        <h3 className="text-white font-bold text-lg mb-2 leading-tight">{title}</h3>
-        <div className="space-y-2 mt-auto">
-          <div className="w-full h-2 bg-white/10 rounded-full" />
-          <div className="w-3/4 h-2 bg-white/10 rounded-full" />
-          <div className="w-1/2 h-2 bg-white/10 rounded-full" />
-        </div>
+        
+        <div className={`${screenData.color} text-[11px] font-mono mb-1.5 transition-colors duration-500`}>~/core</div>
+        <div className="text-[11px] font-mono text-green-400 mb-1 leading-tight">$ {screenData.subtitle}</div>
+        <div className="text-[11px] font-mono text-blue-300/80 mb-6 animate-pulse">[INFO] Loading...</div>
+        
+        <h1 className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${screenData.gradient} mt-auto transition-all duration-700 leading-tight pb-2`}>
+          {screenData.title}
+        </h1>
       </div>
       <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-50 pointer-events-none transform -skew-x-12 translate-x-1/4" />
     </div>
@@ -272,7 +267,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
             x: laptopX,
             rotateY: laptopRotateY,
           }}
-          className="relative w-[240px] h-[480px] perspective-[2000px] flex items-center justify-center"
+          className="relative w-[55vw] max-w-[240px] aspect-[1/2.05] perspective-[2000px] flex items-center justify-center mx-auto"
         >
           <div className="absolute inset-0 w-full h-full rounded-[2.5rem] border-[4px] border-zinc-700 bg-black shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
             {/* Glossy bezel reflection */}
@@ -284,11 +279,9 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
             </div>
 
             {/* Inner Content! */}
-            <div className="relative w-full h-full pt-6">
+            <div className="relative w-full h-full pt-6 bg-black rounded-[2rem] overflow-hidden">
               {bootPhase < 4 && renderBootScreen()}
-              <div className="w-full h-full flex flex-col p-4">
-                <MobilePhoneUI color="from-cyan-500 to-transparent" title="Web Engineering" iconClass="bg-cyan-500/20" />
-              </div>
+              {renderMobileScreenContent()}
             </div>
           </div>
         </motion.div>
