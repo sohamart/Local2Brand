@@ -58,7 +58,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
 
       {/* GlassBook (Internal 3D Scroll Logic handles all movement) */}
       <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none flex items-center justify-center">
-        <GlassBook onBootComplete={onBootComplete} />
+        <GlassBook isBootComplete={isBootComplete} onBootComplete={onBootComplete} />
       </div>
       
       {/* HTML Content - Native Scrolling */}

@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { motion, useScroll, useTransform, useMotionValue, animate, useMotionValueEvent, AnimatePresence } from 'framer-motion';
 import { FaApple } from 'react-icons/fa';
 
-export default function GlassBook({ onBootComplete }: { onBootComplete?: () => void }) {
+export default function GlassBook({ isBootComplete = false, onBootComplete }: { isBootComplete?: boolean, onBootComplete?: () => void }) {
   const { scrollYProgress } = useScroll();
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' ? window.innerWidth < 1024 : false);
   
   // 0=Init, 1=Logo, 2=Progress, 3=Closing/Transforming, 4=Done (Scroll Physics Active)
-  const [bootPhase, setBootPhase] = useState(0);
+  // If already booted, skip straight to phase 4!
+  const [bootPhase, setBootPhase] = useState(isBootComplete ? 4 : 0);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -17,19 +18,12 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
   }, []);
 
   // --- BOOT SEQUENCE MOTION VALUES ---
-  const actualRotateX = useMotionValue(0); // Starts open!
-  const actualScale = useMotionValue(1.5); // Starts massive!
-  const actualY = useMotionValue('5vh'); // Shifted down just a little bit
+  const actualRotateX = useMotionValue(isBootComplete ? 90 : 0); // Starts open!
+  const actualScale = useMotionValue(isBootComplete ? 1 : 1.5); // Starts massive!
+  const actualY = useMotionValue(isBootComplete ? (isMobile ? '25vh' : '-5vh') : '5vh'); // Shifted down just a little bit
 
   useEffect(() => {
-    if (window.innerWidth < 1024) {
-      setBootPhase(4);
-      actualScale.set(1);
-      actualRotateX.set(90);
-      actualY.set('0vh');
-      if (onBootComplete) onBootComplete();
-      return;
-    }
+    if (isBootComplete) return; // Skip boot sequence if already booted!
 
     // Sequence
     const t1 = setTimeout(() => setBootPhase(1), 600);
@@ -37,17 +31,21 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
     const t3 = setTimeout(() => {
       setBootPhase(3);
       
-      // Transform physically into the exact start position of the normal GlassBook!
-      animate(actualRotateX, 90, { duration: 1.5, ease: [0.22, 1, 0.36, 1] });
+      // TRANSFORMATION (Shared by Desktop Laptop and Mobile Phone)
+      if (!isMobile) {
+        animate(actualRotateX, 90, { duration: 1.5, ease: [0.22, 1, 0.36, 1] });
+      }
       animate(actualScale, 1, { duration: 1.5, ease: [0.22, 1, 0.36, 1] });
-      animate(actualY, '-5vh', { duration: 1.5, ease: [0.22, 1, 0.36, 1], onComplete: () => {
+      
+      const finalY = isMobile ? '25vh' : '-5vh';
+      animate(actualY, finalY, { duration: 1.5, ease: [0.22, 1, 0.36, 1], onComplete: () => {
          setBootPhase(4);
          if (onBootComplete) onBootComplete();
       }});
     }, 3200);
 
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [onBootComplete, actualRotateX, actualScale, actualY]);
+  }, [onBootComplete, actualRotateX, actualScale, actualY, isMobile]);
 
 
   // --- SCROLL PHYSICS ENGINE ---
@@ -56,10 +54,15 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
     ['0vw', '0vw', '-25vw', '-25vw', '25vw', '25vw', '0vw', '0vw', '25vw', '25vw', '0vw']
   );
-  const scrollY = useTransform(scrollYProgress, 
+  const laptopScrollY = useTransform(scrollYProgress, 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
     ['-5vh', '15vh', '20vh', '20vh', '20vh', '20vh', '15vh', '15vh', '0vh', '0vh', '10vh']
   );
+  const mobileScrollY = useTransform(scrollYProgress, 
+    [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
+    ['25vh', '15vh', '20vh', '20vh', '20vh', '20vh', '15vh', '15vh', '0vh', '0vh', '10vh']
+  );
+  
   const laptopRotateY = useTransform(scrollYProgress, 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
     [0, 0, 25, 25, -25, -25, 0, 0, -25, -25, 0]
@@ -69,30 +72,16 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
   useMotionValueEvent(scrollRotateX, "change", (latest) => {
     if (bootPhase === 4) actualRotateX.set(latest);
   });
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    if (bootPhase === 4) actualY.set(latest);
+  useMotionValueEvent(laptopScrollY, "change", (latest) => {
+    if (!isMobile && bootPhase === 4) actualY.set(latest);
+  });
+  useMotionValueEvent(mobileScrollY, "change", (latest) => {
+    if (isMobile && bootPhase === 4) actualY.set(latest);
   });
 
   const laptopLogoOpacity = useTransform(actualRotateX, [90, 80], [1, 0]);
 
-  // -- MOBILE 3 PHONES SWIPE LOGIC --
-  const phone1X = useTransform(scrollYProgress, [0, 0.3, 0.4], ['0vw', '-50vw', '-50vw']);
-  const phone1Y = useTransform(scrollYProgress, [0, 0.3, 0.4], ['0vh', '-10vh', '-10vh']);
-  const phone1Rotate = useTransform(scrollYProgress, [0, 0.3, 0.4], [0, -15, -15]);
-  const phone1Opacity = useTransform(scrollYProgress, [0, 0.3, 0.4], [1, 0, 0]);
-  const phone1Scale = useTransform(scrollYProgress, [0, 0.3, 0.4], [1, 0.8, 0.8]);
 
-  const phone2X = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], ['10vw', '0vw', '0vw', '-50vw', '-50vw']);
-  const phone2Y = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], ['-4vh', '0vh', '0vh', '-10vh', '-10vh']);
-  const phone2Rotate = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], [5, 0, 0, -15, -15]);
-  const phone2Opacity = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], [0.6, 1, 1, 0, 0]);
-  const phone2Scale = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], [0.9, 1, 1, 0.8, 0.8]);
-
-  const phone3X = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], ['20vw', '10vw', '10vw', '0vw', '0vw']);
-  const phone3Y = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], ['-8vh', '-4vh', '-4vh', '0vh', '0vh']);
-  const phone3Rotate = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], [10, 5, 5, 0, 0]);
-  const phone3Opacity = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], [0.3, 0.6, 0.6, 1, 1]);
-  const phone3Scale = useTransform(scrollYProgress, [0, 0.3, 0.4, 0.6, 0.7], [0.8, 0.9, 0.9, 1, 1]);
 
   const screenScale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.02, 1]);
 
@@ -122,36 +111,54 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
   }, [scrollYProgress, bootPhase]);
 
   const renderBootScreen = () => (
-    <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-slate-900 to-black p-8 z-30">
+    <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-[#030303] z-30 overflow-hidden">
+      {/* Subtle ambient core glow */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[100px]" />
+      </div>
+
       <AnimatePresence>
         {bootPhase >= 1 && bootPhase < 3 && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9, filter: "blur(10px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="flex flex-col items-center justify-center text-center space-y-8"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 1.05 }} // Clean opacity exit (no blur) to maintain perfect 60fps during 3D shrink
+            transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col items-center justify-center z-10 w-full px-8"
           >
-            <div className="text-5xl md:text-8xl font-black tracking-tighter">
-              Local<span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-violet-500 filter drop-shadow-[0_0_20px_rgba(217,70,239,0.8)]">2</span>Brand
-            </div>
-            
-            <div className="font-mono text-sm md:text-lg text-emerald-400 opacity-80">
-              {bootPhase === 1 ? "> Initializing Agency Protocol..." : "> Uplink Established. Access Granted."}
+            {/* Minimalist Glass Logo Mark */}
+            <div className="relative mb-8">
+              <div className="w-14 h-14 rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-xl flex items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(34,211,238,0.15)]">
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-blue-500/20 opacity-60" />
+                <span className="font-medium text-lg text-white tracking-[0.1em] relative z-10">L2B</span>
+              </div>
             </div>
 
-            <div className="w-64 md:w-96 h-1 bg-white/10 rounded-full overflow-hidden mt-8">
+            {/* Premium Typography */}
+            <h1 className="text-xl md:text-3xl font-light tracking-[0.3em] text-white/90 uppercase mb-12">
+              Local<span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">2</span>Brand
+            </h1>
+            
+            {/* Razor-thin glowing progress bar */}
+            <div className="w-48 md:w-64 h-[1px] bg-white/10 rounded-full overflow-hidden relative">
               <motion.div 
                 initial={{ width: "0%" }}
-                animate={{ width: bootPhase === 2 ? "100%" : "30%" }}
-                transition={{ duration: bootPhase === 2 ? 0.4 : 1.2, ease: "circInOut" }}
-                className="h-full bg-gradient-to-r from-fuchsia-500 to-violet-500 shadow-[0_0_15px_rgba(217,70,239,0.8)]"
+                animate={{ width: bootPhase === 2 ? "100%" : "35%" }}
+                transition={{ duration: bootPhase === 2 ? 0.3 : 1.5, ease: "circOut" }}
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_10px_rgba(34,211,238,0.8)]"
               />
+            </div>
+
+            {/* Ultra-subtle status text */}
+            <div className="mt-6 font-mono text-[9px] md:text-[10px] tracking-[0.4em] text-white/30 uppercase">
+              {bootPhase === 1 ? "Authenticating Session" : "Secure Connection Established"}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/10 pointer-events-none" />
+      
+      {/* Premium Glass Screen Glare */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/[0.03] to-white/[0.08] pointer-events-none" />
     </div>
   );
 
@@ -161,7 +168,7 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
       className={`w-[95%] h-[93%] rounded-xl bg-black border border-white/10 relative overflow-hidden flex flex-col p-10 shadow-[inset_0_0_50px_rgba(0,0,0,1)]`}
     >
       {/* Show the boot screen overlay if booting, otherwise show normal content! */}
-      {bootPhase < 3 && renderBootScreen()}
+      {bootPhase < 4 && renderBootScreen()}
 
       <div className="flex items-center gap-2 mb-8">
         <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
@@ -256,14 +263,35 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
         </motion.div>
       )}
 
-      {/* --- MOBILE 3 PHONES SWIPE RENDER --- */}
+      {/* --- MOBILE PHONE RENDER (Identical behavior to Laptop) --- */}
       {isMobile && (
-        <div className="relative w-[160px] h-[320px] mt-[15vh] perspective-[2000px]">
-          {/* Phones omitted for brevity in boot sequence */}
-          <motion.div style={{ x: phone3X, y: phone3Y, rotateZ: phone3Rotate, opacity: phone3Opacity, scale: phone3Scale }} className="absolute inset-0 w-full h-full rounded-[2rem] liquid-glass-dark shadow-[0_30px_60px_rgba(0,0,0,0.8)] origin-bottom-right"><MobilePhoneUI color="from-fuchsia-500 to-transparent" title="SEO Dominance" iconClass="bg-fuchsia-500/20" /></motion.div>
-          <motion.div style={{ x: phone2X, y: phone2Y, rotateZ: phone2Rotate, opacity: phone2Opacity, scale: phone2Scale }} className="absolute inset-0 w-full h-full rounded-[2rem] liquid-glass-dark shadow-[0_30px_60px_rgba(0,0,0,0.8)] origin-bottom-right"><MobilePhoneUI color="from-cyan-500 to-transparent" title="Web Engineering" iconClass="bg-cyan-500/20" /></motion.div>
-          <motion.div style={{ x: phone1X, y: phone1Y, rotateZ: phone1Rotate, opacity: phone1Opacity, scale: phone1Scale }} className="absolute inset-0 w-full h-full rounded-[2rem] liquid-glass-dark shadow-[0_30px_60px_rgba(0,0,0,0.8)] origin-bottom-right"><MobilePhoneUI color="from-emerald-500 to-transparent" title="Strategic Audit" iconClass="bg-emerald-500/20" /></motion.div>
-        </div>
+        <motion.div 
+          style={{ 
+            scale: actualScale, 
+            y: actualY,
+            x: laptopX,
+            rotateY: laptopRotateY,
+          }}
+          className="relative w-[240px] h-[480px] perspective-[2000px] flex items-center justify-center"
+        >
+          <div className="absolute inset-0 w-full h-full rounded-[2.5rem] border-[4px] border-zinc-700 bg-black shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+            {/* Glossy bezel reflection */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/10 pointer-events-none z-50" />
+            
+            {/* Dynamic notch */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-900 rounded-full z-40 flex items-center justify-end px-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
+            </div>
+
+            {/* Inner Content! */}
+            <div className="relative w-full h-full pt-6">
+              {bootPhase < 4 && renderBootScreen()}
+              <div className="w-full h-full flex flex-col p-4">
+                <MobilePhoneUI color="from-cyan-500 to-transparent" title="Web Engineering" iconClass="bg-cyan-500/20" />
+              </div>
+            </div>
+          </div>
+        </motion.div>
       )}
 
     </div>
