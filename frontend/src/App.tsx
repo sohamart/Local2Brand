@@ -8,7 +8,7 @@ import './index.css';
 
 function App() {
   const [isBootComplete, setIsBootComplete] = useState(() => window.location.pathname !== '/');
-
+ 
   return (
     <Router>
       <div className="min-h-screen flex flex-col text-white selection:bg-cyan-500/30 relative z-0 overflow-x-hidden bg-black">
