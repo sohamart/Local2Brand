@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+
+import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Code, PenTool, TrendingUp, Search, ShoppingCart, BarChart, ChevronRight } from 'lucide-react';
 import GlassBook from '../components/GlassBook';
@@ -43,9 +43,6 @@ interface HomeProps {
 }
 
 const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
-  const reviewRef = useRef<HTMLDivElement>(null);
-  const isReviewInView = useInView(reviewRef, { margin: "-20%" });
-
   return (
     <div className={`w-full font-sans text-white relative ${!isBootComplete ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       
@@ -53,20 +50,16 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
         initial={{ opacity: 0, filter: "blur(20px)" }}
         animate={{ opacity: isBootComplete ? 1 : 0, filter: isBootComplete ? "blur(0px)" : "blur(20px)" }}
         transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+        style={{ willChange: "filter, opacity" }}
         className="fixed inset-0 w-full h-full -z-20 pointer-events-none"
       >
         <AmbientBackground />
       </motion.div>
 
-      {/* GlassBook (Internal 3D Scroll Logic) - Slides right to sit next to the review text! */}
-      <motion.div 
-        initial={{ x: "0%" }}
-        animate={{ x: isReviewInView ? "25%" : "0%", scale: isReviewInView ? 1.2 : 1 }}
-        transition={{ duration: 1.2, type: "spring", bounce: 0.15 }}
-        className="fixed inset-0 w-full h-full -z-10 pointer-events-none flex items-center justify-center"
-      >
+      {/* GlassBook (Internal 3D Scroll Logic handles all movement) */}
+      <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none flex items-center justify-center">
         <GlassBook onBootComplete={onBootComplete} />
-      </motion.div>
+      </div>
       
       {/* HTML Content - Native Scrolling */}
       <motion.div 
@@ -80,6 +73,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
           initial={{ filter: "blur(20px)" }}
           animate={{ filter: isBootComplete ? "blur(0px)" : "blur(20px)" }}
           transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+          style={{ willChange: "filter" }}
           className="relative h-[100vh] flex flex-col items-center justify-start pt-[15vh] md:pt-32 px-6 pointer-events-none"
         >
           <motion.div 
@@ -292,7 +286,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
         </section>
 
         {/* TESTIMONIALS SECTION */}
-        <div ref={reviewRef} className="relative z-30 w-full">
+        <div className="relative z-30 w-full">
           <Testimonials />
         </div>
 

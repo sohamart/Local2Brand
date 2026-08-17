@@ -19,7 +19,7 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
   // --- BOOT SEQUENCE MOTION VALUES ---
   const actualRotateX = useMotionValue(0); // Starts open!
   const actualScale = useMotionValue(1.5); // Starts massive!
-  const actualY = useMotionValue('15vh'); // Shifted down a bit
+  const actualY = useMotionValue('5vh'); // Shifted down just a little bit
 
   useEffect(() => {
     if (window.innerWidth < 1024) {
@@ -36,13 +36,13 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
     const t2 = setTimeout(() => setBootPhase(2), 2000);
     const t3 = setTimeout(() => {
       setBootPhase(3);
-      if (onBootComplete) onBootComplete(); // Trigger homepage fade-in NOW!
       
       // Transform physically into the exact start position of the normal GlassBook!
       animate(actualRotateX, 90, { duration: 1.5, ease: [0.22, 1, 0.36, 1] });
       animate(actualScale, 1, { duration: 1.5, ease: [0.22, 1, 0.36, 1] });
-      animate(actualY, '0vh', { duration: 1.5, ease: [0.22, 1, 0.36, 1], onComplete: () => {
+      animate(actualY, '-5vh', { duration: 1.5, ease: [0.22, 1, 0.36, 1], onComplete: () => {
          setBootPhase(4);
+         if (onBootComplete) onBootComplete();
       }});
     }, 3200);
 
@@ -58,7 +58,7 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
   );
   const scrollY = useTransform(scrollYProgress, 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
-    ['0vh', '15vh', '20vh', '20vh', '20vh', '20vh', '15vh', '15vh', '0vh', '0vh', '10vh']
+    ['-5vh', '15vh', '20vh', '20vh', '20vh', '20vh', '15vh', '15vh', '0vh', '0vh', '10vh']
   );
   const laptopRotateY = useTransform(scrollYProgress, 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
@@ -216,7 +216,12 @@ export default function GlassBook({ onBootComplete }: { onBootComplete?: () => v
       {/* --- DESKTOP LAPTOP RENDER --- */}
       {!isMobile && (
         <motion.div 
-          style={{ x: laptopX, y: actualY, rotateY: laptopRotateY, scale: actualScale }}
+          style={{ 
+            x: laptopX, 
+            y: actualY, 
+            rotateY: laptopRotateY, 
+            scale: actualScale
+          }}
           className="relative flex flex-col items-center transform-style-preserve-3d transition-transform duration-300"
         >
           <motion.div 
