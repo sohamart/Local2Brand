@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { Code, PenTool, TrendingUp, Search, ShoppingCart, BarChart, ChevronRight } from 'lucide-react';
@@ -47,10 +46,10 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
     <div className={`w-full font-sans text-white relative ${!isBootComplete ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
       
       <motion.div 
-        initial={{ opacity: 0, filter: "blur(20px)" }}
-        animate={{ opacity: isBootComplete ? 1 : 0, filter: isBootComplete ? "blur(0px)" : "blur(20px)" }}
+        initial={{ opacity: 0, scale: 1.05 }}
+        animate={{ opacity: isBootComplete ? 1 : 0, scale: isBootComplete ? 1 : 1.05 }}
         transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-        style={{ willChange: "filter, opacity" }}
+        style={{ willChange: "opacity, transform" }}
         className="fixed inset-0 w-full h-full -z-20 pointer-events-none"
       >
         <AmbientBackground />
@@ -68,12 +67,12 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
         transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
         className="w-full relative z-10"
       >
-        {/* HERO SECTION - Blur fades beautifully during boot! */}
+        {/* HERO SECTION - Fade and transform elegantly without CSS blur */}
         <motion.section 
-          initial={{ filter: "blur(20px)" }}
-          animate={{ filter: isBootComplete ? "blur(0px)" : "blur(20px)" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: isBootComplete ? 1 : 0, y: isBootComplete ? 0 : 20 }}
           transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-          style={{ willChange: "filter" }}
+          style={{ willChange: "opacity, transform" }}
           className="relative h-[100vh] flex flex-col items-center justify-start pt-[15vh] md:pt-32 px-6 pointer-events-none"
         >
           <motion.div 
@@ -102,7 +101,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
               variants={fadeUpVariant}
               className="text-[4.5rem] sm:text-7xl md:text-8xl lg:text-[8rem] font-black leading-[0.9] tracking-tighter"
             >
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 filter drop-shadow-[0_0_40px_rgba(217,70,239,0.5)]">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-400 [text-shadow:0_0_40px_rgba(217,70,239,0.5)]">
                 LOCAL.
               </span>
             </motion.h1>
@@ -119,7 +118,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
               transition={{ duration: 0.8 }}
               className="liquid-glass-dark rounded-[2.5rem] p-8 md:p-12 shadow-[0_40px_80px_rgba(0,0,0,0.8)] grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-12 border-t border-white/20 relative overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-fuchsia-500/10 to-violet-500/10 opacity-50 blur-3xl" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.15)_0%,rgba(217,70,239,0.15)_50%,rgba(139,92,246,0.15)_100%)] pointer-events-none" />
               
               {[
                 { value: "50+", label: "Brands Elevated" },
@@ -132,7 +131,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
                   whileHover={{ scale: 1.1, y: -5 }}
                   className="flex flex-col items-center justify-center text-center group cursor-default relative z-10"
                 >
-                  <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 mb-2 group-hover:from-cyan-400 group-hover:to-blue-600 transition-all duration-500 filter group-hover:drop-shadow-[0_0_20px_rgba(34,211,238,0.5)]">
+                  <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-400 mb-2 group-hover:from-cyan-400 group-hover:to-blue-600 transition-all duration-500 group-hover:[text-shadow:0_0_20px_rgba(34,211,238,0.5)]">
                     {stat.value}
                   </h2>
                   <p className="text-white/60 font-bold tracking-[0.15em] uppercase text-[10px] sm:text-xs group-hover:text-white transition-colors duration-500">{stat.label}</p>
@@ -153,13 +152,13 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
               
             <div className="mb-16 md:mb-24 relative">
               <motion.h2 
-                initial={{ opacity: 0, x: 30, filter: "blur(10px)" }}
-                whileInView={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="text-4xl sm:text-5xl md:text-7xl font-black mb-4 md:mb-6 tracking-tighter leading-tight"
               >
-                The <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-violet-500 filter drop-shadow-[0_0_30px_rgba(217,70,239,0.4)]">Evolution</span> Protocol.
+                The <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-violet-500 [text-shadow:0_0_30px_rgba(217,70,239,0.4)]">Evolution</span> Protocol.
               </motion.h2>
             </div>
 
@@ -182,10 +181,10 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
                     <span className="font-bold text-white text-sm md:text-base">{item.step}</span>
                   </div>
                   
-                  {/* Frosted Liquid Glass Timeline Card with Beautiful Colored Blur! */}
+                  {/* Frosted Liquid Glass Timeline Card with Pure Backdrop Blur */}
                   <div className="w-[calc(100%-3rem)] md:w-[calc(100%-4rem)] p-6 md:p-8 rounded-[2rem] bg-white/5 backdrop-blur-3xl border border-white/10 group-hover:bg-white/10 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ml-6 md:ml-8 relative overflow-hidden">
-                    {/* The Blur Color Background inside the card */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-600/20 via-transparent to-violet-600/20 blur-2xl pointer-events-none" />
+                    {/* Soft glowing colored background inside the card without CSS blur */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(192,38,211,0.15),transparent_60%),radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.15),transparent_60%)] pointer-events-none" />
                     
                     <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/0 via-fuchsia-500/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
                     <h3 className="text-2xl md:text-3xl font-bold mb-2 md:mb-3 text-white group-hover:text-fuchsia-400 transition-colors relative z-10">{item.title}</h3>
@@ -208,8 +207,10 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
               transition={{ duration: 0.8, type: "spring" }}
               className="mb-12 md:mb-16 liquid-glass-dark p-8 md:p-10 rounded-[2.5rem] border-t border-white/20 shadow-[0_40px_80px_rgba(0,0,0,0.6)] relative overflow-hidden group"
             >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-[80px] group-hover:bg-cyan-500/30 transition-colors duration-700" />
-              <h2 className="text-4xl sm:text-5xl md:text-7xl font-black mb-4 tracking-tighter relative z-10">We Build <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 filter drop-shadow-[0_0_30px_rgba(52,211,153,0.4)]">Weapons.</span></h2>
+              {/* Giant glowing orb replaced with massive radial gradient */}
+              <div className="absolute top-[0] right-[0] w-[150%] h-[150%] translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.15),transparent_50%)] group-hover:bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.2),transparent_50%)] transition-colors duration-700 pointer-events-none" />
+              
+              <h2 className="text-4xl sm:text-5xl md:text-7xl font-black mb-4 tracking-tighter relative z-10">We Build <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 [text-shadow:0_0_30px_rgba(52,211,153,0.4)]">Weapons.</span></h2>
               <p className="text-base md:text-lg text-white/70 relative z-10">
                 Not just websites. We build digital assets designed to crush your competition and generate revenue.
               </p>
@@ -227,12 +228,9 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
                   key={i}
                   variants={fadeUpVariant}
                   whileHover={{ y: -10, scale: 1.02 }}
-                  className="relative group rounded-[2rem] p-6 overflow-hidden liquid-glass-dark border border-white/10 transition-all duration-500 shadow-2xl cursor-pointer"
+                  className="relative group rounded-[2rem] p-6 overflow-hidden liquid-glass-dark border border-white/10 transition-all duration-500 shadow-2xl hover:shadow-[0_0_40px_rgba(6,182,212,0.3)] cursor-pointer"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-0" />
-                  
-                  {/* Neon Glow on hover */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 rounded-[2rem] opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-700 z-0" />
                   
                   <div className="relative z-10 h-full flex flex-col">
                     <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl liquid-glass border border-white/10 flex items-center justify-center mb-4 md:mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg bg-black/40">
@@ -255,16 +253,16 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
         <section className="py-24 md:py-32 px-6 lg:px-12 relative overflow-hidden z-20">
           <div className="max-w-5xl mx-auto relative z-10">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20, filter: "blur(20px)" }}
-              whileInView={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="w-full liquid-glass-dark rounded-[3rem] p-10 md:p-16 text-center border-t border-white/20 shadow-[0_40px_100px_rgba(0,0,0,0.8)] relative group overflow-hidden flex flex-col items-center justify-center min-h-[400px]"
             >
-              <div className="absolute inset-0 bg-gradient-to-t from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(249,115,22,0.15)_0%,transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
               
               <h2 className="text-4xl sm:text-5xl md:text-7xl font-black mb-6 md:mb-8 tracking-tighter relative z-10 leading-tight">
-                Your Digital <br className="hidden md:block"/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-rose-500 to-pink-500 filter drop-shadow-[0_0_30px_rgba(244,63,94,0.5)]">Transformation</span> Starts Here.
+                Your Digital <br className="hidden md:block"/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-rose-500 to-pink-500 [text-shadow:0_0_30px_rgba(244,63,94,0.5)]">Transformation</span> Starts Here.
               </h2>
               <p className="text-lg md:text-xl text-white/70 mb-10 md:mb-12 max-w-2xl mx-auto relative z-10">
                 Request a comprehensive technical and strategic audit of your business. Free of charge.
@@ -274,11 +272,11 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
                 <input 
                   type="email" 
                   placeholder="Enter your email address" 
-                  className="w-full liquid-glass border border-white/10 rounded-[1.5rem] px-6 py-4 md:py-5 text-white placeholder-white/50 focus:outline-none focus:border-cyan-400/50 transition-colors text-base md:text-lg shadow-[inset_0_2px_10px_rgba(0,0,0,0.4)]" 
+                  className="w-full liquid-glass border border-white/10 rounded-[1.5rem] px-6 py-4 md:py-5 text-white placeholder-white/50 focus:outline-none focus:border-orange-400/50 transition-colors text-base md:text-lg shadow-[inset_0_2px_10px_rgba(0,0,0,0.4)]" 
                 />
-                <button className="liquid-glass group relative overflow-hidden text-white font-bold px-8 md:px-10 py-4 md:py-5 rounded-[1.5rem] transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(34,211,238,0.4)] flex items-center justify-center shrink-0 border border-white/20 hover:border-cyan-400/50">
+                <button className="liquid-glass group relative overflow-hidden text-white font-bold px-8 md:px-10 py-4 md:py-5 rounded-[1.5rem] transition-all shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(249,115,22,0.4)] flex items-center justify-center shrink-0 border border-white/20 hover:border-orange-400/50">
                   <span className="relative z-10">Audit My Business</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/50 to-pink-500/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-pink-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                 </button>
               </div>
             </motion.div>
