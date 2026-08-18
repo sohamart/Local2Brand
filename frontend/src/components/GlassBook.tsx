@@ -42,7 +42,8 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
   // --- BOOT SEQUENCE MOTION VALUES ---
   const actualRotateX = useMotionValue(isBootComplete ? 90 : 0); // Starts open!
   const actualScale = useMotionValue(isBootComplete ? 1 : 1.5); // Starts massive!
-  const actualY = useMotionValue(isBootComplete ? (isMobile ? '0vh' : '-5vh') : '5vh'); // Center on mobile!
+  const actualY = useMotionValue(isBootComplete ? (isMobile ? '12vh' : '-5vh') : '5vh'); // Shifted down just enough to clear the hero text
+  const actualOpacity = useMotionValue(1);
 
   useEffect(() => {
     if (isBootComplete) return; // Skip boot sequence if already booted!
@@ -59,7 +60,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
       }
       animate(actualScale, 1, { duration: 1.5, ease: [0.22, 1, 0.36, 1] });
       
-      const finalY = isMobile ? '0vh' : '-5vh';
+      const finalY = isMobile ? '12vh' : '-5vh';
       animate(actualY, finalY, { duration: 1.5, ease: [0.22, 1, 0.36, 1], onComplete: () => {
          setBootPhase(4);
          if (onBootComplete) onBootComplete();
@@ -80,10 +81,19 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
     ['-5vh', '15vh', '20vh', '20vh', '20vh', '20vh', '15vh', '15vh', '0vh', '0vh', '10vh']
   );
-  // Cinematic Dive for Mobile instead of erratic horizontal shifting
-  const mobileScrollScale = useTransform(scrollYProgress, [0, 0.05, 0.25], [1, 1, 15]);
-  const mobileOpacity = useTransform(scrollYProgress, [0, 0.15, 0.25], [1, 1, 0]);
-  const mobileScrollY = useTransform(scrollYProgress, [0, 0.25], ['0vh', '40vh']);
+  // Cinematic Dive for Mobile: Dives in at 0.25, stays hidden, then zooms OUT at 0.8 to show reviews!
+  const mobileScrollScale = useTransform(scrollYProgress, 
+    [0, 0.05, 0.25, 0.7, 0.8, 1], 
+    [1, 1, 15, 15, 1, 1]
+  );
+  const mobileOpacity = useTransform(scrollYProgress, 
+    [0, 0.15, 0.25, 0.7, 0.8, 1], 
+    [1, 1, 0, 0, 1, 1]
+  );
+  const mobileScrollY = useTransform(scrollYProgress, 
+    [0, 0.25, 0.7, 0.8, 1], 
+    ['12vh', '40vh', '40vh', '0vh', '0vh']
+  );
   
   const laptopRotateY = useTransform(scrollYProgress, 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
@@ -99,6 +109,12 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
   });
   useMotionValueEvent(mobileScrollY, "change", (latest) => {
     if (isMobile && bootPhase === 4) actualY.set(latest as string);
+  });
+  useMotionValueEvent(mobileScrollScale, "change", (latest) => {
+    if (isMobile && bootPhase === 4) actualScale.set(latest);
+  });
+  useMotionValueEvent(mobileOpacity, "change", (latest) => {
+    if (isMobile && bootPhase === 4) actualOpacity.set(latest);
   });
 
   const laptopLogoOpacity = useTransform(actualRotateX, [90, 80], [1, 0]);
@@ -126,9 +142,8 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
   useEffect(() => {
     if (bootPhase < 4) return;
     const unsubscribe = scrollYProgress.on("change", (latest) => {
-      if (latest > 0.85) {
-        setScreenData({ type: "terminal", title: "SYSTEM READY", subtitle: "Commencing power down sequence...", color: "text-rose-400", gradient: "from-rose-500 via-red-400 to-orange-400" });
-      } else if (latest > 0.65) {
+      if (latest > 0.65) {
+        // Locks into review mode and never changes!
         setScreenData({ type: "reviews", title: "INDUSTRY CONSENSUS", subtitle: "Analyzing client data...", color: "text-orange-400", gradient: "from-orange-400 via-amber-300 to-yellow-300" });
       } else if (latest > 0.45) {
         setScreenData({ type: "terminal", title: "WEAPONS ONLINE", subtitle: "Deploying Web Engineering & SEO Dominance.", color: "text-emerald-400", gradient: "from-emerald-400 via-teal-300 to-cyan-400" });
@@ -220,7 +235,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
   );
 
   const renderMobileScreenContent = () => (
-    <div className="w-full h-full flex flex-col pt-2 p-5 overflow-hidden relative">
+    <div className="w-full h-full flex flex-col pt-4 p-6 overflow-hidden relative">
       {/* Modern, sleek background without heavy blurs (Fixes Vercel/iOS Safari issues) */}
       <div className="absolute inset-0 bg-gradient-to-b from-zinc-900 via-black to-black z-0" />
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none z-0" />
@@ -228,7 +243,8 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
       
       {screenData.type === 'reviews' ? (
         <div className="relative z-10 flex flex-col h-full items-center justify-center pt-2">
-          <div className="flex space-x-1 mb-4 bg-white/5 rounded-full px-3 py-1.5 border border-white/10 backdrop-blur-md">
+          <div className="text-[11px] font-bold text-white/80 tracking-[0.4em] uppercase mb-4 drop-shadow-md">Client Reviews</div>
+          <div className="flex space-x-1 mb-6 bg-white/10 rounded-full px-4 py-2 border border-white/20 backdrop-blur-md shadow-[0_0_20px_rgba(255,255,255,0.05)]">
             {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />)}
           </div>
           
@@ -241,7 +257,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
               transition={{ duration: 0.4 }}
               className="flex flex-col items-center text-center w-full mt-2"
             >
-              <h3 className={`text-base font-black leading-[1.3] mb-6 text-transparent bg-clip-text bg-gradient-to-r ${reviewsData[currentReviewIndex].gradient} [text-shadow:0_4px_10px_rgba(0,0,0,0.5)]`}>
+              <h3 className={`text-lg sm:text-xl font-black leading-[1.3] mb-8 text-transparent bg-clip-text bg-gradient-to-r ${reviewsData[currentReviewIndex].gradient} [text-shadow:0_4px_10px_rgba(0,0,0,0.5)]`}>
                 "{reviewsData[currentReviewIndex].text}"
               </h3>
               
@@ -331,12 +347,12 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
       {isMobile && (
         <motion.div 
           style={{ 
-            scale: bootPhase < 4 ? actualScale : mobileScrollScale, 
+            scale: actualScale, 
             y: actualY,
-            opacity: bootPhase < 4 ? 1 : mobileOpacity,
+            opacity: actualOpacity,
             willChange: "transform, opacity"
           }}
-          className="relative w-[55vw] max-w-[240px] aspect-[1/2.05] perspective-[2000px] flex items-center justify-center mx-auto"
+          className="relative w-[68vw] max-w-[280px] aspect-[1/2.05] perspective-[2000px] flex items-center justify-center mx-auto mt-6"
         >
           <div className="absolute inset-0 w-full h-full rounded-[2.5rem] border-[4px] border-zinc-700 bg-black shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
             {/* Glossy bezel reflection */}

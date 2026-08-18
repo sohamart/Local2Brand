@@ -73,7 +73,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
           animate={{ opacity: isBootComplete ? 1 : 0, y: isBootComplete ? 0 : 20 }}
           transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
           style={{ willChange: "opacity, transform" }}
-          className="relative h-[100vh] flex flex-col items-center justify-start pt-[15vh] md:pt-32 px-6 pointer-events-none"
+          className="relative h-[100vh] flex flex-col items-center justify-start pt-[10vh] md:pt-[18vh] px-6 pointer-events-none"
         >
           <motion.div 
             initial={{ opacity: 0, scale: 0.5, y: -20 }}
