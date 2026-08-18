@@ -74,7 +74,7 @@
 
 /* iOS Liquid Glass Effect (Production Safe via @apply) */
 .liquid-glass {
-  @apply backdrop-blur-[40px] backdrop-saturate-[200%];
+  @apply backdrop-blur-lg md:backdrop-blur-[40px] backdrop-saturate-150 md:backdrop-saturate-[200%];
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.08) 0%,
@@ -92,7 +92,7 @@
 }
 
 .liquid-glass-dark {
-  @apply backdrop-blur-[50px] backdrop-saturate-[250%];
+  @apply backdrop-blur-md md:backdrop-blur-[50px] backdrop-saturate-150 md:backdrop-saturate-[250%];
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%),
               radial-gradient(circle at top right, rgba(34, 211, 238, 0.1), transparent 50%),
               radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.08), transparent 50%);
