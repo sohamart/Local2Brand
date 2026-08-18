@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --font-sans: "Inter", "sans-serif";
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
 
 @layer base {
   :root {
@@ -44,6 +71,7 @@
     background: #000;
   }
 }
+
 /* iOS Liquid Glass Effect (Water Drop Style) */
 .liquid-glass {
   background: linear-gradient(
@@ -65,10 +93,8 @@
 
 .liquid-glass-dark {
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.05) 100%);
-  --lg-blur-dark: blur(50px);
-  --lg-sat-dark: saturate(250%);
-  backdrop-filter: var(--lg-blur-dark) var(--lg-sat-dark);
-  -webkit-backdrop-filter: var(--lg-blur-dark) var(--lg-sat-dark);
+  backdrop-filter: blur(50px) saturate(250%);
+  -webkit-backdrop-filter: blur(50px) saturate(250%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 
     0 30px 60px rgba(0, 0, 0, 0.6), 
@@ -78,20 +104,6 @@
 
 .glow-blue {
   box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
-}
-
-/* Bulletproof Blur Utilities (Bypasses Tailwind's empty variable bug in production) */
-.glass-blur-md {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.glass-blur-xl {
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-.glass-blur-3xl {
-  backdrop-filter: blur(64px);
-  -webkit-backdrop-filter: blur(64px);
 }
 
 /* Animated Mesh Background Base */
@@ -111,8 +123,9 @@
   content: "";
   position: absolute;
   border-radius: 50%;
-  filter: blur(120px);
   opacity: 0.5;
+  will-change: transform;
+  transform: translateZ(0);
   animation: float 20s infinite alternate ease-in-out;
 }
 
