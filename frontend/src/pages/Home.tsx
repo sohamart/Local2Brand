@@ -162,7 +162,7 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
               </motion.h2>
             </div>
 
-            <div className="space-y-16 md:space-y-24 relative before:absolute before:inset-0 before:ml-[23px] md:before:ml-[27px] before:h-full before:w-1 before:bg-gradient-to-b before:from-fuchsia-500 before:via-violet-400 before:to-transparent">
+            <div className="flex flex-col gap-8 md:space-y-24 relative md:before:absolute md:before:inset-0 md:before:ml-[27px] md:before:h-full md:before:w-1 md:before:bg-gradient-to-b md:before:from-fuchsia-500 md:before:via-violet-400 md:before:to-transparent">
               {[
                 { step: "01", title: "Strategic Audit", desc: "Identify massive gaps in your local market." },
                 { step: "02", title: "Architecture", desc: "High-converting website and brand blueprint." },
@@ -175,20 +175,27 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
                   initial="hidden"
                   whileInView="show"
                   viewport={{ once: true, margin: "-15%" }}
-                  className="relative flex items-center justify-normal group"
+                  className="sticky md:relative flex items-center justify-normal group w-full"
+                  style={{ top: `calc(15vh + ${i * 20}px)` }} // Premium stacking card effect on mobile!
                 >
-                  <div className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-full border border-white/20 bg-gradient-to-br from-fuchsia-500 to-violet-600 shadow-[0_0_30px_rgba(217,70,239,0.5)] shrink-0 z-10 transition-transform duration-500 group-hover:scale-110">
-                    <span className="font-bold text-white text-sm md:text-base">{item.step}</span>
+                  <div className="hidden md:flex items-center justify-center w-14 h-14 rounded-full border border-white/20 bg-gradient-to-br from-fuchsia-500 to-violet-600 shadow-[0_0_30px_rgba(217,70,239,0.5)] shrink-0 z-10 transition-transform duration-500 group-hover:scale-110">
+                    <span className="font-bold text-white text-base">{item.step}</span>
                   </div>
                   
                   {/* Frosted Liquid Glass Timeline Card with Pure Backdrop Blur */}
-                  <div className="w-[calc(100%-3rem)] md:w-[calc(100%-4rem)] p-6 md:p-8 rounded-[2rem] bg-white/5 backdrop-blur-3xl border border-white/10 group-hover:bg-white/10 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ml-6 md:ml-8 relative overflow-hidden">
+                  <div className="w-full md:w-[calc(100%-4rem)] p-8 md:p-8 rounded-[2.5rem] md:rounded-[2rem] bg-[#0f0f11] md:bg-white/5 backdrop-blur-3xl border border-white/10 group-hover:bg-white/10 transition-all duration-500 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] md:ml-8 relative overflow-hidden">
+                    {/* Giant background number for mobile */}
+                    <div className="md:hidden absolute -top-6 -right-4 text-[8rem] font-black text-white/[0.03] pointer-events-none leading-none select-none">{item.step}</div>
+
                     {/* Soft glowing colored background inside the card without CSS blur */}
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(192,38,211,0.15),transparent_60%),radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.15),transparent_60%)] pointer-events-none" />
                     
                     <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-500/0 via-fuchsia-500/0 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-                    <h3 className="text-2xl md:text-3xl font-bold mb-2 md:mb-3 text-white group-hover:text-fuchsia-400 transition-colors relative z-10">{item.title}</h3>
-                    <p className="text-white/70 text-sm md:text-lg leading-relaxed relative z-10">{item.desc}</p>
+                    
+                    <div className="md:hidden w-12 h-1 bg-white/20 rounded-full mb-6" /> {/* Handlebar for mobile */}
+
+                    <h3 className="text-3xl md:text-3xl font-bold mb-3 text-white group-hover:text-fuchsia-400 transition-colors relative z-10">{item.title}</h3>
+                    <p className="text-white/70 text-base md:text-lg leading-relaxed relative z-10 max-w-[85%] md:max-w-full">{item.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -221,14 +228,14 @@ const Home = ({ isBootComplete, onBootComplete }: HomeProps) => {
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: "-10%" }}
-              className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 auto-rows-[240px] md:auto-rows-[280px]"
+              className="flex overflow-x-auto snap-x snap-mandatory pb-8 -mx-6 px-6 gap-4 md:grid md:grid-cols-2 md:gap-6 md:auto-rows-[280px]"
             >
               {services.map((service, i) => (
                 <motion.div 
                   key={i}
                   variants={fadeUpVariant}
                   whileHover={{ y: -10, scale: 1.02 }}
-                  className="relative group rounded-[2rem] p-6 overflow-hidden liquid-glass-dark border border-white/10 transition-all duration-500 shadow-2xl hover:shadow-[0_0_40px_rgba(6,182,212,0.3)] cursor-pointer"
+                  className="min-w-[85vw] min-h-[260px] md:min-w-0 md:min-h-0 snap-center relative group rounded-[2.5rem] md:rounded-[2rem] p-8 md:p-6 overflow-hidden liquid-glass-dark border border-white/10 transition-all duration-500 shadow-2xl hover:shadow-[0_0_40px_rgba(6,182,212,0.3)] cursor-pointer shrink-0 flex flex-col"
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-0" />
                   

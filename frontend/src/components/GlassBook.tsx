@@ -94,6 +94,14 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
     [0, 0.25, 0.7, 0.8, 1], 
     ['12vh', '40vh', '40vh', '0vh', '0vh']
   );
+  const mobileRotateY = useTransform(scrollYProgress, 
+    [0, 0.15, 0.25, 0.7, 0.8, 1], 
+    [0, -10, -25, 25, 0, 0]
+  );
+  const mobileRotateX = useTransform(scrollYProgress, 
+    [0, 0.15, 0.25, 0.7, 0.8, 1], 
+    [0, 5, 15, -15, 0, 0]
+  );
   
   const laptopRotateY = useTransform(scrollYProgress, 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
@@ -130,6 +138,14 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
     gradient: "from-blue-400 via-cyan-300 to-emerald-300",
     type: "terminal" as "terminal" | "reviews"
   });
+
+  const [islandExpanded, setIslandExpanded] = useState(false);
+  useEffect(() => {
+    if (bootPhase < 4) return;
+    setIslandExpanded(true);
+    const timer = setTimeout(() => setIslandExpanded(false), 2000);
+    return () => clearTimeout(timer);
+  }, [screenData.title, bootPhase]);
 
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   useEffect(() => {
@@ -247,7 +263,16 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
         <div className="relative z-10 flex flex-col h-full items-center justify-center pt-2">
           <div className="text-[11px] font-bold text-white/80 tracking-[0.4em] uppercase mb-4 drop-shadow-md">Client Reviews</div>
           <div className="flex space-x-1 mb-6 bg-white/10 rounded-full px-4 py-2 border border-white/20 backdrop-blur-md shadow-[0_0_20px_rgba(255,255,255,0.05)]">
-            {[...Array(5)].map((_, i) => <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />)}
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={`${currentReviewIndex}-${i}`}
+                initial={{ opacity: 0, scale: 0, rotate: -180 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
+              >
+                <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" />
+              </motion.div>
+            ))}
           </div>
           
           <AnimatePresence mode="wait">
@@ -352,18 +377,51 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
             scale: actualScale, 
             y: actualY,
             opacity: actualOpacity,
+            rotateX: mobileRotateX,
+            rotateY: mobileRotateY,
             willChange: "transform, opacity"
           }}
-          className="relative w-[68vw] max-w-[280px] aspect-[1/2.05] perspective-[2000px] flex items-center justify-center mx-auto mt-6"
+          className="relative w-[68vw] max-w-[280px] aspect-[1/2.05] perspective-[2000px] flex items-center justify-center mx-auto mt-6 transform-style-preserve-3d"
         >
+          {/* Dynamic Aura Glow */}
+          <div className={`absolute inset-0 rounded-[2.5rem] blur-[40px] opacity-40 transition-colors duration-1000 ${screenData.type === 'reviews' ? 'bg-orange-500' : 'bg-cyan-500'}`} />
+
           <div className="absolute inset-0 w-full h-full rounded-[2.5rem] border-[4px] border-zinc-700 bg-black shadow-[0_30px_60px_rgba(0,0,0,0.8)] overflow-hidden">
             {/* Glossy bezel reflection */}
             <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/10 pointer-events-none z-50" />
             
-            {/* Dynamic notch */}
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-900 rounded-full z-40 flex items-center justify-end px-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
-            </div>
+            {/* Dynamic Island Notch Animation */}
+            <motion.div 
+              animate={{ 
+                width: islandExpanded ? '140px' : '64px',
+                height: islandExpanded ? '24px' : '16px',
+                borderRadius: islandExpanded ? '12px' : '9999px'
+              }}
+              transition={{ type: "spring", bounce: 0.5, duration: 0.6 }}
+              className="absolute top-2 left-1/2 -translate-x-1/2 bg-black flex items-center justify-center overflow-hidden z-50 border border-white/5 shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
+              style={{ originX: 0.5, originY: 0 }}
+            >
+               <AnimatePresence mode="wait">
+                 {islandExpanded ? (
+                   <motion.span 
+                     key="text"
+                     initial={{ opacity: 0, scale: 0.8 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     exit={{ opacity: 0, scale: 0.8 }}
+                     transition={{ duration: 0.2 }}
+                     className="text-[8px] font-bold text-white tracking-widest whitespace-nowrap px-3"
+                   >
+                     {screenData.type === "reviews" ? "REVIEWS SYNCED" : "UPDATE SECURED"}
+                   </motion.span>
+                 ) : (
+                   <motion.div 
+                     key="dot"
+                     initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                     className="absolute right-2 w-1.5 h-1.5 rounded-full bg-blue-500/50" 
+                   />
+                 )}
+               </AnimatePresence>
+            </motion.div>
 
             {/* Inner Content! */}
             <div className="relative w-full h-full pt-6 bg-black rounded-[2rem] overflow-hidden">
