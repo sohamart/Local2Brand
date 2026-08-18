@@ -142,7 +142,9 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
   useEffect(() => {
     if (bootPhase < 4) return;
     const unsubscribe = scrollYProgress.on("change", (latest) => {
-      if (latest > 0.65) {
+      const reviewThreshold = isMobile ? 0.81 : 0.65;
+      
+      if (latest > reviewThreshold) {
         // Locks into review mode and never changes!
         setScreenData({ type: "reviews", title: "INDUSTRY CONSENSUS", subtitle: "Analyzing client data...", color: "text-orange-400", gradient: "from-orange-400 via-amber-300 to-yellow-300" });
       } else if (latest > 0.45) {
