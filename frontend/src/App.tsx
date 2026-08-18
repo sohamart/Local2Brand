@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Lenis from 'lenis';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import ComingSoon from './pages/ComingSoon';
@@ -8,6 +9,24 @@ import './index.css';
 
 function App() {
   const [isBootComplete, setIsBootComplete] = useState(() => window.location.pathname !== '/');
+  
+  useEffect(() => {
+    const lenis = new Lenis({
+      autoRaf: true,
+      duration: 1.5,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      smoothTouch: false,
+      touchMultiplier: 2,
+    });
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
  
   return (
     <Router>
