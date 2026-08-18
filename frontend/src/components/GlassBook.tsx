@@ -42,7 +42,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
   // --- BOOT SEQUENCE MOTION VALUES ---
   const actualRotateX = useMotionValue(isBootComplete ? 90 : 0); // Starts open!
   const actualScale = useMotionValue(isBootComplete ? 1 : 1.5); // Starts massive!
-  const actualY = useMotionValue(isBootComplete ? (isMobile ? '18vh' : '-5vh') : '5vh'); // Shifted down just a little bit
+  const actualY = useMotionValue(isBootComplete ? (isMobile ? '0vh' : '-5vh') : '5vh'); // Center on mobile!
 
   useEffect(() => {
     if (isBootComplete) return; // Skip boot sequence if already booted!
@@ -59,7 +59,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
       }
       animate(actualScale, 1, { duration: 1.5, ease: [0.22, 1, 0.36, 1] });
       
-      const finalY = isMobile ? '18vh' : '-5vh';
+      const finalY = isMobile ? '0vh' : '-5vh';
       animate(actualY, finalY, { duration: 1.5, ease: [0.22, 1, 0.36, 1], onComplete: () => {
          setBootPhase(4);
          if (onBootComplete) onBootComplete();
@@ -80,10 +80,10 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
     ['-5vh', '15vh', '20vh', '20vh', '20vh', '20vh', '15vh', '15vh', '0vh', '0vh', '10vh']
   );
-  const mobileScrollY = useTransform(scrollYProgress, 
-    [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
-    ['18vh', '15vh', '20vh', '20vh', '20vh', '20vh', '15vh', '15vh', '0vh', '0vh', '10vh']
-  );
+  // Cinematic Dive for Mobile instead of erratic horizontal shifting
+  const mobileScrollScale = useTransform(scrollYProgress, [0, 0.05, 0.25], [1, 1, 15]);
+  const mobileOpacity = useTransform(scrollYProgress, [0, 0.15, 0.25], [1, 1, 0]);
+  const mobileScrollY = useTransform(scrollYProgress, [0, 0.25], ['0vh', '40vh']);
   
   const laptopRotateY = useTransform(scrollYProgress, 
     [0, 0.15, 0.2, 0.4, 0.45, 0.65, 0.7, 0.85, 0.9, 0.95, 1], 
@@ -98,7 +98,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
     if (!isMobile && bootPhase === 4) actualY.set(latest);
   });
   useMotionValueEvent(mobileScrollY, "change", (latest) => {
-    if (isMobile && bootPhase === 4) actualY.set(latest);
+    if (isMobile && bootPhase === 4) actualY.set(latest as string);
   });
 
   const laptopLogoOpacity = useTransform(actualRotateX, [90, 80], [1, 0]);
@@ -327,15 +327,14 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
         </motion.div>
       )}
 
-      {/* --- MOBILE PHONE RENDER (Identical behavior to Laptop) --- */}
+      {/* --- MOBILE PHONE RENDER (Cinematic Dive Effect instead of shifting) --- */}
       {isMobile && (
         <motion.div 
           style={{ 
-            scale: actualScale, 
+            scale: bootPhase < 4 ? actualScale : mobileScrollScale, 
             y: actualY,
-            x: laptopX,
-            rotateY: laptopRotateY,
-            willChange: "transform"
+            opacity: bootPhase < 4 ? 1 : mobileOpacity,
+            willChange: "transform, opacity"
           }}
           className="relative w-[55vw] max-w-[240px] aspect-[1/2.05] perspective-[2000px] flex items-center justify-center mx-auto"
         >

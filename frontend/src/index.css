@@ -74,29 +74,36 @@
 
 /* iOS Liquid Glass Effect (Production Safe via @apply) */
 .liquid-glass {
-  @apply backdrop-blur-[40px] backdrop-saturate-200;
+  @apply backdrop-blur-[40px] backdrop-saturate-[200%];
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0.01) 100%
-  );
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  ),
+  radial-gradient(circle at top left, rgba(255, 255, 255, 0.15), transparent 60%);
 
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 
   box-shadow:
     0 30px 60px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 0 20px rgba(255, 255, 255, 0.05);
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 0 30px rgba(255, 255, 255, 0.08),
+    inset 20px 0 50px -20px rgba(255, 255, 255, 0.15);
 }
 
 .liquid-glass-dark {
-  @apply backdrop-blur-[50px] backdrop-saturate-200;
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.05) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  @apply backdrop-blur-[50px] backdrop-saturate-[250%];
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%),
+              radial-gradient(circle at top right, rgba(34, 211, 238, 0.1), transparent 50%),
+              radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.08), transparent 50%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 
-    0 30px 60px rgba(0, 0, 0, 0.6), 
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.5);
+    0 30px 60px rgba(0, 0, 0, 0.7), 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.6),
+    inset 0 0 40px rgba(255, 255, 255, 0.05),
+    inset 30px 0 60px -30px rgba(34, 211, 238, 0.15),
+    inset -30px 0 60px -30px rgba(168, 85, 247, 0.15);
 }
 
 .glow-blue {

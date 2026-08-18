@@ -38,9 +38,8 @@ export default function AmbientBackground() {
   return (
     <div className="fixed inset-0 w-full h-full -z-20 overflow-hidden bg-black">
       
-      {/* 1. Fluid Aurora Mesh Gradients - Sped up for more noticeable, soft animation */}
-      {!isMobile && (
-        <div className="absolute inset-0 opacity-50 mix-blend-screen">
+      {/* 1. Fluid Aurora Mesh Gradients - Enabled for both desktop and mobile for a modern interesting background */}
+      <div className="absolute inset-0 opacity-50 mix-blend-screen">
           <motion.div 
             animate={{ 
               x: ['0%', '15%', '-15%', '0%'],
@@ -69,7 +68,6 @@ export default function AmbientBackground() {
             className="absolute top-[40%] left-[40%] w-[35vw] h-[35vw] bg-violet-600/20 rounded-full blur-[100px]"
           />
         </div>
-      )}
 
       {/* 2. Premium SVG Dot Grid Pattern */}
       <div 
