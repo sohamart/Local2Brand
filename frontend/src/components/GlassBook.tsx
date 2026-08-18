@@ -143,9 +143,9 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
 
   const renderBootScreen = () => (
     <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-[#030303] z-30 overflow-hidden">
-      {/* Subtle ambient core glow */}
+      {/* Subtle ambient core glow using high-performance radial gradient instead of blur */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className={`w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[100px] ${isMobile ? 'opacity-50' : ''}`} />
+        <div className={`w-[400px] h-[400px] bg-[radial-gradient(circle_at_center,rgba(6,182,212,0.15)_0%,transparent_70%)] rounded-full ${isMobile ? 'opacity-50' : ''}`} />
       </div>
 
       <AnimatePresence>
@@ -195,7 +195,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
 
   const renderScreenContent = () => (
     <motion.div 
-      style={{ scale: screenScale }}
+      style={{ scale: screenScale, willChange: "transform" }}
       className={`w-[95%] h-[93%] rounded-xl bg-black border border-white/10 relative overflow-hidden flex flex-col p-10 shadow-[inset_0_0_50px_rgba(0,0,0,1)]`}
     >
       {/* Show the boot screen overlay if booting, otherwise show normal content! */}
@@ -211,7 +211,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
       <div className="text-base font-mono text-green-400 mb-1 drop-shadow-md">$ {screenData.subtitle}</div>
       <div className="text-base font-mono text-blue-300/80 mb-8 animate-pulse drop-shadow-md">[INFO] Processing layout data...</div>
       
-      <h1 className={`text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r ${screenData.gradient} mt-auto transition-all duration-700 filter drop-shadow-lg`}>
+      <h1 className={`text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r ${screenData.gradient} mt-auto transition-all duration-700 [text-shadow:0_4px_20px_rgba(0,0,0,0.5)]`}>
         {screenData.title}
       </h1>
       
@@ -241,7 +241,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
               transition={{ duration: 0.4 }}
               className="flex flex-col items-center text-center w-full mt-2"
             >
-              <h3 className={`text-base font-black leading-[1.3] mb-6 text-transparent bg-clip-text bg-gradient-to-r ${reviewsData[currentReviewIndex].gradient} filter drop-shadow-md`}>
+              <h3 className={`text-base font-black leading-[1.3] mb-6 text-transparent bg-clip-text bg-gradient-to-r ${reviewsData[currentReviewIndex].gradient} [text-shadow:0_4px_10px_rgba(0,0,0,0.5)]`}>
                 "{reviewsData[currentReviewIndex].text}"
               </h3>
               
@@ -290,12 +290,13 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
             x: laptopX, 
             y: actualY, 
             rotateY: laptopRotateY, 
-            scale: actualScale
+            scale: actualScale,
+            willChange: "transform"
           }}
           className="relative flex flex-col items-center transform-style-preserve-3d transition-transform duration-300"
         >
           <motion.div 
-            style={{ rotateX: actualRotateX, transformOrigin: "bottom" }}
+            style={{ rotateX: actualRotateX, transformOrigin: "bottom", willChange: "transform" }}
             className={`relative w-[650px] h-[420px] rounded-t-[2rem] border-[3px] ${bootPhase < 3 ? 'border-[#1a1a1a] bg-[#0a0a0a]' : 'border-zinc-700 bg-zinc-900'} shadow-[0_-20px_50px_rgba(255,255,255,0.05)] flex items-center justify-center overflow-hidden z-20 transition-colors duration-1000`}
           >
             <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-60" />
@@ -311,7 +312,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
           {/* Laptop Base */}
           <div className={`relative w-[650px] h-[25px] rounded-b-2xl border ${bootPhase < 3 ? 'border-[#1a1a1a] bg-[#2a2a2a]' : 'border-zinc-600 bg-zinc-800'} shadow-[0_40px_80px_rgba(0,0,0,1)] z-10 transition-colors duration-1000`}>
             <div className="absolute top-0 inset-x-0 h-[2px] bg-white/40" />
-            <div className="absolute -bottom-[6px] inset-x-4 h-[6px] bg-zinc-900/80 rounded-b-full blur-[3px]" />
+            <div className="absolute -bottom-[6px] inset-x-4 h-[6px] bg-zinc-900/80 rounded-b-full shadow-[0_4px_10px_rgba(0,0,0,0.5)]" />
             <div className="absolute left-1/2 -translate-x-1/2 top-0 w-[100px] h-[4px] bg-zinc-600 rounded-b-md" />
             <div 
               className={`absolute -top-[300px] inset-x-0 h-[300px] ${bootPhase < 3 ? 'bg-[#1a1a1a]' : 'bg-zinc-800/90'} border border-white/10 rounded-t-xl transition-colors duration-1000`}
@@ -322,7 +323,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
             </div>
           </div>
           
-          <div className="absolute -bottom-[120px] w-[800px] h-[60px] bg-cyan-900/30 blur-[50px] rounded-full" />
+          <div className="absolute -bottom-[120px] w-[800px] h-[60px] bg-[radial-gradient(ellipse_at_center,rgba(8,145,178,0.3)_0%,transparent_70%)] rounded-full pointer-events-none" />
         </motion.div>
       )}
 
@@ -334,6 +335,7 @@ export default function GlassBook({ isBootComplete = false, onBootComplete }: { 
             y: actualY,
             x: laptopX,
             rotateY: laptopRotateY,
+            willChange: "transform"
           }}
           className="relative w-[55vw] max-w-[240px] aspect-[1/2.05] perspective-[2000px] flex items-center justify-center mx-auto"
         >
