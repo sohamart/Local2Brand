@@ -1,16 +1,53 @@
-# React + Vite
+# LOCAL2BRAND
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> **Build Local. Think Global.**
 
-Currently, two official plugins are available:
+A high-end, production-quality digital agency platform and ready-made website showcase with a frictionless WhatsApp direct ordering system.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 📁 Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+local2brand/
+├── frontend/             # Complete React + Vite + Tailwind v4 Web Application
+│   ├── src/              # React components, pages, data, and styles
+│   ├── public/           # Static assets and icons
+│   ├── package.json      # Dependencies and scripts
+│   └── vite.config.js    # Vite configuration
+├── .gitignore            # Root git ignore rules
+└── README.md             # Repository documentation
+```
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## 🚀 Quick Start
+
+### 1. Navigate to the Frontend directory
+```bash
+cd frontend
+```
+
+### 2. Install dependencies (if not already installed)
+```bash
+npm install
+```
+
+### 3. Run the development server
+```bash
+npm run dev
+```
+
+### 4. Build for production
+```bash
+npm run build
+```
+
+---
+
+## 🇮🇳 Key Highlights
+- **Fixed Light Liquid-Glass Theme System**: Tailored `@theme` tokens with 3D waterdrop navbar, subtle specular sheen, and animated Ashoka Chakra.
+- **WhatsApp Direct Order Engine**: Instant modal order formatting for WhatsApp business consultation.
+- **100% Mobile & 4K Responsive**: Pixel-perfect viewports across 320px smartphones to widescreen monitors.
+- **Interactive Physics Background**: Canvas 2D animated mouse repulsion wave & custom fluid cursor.
+- **9 Ready-Made Templates & Showcase**: Real-time device simulator with Desktop, Tablet, and Mobile viewports.
