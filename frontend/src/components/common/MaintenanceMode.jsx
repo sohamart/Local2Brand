@@ -84,9 +84,9 @@ export default function MaintenanceMode({ onBypassSuccess }) {
   }, []);
 
   const getInstagramUsername = () => {
-    const rawUrl = siteConfig.socialLinks.instagram || 'https://instagram.com/local2brand';
+    const rawUrl = siteConfig.socialLinks.instagram || 'https://www.instagram.com/local2brand_official?igsi=MWxjOHNjcTl0aDhjMQ==';
     const match = rawUrl.match(/instagram\.com\/([a-zA-Z0-9._]+)/);
-    return match ? match[1] : 'local2brand';
+    return match ? match[1] : 'local2brand_official';
   };
 
   const handleFormChange = (e) => {
