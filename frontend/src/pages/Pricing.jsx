@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Sparkles, ArrowRight, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Check, X, Sparkles, ArrowRight, ShieldCheck, HelpCircle, Tag } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
 import { pricingPlans, featureMatrix } from '../data/pricing';
@@ -19,7 +19,7 @@ export default function Pricing() {
         description="Explore our transparent fixed-price website packages. Starter, Professional, and Custom Enterprise tiers with instant WhatsApp ordering and 48h turnaround."
       />
 
-      <div className="pt-32 sm:pt-40 pb-20">
+      <div className="pt-28 xs:pt-32 sm:pt-40 pb-20">
         
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -33,8 +33,8 @@ export default function Pricing() {
             subtitle="No hidden fees, recurring lock-ins, or surprise invoices. Choose the package that matches your ambition, with instant UPI and WhatsApp confirmation."
           />
 
-          {/* Currency Toggle */}
-          <div className="mt-8 flex justify-center">
+          {/* Currency Toggle & Active Offer Banner */}
+          <div className="mt-8 flex flex-col items-center justify-center gap-4">
             <div className="p-1 rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-sm inline-flex items-center gap-1">
               <button
                 onClick={() => setCurrency('INR')}
@@ -57,11 +57,35 @@ export default function Pricing() {
                 <span>🌐 USD ($)</span>
               </button>
             </div>
+
+            {/* Festive Launch Offer Banner */}
+            <div className="w-full max-w-2xl p-3.5 sm:py-3.5 sm:px-6 rounded-2xl bg-amber-50/90 border-2 border-amber-300/80 shadow-glass flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+                  20%
+                </div>
+                <div>
+                  <div className="text-xs sm:text-sm font-extrabold text-amber-950">
+                    Launch Special: Flat 20% Instant Discount
+                  </div>
+                  <div className="text-[11px] text-amber-800">
+                    Use coupon code <strong className="font-mono bg-amber-200/80 px-1.5 py-0.5 rounded text-amber-950 font-bold">INDIA2025</strong> at checkout
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => openOrderModal({ websiteType: 'Offer Code: INDIA2025 (20% OFF)' })}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm transition-all cursor-pointer hover:opacity-95 shrink-0"
+              >
+                Claim 20% OFF
+              </button>
+            </div>
           </div>
         </div>
 
         {/* 3 Pricing Cards Grid */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 sm:mt-14">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
             {pricingPlans.map((plan) => {
               const isPopular = plan.popular;
@@ -158,7 +182,7 @@ export default function Pricing() {
               Detailed Feature Comparison
             </h2>
             <p className="text-slate-600 text-sm mt-2">
-              Compare every technical deliverable and specification across our plans.
+              Compare every technical deliverable and specification across our tiers.
             </p>
           </div>
 
@@ -166,38 +190,49 @@ export default function Pricing() {
             <table className="w-full text-left text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="py-4 px-4 font-bold text-slate-900">Features & Deliverables</th>
-                  <th className="py-4 px-4 font-bold text-slate-900 text-center">Starter</th>
-                  <th className="py-4 px-4 font-bold text-purple-600 text-center">Professional</th>
-                  <th className="py-4 px-4 font-bold text-slate-900 text-center">Custom</th>
+                  <th className="py-4 px-4 font-bold text-slate-900 w-2/5">Features & Deliverables</th>
+                  <th className="py-4 px-4 font-bold text-slate-900 text-center w-1/5">Starter</th>
+                  <th className="py-4 px-4 font-bold text-purple-600 text-center w-1/5 bg-purple-50/50 rounded-t-lg">Professional</th>
+                  <th className="py-4 px-4 font-bold text-slate-900 text-center w-1/5">Custom</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-600">
-                {featureMatrix.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3.5 px-4 font-medium text-slate-800">{row.feature}</td>
-                    <td className="py-3.5 px-4 text-center">
-                      {typeof row.starter === 'boolean' ? (
-                        row.starter ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
-                      ) : (
-                        <span className="font-semibold text-slate-700">{row.starter}</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-center bg-purple-50/30">
-                      {typeof row.pro === 'boolean' ? (
-                        row.pro ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
-                      ) : (
-                        <span className="font-bold text-purple-700">{row.pro}</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-center">
-                      {typeof row.custom === 'boolean' ? (
-                        row.custom ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
-                      ) : (
-                        <span className="font-semibold text-slate-700">{row.custom}</span>
-                      )}
-                    </td>
-                  </tr>
+                {featureMatrix.map((group, groupIdx) => (
+                  <React.Fragment key={groupIdx}>
+                    {/* Category Header Row */}
+                    <tr className="bg-slate-100/70">
+                      <td colSpan={4} className="py-2.5 px-4 font-extrabold text-slate-900 uppercase text-[11px] tracking-wider">
+                        {group.category}
+                      </td>
+                    </tr>
+                    {/* Items within Category */}
+                    {group.items.map((item, itemIdx) => (
+                      <tr key={itemIdx} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-3 px-4 font-medium text-slate-800">{item.name}</td>
+                        <td className="py-3 px-4 text-center">
+                          {typeof item.starter === 'boolean' ? (
+                            item.starter ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
+                          ) : (
+                            <span className="font-semibold text-slate-700">{item.starter}</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center bg-purple-50/30">
+                          {typeof item.professional === 'boolean' ? (
+                            item.professional ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
+                          ) : (
+                            <span className="font-bold text-purple-700">{item.professional}</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {typeof item.custom === 'boolean' ? (
+                            item.custom ? <Check className="w-4 h-4 text-emerald-600 mx-auto" /> : <X className="w-4 h-4 text-slate-300 mx-auto" />
+                          ) : (
+                            <span className="font-semibold text-slate-700">{item.custom}</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

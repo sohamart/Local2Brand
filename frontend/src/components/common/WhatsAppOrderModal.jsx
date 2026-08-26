@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Sparkles, Phone, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { X, Send, Sparkles, Phone, MessageSquare, CheckCircle2, Tag, Check } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { generateWhatsAppOrderUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import { siteConfig } from '../../config/siteConfig';
@@ -18,6 +18,8 @@ export default function WhatsAppOrderModal() {
     requirements: ''
   });
 
+  const [couponInput, setCouponInput] = useState('INDIA2025');
+  const [isCouponApplied, setIsCouponApplied] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -27,12 +29,13 @@ export default function WhatsAppOrderModal() {
         businessName: '',
         whatsapp: '',
         email: '',
-        websiteType: modalData.websiteType || 'Business Website',
+        websiteType: modalData.websiteType || 'Business Website (from ₹9,999)',
         selectedDemo: modalData.selectedDemo || '',
         requirements: modalData.initialRequirements || ''
       });
+      setCouponInput('INDIA2025');
+      setIsCouponApplied(true);
       setIsSubmitting(false);
-      // Lock background scroll safely
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
@@ -50,17 +53,33 @@ export default function WhatsAppOrderModal() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleApplyCoupon = (e) => {
+    e.preventDefault();
+    if (couponInput.trim().toUpperCase() === 'INDIA2025' || couponInput.trim().toUpperCase() === 'LAUNCH20') {
+      setIsCouponApplied(true);
+    } else {
+      setIsCouponApplied(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const whatsappUrl = generateWhatsAppOrderUrl(formData);
+    const payload = {
+      ...formData,
+      couponCode: isCouponApplied ? couponInput.trim().toUpperCase() : '',
+      discountText: isCouponApplied ? '20% OFF Launch Special' : '',
+      finalPrice: isCouponApplied ? 'Discount Applied (20% OFF)' : 'Standard Package Price'
+    };
+
+    const whatsappUrl = generateWhatsAppOrderUrl(payload);
     
     setTimeout(() => {
       openWhatsAppChat(whatsappUrl);
       setIsSubmitting(false);
       closeOrderModal();
-    }, 350);
+    }, 300);
   };
 
   return (
@@ -78,7 +97,7 @@ export default function WhatsAppOrderModal() {
         onClick={closeOrderModal}
       />
 
-      {/* Scrollable Container */}
+      {/* Scrollable Centering Container */}
       <div 
         className="min-h-full flex items-center justify-center p-3.5 sm:p-6 py-8 sm:py-12 pointer-events-none relative z-10"
         data-lenis-prevent="true"
@@ -105,14 +124,56 @@ export default function WhatsAppOrderModal() {
           <div className="mb-5 sm:mb-6 pr-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">
               <AshokaChakra size={12} />
-              <span>🇮🇳 Fast WhatsApp Direct Order Flow</span>
+              <span>Direct WhatsApp Order Form</span>
             </div>
             <h3 className="text-xl xs:text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
               {modalData.selectedDemo ? `Get "${modalData.selectedDemo}"` : 'Start Your Website'}
             </h3>
             <p className="text-slate-600 text-xs sm:text-sm mt-1">
-              Fill in your project details below to launch our instant WhatsApp consultation with our founders.
+              Fill in your details below. Your project and applied offer will open directly on WhatsApp with our founding team.
             </p>
+          </div>
+
+          {/* Applied Offer Box */}
+          <div className="mb-5 p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-emerald-500/10 border border-amber-300/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                <Tag className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                  <span>Promo Code: {couponInput}</span>
+                  {isCouponApplied && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-600" />
+                      <span>20% OFF Applied</span>
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-slate-600">
+                  {isCouponApplied 
+                    ? '🎉 Flat 20% discount + Free 1-Year Domain & SSL will be applied!' 
+                    : 'Enter code INDIA2025 for 20% discount.'}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 w-full sm:w-auto">
+              <input
+                type="text"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                placeholder="Coupon"
+                className="w-24 sm:w-28 px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-xs font-mono font-bold uppercase text-slate-800"
+              />
+              <button
+                type="button"
+                onClick={handleApplyCoupon}
+                className="px-3 py-1 rounded-lg text-xs font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 transition-colors cursor-pointer"
+              >
+                Apply
+              </button>
+            </div>
           </div>
 
           {/* Form */}
@@ -196,12 +257,12 @@ export default function WhatsAppOrderModal() {
                   onChange={handleChange}
                   className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
                 >
-                  <option value="Business Website (from ₹9,999)">Business Website (from ₹9,999 / $399)</option>
+                  <option value="Starter Website (from ₹9,999)">Starter Website (from ₹9,999 / $399)</option>
+                  <option value="Professional Website (from ₹19,999)">Professional Website (from ₹19,999 / $799)</option>
                   <option value="Landing Page (from ₹5,999)">High-Converting Landing Page</option>
-                  <option value="Portfolio Website">Portfolio / Personal Brand</option>
-                  <option value="D2C / E-commerce Store">D2C / E-commerce Store</option>
                   <option value="Ready-Made Demo Customization">Ready-Made Demo Customization (48h)</option>
-                  <option value="Custom Web Application">Custom Web Application</option>
+                  <option value="D2C / E-commerce Store">D2C / E-commerce Store</option>
+                  <option value="Custom Enterprise Web App">Custom Enterprise Web App</option>
                 </select>
               </div>
 
@@ -224,32 +285,16 @@ export default function WhatsAppOrderModal() {
             {/* Additional Requirements */}
             <div>
               <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                Project Needs & Customization Details
+                Project Details / Preferred Colors
               </label>
               <textarea
                 name="requirements"
-                rows="3"
-                placeholder="Tell us about your brand, preferred sections, target launch date, GST details, or any specific features..."
+                rows="2"
+                placeholder="Tell us about your brand, preferred launch date, GST requirements..."
                 value={formData.requirements}
                 onChange={handleChange}
                 className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all resize-none"
               ></textarea>
-            </div>
-
-            {/* Trust points */}
-            <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 pt-1">
-              <span className="inline-flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                Direct Founder Access
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                GST Invoice Available
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                100% WhatsApp Confirmation
-              </span>
             </div>
 
             {/* Submit Action */}
@@ -260,17 +305,17 @@ export default function WhatsAppOrderModal() {
                 className="w-full py-3.5 sm:py-4 px-6 rounded-btn font-bold text-sm sm:text-base text-white l2b-gradient-bg shadow-glass-highlight active:scale-[0.99] transition-all flex items-center justify-center gap-2 group cursor-pointer hover:opacity-95"
               >
                 {isSubmitting ? (
-                  <span>Launching WhatsApp...</span>
+                  <span>Opening WhatsApp...</span>
                 ) : (
                   <>
                     <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                    <span>Send Order on WhatsApp</span>
+                    <span>Send Order with 20% OFF to WhatsApp</span>
                     <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </button>
               <p className="text-center text-[10px] sm:text-xs text-slate-400 mt-2">
-                Opens WhatsApp with your pre-formatted order summary for instant confirmation with our Indian team.
+                Opens WhatsApp with your pre-formatted order summary & applied discount for instant kickoff.
               </p>
             </div>
           </form>

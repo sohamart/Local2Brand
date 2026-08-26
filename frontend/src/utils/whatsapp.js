@@ -11,26 +11,31 @@ export function generateWhatsAppOrderUrl(formData = {}) {
     email = '',
     websiteType = 'Custom Website',
     selectedDemo = 'Custom Requirement',
+    couponCode = '',
+    discountText = '',
+    finalPrice = '',
     requirements = 'I would like to discuss a website tailored for my business.'
   } = formData;
 
   const lines = [
     `👋 Hello ${siteConfig.brandName},`,
     '',
-    'I am interested in getting a website for my brand/business.',
+    'I want to start my website project with you.',
     '',
     `👤 *Name:* ${name || 'Not provided'}`,
-    `🏢 *Business Name:* ${businessName || 'Not provided'}`,
-    `📱 *Client Phone/WhatsApp:* ${whatsapp || 'Not provided'}`,
+    `🏢 *Business / Brand:* ${businessName || 'Not provided'}`,
+    `📱 *WhatsApp/Phone:* ${whatsapp || 'Not provided'}`,
     `📧 *Email:* ${email || 'Not provided'}`,
-    `🏷️ *Selected Demo:* ${selectedDemo}`,
     `🌐 *Website Type:* ${websiteType}`,
-    `📝 *Requirements:*`,
-    `${requirements || 'None specified.'}`,
+    selectedDemo ? `🏷️ *Template Reference:* ${selectedDemo}` : '',
+    couponCode ? `🔥 *Applied Coupon:* ${couponCode} (${discountText || '20% OFF'})` : '',
+    finalPrice ? `💰 *Estimated Price:* ${finalPrice}` : '',
+    `📝 *Project Requirements:*`,
+    `${requirements || 'Ready for 48h launch kickoff.'}`,
     '',
-    'Please share the next steps, customization details, and final pricing.',
+    'Please confirm project kickoff and next steps on WhatsApp.',
     'Thank you!'
-  ];
+  ].filter(Boolean);
 
   const fullMessage = lines.join('\n');
   const encoded = encodeURIComponent(fullMessage);
