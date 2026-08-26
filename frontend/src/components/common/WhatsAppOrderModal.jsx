@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Sparkles, Phone, MessageSquare, CheckCircle2, Tag, Check } from 'lucide-react';
+import { X, Send, Sparkles, Phone, MessageSquare, CheckCircle2, Tag, Check, CheckCircle, AlertCircle } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { generateWhatsAppOrderUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import { siteConfig } from '../../config/siteConfig';
@@ -20,6 +20,8 @@ export default function WhatsAppOrderModal() {
 
   const [couponInput, setCouponInput] = useState('INDIA2025');
   const [isCouponApplied, setIsCouponApplied] = useState(true);
+  const [showAppliedToast, setShowAppliedToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -29,16 +31,23 @@ export default function WhatsAppOrderModal() {
         businessName: '',
         whatsapp: '',
         email: '',
-        websiteType: modalData.websiteType || 'Business Website (from ₹9,999)',
+        websiteType: modalData.websiteType || 'Starter Website (from ₹9,999)',
         selectedDemo: modalData.selectedDemo || '',
         requirements: modalData.initialRequirements || ''
       });
       setCouponInput('INDIA2025');
       setIsCouponApplied(true);
+      setShowAppliedToast(true);
+      setToastMessage('🎉 Launch Offer "INDIA2025" Applied: Flat 20% OFF (-₹2,000 / -$80)!');
       setIsSubmitting(false);
       document.body.style.overflow = 'hidden';
+
+      // Auto-hide toast after 4s
+      const timer = setTimeout(() => setShowAppliedToast(false), 4500);
+      return () => clearTimeout(timer);
     } else {
       document.body.style.overflow = 'auto';
+      setShowAppliedToast(false);
     }
 
     return () => {
@@ -55,11 +64,29 @@ export default function WhatsAppOrderModal() {
 
   const handleApplyCoupon = (e) => {
     e.preventDefault();
-    if (couponInput.trim().toUpperCase() === 'INDIA2025' || couponInput.trim().toUpperCase() === 'LAUNCH20') {
+    const cleanCode = couponInput.trim().toUpperCase();
+
+    if (cleanCode === 'INDIA2025' || cleanCode === 'LAUNCH20' || cleanCode === 'FESTIVE20') {
       setIsCouponApplied(true);
+      setShowAppliedToast(true);
+      setToastMessage(`🎉 Coupon "${cleanCode}" Applied! 20% Discount Activated.`);
+      setTimeout(() => setShowAppliedToast(false), 4000);
+    } else if (cleanCode === '') {
+      setIsCouponApplied(false);
     } else {
       setIsCouponApplied(false);
+      setShowAppliedToast(true);
+      setToastMessage('⚠️ Invalid coupon code. Try code "INDIA2025".');
+      setTimeout(() => setShowAppliedToast(false), 3500);
     }
+  };
+
+  const handleRemoveCoupon = () => {
+    setIsCouponApplied(false);
+    setCouponInput('');
+    setShowAppliedToast(true);
+    setToastMessage('Coupon removed.');
+    setTimeout(() => setShowAppliedToast(false), 2500);
   };
 
   const handleSubmit = (e) => {
@@ -70,7 +97,7 @@ export default function WhatsAppOrderModal() {
       ...formData,
       couponCode: isCouponApplied ? couponInput.trim().toUpperCase() : '',
       discountText: isCouponApplied ? '20% OFF Launch Special' : '',
-      finalPrice: isCouponApplied ? 'Discount Applied (20% OFF)' : 'Standard Package Price'
+      finalPrice: isCouponApplied ? '20% OFF Discount Applied' : 'Standard Pricing'
     };
 
     const whatsappUrl = generateWhatsAppOrderUrl(payload);
@@ -120,8 +147,24 @@ export default function WhatsAppOrderModal() {
             <X className="w-5 h-5" />
           </button>
 
+          {/* Animated Offer Applied Popup / Toast Alert */}
+          {showAppliedToast && (
+            <div className="mb-4 p-3 rounded-xl bg-slate-900 text-white text-xs flex items-center justify-between gap-2 shadow-lg animate-in slide-in-from-top-2 duration-200 border border-slate-700">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400 shrink-0 animate-spin" />
+                <span className="font-bold text-slate-100">{toastMessage}</span>
+              </div>
+              <button 
+                onClick={() => setShowAppliedToast(false)}
+                className="text-slate-400 hover:text-white p-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* Modal Header */}
-          <div className="mb-5 sm:mb-6 pr-8">
+          <div className="mb-4 sm:mb-5 pr-8">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">
               <AshokaChakra size={12} />
               <span>Direct WhatsApp Order Form</span>
@@ -130,49 +173,79 @@ export default function WhatsAppOrderModal() {
               {modalData.selectedDemo ? `Get "${modalData.selectedDemo}"` : 'Start Your Website'}
             </h3>
             <p className="text-slate-600 text-xs sm:text-sm mt-1">
-              Fill in your details below. Your project and applied offer will open directly on WhatsApp with our founding team.
+              Your project details and applied discount will open directly on WhatsApp with our founding team.
             </p>
           </div>
 
-          {/* Applied Offer Box */}
-          <div className="mb-5 p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-emerald-500/10 border border-amber-300/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                <Tag className="w-4 h-4" />
-              </div>
-              <div className="text-left">
-                <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                  <span>Promo Code: {couponInput}</span>
-                  {isCouponApplied && (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center gap-1">
-                      <Check className="w-3 h-3 text-emerald-600" />
-                      <span>20% OFF Applied</span>
-                    </span>
-                  )}
+          {/* Interactive Coupon Box with APPLIED Indicator */}
+          <div className={`mb-5 p-3.5 rounded-2xl border transition-all duration-200 ${
+            isCouponApplied
+              ? 'bg-emerald-50/80 border-emerald-300/80 shadow-xs'
+              : 'bg-amber-50/60 border-amber-200 shadow-xs'
+          }`}>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs ${
+                  isCouponApplied ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-950'
+                }`}>
+                  <Tag className="w-4 h-4" />
                 </div>
-                <div className="text-[11px] text-slate-600">
-                  {isCouponApplied 
-                    ? '🎉 Flat 20% discount + Free 1-Year Domain & SSL will be applied!' 
-                    : 'Enter code INDIA2025 for 20% discount.'}
+                <div className="text-left">
+                  <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                    <span>Coupon: <strong className="font-mono">{couponInput || 'NONE'}</strong></span>
+                    {isCouponApplied ? (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-2xs">
+                        <Check className="w-3 h-3" />
+                        <span>APPLIED (20% OFF)</span>
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">
+                        Not Applied
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-0.5">
+                    {isCouponApplied 
+                      ? '🎉 Flat 20% discount + Free 1-Year Custom Domain & SSL activated!' 
+                      : 'Enter code INDIA2025 to activate 20% discount.'}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-1.5 w-full sm:w-auto">
-              <input
-                type="text"
-                value={couponInput}
-                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                placeholder="Coupon"
-                className="w-24 sm:w-28 px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-xs font-mono font-bold uppercase text-slate-800"
-              />
-              <button
-                type="button"
-                onClick={handleApplyCoupon}
-                className="px-3 py-1 rounded-lg text-xs font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 transition-colors cursor-pointer"
-              >
-                Apply
-              </button>
+              {/* Input & Apply / Remove Actions */}
+              <div className="flex items-center gap-1.5 shrink-0 justify-end">
+                {!isCouponApplied ? (
+                  <>
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      placeholder="INDIA2025"
+                      className="w-28 px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all cursor-pointer shadow-xs"
+                    >
+                      Apply
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1 rounded-lg">
+                      ✓ APPLIED
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="text-[11px] font-semibold text-slate-500 hover:text-red-600 underline cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -309,7 +382,11 @@ export default function WhatsAppOrderModal() {
                 ) : (
                   <>
                     <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                    <span>Send Order with 20% OFF to WhatsApp</span>
+                    <span>
+                      {isCouponApplied 
+                        ? 'Send Order with 20% OFF to WhatsApp' 
+                        : 'Send Order on WhatsApp'}
+                    </span>
                     <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
