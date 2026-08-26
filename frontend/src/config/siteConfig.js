@@ -10,13 +10,18 @@ export const siteConfig = {
   fullDescription: import.meta.env.VITE_BRAND_FULL_DESC || "LOCAL2BRAND designs and develops bespoke, high-converting websites and modern digital products for ambitious businesses ready to scale locally and globally.",
   
   // WhatsApp & Contact details
-  // Note: whatsappNumber should be international format without '+' or spaces for wa.me URL
   whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "919876543210", 
   displayWhatsapp: import.meta.env.VITE_DISPLAY_WHATSAPP || "+91 98765 43210",
   email: import.meta.env.VITE_CONTACT_EMAIL || "hello@local2brand.com",
   phone: import.meta.env.VITE_CONTACT_PHONE || "+91 98765 43210",
   address: import.meta.env.VITE_CONTACT_ADDRESS || "Pan-India Hub • Mumbai, Bengaluru, Delhi, Kolkata & Global Edge",
   hours: import.meta.env.VITE_CONTACT_HOURS || "Mon - Sat: 9:00 AM - 9:00 PM IST",
+
+  // Maintenance & Coming Soon Controls
+  isMaintenanceMode: import.meta.env.VITE_MAINTENANCE_MODE === "true",
+  isComingSoonMode: import.meta.env.VITE_COMING_SOON_MODE === "true",
+  launchTargetDate: import.meta.env.VITE_LAUNCH_TARGET_DATE || "2026-09-01T00:00:00",
+  adminBypassPassword: import.meta.env.VITE_ADMIN_BYPASS_PASSWORD || "admin123",
 
   socialLinks: {
     instagram: import.meta.env.VITE_INSTAGRAM_URL || "https://instagram.com/local2brand",
