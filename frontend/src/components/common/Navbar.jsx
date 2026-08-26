@@ -55,11 +55,13 @@ export default function Navbar() {
             to="/" 
             className="flex items-center gap-2 sm:gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-xl p-0.5"
           >
-            {/* 3D Liquid Glass L2B Badge */}
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl l2b-gradient-bg p-[1.5px] shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform shrink-0 relative">
-              <div className="w-full h-full bg-white/15 backdrop-blur-md rounded-[10px] flex items-center justify-center text-white font-extrabold text-sm sm:text-base tracking-tighter border border-white/40">
-                L<span className="text-pink-200">2</span>B
-              </div>
+            {/* 3D Liquid Glass L2B Logo */}
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform shrink-0 border border-white/80 bg-white">
+              <img 
+                src="/logo.jpg" 
+                alt="LOCAL2BRAND Official 3D Logo" 
+                className="w-full h-full object-cover" 
+              />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">

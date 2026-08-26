@@ -24,10 +24,12 @@ export default function Footer() {
           {/* Brand Col */}
           <div className="lg:col-span-2 space-y-4">
             <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl l2b-gradient-bg p-[1.5px] shadow-md shadow-purple-500/25">
-                <div className="w-full h-full bg-white/15 backdrop-blur-md rounded-[10px] flex items-center justify-center text-white font-extrabold text-base tracking-tighter border border-white/40">
-                  L<span className="text-pink-200">2</span>B
-                </div>
+              <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/25 border border-white/80 bg-white">
+                <img 
+                  src="/logo.jpg" 
+                  alt="LOCAL2BRAND Official 3D Logo" 
+                  className="w-full h-full object-cover" 
+                />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
