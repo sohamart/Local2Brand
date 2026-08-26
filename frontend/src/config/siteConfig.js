@@ -20,11 +20,14 @@ export const siteConfig = {
   // Maintenance & Coming Soon Controls
   isMaintenanceMode: import.meta.env.VITE_MAINTENANCE_MODE === "true",
   isComingSoonMode: import.meta.env.VITE_COMING_SOON_MODE === "true",
-  launchTargetDate: import.meta.env.VITE_LAUNCH_TARGET_DATE || "2026-09-01T00:00:00",
+  launchTargetDate: import.meta.env.VITE_LAUNCH_TARGET_DATE || "2026-09-15T00:00:00",
   adminBypassPassword: import.meta.env.VITE_ADMIN_BYPASS_PASSWORD || "admin123",
 
+  // Instagram Configuration
+  instagramHandle: import.meta.env.VITE_INSTAGRAM_HANDLE || "local2brand",
+
   socialLinks: {
-    instagram: import.meta.env.VITE_INSTAGRAM_URL || "https://instagram.com/local2brand",
+    instagram: import.meta.env.VITE_INSTAGRAM_URL || `https://instagram.com/${import.meta.env.VITE_INSTAGRAM_HANDLE || "local2brand"}`,
     facebook: import.meta.env.VITE_FACEBOOK_URL || "https://facebook.com/local2brand",
     linkedin: import.meta.env.VITE_LINKEDIN_URL || "https://linkedin.com/company/local2brand",
     youtube: import.meta.env.VITE_YOUTUBE_URL || "https://youtube.com/@local2brand",
