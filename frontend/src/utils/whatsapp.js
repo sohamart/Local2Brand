@@ -1,6 +1,19 @@
 import { siteConfig } from '../config/siteConfig';
 
 /**
+ * Clean phone number to pure digits for wa.me URL
+ * Strips '+', spaces, dashes, brackets etc.
+ */
+function getSanitizedWhatsAppNumber() {
+  const rawNumber = 
+    import.meta.env.VITE_WHATSAPP_NUMBER || 
+    siteConfig.whatsappNumber || 
+    "919876543210";
+    
+  return String(rawNumber).replace(/[^0-9]/g, '');
+}
+
+/**
  * Builds an encoded WhatsApp URL for custom website orders
  */
 export function generateWhatsAppOrderUrl(formData = {}) {
@@ -10,15 +23,18 @@ export function generateWhatsAppOrderUrl(formData = {}) {
     whatsapp = '',
     email = '',
     websiteType = 'Custom Website',
-    selectedDemo = 'Custom Requirement',
+    selectedDemo = '',
     couponCode = '',
     discountText = '',
     finalPrice = '',
     requirements = 'I would like to discuss a website tailored for my business.'
   } = formData;
 
+  const brandName = import.meta.env.VITE_BRAND_NAME || siteConfig.brandName || "LOCAL2BRAND";
+  const targetNumber = getSanitizedWhatsAppNumber();
+
   const lines = [
-    `👋 Hello ${siteConfig.brandName},`,
+    `👋 Hello ${brandName},`,
     '',
     'I want to start my website project with you.',
     '',
@@ -29,9 +45,9 @@ export function generateWhatsAppOrderUrl(formData = {}) {
     `🌐 *Website Type:* ${websiteType}`,
     selectedDemo ? `🏷️ *Template Reference:* ${selectedDemo}` : '',
     couponCode ? `🔥 *Applied Coupon:* ${couponCode} (${discountText || '20% OFF'})` : '',
-    finalPrice ? `💰 *Estimated Price:* ${finalPrice}` : '',
+    finalPrice ? `💰 *Price Status:* ${finalPrice}` : '',
     `📝 *Project Requirements:*`,
-    `${requirements || 'Ready for 48h launch kickoff.'}`,
+    `${requirements || 'Ready for launch kickoff.'}`,
     '',
     'Please confirm project kickoff and next steps on WhatsApp.',
     'Thank you!'
@@ -40,16 +56,20 @@ export function generateWhatsAppOrderUrl(formData = {}) {
   const fullMessage = lines.join('\n');
   const encoded = encodeURIComponent(fullMessage);
   
-  return `https://wa.me/${siteConfig.whatsappNumber}?text=${encoded}`;
+  return `https://wa.me/${targetNumber}?text=${encoded}`;
 }
 
 /**
  * Builds a direct general consultation WhatsApp link
  */
 export function generateWhatsAppGeneralUrl(customMessage = '') {
+  const brandName = import.meta.env.VITE_BRAND_NAME || siteConfig.brandName || "LOCAL2BRAND";
+  const targetNumber = getSanitizedWhatsAppNumber();
+
   const defaultText = customMessage || 
-    `Hello ${siteConfig.brandName}, I would like to explore your website design & development services for my business.`;
-  return `https://wa.me/${siteConfig.whatsappNumber}?text=${encodeURIComponent(defaultText)}`;
+    `Hello ${brandName}, I would like to explore your website design & development services for my business.`;
+    
+  return `https://wa.me/${targetNumber}?text=${encodeURIComponent(defaultText)}`;
 }
 
 /**
