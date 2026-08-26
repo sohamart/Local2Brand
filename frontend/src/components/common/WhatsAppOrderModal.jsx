@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Sparkles, Phone, MessageSquare, CheckCircle2, Tag, Check, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Send, Sparkles, Phone, MessageSquare, CheckCircle2, Tag, Check, AlertCircle, Flame } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { generateWhatsAppOrderUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import { siteConfig } from '../../config/siteConfig';
@@ -19,7 +19,7 @@ export default function WhatsAppOrderModal() {
   });
 
   const [couponInput, setCouponInput] = useState('INDIA2025');
-  const [isCouponApplied, setIsCouponApplied] = useState(true);
+  const [isCouponApplied, setIsCouponApplied] = useState(false);
   const [showAppliedToast, setShowAppliedToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,16 +35,29 @@ export default function WhatsAppOrderModal() {
         selectedDemo: modalData.selectedDemo || '',
         requirements: modalData.initialRequirements || ''
       });
-      setCouponInput('INDIA2025');
-      setIsCouponApplied(true);
-      setShowAppliedToast(true);
-      setToastMessage('🎉 Launch Offer "INDIA2025" Applied: Flat 20% OFF (-₹2,000 / -$80)!');
+
+      // If user clicked an offer specifically (e.g. "Claim 20% OFF"), auto-apply!
+      // If user clicked generic "Get Started", do NOT auto-apply (they can click Apply).
+      const shouldAutoApply = modalData.autoApplyOffer || 
+        modalData.websiteType?.toLowerCase().includes('offer') || 
+        modalData.websiteType?.toLowerCase().includes('20%') || 
+        modalData.websiteType?.toLowerCase().includes('india2025');
+
+      if (shouldAutoApply) {
+        setCouponInput('INDIA2025');
+        setIsCouponApplied(true);
+        setShowAppliedToast(true);
+        setToastMessage('🎉 Launch Offer "INDIA2025" Applied: Flat 20% OFF Activated!');
+        const timer = setTimeout(() => setShowAppliedToast(false), 4000);
+        return () => clearTimeout(timer);
+      } else {
+        setCouponInput('INDIA2025');
+        setIsCouponApplied(false);
+        setShowAppliedToast(false);
+      }
+
       setIsSubmitting(false);
       document.body.style.overflow = 'hidden';
-
-      // Auto-hide toast after 4s
-      const timer = setTimeout(() => setShowAppliedToast(false), 4500);
-      return () => clearTimeout(timer);
     } else {
       document.body.style.overflow = 'auto';
       setShowAppliedToast(false);
@@ -63,22 +76,34 @@ export default function WhatsAppOrderModal() {
   };
 
   const handleApplyCoupon = (e) => {
-    e.preventDefault();
-    const cleanCode = couponInput.trim().toUpperCase();
+    if (e) e.preventDefault();
+    const cleanCode = (couponInput || '').trim().toUpperCase();
 
     if (cleanCode === 'INDIA2025' || cleanCode === 'LAUNCH20' || cleanCode === 'FESTIVE20') {
+      setCouponInput(cleanCode);
       setIsCouponApplied(true);
       setShowAppliedToast(true);
-      setToastMessage(`🎉 Coupon "${cleanCode}" Applied! 20% Discount Activated.`);
-      setTimeout(() => setShowAppliedToast(false), 4000);
+      setToastMessage(`🎉 Coupon "${cleanCode}" Applied: Flat 20% OFF Activated!`);
+      setTimeout(() => setShowAppliedToast(false), 3500);
     } else if (cleanCode === '') {
       setIsCouponApplied(false);
+      setShowAppliedToast(true);
+      setToastMessage('Please enter a coupon code (e.g. INDIA2025).');
+      setTimeout(() => setShowAppliedToast(false), 2500);
     } else {
       setIsCouponApplied(false);
       setShowAppliedToast(true);
-      setToastMessage('⚠️ Invalid coupon code. Try code "INDIA2025".');
-      setTimeout(() => setShowAppliedToast(false), 3500);
+      setToastMessage('⚠️ Invalid code. Try using code "INDIA2025".');
+      setTimeout(() => setShowAppliedToast(false), 3000);
     }
+  };
+
+  const handleQuickApplyIndia2025 = () => {
+    setCouponInput('INDIA2025');
+    setIsCouponApplied(true);
+    setShowAppliedToast(true);
+    setToastMessage('🎉 Coupon "INDIA2025" Applied: Flat 20% OFF Activated!');
+    setTimeout(() => setShowAppliedToast(false), 3500);
   };
 
   const handleRemoveCoupon = () => {
@@ -95,7 +120,7 @@ export default function WhatsAppOrderModal() {
 
     const payload = {
       ...formData,
-      couponCode: isCouponApplied ? couponInput.trim().toUpperCase() : '',
+      couponCode: isCouponApplied ? (couponInput.trim().toUpperCase() || 'INDIA2025') : '',
       discountText: isCouponApplied ? '20% OFF Launch Special' : '',
       finalPrice: isCouponApplied ? '20% OFF Discount Applied' : 'Standard Pricing'
     };
@@ -156,7 +181,7 @@ export default function WhatsAppOrderModal() {
               </div>
               <button 
                 onClick={() => setShowAppliedToast(false)}
-                className="text-slate-400 hover:text-white p-0.5"
+                className="text-slate-400 hover:text-white p-0.5 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -177,11 +202,11 @@ export default function WhatsAppOrderModal() {
             </p>
           </div>
 
-          {/* Interactive Coupon Box with APPLIED Indicator */}
+          {/* Interactive Coupon Box with Clear Apply & Applied States */}
           <div className={`mb-5 p-3.5 rounded-2xl border transition-all duration-200 ${
             isCouponApplied
-              ? 'bg-emerald-50/80 border-emerald-300/80 shadow-xs'
-              : 'bg-amber-50/60 border-amber-200 shadow-xs'
+              ? 'bg-emerald-50/90 border-emerald-300 shadow-xs'
+              : 'bg-amber-50/70 border-amber-200 shadow-xs'
           }`}>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
@@ -194,20 +219,25 @@ export default function WhatsAppOrderModal() {
                   <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5 flex-wrap">
                     <span>Coupon: <strong className="font-mono">{couponInput || 'NONE'}</strong></span>
                     {isCouponApplied ? (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-2xs">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-2xs animate-in zoom-in-95">
                         <Check className="w-3 h-3" />
                         <span>APPLIED (20% OFF)</span>
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold">
-                        Not Applied
-                      </span>
+                      <button
+                        type="button"
+                        onClick={handleQuickApplyIndia2025}
+                        className="px-2 py-0.5 rounded-full bg-amber-200 hover:bg-amber-300 text-amber-900 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      >
+                        <Flame className="w-3 h-3 text-amber-700 fill-amber-600" />
+                        <span>Click to Apply INDIA2025</span>
+                      </button>
                     )}
                   </div>
                   <div className="text-[11px] text-slate-600 mt-0.5">
                     {isCouponApplied 
                       ? '🎉 Flat 20% discount + Free 1-Year Custom Domain & SSL activated!' 
-                      : 'Enter code INDIA2025 to activate 20% discount.'}
+                      : 'Apply coupon INDIA2025 to save 20% on your order.'}
                   </div>
                 </div>
               </div>
@@ -215,26 +245,27 @@ export default function WhatsAppOrderModal() {
               {/* Input & Apply / Remove Actions */}
               <div className="flex items-center gap-1.5 shrink-0 justify-end">
                 {!isCouponApplied ? (
-                  <>
+                  <div className="flex items-center gap-1.5 w-full sm:w-auto">
                     <input
                       type="text"
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                       placeholder="INDIA2025"
-                      className="w-28 px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      className="w-28 px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
-                      className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all cursor-pointer shadow-xs"
+                      className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all cursor-pointer shadow-xs active:scale-95"
                     >
                       Apply
                     </button>
-                  </>
+                  </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1 rounded-lg">
-                      ✓ APPLIED
+                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>APPLIED</span>
                     </span>
                     <button
                       type="button"
