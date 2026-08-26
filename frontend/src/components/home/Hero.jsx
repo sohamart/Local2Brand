@@ -108,6 +108,32 @@ export default function Hero() {
               48h Superfast Delivery
             </span>
           </div>
+
+          {/* Animated Glowing 20% OFF Launch Offer Box */}
+          <div className="pt-6">
+            <div className="inline-flex flex-col sm:flex-row items-center gap-3 p-3 sm:py-2.5 sm:px-5 rounded-2xl bg-white/95 backdrop-blur-xl border-2 border-amber-400/50 shadow-glass-highlight relative overflow-hidden group">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-900 text-[10px] font-extrabold uppercase tracking-wider shadow-xs">
+                  🔥 Launch Offer
+                </span>
+                <span className="text-xs sm:text-sm font-bold text-slate-900">
+                  Flat <strong className="text-amber-600">20% OFF</strong> + Free 1-Yr SSL & Domain
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-500 font-mono bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-bold">
+                  CODE: INDIA2025
+                </span>
+                <button
+                  onClick={() => openOrderModal({ websiteType: 'Offer Code: INDIA2025 (20% OFF)' })}
+                  className="px-3.5 py-1 rounded-lg text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 cursor-pointer"
+                >
+                  Claim ₹2,000 OFF
+                </button>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-blue-500 to-emerald-500" />
+            </div>
+          </div>
         </div>
 
         {/* Sleek Minimal Showcase Frame with Dynamic Tabs */}

@@ -22,37 +22,63 @@ export default function PricingPreview() {
           subtitle="Fixed upfront pricing with rapid delivery, GST invoice support, and lifetime ownership. Choose the tier that best fits your business goals."
         />
 
-        {/* Currency Switcher */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <div className="p-1 rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-sm inline-flex items-center gap-1">
+        {/* Currency Switcher & Launch Offer Banner */}
+        <div className="mt-10 flex flex-col items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="p-1 rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-sm inline-flex items-center gap-1">
+              <button
+                onClick={() => setCurrency('INR')}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  currency === 'INR'
+                    ? 'bg-amber-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>🇮🇳 INR (₹)</span>
+              </button>
+              <button
+                onClick={() => setCurrency('USD')}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  currency === 'USD'
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <span>🌐 USD ($)</span>
+              </button>
+            </div>
+            <span className="text-xs text-slate-500 font-medium">
+              UPI / NetBanking / GST Invoice Supported
+            </span>
+          </div>
+
+          {/* Festive Launch Offer Card */}
+          <div className="w-full max-w-2xl p-3 sm:py-3 sm:px-6 rounded-2xl bg-amber-50/90 border border-amber-300/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 flex items-center justify-center font-bold text-sm shrink-0">
+                20%
+              </div>
+              <div>
+                <div className="text-xs font-extrabold text-amber-950">
+                  Launch Special: Flat 20% Instant Discount
+                </div>
+                <div className="text-[11px] text-amber-800">
+                  Use coupon code <strong className="font-mono bg-amber-200/70 px-1.5 py-0.5 rounded text-amber-900">INDIA2025</strong> at checkout
+                </div>
+              </div>
+            </div>
+
             <button
-              onClick={() => setCurrency('INR')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                currency === 'INR'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              onClick={() => openOrderModal({ websiteType: 'Offer Code: INDIA2025 (20% OFF)' })}
+              className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 shadow-sm transition-all cursor-pointer shrink-0"
             >
-              <span>🇮🇳 INR (₹)</span>
-            </button>
-            <button
-              onClick={() => setCurrency('USD')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                currency === 'USD'
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <span>🌐 USD ($)</span>
+              Apply Discount
             </button>
           </div>
-          <span className="text-xs text-slate-500 font-medium">
-            UPI / NetBanking / All Major Cards Accepted
-          </span>
         </div>
 
         {/* Pricing Cards Grid */}
-        <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        <div className="mt-8 sm:mt-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
           {pricingPlans.map((tier) => {
             const isPopular = tier.popular;
 

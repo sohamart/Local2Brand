@@ -5,7 +5,6 @@ import Footer from './components/common/Footer';
 import LiquidBackground from './components/common/LiquidBackground';
 import CustomCursor from './components/common/CustomCursor';
 import WhatsAppOrderModal from './components/common/WhatsAppOrderModal';
-import TopOfferBanner from './components/common/TopOfferBanner';
 import Chatbot from './components/common/Chatbot';
 import { OrderModalProvider } from './context/OrderModalContext';
 
@@ -42,9 +41,6 @@ export default function App() {
 
         {/* Ambient Liquid Glass Mesh Background */}
         <LiquidBackground />
-
-        {/* Top Launch Offer Ribbon */}
-        <TopOfferBanner />
 
         {/* Global Floating Glass Navbar */}
         <Navbar />

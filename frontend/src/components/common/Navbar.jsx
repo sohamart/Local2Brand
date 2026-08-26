@@ -42,9 +42,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`fixed left-0 right-0 z-40 px-3 xs:px-4 sm:px-6 lg:px-8 transition-all duration-300 pointer-events-none ${
-        isScrolled ? 'top-0 pt-2 sm:pt-3' : 'top-8 sm:top-9 pt-1.5 sm:pt-2'
-      }`}>
+      <header className="fixed top-0 left-0 right-0 z-40 px-3 xs:px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 transition-all duration-300 pointer-events-none">
         <nav
           className={`max-w-7xl mx-auto rounded-full transition-all duration-300 pointer-events-auto flex items-center justify-between px-3.5 sm:px-6 relative overflow-hidden ${
             isScrolled
@@ -99,7 +97,16 @@ export default function Navbar() {
           </div>
 
           {/* Desktop CTA Action Buttons */}
-          <div className="hidden sm:flex items-center gap-2.5">
+          <div className="hidden sm:flex items-center gap-2">
+            {/* 20% OFF Offer Pill */}
+            <button
+              onClick={() => openOrderModal({ websiteType: 'Offer Code: INDIA2025 (20% OFF)' })}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-300/80 shadow-xs transition-all cursor-pointer animate-pulse"
+              title="Claim 20% OFF Launch Offer"
+            >
+              <span>🔥 20% OFF</span>
+            </button>
+
             {/* Direct WhatsApp Button */}
             <button
               onClick={handleWhatsAppQuickChat}
