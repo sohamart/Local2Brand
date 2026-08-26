@@ -6,6 +6,7 @@ import LiquidBackground from './components/common/LiquidBackground';
 import CustomCursor from './components/common/CustomCursor';
 import WhatsAppOrderModal from './components/common/WhatsAppOrderModal';
 import Chatbot from './components/common/Chatbot';
+import Preloader from './components/common/Preloader';
 import { OrderModalProvider } from './context/OrderModalContext';
 
 // Pages
@@ -36,6 +37,9 @@ export default function App() {
       <div className="relative min-h-screen flex flex-col font-sans text-slate-900 selection:bg-purple-600 selection:text-white">
         <ScrollToTop />
         
+        {/* Animated Initial Liquid Glass Preloader */}
+        <Preloader />
+
         {/* Precision Fluid Pointer Dot & Ring Cursor */}
         <CustomCursor />
 
