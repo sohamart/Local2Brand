@@ -42,7 +42,9 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 px-3 xs:px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 transition-all duration-300 pointer-events-none">
+      <header className={`fixed left-0 right-0 z-40 px-3 xs:px-4 sm:px-6 lg:px-8 transition-all duration-300 pointer-events-none ${
+        isScrolled ? 'top-0 pt-2 sm:pt-3' : 'top-8 sm:top-9 pt-1.5 sm:pt-2'
+      }`}>
         <nav
           className={`max-w-7xl mx-auto rounded-full transition-all duration-300 pointer-events-auto flex items-center justify-between px-3.5 sm:px-6 relative overflow-hidden ${
             isScrolled

@@ -5,6 +5,8 @@ import Footer from './components/common/Footer';
 import LiquidBackground from './components/common/LiquidBackground';
 import CustomCursor from './components/common/CustomCursor';
 import WhatsAppOrderModal from './components/common/WhatsAppOrderModal';
+import TopOfferBanner from './components/common/TopOfferBanner';
+import Chatbot from './components/common/Chatbot';
 import { OrderModalProvider } from './context/OrderModalContext';
 
 // Pages
@@ -32,7 +34,7 @@ function ScrollToTop() {
 export default function App() {
   return (
     <OrderModalProvider>
-      <div className="relative min-h-screen flex flex-col font-sans text-slate-900 selection:bg-brand-600 selection:text-white">
+      <div className="relative min-h-screen flex flex-col font-sans text-slate-900 selection:bg-purple-600 selection:text-white">
         <ScrollToTop />
         
         {/* Precision Fluid Pointer Dot & Ring Cursor */}
@@ -40,6 +42,9 @@ export default function App() {
 
         {/* Ambient Liquid Glass Mesh Background */}
         <LiquidBackground />
+
+        {/* Top Launch Offer Ribbon */}
+        <TopOfferBanner />
 
         {/* Global Floating Glass Navbar */}
         <Navbar />
@@ -62,6 +67,9 @@ export default function App() {
 
         {/* Global Footer */}
         <Footer />
+
+        {/* Floating Animated BrandBot Concierge */}
+        <Chatbot />
 
         {/* Global WhatsApp Order Modal */}
         <WhatsAppOrderModal />
