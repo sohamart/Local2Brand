@@ -21,7 +21,7 @@ export default function FAQSection() {
       <div className="section-glow section-glow-blue top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px]" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         <SectionHeading
           badge="Frequently Asked Questions"
           title="Got Questions? We Have Answers."
@@ -36,11 +36,10 @@ export default function FAQSection() {
             return (
               <div
                 key={faq.question}
-                className={`glass-panel rounded-2xl transition-all duration-200 overflow-hidden border ${
-                  isOpen
+                className={`glass-panel rounded-2xl transition-all duration-200 overflow-hidden border ${isOpen
                     ? 'border-purple-300 shadow-glass bg-white'
                     : 'border-white/90 hover:border-slate-300/80 bg-white/70'
-                }`}
+                  }`}
               >
                 <button
                   onClick={() => toggleFAQ(index)}
@@ -51,9 +50,8 @@ export default function FAQSection() {
                     {faq.question}
                   </span>
 
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                    isOpen ? 'bg-purple-50 text-purple-600' : 'bg-slate-100 text-slate-500'
-                  }`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors ${isOpen ? 'bg-purple-50 text-purple-600' : 'bg-slate-100 text-slate-500'
+                    }`}>
                     {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                   </div>
                 </button>

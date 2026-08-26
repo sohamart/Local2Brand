@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  ArrowRight, 
-  Sparkles, 
+import {
+  ArrowRight,
+  Sparkles,
   ExternalLink,
   Globe,
   Zap,
@@ -47,7 +47,7 @@ export default function Hero() {
   return (
     <section className="relative pt-32 sm:pt-40 lg:pt-44 pb-16 sm:pb-20 overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Top Pill Badge with Animated Ashoka Chakra */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-sm text-xs font-semibold text-slate-800 animate-float relative overflow-hidden">
@@ -138,7 +138,7 @@ export default function Hero() {
 
         {/* Sleek Minimal Showcase Frame with Dynamic Tabs */}
         <div className="mt-14 sm:mt-16 max-w-4xl mx-auto">
-          
+
           {/* Minimal Tab Switcher */}
           <div className="flex items-center justify-between gap-2 mb-3 px-2">
             <div className="flex items-center gap-1.5 p-1 bg-white/80 backdrop-blur-md rounded-xl border border-slate-200/70 shadow-sm">
@@ -146,11 +146,10 @@ export default function Hero() {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(idx)}
-                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === idx
+                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === idx
                       ? 'bg-slate-900 text-white shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   {item.title}
                 </button>
@@ -165,7 +164,7 @@ export default function Hero() {
 
           {/* Clean Glass Showcase Container with Subtle Indian Bottom Accent */}
           <div className="rounded-card sm:rounded-hero glass-panel p-2.5 sm:p-4 shadow-floating border border-white relative overflow-hidden">
-            
+
             <div className="relative rounded-xl sm:rounded-card overflow-hidden aspect-[16/10] bg-slate-100 group">
               <img
                 key={current.id}
@@ -173,7 +172,7 @@ export default function Hero() {
                 alt={current.title}
                 className="w-full h-full object-cover object-top group-hover:scale-103 transition-transform duration-700 ease-out animate-in fade-in"
               />
-              
+
               {/* Minimal Clean Bottom Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent flex items-end p-4 sm:p-6">
                 <div className="text-white w-full flex items-center justify-between gap-4">

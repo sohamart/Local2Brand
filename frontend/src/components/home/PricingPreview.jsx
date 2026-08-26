@@ -15,7 +15,7 @@ export default function PricingPreview() {
       <div className="section-glow section-glow-purple top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[450px]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         <SectionHeading
           badge="🇮🇳 Transparent Indian & Global Pricing"
           title="Simple, Honest Investment. Zero Hidden Fees."
@@ -28,21 +28,19 @@ export default function PricingPreview() {
             <div className="p-1 rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-sm inline-flex items-center gap-1">
               <button
                 onClick={() => setCurrency('INR')}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  currency === 'INR'
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${currency === 'INR'
                     ? 'bg-amber-600 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 <span>🇮🇳 INR (₹)</span>
               </button>
               <button
                 onClick={() => setCurrency('USD')}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  currency === 'USD'
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${currency === 'USD'
                     ? 'bg-slate-900 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 <span>🌐 USD ($)</span>
               </button>
@@ -85,11 +83,10 @@ export default function PricingPreview() {
             return (
               <div
                 key={tier.id}
-                className={`rounded-hero p-8 flex flex-col justify-between transition-all duration-300 relative ${
-                  isPopular
+                className={`rounded-hero p-8 flex flex-col justify-between transition-all duration-300 relative ${isPopular
                     ? 'bg-white shadow-floating border-2 border-purple-500 lg:-translate-y-2'
                     : 'glass-card border border-white/95'
-                }`}
+                  }`}
               >
                 {/* Popular Pill */}
                 {isPopular && (
@@ -143,11 +140,10 @@ export default function PricingPreview() {
                       websiteType: `Pricing Plan: ${tier.name}`,
                       initialRequirements: `Interested in the ${tier.name} package.`
                     })}
-                    className={`w-full py-3.5 px-6 rounded-btn font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
-                      isPopular
+                    className={`w-full py-3.5 px-6 rounded-btn font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${isPopular
                         ? 'text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95'
                         : 'text-slate-900 bg-slate-100 hover:bg-slate-200'
-                    }`}
+                      }`}
                   >
                     <span>Get Started on WhatsApp</span>
                     <ArrowRight className="w-4 h-4" />

@@ -20,7 +20,7 @@ export default function Pricing() {
       />
 
       <div className="pt-28 xs:pt-32 sm:pt-40 pb-20">
-        
+
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
@@ -38,21 +38,19 @@ export default function Pricing() {
             <div className="p-1 rounded-full bg-white/90 backdrop-blur-md border border-slate-200 shadow-sm inline-flex items-center gap-1">
               <button
                 onClick={() => setCurrency('INR')}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  currency === 'INR'
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${currency === 'INR'
                     ? 'bg-amber-600 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 <span>🇮🇳 INR (₹)</span>
               </button>
               <button
                 onClick={() => setCurrency('USD')}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  currency === 'USD'
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${currency === 'USD'
                     ? 'bg-slate-900 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
-                }`}
+                  }`}
               >
                 <span>🌐 USD ($)</span>
               </button>
@@ -93,11 +91,10 @@ export default function Pricing() {
               return (
                 <div
                   key={plan.id}
-                  className={`rounded-hero p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 relative ${
-                    isPopular
+                  className={`rounded-hero p-8 sm:p-10 flex flex-col justify-between transition-all duration-300 relative ${isPopular
                       ? 'glass-panel border-2 border-purple-500 shadow-glass-highlight lg:-translate-y-3 bg-white/95'
                       : 'glass-card border border-white/90 shadow-glass bg-white/80'
-                  }`}
+                    }`}
                 >
                   {isPopular && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full l2b-gradient-bg text-white text-xs font-extrabold uppercase tracking-wider shadow-md flex items-center gap-1.5">
@@ -153,11 +150,10 @@ export default function Pricing() {
                         websiteType: `Pricing Plan: ${plan.name}`,
                         initialRequirements: `Interested in the ${plan.name} package (${currency === 'USD' ? plan.price : plan.priceInr}).`
                       })}
-                      className={`w-full py-4 px-6 rounded-btn font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
-                        isPopular
+                      className={`w-full py-4 px-6 rounded-btn font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${isPopular
                           ? 'text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95'
                           : 'text-slate-900 bg-slate-100 hover:bg-slate-200'
-                      }`}
+                        }`}
                     >
                       <span>Choose {plan.name}</span>
                       <ArrowRight className="w-4 h-4" />

@@ -24,7 +24,7 @@ export default function Portfolio() {
       />
 
       <div className="pt-28 xs:pt-32 sm:pt-40 pb-20">
-        
+
         {/* Page Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
@@ -45,11 +45,10 @@ export default function Portfolio() {
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
-                    isActive
+                  className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${isActive
                       ? 'bg-slate-900 text-white shadow-md'
                       : 'bg-white/80 hover:bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 shadow-sm'
-                  }`}
+                    }`}
                 >
                   {cat}
                 </button>

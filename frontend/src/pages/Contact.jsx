@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  MessageCircle, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Clock, 
-  Sparkles, 
-  Send, 
-  Globe2, 
-  CheckCircle2, 
-  ArrowRight 
+import {
+  MessageCircle,
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  Sparkles,
+  Send,
+  Globe2,
+  CheckCircle2,
+  ArrowRight
 } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
@@ -50,7 +50,7 @@ export default function Contact() {
       />
 
       <div className="pt-28 xs:pt-32 sm:pt-40 pb-20">
-        
+
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
@@ -67,10 +67,10 @@ export default function Contact() {
         {/* Contact Layout Grid */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-            
+
             {/* Left Column: Direct Info & WhatsApp VIP Box */}
             <div className="lg:col-span-5 space-y-6">
-              
+
               {/* WhatsApp VIP Card */}
               <div className="glass-panel p-6 sm:p-8 rounded-card border-2 border-emerald-500/40 shadow-glass-lg relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-white to-white">
                 <div className="flex items-center gap-3 mb-4">

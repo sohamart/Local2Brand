@@ -16,7 +16,7 @@ export default function FeaturedWork() {
       <div className="section-glow section-glow-purple bottom-1/4 -right-20 w-[550px] h-[350px]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         <SectionHeading
           badge="Client Case Studies"
           title="Work That Speaks for Your Brand."
@@ -33,10 +33,9 @@ export default function FeaturedWork() {
                 key={project.id}
                 className="glass-panel rounded-hero p-5 sm:p-8 lg:p-10 border border-white shadow-glass transition-all duration-300 hover:shadow-glass-lg"
               >
-                <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center ${
-                  isReversed ? 'lg:flex-row-reverse' : ''
-                }`}>
-                  
+                <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center ${isReversed ? 'lg:flex-row-reverse' : ''
+                  }`}>
+
                   {/* Visual Preview */}
                   <div className={`lg:col-span-7 ${isReversed ? 'lg:order-2' : ''}`}>
                     <div className="relative rounded-card overflow-hidden shadow-md group aspect-[16/10] bg-slate-100">

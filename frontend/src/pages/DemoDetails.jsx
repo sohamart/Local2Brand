@@ -1,16 +1,16 @@
 import React from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Check, 
-  Sparkles, 
-  Clock, 
-  Star, 
-  ArrowRight, 
-  ExternalLink, 
-  ShieldCheck, 
-  Share2, 
-  MessageCircle 
+import {
+  ArrowLeft,
+  Check,
+  Sparkles,
+  Clock,
+  Star,
+  ArrowRight,
+  ExternalLink,
+  ShieldCheck,
+  Share2,
+  MessageCircle
 } from 'lucide-react';
 import { getDemoBySlug, demoWebsites } from '../data/demos';
 import { SEO } from '../components/common/CommonUI';
@@ -51,7 +51,7 @@ export default function DemoDetails() {
       />
 
       <div className="pt-28 xs:pt-32 sm:pt-36 pb-20">
-        
+
         {/* Navigation Breadcrumb */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
           <Link
@@ -67,7 +67,7 @@ export default function DemoDetails() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-12">
           <div className="glass-panel rounded-card sm:rounded-hero p-5 sm:p-8 lg:p-10 border border-white shadow-floating relative overflow-hidden">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              
+
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-2xs">
@@ -131,21 +131,21 @@ export default function DemoDetails() {
 
         {/* Interactive Device Preview Simulator */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
-          <DevicePreview 
+          <DevicePreview
             demo={demo}
-            image={demo.image || demo.heroImage} 
-            title={demo.title} 
-            aspectRatio={demo.aspectRatio} 
+            image={demo.image || demo.heroImage}
+            title={demo.title}
+            aspectRatio={demo.aspectRatio}
           />
         </div>
 
         {/* Template In-Depth Specifications Grid */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
+
             {/* Left Col: Included Features & Deliverables */}
             <div className="lg:col-span-8 space-y-8">
-              
+
               {/* Features Box */}
               <div className="glass-card p-6 sm:p-8 rounded-card border border-white space-y-6">
                 <h3 className="text-xl font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
@@ -196,7 +196,7 @@ export default function DemoDetails() {
 
             {/* Right Col: Specifications & Fast Checkout Box */}
             <div className="lg:col-span-4 space-y-6">
-              
+
               <div className="glass-panel p-6 sm:p-8 rounded-card border border-white shadow-floating space-y-6 sticky top-24">
                 <h4 className="text-base font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-1.5">
                   <AshokaChakra size={13} />

@@ -22,7 +22,7 @@ export default function Testimonials() {
       <div className="section-glow section-glow-blue top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         <SectionHeading
           badge="Verified Client Success"
           title="Loved by Growing Businesses Worldwide."
@@ -95,11 +95,10 @@ export default function Testimonials() {
             <div
               key={item.id}
               onClick={() => setActiveIndex(idx)}
-              className={`p-5 rounded-card cursor-pointer transition-all duration-200 ${
-                activeIndex === idx
+              className={`p-5 rounded-card cursor-pointer transition-all duration-200 ${activeIndex === idx
                   ? 'bg-white shadow-glass border-2 border-purple-500/80 scale-102'
                   : 'glass-card hover:bg-white border border-white/80 opacity-70 hover:opacity-100'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-1 text-amber-400 mb-2">
                 {[...Array(item.rating)].map((_, i) => (

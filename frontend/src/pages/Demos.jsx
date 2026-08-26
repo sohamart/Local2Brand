@@ -14,7 +14,7 @@ export default function Demos() {
   const filteredDemos = useMemo(() => {
     return demoWebsites.filter((demo) => {
       const matchesCategory = activeCategory === 'All' || demo.category === activeCategory;
-      const matchesSearch = 
+      const matchesSearch =
         demo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         demo.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         demo.shortDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -32,7 +32,7 @@ export default function Demos() {
       />
 
       <div className="pt-28 xs:pt-32 sm:pt-40 pb-20">
-        
+
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
@@ -63,7 +63,7 @@ export default function Demos() {
 
           {/* Search & Category Filter Control Center */}
           <div className="mt-8 sm:mt-10 max-w-4xl mx-auto space-y-4">
-            
+
             {/* Search Input */}
             <div className="relative">
               <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -92,11 +92,10 @@ export default function Demos() {
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
-                      isActive
+                    className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${isActive
                         ? 'bg-slate-900 text-white shadow-md'
                         : 'bg-white/80 hover:bg-white text-slate-600 hover:text-slate-900 border border-slate-200/80 shadow-sm'
-                    }`}
+                      }`}
                   >
                     {cat}
                   </button>

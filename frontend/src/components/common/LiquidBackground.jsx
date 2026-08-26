@@ -162,8 +162,8 @@ export default function LiquidBackground() {
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
       {/* Interactive Physics Magnetic Repulsion Grid Canvas */}
-      <canvas 
-        ref={canvasRef} 
+      <canvas
+        ref={canvasRef}
         className="absolute inset-0 w-full h-full opacity-80"
       />
     </div>

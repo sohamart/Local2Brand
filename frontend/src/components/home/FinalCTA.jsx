@@ -18,10 +18,10 @@ export default function FinalCTA() {
       <div className="section-glow section-glow-purple top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[450px]" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Banner Glass Box */}
         <div className="rounded-hero glass-panel p-8 sm:p-14 lg:p-16 border border-white shadow-floating relative overflow-hidden text-center">
-          
+
           {/* Subtle Corner Light Glow */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-pink-400/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-400/10 rounded-full blur-3xl pointer-events-none" />

@@ -20,15 +20,15 @@ export default function Footer() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 pb-12 border-b border-slate-200/70">
-          
+
           {/* Brand Col */}
           <div className="lg:col-span-2 space-y-4">
             <Link to="/" className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/25 border border-white/80 bg-white">
-                <img 
-                  src="/logo.jpg" 
-                  alt="LOCAL2BRAND Official 3D Logo" 
-                  className="w-full h-full object-cover" 
+                <img
+                  src="/logo.jpg"
+                  alt="LOCAL2BRAND Official 3D Logo"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex flex-col">
@@ -46,7 +46,7 @@ export default function Footer() {
                 </span>
               </div>
             </Link>
-            
+
             <p className="text-slate-600 text-sm leading-relaxed max-w-sm">
               We design and engineer bespoke, high-converting websites that empower Indian businesses, creators, and ambitious enterprises to compete and win on a global stage.
             </p>
@@ -71,8 +71,8 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-slate-600">
               {siteConfig.navLinks.map((link) => (
                 <li key={link.label}>
-                  <Link 
-                    to={link.href} 
+                  <Link
+                    to={link.href}
                     className="hover:text-purple-600 transition-colors inline-flex items-center gap-1 group"
                   >
                     <span>{link.label}</span>
@@ -123,15 +123,15 @@ export default function Footer() {
               Direct Contact
             </h4>
             <div className="space-y-2.5 text-xs text-slate-600">
-              <a 
-                href={`mailto:${siteConfig.email}`} 
+              <a
+                href={`mailto:${siteConfig.email}`}
                 className="flex items-center gap-2 hover:text-purple-600 transition-colors"
               >
                 <Mail className="w-4 h-4 text-purple-600 shrink-0" />
                 <span>{siteConfig.email}</span>
               </a>
-              <a 
-                href={`tel:${siteConfig.whatsappNumber}`} 
+              <a
+                href={`tel:${siteConfig.whatsappNumber}`}
                 className="flex items-center gap-2 hover:text-purple-600 transition-colors"
               >
                 <Phone className="w-4 h-4 text-purple-600 shrink-0" />
@@ -158,7 +158,7 @@ export default function Footer() {
               <span>Proudly Built in India</span>
             </span>
           </div>
-          
+
           <div className="flex items-center gap-6">
             <Link to="/about" className="hover:text-slate-900 transition-colors">About Us</Link>
             <Link to="/pricing" className="hover:text-slate-900 transition-colors">INR (₹) & USD Pricing</Link>

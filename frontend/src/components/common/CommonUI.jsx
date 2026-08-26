@@ -9,9 +9,8 @@ export function GlassCard({
 }) {
   return (
     <div
-      className={`rounded-card ${
-        hoverEffect ? 'glass-card' : 'glass-panel'
-      } ${padding} ${className}`}
+      className={`rounded-card ${hoverEffect ? 'glass-card' : 'glass-panel'
+        } ${padding} ${className}`}
       {...props}
     >
       {children}

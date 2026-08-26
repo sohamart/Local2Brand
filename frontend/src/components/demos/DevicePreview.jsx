@@ -27,16 +27,15 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
     <div className="space-y-4 sm:space-y-6">
       {/* Device Viewport Selector Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 glass-panel rounded-2xl border border-white/90 shadow-glass-sm">
-        
+
         {/* Device Switcher Pills */}
         <div className="flex items-center justify-center gap-1 p-1 bg-slate-100/90 rounded-xl border border-slate-200/60">
           <button
             onClick={() => setDeviceMode('desktop')}
-            className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-              deviceMode === 'desktop'
+            className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${deviceMode === 'desktop'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-500 hover:text-slate-800'
-            }`}
+              }`}
           >
             <Monitor className="w-3.5 h-3.5" />
             <span>Desktop</span>
@@ -44,11 +43,10 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
 
           <button
             onClick={() => setDeviceMode('tablet')}
-            className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-              deviceMode === 'tablet'
+            className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${deviceMode === 'tablet'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-500 hover:text-slate-800'
-            }`}
+              }`}
           >
             <Tablet className="w-3.5 h-3.5" />
             <span>Tablet</span>
@@ -56,11 +54,10 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
 
           <button
             onClick={() => setDeviceMode('mobile')}
-            className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-              deviceMode === 'mobile'
+            className={`flex-1 sm:flex-none px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${deviceMode === 'mobile'
                 ? 'bg-white text-slate-900 shadow-sm'
                 : 'text-slate-500 hover:text-slate-800'
-            }`}
+              }`}
           >
             <Smartphone className="w-3.5 h-3.5" />
             <span>Mobile</span>
@@ -88,16 +85,15 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
 
       {/* Interactive Device Stage Container */}
       <div className="p-2 sm:p-6 lg:p-8 rounded-card sm:rounded-hero glass-card border border-white flex items-center justify-center min-h-[360px] xs:min-h-[420px] sm:min-h-[600px] bg-slate-100/50 overflow-hidden">
-        
+
         {/* Device Frame */}
         <div
-          className={`transition-all duration-500 ease-out bg-white rounded-xl sm:rounded-3xl border-2 sm:border-8 border-slate-900 shadow-2xl overflow-hidden flex flex-col ${
-            deviceMode === 'desktop'
+          className={`transition-all duration-500 ease-out bg-white rounded-xl sm:rounded-3xl border-2 sm:border-8 border-slate-900 shadow-2xl overflow-hidden flex flex-col ${deviceMode === 'desktop'
               ? 'w-full max-w-5xl aspect-[16/10]'
               : deviceMode === 'tablet'
-              ? 'w-[360px] sm:w-[440px] max-w-full aspect-[3/4]'
-              : 'w-[280px] sm:w-[320px] max-w-full aspect-[9/19]'
-          }`}
+                ? 'w-[360px] sm:w-[440px] max-w-full aspect-[3/4]'
+                : 'w-[280px] sm:w-[320px] max-w-full aspect-[9/19]'
+            }`}
         >
           {/* Top Device Header Bar */}
           <div className="bg-slate-900 px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between text-white/70 text-[9px] sm:text-[10px]">

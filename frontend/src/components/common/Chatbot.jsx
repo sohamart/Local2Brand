@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { 
-  X, 
-  MessageCircle, 
-  ChevronRight, 
-  ChevronDown, 
-  Sparkles, 
-  Headphones, 
-  ArrowRight, 
-  Flame, 
-  Send, 
-  CheckCircle2, 
-  Clock, 
-  ShieldCheck 
+import {
+  X,
+  MessageCircle,
+  ChevronRight,
+  ChevronDown,
+  Sparkles,
+  Headphones,
+  ArrowRight,
+  Flame,
+  Send,
+  CheckCircle2,
+  Clock,
+  ShieldCheck
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
@@ -84,7 +84,7 @@ export default function Chatbot() {
 
   return (
     <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 pointer-events-auto">
-      
+
       {/* 1. Compact Floating Circular Button */}
       <div className="relative group flex items-center justify-end">
         {!isOpen && (
@@ -96,11 +96,10 @@ export default function Chatbot() {
 
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white shadow-glass-highlight hover:shadow-2xl transition-all duration-300 transform active:scale-95 cursor-pointer relative ${
-            isOpen
+          className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white shadow-glass-highlight hover:shadow-2xl transition-all duration-300 transform active:scale-95 cursor-pointer relative ${isOpen
               ? 'bg-slate-900 rotate-90 scale-100'
               : 'l2b-gradient-bg animate-float hover:scale-108'
-          }`}
+            }`}
           aria-label={isOpen ? "Close Support" : "Open WhatsApp Support"}
         >
           {isOpen ? (
@@ -117,7 +116,7 @@ export default function Chatbot() {
 
       {/* 2. Dedicated WhatsApp Support & Question Selector Card */}
       {isOpen && (
-        <div 
+        <div
           className="absolute bottom-16 sm:bottom-18 right-0 w-[320px] xs:w-[360px] sm:w-[395px] h-[520px] max-h-[82vh] bg-white/98 backdrop-blur-2xl rounded-3xl border border-white/95 shadow-2xl flex flex-col justify-between overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 ease-out"
           data-lenis-prevent="true"
         >
@@ -152,7 +151,7 @@ export default function Chatbot() {
           </div>
 
           {/* Body Content with Smooth Scrolling */}
-          <div 
+          <div
             className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 bg-slate-50/60 modal-touch-scroll"
             data-lenis-prevent="true"
             style={{
@@ -200,11 +199,10 @@ export default function Chatbot() {
                 return (
                   <div
                     key={topic.id}
-                    className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-                      isSelected
+                    className={`rounded-2xl border transition-all duration-200 overflow-hidden ${isSelected
                         ? 'bg-white border-purple-300 shadow-md ring-1 ring-purple-400/20'
                         : 'bg-white/90 border-slate-200/80 hover:border-slate-300 shadow-2xs'
-                    }`}
+                      }`}
                   >
                     {/* Clickable Header */}
                     <button

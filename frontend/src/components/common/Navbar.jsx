@@ -44,23 +44,22 @@ export default function Navbar() {
     <>
       <header className="fixed top-0 left-0 right-0 z-40 px-3 xs:px-4 sm:px-6 lg:px-8 pt-2.5 sm:pt-4 transition-all duration-300 pointer-events-none">
         <nav
-          className={`max-w-7xl mx-auto rounded-full transition-all duration-300 pointer-events-auto flex items-center justify-between px-3.5 sm:px-6 relative overflow-hidden ${
-            isScrolled
+          className={`max-w-7xl mx-auto rounded-full transition-all duration-300 pointer-events-auto flex items-center justify-between px-3.5 sm:px-6 relative overflow-hidden ${isScrolled
               ? 'py-2 sm:py-2.5 glass-waterdrop shadow-waterdrop scale-[0.99]'
               : 'py-2.5 sm:py-3.5 glass-waterdrop shadow-waterdrop'
-          }`}
+            }`}
         >
           {/* Brand Logo with 3D Liquid L2B Gradient */}
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="flex items-center gap-2 sm:gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded-xl p-0.5"
           >
             {/* 3D Liquid Glass L2B Logo */}
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform shrink-0 border border-white/80 bg-white">
-              <img 
-                src="/logo.jpg" 
-                alt="LOCAL2BRAND Official 3D Logo" 
-                className="w-full h-full object-cover" 
+              <img
+                src="/logo.jpg"
+                alt="LOCAL2BRAND Official 3D Logo"
+                className="w-full h-full object-cover"
               />
             </div>
             <div className="flex flex-col">
@@ -86,10 +85,9 @@ export default function Navbar() {
                 key={link.label}
                 to={link.href}
                 className={({ isActive }) =>
-                  `px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-semibold transition-all duration-200 ${
-                    isActive
-                      ? 'bg-white text-slate-900 font-bold shadow-sm border border-slate-200/80'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  `px-3.5 py-1.5 rounded-full text-xs xl:text-sm font-semibold transition-all duration-200 ${isActive
+                    ? 'bg-white text-slate-900 font-bold shadow-sm border border-slate-200/80'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                   }`
                 }
               >
@@ -148,8 +146,8 @@ export default function Navbar() {
           </div>
 
           {/* Indian Flag Tricolor Border along the BOTTOM RIM of Navbar */}
-          <div 
-            className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full pointer-events-none" 
+          <div
+            className="absolute bottom-0 left-4 right-4 h-[2px] rounded-full pointer-events-none"
             style={{
               background: 'linear-gradient(90deg, #FF9933 0%, #FFFFFF 30%, #0072FF 50%, #FFFFFF 70%, #138808 100%)',
               boxShadow: '0 1px 4px rgba(255, 153, 51, 0.25)'
@@ -161,7 +159,7 @@ export default function Navbar() {
       {/* Mobile Glass Navigation Drawer */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-30 lg:hidden flex flex-col justify-between pt-20 pb-6 px-4 xs:px-6 bg-white/95 backdrop-blur-2xl animate-in fade-in duration-200 overflow-y-auto">
-          
+
           {/* Top Links List */}
           <div className="flex flex-col space-y-1.5 mt-3">
             <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 px-2 flex items-center justify-between">
@@ -177,10 +175,9 @@ export default function Navbar() {
                 to={link.href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `px-4 py-3 rounded-2xl text-base font-semibold flex items-center justify-between transition-all ${
-                    isActive
-                      ? 'bg-slate-100 text-slate-900 font-bold border border-slate-200 shadow-sm'
-                      : 'text-slate-800 hover:bg-slate-50'
+                  `px-4 py-3 rounded-2xl text-base font-semibold flex items-center justify-between transition-all ${isActive
+                    ? 'bg-slate-100 text-slate-900 font-bold border border-slate-200 shadow-sm'
+                    : 'text-slate-800 hover:bg-slate-50'
                   }`
                 }
               >

@@ -33,7 +33,7 @@ export default function TrustMetrics() {
       <div className="section-glow section-glow-blue top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] sm:w-[750px] h-[300px]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-3 shadow-xs">
@@ -44,8 +44,8 @@ export default function TrustMetrics() {
             Built for ambitious Indian businesses ready to scale globally.
           </h2>
           <p className="text-xs text-slate-500 mt-2 flex items-center justify-center gap-2 flex-wrap">
-            <span>GST Invoicing Ready</span> • 
-            <span>UPI / Card Payments</span> • 
+            <span>GST Invoicing Ready</span> •
+            <span>UPI / Card Payments</span> •
             <span>Mumbai • Bengaluru • Delhi • Kolkata • Global</span>
           </p>
         </div>

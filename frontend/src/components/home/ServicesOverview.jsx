@@ -23,7 +23,7 @@ export default function ServicesOverview() {
       <div className="section-glow section-glow-blue bottom-10 -left-20 w-[500px] h-[350px]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Section Heading */}
         <SectionHeading
           badge="🇮🇳 Indian Craft • Global Standards"
@@ -40,9 +40,8 @@ export default function ServicesOverview() {
             return (
               <div
                 key={service.id}
-                className={`glass-card p-7 sm:p-8 rounded-card border border-white/95 flex flex-col justify-between group relative ${
-                  isLarge ? 'md:col-span-2 lg:col-span-1' : ''
-                }`}
+                className={`glass-card p-7 sm:p-8 rounded-card border border-white/95 flex flex-col justify-between group relative ${isLarge ? 'md:col-span-2 lg:col-span-1' : ''
+                  }`}
               >
                 <div>
                   {/* Icon & Starting Tag with INR & USD */}
@@ -62,7 +61,7 @@ export default function ServicesOverview() {
                   <p className="text-xs font-medium text-brand-600 mt-1 mb-3">
                     {service.tagline}
                   </p>
-                  
+
                   {/* Description */}
                   <p className="text-slate-600 text-sm leading-relaxed mb-6">
                     {service.description}

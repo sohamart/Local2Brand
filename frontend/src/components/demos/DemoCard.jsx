@@ -19,7 +19,7 @@ export default function DemoCard({ demo }) {
 
   return (
     <div className="group rounded-card glass-card overflow-hidden border border-white/90 shadow-glass hover:shadow-glass-highlight transition-all duration-300 flex flex-col justify-between relative">
-      
+
       {/* Top Image Preview Container */}
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
         <img

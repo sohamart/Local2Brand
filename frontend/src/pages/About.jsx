@@ -20,7 +20,7 @@ export default function About() {
       />
 
       <div className="pt-32 sm:pt-40 pb-20">
-        
+
         {/* About Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
@@ -37,13 +37,13 @@ export default function About() {
         {/* Narrative & Mission Glass Grid */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-24">
           <div className="glass-panel rounded-hero p-8 sm:p-12 lg:p-16 border border-white shadow-glass-lg grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative overflow-hidden">
-            
+
             <div className="lg:col-span-7 space-y-6">
               <span className="text-xs font-bold uppercase tracking-widest text-amber-800 flex items-center gap-1.5">
                 <AshokaChakra size={12} />
                 <span>The Story Behind LOCAL2BRAND</span>
               </span>
-              
+
               <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
                 Great Indian businesses deserve world-class digital experiences.
               </h2>

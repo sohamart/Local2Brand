@@ -38,9 +38,9 @@ export default function WhatsAppOrderModal() {
 
       // If user clicked an offer specifically (e.g. "Claim 20% OFF"), auto-apply!
       // If user clicked generic "Get Started", do NOT auto-apply (they can click Apply).
-      const shouldAutoApply = modalData.autoApplyOffer || 
-        modalData.websiteType?.toLowerCase().includes('offer') || 
-        modalData.websiteType?.toLowerCase().includes('20%') || 
+      const shouldAutoApply = modalData.autoApplyOffer ||
+        modalData.websiteType?.toLowerCase().includes('offer') ||
+        modalData.websiteType?.toLowerCase().includes('20%') ||
         modalData.websiteType?.toLowerCase().includes('india2025');
 
       if (shouldAutoApply) {
@@ -126,7 +126,7 @@ export default function WhatsAppOrderModal() {
     };
 
     const whatsappUrl = generateWhatsAppOrderUrl(payload);
-    
+
     setTimeout(() => {
       openWhatsAppChat(whatsappUrl);
       setIsSubmitting(false);
@@ -135,7 +135,7 @@ export default function WhatsAppOrderModal() {
   };
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 overflow-y-auto modal-touch-scroll"
       data-lenis-prevent="true"
       style={{
@@ -144,17 +144,17 @@ export default function WhatsAppOrderModal() {
       }}
     >
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-slate-950/50 backdrop-blur-md transition-opacity duration-300 z-0"
         onClick={closeOrderModal}
       />
 
       {/* Scrollable Centering Container */}
-      <div 
+      <div
         className="min-h-full flex items-center justify-center p-3.5 sm:p-6 py-8 sm:py-12 pointer-events-none relative z-10"
         data-lenis-prevent="true"
       >
-        <div 
+        <div
           role="dialog"
           aria-modal="true"
           data-lenis-prevent="true"
@@ -179,7 +179,7 @@ export default function WhatsAppOrderModal() {
                 <Sparkles className="w-4 h-4 text-amber-400 shrink-0 animate-spin" />
                 <span className="font-bold text-slate-100">{toastMessage}</span>
               </div>
-              <button 
+              <button
                 onClick={() => setShowAppliedToast(false)}
                 className="text-slate-400 hover:text-white p-0.5 cursor-pointer"
               >
@@ -203,16 +203,14 @@ export default function WhatsAppOrderModal() {
           </div>
 
           {/* Interactive Coupon Box with Clear Apply & Applied States */}
-          <div className={`mb-5 p-3.5 rounded-2xl border transition-all duration-200 ${
-            isCouponApplied
+          <div className={`mb-5 p-3.5 rounded-2xl border transition-all duration-200 ${isCouponApplied
               ? 'bg-emerald-50/90 border-emerald-300 shadow-xs'
               : 'bg-amber-50/70 border-amber-200 shadow-xs'
-          }`}>
+            }`}>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs ${
-                  isCouponApplied ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-950'
-                }`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs ${isCouponApplied ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-950'
+                  }`}>
                   <Tag className="w-4 h-4" />
                 </div>
                 <div className="text-left">
@@ -235,8 +233,8 @@ export default function WhatsAppOrderModal() {
                     )}
                   </div>
                   <div className="text-[11px] text-slate-600 mt-0.5">
-                    {isCouponApplied 
-                      ? '🎉 Flat 20% discount + Free 1-Year Custom Domain & SSL activated!' 
+                    {isCouponApplied
+                      ? '🎉 Flat 20% discount + Free 1-Year Custom Domain & SSL activated!'
                       : 'Apply coupon INDIA2025 to save 20% on your order.'}
                   </div>
                 </div>
@@ -414,8 +412,8 @@ export default function WhatsAppOrderModal() {
                   <>
                     <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
                     <span>
-                      {isCouponApplied 
-                        ? 'Send Order with 20% OFF to WhatsApp' 
+                      {isCouponApplied
+                        ? 'Send Order with 20% OFF to WhatsApp'
                         : 'Send Order on WhatsApp'}
                     </span>
                     <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1 group-hover:translate-x-1 transition-transform" />

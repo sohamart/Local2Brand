@@ -36,7 +36,7 @@ function ScrollToTop() {
 
 export default function App() {
   const isMaintenanceOrComingSoon = siteConfig.isMaintenanceMode || siteConfig.isComingSoonMode;
-  
+
   // Check if admin bypass is currently active on this device
   const [isBypassed, setIsBypassed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -85,7 +85,7 @@ export default function App() {
     <OrderModalProvider>
       <div className="relative min-h-screen flex flex-col font-sans text-slate-900 selection:bg-purple-600 selection:text-white">
         <ScrollToTop />
-        
+
         {/* Animated Initial Liquid Glass Preloader */}
         <Preloader />
 

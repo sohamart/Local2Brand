@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Lock, 
-  KeyRound, 
-  Clock, 
-  Sparkles, 
-  ArrowRight, 
-  X, 
-  CheckCircle2, 
+import {
+  Lock,
+  KeyRound,
+  Clock,
+  Sparkles,
+  ArrowRight,
+  X,
+  CheckCircle2,
   AlertCircle,
   ShieldCheck,
   Send,
@@ -17,13 +17,13 @@ import AshokaChakra from './AshokaChakra';
 
 function InstagramIcon({ className = "w-4 h-4" }) {
   return (
-    <svg 
-      className={className} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
     >
       <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
@@ -99,7 +99,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
     setIsSubmitting(true);
 
     const instaUser = getInstagramUsername();
-    
+
     // Format structured message for Instagram DM
     const messageText = [
       `👋 Early Project Inquiry for ${siteConfig.brandName}:`,
@@ -112,7 +112,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
 
     // Copy to clipboard for easy pasting into Instagram DM
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(messageText).catch(() => {});
+      navigator.clipboard.writeText(messageText).catch(() => { });
     }
 
     setShowInstaModal(true);
@@ -131,7 +131,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
     if (passwordInput === expectedPassword) {
       setIsSuccess(true);
       setErrorMsg('');
-      
+
       // Grant 10 minutes bypass (10 * 60 * 1000 ms)
       const tenMinutesFromNow = Date.now() + 10 * 60 * 1000;
       localStorage.setItem('l2b_admin_bypass_expiry', String(tenMinutesFromNow));
@@ -147,7 +147,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-between p-4 sm:p-8 relative overflow-hidden font-sans text-slate-900 selection:bg-pink-600 selection:text-white">
-      
+
       {/* Background Ambient Liquid Glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-pink-400/20 via-purple-500/20 to-indigo-500/25 rounded-full blur-[110px] pointer-events-none" />
       <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] bg-amber-400/15 rounded-full blur-[100px] pointer-events-none" />
@@ -156,10 +156,10 @@ export default function MaintenanceMode({ onBypassSuccess }) {
       <header className="w-full max-w-6xl mx-auto flex items-center justify-between py-4 relative z-10">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/20 border border-white/80 bg-white">
-            <img 
-              src="/logo.jpg" 
-              alt="LOCAL2BRAND Official 3D Logo" 
-              className="w-full h-full object-cover" 
+            <img
+              src="/logo.jpg"
+              alt="LOCAL2BRAND Official 3D Logo"
+              className="w-full h-full object-cover"
             />
           </div>
           <div className="flex flex-col">
@@ -192,7 +192,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
 
       {/* Center Main Stage: Countdown + Instagram DM Contact Form */}
       <main className="w-full max-w-4xl mx-auto text-center space-y-8 py-6 sm:py-10 relative z-10">
-        
+
         {/* Status Pill Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-xl border border-slate-200 shadow-sm text-xs font-bold text-slate-800 animate-float">
           <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping" />
@@ -392,8 +392,8 @@ export default function MaintenanceMode({ onBypassSuccess }) {
       {/* Instagram DM Success Confirmation Modal */}
       {showInstaModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="fixed inset-0 bg-slate-950/50 backdrop-blur-md" 
+          <div
+            className="fixed inset-0 bg-slate-950/50 backdrop-blur-md"
             onClick={() => setShowInstaModal(false)}
           />
 
@@ -436,12 +436,12 @@ export default function MaintenanceMode({ onBypassSuccess }) {
       {/* Admin Password Modal (Grants 10-Minute Device Bypass) */}
       {showAdminModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="fixed inset-0 bg-slate-950/50 backdrop-blur-md transition-opacity" 
+          <div
+            className="fixed inset-0 bg-slate-950/50 backdrop-blur-md transition-opacity"
             onClick={() => setShowAdminModal(false)}
           />
 
-          <div 
+          <div
             role="dialog"
             aria-modal="true"
             className="relative w-full max-w-sm bg-white/98 backdrop-blur-2xl rounded-3xl border border-white p-6 shadow-2xl z-10 animate-in fade-in zoom-in-95 space-y-4"
@@ -453,7 +453,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
                 </div>
                 <h3 className="font-extrabold text-slate-900 text-base">Admin Preview Access</h3>
               </div>
-              <button 
+              <button
                 onClick={() => setShowAdminModal(false)}
                 className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
               >

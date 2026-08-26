@@ -1,16 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Globe, 
-  Target, 
-  Palette, 
-  ShoppingBag, 
-  Code2, 
-  Check, 
-  ArrowRight, 
-  Clock, 
-  Sparkles, 
-  Zap 
+import {
+  Globe,
+  Target,
+  Palette,
+  ShoppingBag,
+  Code2,
+  Check,
+  ArrowRight,
+  Clock,
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
@@ -46,7 +46,7 @@ export default function Services() {
       />
 
       <div className="pt-32 sm:pt-40 pb-20">
-        
+
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
@@ -73,10 +73,9 @@ export default function Services() {
                 id={service.id}
                 className="glass-panel rounded-hero p-6 sm:p-10 lg:p-14 border border-white shadow-floating relative overflow-hidden"
               >
-                <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center ${
-                  isReversed ? 'lg:flex-row-reverse' : ''
-                }`}>
-                  
+                <div className={`grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center ${isReversed ? 'lg:flex-row-reverse' : ''
+                  }`}>
+
                   {/* Left Column: Details */}
                   <div className={`lg:col-span-6 space-y-6 ${isReversed ? 'lg:order-2' : ''}`}>
                     <div className="flex items-center gap-3">

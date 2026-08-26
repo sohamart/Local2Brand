@@ -10,9 +10,9 @@ export const siteConfig = {
   fullDescription: import.meta.env.VITE_BRAND_FULL_DESC || "LOCAL2BRAND designs and develops bespoke, high-converting websites and modern digital products for ambitious businesses ready to scale locally and globally.",
   
   // WhatsApp & Contact details
-  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "919876543210", 
-  displayWhatsapp: import.meta.env.VITE_DISPLAY_WHATSAPP || "+91 98765 43210",
-  email: import.meta.env.VITE_CONTACT_EMAIL || "hello@local2brand.com",
+  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "918649814067", 
+  displayWhatsapp: import.meta.env.VITE_DISPLAY_WHATSAPP || "+918649814067",
+  email: import.meta.env.VITE_CONTACT_EMAIL || "stackaddacontact@.com",
   phone: import.meta.env.VITE_CONTACT_PHONE || "+91 98765 43210",
   address: import.meta.env.VITE_CONTACT_ADDRESS || "Pan-India Hub • Mumbai, Bengaluru, Delhi, Kolkata & Global Edge",
   hours: import.meta.env.VITE_CONTACT_HOURS || "Mon - Sat: 9:00 AM - 9:00 PM IST",
@@ -27,7 +27,7 @@ export const siteConfig = {
   instagramHandle: import.meta.env.VITE_INSTAGRAM_HANDLE || "local2brand",
 
   socialLinks: {
-    instagram: import.meta.env.VITE_INSTAGRAM_URL || `https://instagram.com/${import.meta.env.VITE_INSTAGRAM_HANDLE || "local2brand"}`,
+    instagram: import.meta.env.VITE_INSTAGRAM_URL || `https://instagram.com/${import.meta.env.VITE_INSTAGRAM_HANDLE || "local2brand_official"}`,
     facebook: import.meta.env.VITE_FACEBOOK_URL || "https://facebook.com/local2brand",
     linkedin: import.meta.env.VITE_LINKEDIN_URL || "https://linkedin.com/company/local2brand",
     youtube: import.meta.env.VITE_YOUTUBE_URL || "https://youtube.com/@local2brand",

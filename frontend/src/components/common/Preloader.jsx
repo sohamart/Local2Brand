@@ -28,16 +28,15 @@ export default function Preloader() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/95 backdrop-blur-2xl transition-all duration-700 ease-out ${
-        isLoaded ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'
-      }`}
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/95 backdrop-blur-2xl transition-all duration-700 ease-out ${isLoaded ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'
+        }`}
     >
       {/* Ambient Liquid Gradient Glows behind preloader */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] sm:w-[500px] h-[380px] sm:h-[500px] bg-gradient-to-tr from-cyan-400/20 via-purple-500/20 to-pink-500/25 rounded-full blur-[90px] animate-pulse pointer-events-none" />
 
       {/* Main Preloader Content Card */}
       <div className="relative z-10 flex flex-col items-center text-center space-y-6 px-6">
-        
+
         {/* Animated 3D Liquid Jelly Logo with Pulsing Glow Ring */}
         <div className="relative group">
           {/* Rotating Liquid Glow Aura */}

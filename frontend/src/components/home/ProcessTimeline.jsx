@@ -44,7 +44,7 @@ export default function ProcessTimeline() {
       <div className="section-glow section-glow-blue top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[350px]" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         <SectionHeading
           badge="Seamless 5-Step Process"
           title="From Idea to Launch."
@@ -53,7 +53,7 @@ export default function ProcessTimeline() {
 
         {/* Timeline Desktop & Mobile */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-5 gap-6 relative">
-          
+
           {/* Subtle Connecting Line for Desktop */}
           <div className="hidden md:block absolute top-1/2 left-8 right-8 h-1 bg-gradient-to-r from-brand-200 via-purple-400 to-pink-400 -translate-y-6 z-0 rounded-full opacity-60" />
 
@@ -66,25 +66,22 @@ export default function ProcessTimeline() {
                 key={item.step}
                 onMouseEnter={() => setHoveredStep(index)}
                 onMouseLeave={() => setHoveredStep(null)}
-                className={`glass-card p-6 rounded-card border transition-all duration-300 relative z-10 flex flex-col justify-between cursor-pointer ${
-                  isHovered
+                className={`glass-card p-6 rounded-card border transition-all duration-300 relative z-10 flex flex-col justify-between cursor-pointer ${isHovered
                     ? 'border-purple-400 shadow-glass-highlight -translate-y-3 bg-white'
                     : 'border-white/95 shadow-glass bg-white/80'
-                }`}
+                  }`}
               >
                 <div>
                   {/* Step Number & Icon */}
                   <div className="flex items-center justify-between mb-5">
-                    <span className={`text-2xl font-black font-mono transition-colors ${
-                      isHovered ? 'text-purple-600' : 'text-purple-600/30'
-                    }`}>
+                    <span className={`text-2xl font-black font-mono transition-colors ${isHovered ? 'text-purple-600' : 'text-purple-600/30'
+                      }`}>
                       {item.step}
                     </span>
-                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${
-                      isHovered
+                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${isHovered
                         ? 'l2b-gradient-bg text-white shadow-md shadow-purple-500/30 scale-110'
                         : 'bg-purple-50 text-purple-600 border border-purple-100'
-                    }`}>
+                      }`}>
                       <Icon className="w-5 h-5" />
                     </div>
                   </div>
