@@ -130,76 +130,78 @@ html {
   z-index: 999999;
 }
 
-/* Dual Sliding Doors Automatic Close & Open Keyframes (Medium Speed) */
-@keyframes autoDoorLeft {
+/* 3D Dual Vault Doors Automatic Close & Open Keyframes (1.15s Slow Majestic 3D) */
+@keyframes autoDoorLeft3D {
   0% {
-    transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-100%, 0, 0) rotateY(-24deg) scale(0.96);
   }
   38% {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) rotateY(0deg) scale(1);
   }
-  60% {
-    transform: translate3d(0, 0, 0);
+  62% {
+    transform: translate3d(0, 0, 0) rotateY(0deg) scale(1);
   }
   100% {
-    transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-100%, 0, 0) rotateY(-24deg) scale(0.96);
   }
 }
 
-@keyframes autoDoorRight {
+@keyframes autoDoorRight3D {
   0% {
-    transform: translate3d(100%, 0, 0);
+    transform: translate3d(100%, 0, 0) rotateY(24deg) scale(0.96);
   }
   38% {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) rotateY(0deg) scale(1);
   }
-  60% {
-    transform: translate3d(0, 0, 0);
+  62% {
+    transform: translate3d(0, 0, 0) rotateY(0deg) scale(1);
   }
   100% {
-    transform: translate3d(100%, 0, 0);
+    transform: translate3d(100%, 0, 0) rotateY(24deg) scale(0.96);
   }
 }
 
-@keyframes autoDoorEmblem {
+@keyframes autoDoorEmblem3D {
   0% {
     opacity: 0;
-    transform: scale(0.85);
+    transform: translate3d(0, 0, -40px) scale(0.8);
   }
-  34% {
+  35% {
     opacity: 0;
-    transform: scale(0.85);
+    transform: translate3d(0, 0, -40px) scale(0.8);
   }
-  40% {
+  42% {
     opacity: 1;
-    transform: scale(1);
+    transform: translate3d(0, 0, 40px) scale(1.05);
   }
   58% {
     opacity: 1;
-    transform: scale(1);
+    transform: translate3d(0, 0, 40px) scale(1.05);
   }
-  65% {
+  66% {
     opacity: 0;
-    transform: scale(0.85);
+    transform: translate3d(0, 0, -40px) scale(0.8);
   }
   100% {
     opacity: 0;
-    transform: scale(0.85);
+    transform: translate3d(0, 0, -40px) scale(0.8);
   }
 }
 
-.animate-auto-door-left {
-  animation: autoDoorLeft 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.animate-auto-door-left-3d {
+  animation: autoDoorLeft3D 1.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: left center;
   will-change: transform;
 }
 
-.animate-auto-door-right {
-  animation: autoDoorRight 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.animate-auto-door-right-3d {
+  animation: autoDoorRight3D 1.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: right center;
   will-change: transform;
 }
 
-.animate-auto-door-emblem {
-  animation: autoDoorEmblem 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.animate-auto-door-emblem-3d {
+  animation: autoDoorEmblem3D 1.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: opacity, transform;
 }
 

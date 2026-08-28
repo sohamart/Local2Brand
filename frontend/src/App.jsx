@@ -26,17 +26,6 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 
-// Helper to scroll to top on page change
-function ScrollToTop() {
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-  }, [pathname]);
-
-  return null;
-}
-
 export default function App() {
   const isMaintenanceOrComingSoon = siteConfig.isMaintenanceMode || siteConfig.isComingSoonMode;
 
@@ -90,8 +79,6 @@ export default function App() {
     <ThemeProvider>
       <OrderModalProvider>
         <div className="relative min-h-screen flex flex-col font-sans text-slate-900 dark:text-slate-100 selection:bg-purple-600 selection:text-white transition-colors duration-300">
-          <ScrollToTop />
-
           {/* Animated Initial Liquid Glass Preloader */}
           <Preloader />
 
