@@ -1195,21 +1195,33 @@ export default function WhatsAppOrderModal() {
                     </div>
                   </div>
 
-                  {/* Summary Box */}
-                  <div className="p-4 rounded-3xl bg-slate-900 dark:bg-black border border-purple-500/30 text-white space-y-1.5 shadow-xl">
-                    <div className="flex justify-between text-xs text-slate-400">
-                      <span>Base Budget:</span>
-                      <span className="text-white font-bold">{formData.budget}</span>
+                  {/* Summary Box (Theme Adaptive) */}
+                  <div className="p-4 rounded-3xl bg-gradient-to-br from-purple-50/90 via-slate-50 to-amber-50/50 dark:from-purple-950/40 dark:via-slate-950 dark:to-slate-900/90 border border-purple-200/90 dark:border-purple-800/60 text-slate-800 dark:text-slate-100 space-y-2 shadow-sm">
+                    <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
+                      <span>Base Budget Tier:</span>
+                      <span className="text-slate-900 dark:text-white font-bold">{formData.budget}</span>
                     </div>
+                    {formData.addDomain && (
+                      <div className="flex justify-between text-xs text-purple-700 dark:text-purple-300">
+                        <span>Domain Addon:</span>
+                        <span>+₹999</span>
+                      </div>
+                    )}
+                    {formData.addHosting && (
+                      <div className="flex justify-between text-xs text-emerald-700 dark:text-emerald-300">
+                        <span>Hosting Addon:</span>
+                        <span>+₹1,999</span>
+                      </div>
+                    )}
                     {appliedCoupon && (
-                      <div className="flex justify-between text-xs text-emerald-400 font-bold">
+                      <div className="flex justify-between text-xs text-emerald-600 dark:text-emerald-400 font-bold">
                         <span>Promo Code:</span>
                         <span>{appliedCoupon.code} ({appliedCoupon.discountPercent}% OFF)</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm font-black pt-1 border-t border-slate-800 text-amber-300">
+                    <div className="flex justify-between text-sm font-black pt-1.5 border-t border-slate-200/80 dark:border-slate-800 text-purple-700 dark:text-amber-300">
                       <span>Estimated Total:</span>
-                      <span>₹{priceBreakdown.total.toLocaleString('en-IN')}</span>
+                      <span className="text-base sm:text-lg">₹{priceBreakdown.total.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
@@ -1253,7 +1265,7 @@ export default function WhatsAppOrderModal() {
                 <span>Back</span>
               </button>
             ) : (
-              <span className="text-[11px] text-slate-500 font-medium">⚡ 48-Hour Turnaround Guarantee</span>
+              <span className="text-[11px] text-slate-500 font-medium">⚡ 3 - 7 Days Turnaround Guarantee</span>
             )}
 
             {currentStep < totalSteps ? (
