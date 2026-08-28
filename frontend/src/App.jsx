@@ -13,6 +13,8 @@ import { siteConfig } from './config/siteConfig';
 import { OrderModalProvider } from './context/OrderModalContext';
 import { ThemeProvider } from './context/ThemeContext';
 
+import PageTransition from './components/common/PageTransition';
+
 // Pages
 import Home from './pages/Home';
 import Services from './pages/Services';
@@ -116,20 +118,22 @@ export default function App() {
           {/* Global Floating Glass Navbar */}
           <Navbar />
 
-          {/* Dynamic Route Viewports */}
-          <div className="flex-1 z-10">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/portfolio" element={<Portfolio />} />
-              <Route path="/demos" element={<Demos />} />
-              <Route path="/demos/:slug" element={<DemoDetails />} />
-              <Route path="/demo/:slug" element={<DemoDetails />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+          {/* Dynamic Route Viewports with Page Transition */}
+          <div className="flex-1 z-10 flex flex-col">
+            <PageTransition>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/portfolio" element={<Portfolio />} />
+                <Route path="/demos" element={<Demos />} />
+                <Route path="/demos/:slug" element={<DemoDetails />} />
+                <Route path="/demo/:slug" element={<DemoDetails />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </PageTransition>
           </div>
 
           {/* Global Footer */}

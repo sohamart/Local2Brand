@@ -130,6 +130,63 @@ html {
   z-index: 999999;
 }
 
+/* Slow Organic Liquid Wave Page Transition Keyframes */
+@keyframes liquidLeadIn {
+  0% {
+    transform: translate3d(0, -100%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes liquidLeadOut {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+.animate-liquid-lead-in {
+  animation: liquidLeadIn 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+}
+
+.animate-liquid-lead-out {
+  animation: liquidLeadOut 0.54s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
+  will-change: transform;
+}
+
+@keyframes liquidWaveIn {
+  0% {
+    transform: translate3d(0, -100%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes liquidWaveOut {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+.animate-liquid-wave-in {
+  animation: liquidWaveIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) 0.04s forwards;
+  will-change: transform;
+}
+
+.animate-liquid-wave-out {
+  animation: liquidWaveOut 0.58s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+}
+
 body {
   overflow-x: hidden;
   max-width: 100vw;
