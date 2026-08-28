@@ -130,61 +130,77 @@ html {
   z-index: 999999;
 }
 
-/* Slow Organic Liquid Wave Page Transition Keyframes */
-@keyframes liquidLeadIn {
+/* Dual Sliding Doors Automatic Close & Open Keyframes (Medium Speed) */
+@keyframes autoDoorLeft {
   0% {
-    transform: translate3d(0, -100%, 0);
+    transform: translate3d(-100%, 0, 0);
   }
-  100% {
+  38% {
     transform: translate3d(0, 0, 0);
   }
-}
-
-@keyframes liquidLeadOut {
-  0% {
+  60% {
     transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translate3d(0, 100%, 0);
+    transform: translate3d(-100%, 0, 0);
   }
 }
 
-.animate-liquid-lead-in {
-  animation: liquidLeadIn 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform;
-}
-
-.animate-liquid-lead-out {
-  animation: liquidLeadOut 0.54s cubic-bezier(0.16, 1, 0.3, 1) 0.05s forwards;
-  will-change: transform;
-}
-
-@keyframes liquidWaveIn {
+@keyframes autoDoorRight {
   0% {
-    transform: translate3d(0, -100%, 0);
+    transform: translate3d(100%, 0, 0);
   }
-  100% {
+  38% {
     transform: translate3d(0, 0, 0);
   }
-}
-
-@keyframes liquidWaveOut {
-  0% {
+  60% {
     transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translate3d(0, 100%, 0);
+    transform: translate3d(100%, 0, 0);
   }
 }
 
-.animate-liquid-wave-in {
-  animation: liquidWaveIn 0.52s cubic-bezier(0.16, 1, 0.3, 1) 0.04s forwards;
+@keyframes autoDoorEmblem {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  34% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  58% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  65% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+.animate-auto-door-left {
+  animation: autoDoorLeft 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: transform;
 }
 
-.animate-liquid-wave-out {
-  animation: liquidWaveOut 0.58s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-auto-door-right {
+  animation: autoDoorRight 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: transform;
+}
+
+.animate-auto-door-emblem {
+  animation: autoDoorEmblem 0.82s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: opacity, transform;
 }
 
 body {
