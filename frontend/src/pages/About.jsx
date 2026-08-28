@@ -53,7 +53,7 @@ export default function About() {
               </p>
 
               <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-                We founded <strong>LOCAL2BRAND</strong> in India on a singular standard: combining Apple-inspired liquid glass aesthetics, sub-second PageSpeed performance, and a frictionless WhatsApp order system to launch client websites in 48 to 72 hours.
+                We founded <strong>LOCAL2BRAND</strong> in India on a singular standard: combining Apple-inspired liquid glass aesthetics, sub-second PageSpeed performance, and a frictionless WhatsApp order system to launch client websites in 3 to 7 business days.
               </p>
 
               {/* Core Values Bullets */}

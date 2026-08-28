@@ -42,7 +42,7 @@ export function generateWhatsAppOrderUrl(orderData = {}) {
     coupon ? `🏷️ *Coupon Applied:* ${coupon} (${discountPercentage}% OFF)` : '',
     requirements ? `\n📝 *Project Requirements:*\n"${requirements}"` : '',
     '\n━━━━━━━━━━━━━━━━━━━━',
-    '⚡ *Turnaround Goal:* 48-Hour Delivery',
+    '⚡ *Turnaround Goal:* 3 - 7 Days Delivery',
     '🇮🇳 *Origin:* local2brand.com'
   ].filter(Boolean);
 

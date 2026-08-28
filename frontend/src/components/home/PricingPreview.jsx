@@ -16,7 +16,7 @@ export default function PricingPreview() {
         <SectionHeading
           badge="🇮🇳 Predictable Investment • Rapid Delivery"
           title="Transparent Packages. Coming Soon."
-          subtitle="Fixed upfront packages with rapid 48h delivery, turnkey source code ownership, and full GST invoice support. Pricing packages are in final review."
+          subtitle="Fixed upfront packages with rapid 3 - 7 days delivery, turnkey source code ownership, and full GST invoice support. Pricing packages are in final review."
         />
 
         {/* Festive Launch Offer Card */}

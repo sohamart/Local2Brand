@@ -85,7 +85,7 @@ export default function LiveDemoViewer() {
       `Template: *${template.title}*\n` +
       `Category: ${template.category}\n` +
       `Special Price: *${template.price}*\n\n` +
-      `Hi LOCAL2BRAND team, I loved this live demo and want to deploy it for my business in 48 hours!`;
+      `Hi LOCAL2BRAND team, I loved this live demo and want to deploy it for my business in 3 to 7 days!`;
     openWhatsAppChat(generateWhatsAppGeneralUrl(text));
   };
 

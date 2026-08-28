@@ -132,7 +132,7 @@ export default function DemoCard({ demo }) {
             </div>
 
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-              Ready in 48h
+              Ready in 3 - 7 Days
             </span>
           </div>
 

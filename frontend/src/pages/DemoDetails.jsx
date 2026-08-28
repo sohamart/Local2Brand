@@ -49,7 +49,7 @@ export default function DemoDetails() {
     <>
       <SEO
         title={`${demo.title} — Live Website Template Preview`}
-        description={`Interactive preview of ${demo.title}. Features ${demo.features.slice(0, 2).join(', ')}. Order via WhatsApp with 48h turnaround.`}
+        description={`Interactive preview of ${demo.title}. Features ${demo.features.slice(0, 2).join(', ')}. Order via WhatsApp with 3 - 7 days turnaround.`}
       />
 
       <div className="pt-28 xs:pt-32 sm:pt-36 pb-20">

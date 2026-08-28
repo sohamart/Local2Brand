@@ -283,7 +283,7 @@ export default function Contact() {
                       <option value="High-Converting Landing Page">High-Converting Landing Page</option>
                       <option value="Creative Portfolio Website">Creative Portfolio Website</option>
                       <option value="E-commerce Store">D2C & E-commerce Store</option>
-                      <option value="Ready-Made Demo Customization">Ready-Made Demo Customization (48h)</option>
+                      <option value="Ready-Made Demo Customization">Ready-Made Demo Customization (3 - 7 Days)</option>
                       <option value="Custom Web Application">Custom Web Application</option>
                     </select>
                   </div>

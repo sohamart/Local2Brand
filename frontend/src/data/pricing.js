@@ -11,7 +11,7 @@ export const pricingPlans = [
     price: "$399",
     priceInr: "₹12,999",
     billingNote: "One-time investment",
-    turnaround: "48 - 72 Hours",
+    turnaround: "3 - 7 Days",
     description: "Ideal for local businesses, consultants, and creators looking to launch a polished online presence quickly.",
     features: [
       "Up to 5 High-Conversion Pages / Sections",

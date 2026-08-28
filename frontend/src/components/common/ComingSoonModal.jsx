@@ -59,7 +59,7 @@ export default function ComingSoonModal({ isOpen, onClose, planName = 'Pricing P
           <div className="pt-2 border-t border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>48-Hour Rapid Delivery Guarantee is active</span>
+              <span>3 - 7 Days Rapid Delivery Guarantee is active</span>
             </div>
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold">
               <CheckCircle2 className="w-4 h-4 shrink-0" />

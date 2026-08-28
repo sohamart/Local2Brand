@@ -63,7 +63,7 @@ export default function Pricing() {
     <>
       <SEO
         title="Pricing Plans — Transparent Website Packages & Turnkey Addons"
-        description="Explore our transparent fixed-price website packages and turnkey domain & hosting options. Starter, Professional, and Custom tiers with 48h delivery."
+        description="Explore our transparent fixed-price website packages and turnkey domain & hosting options. Starter, Professional, and Custom tiers with 3 - 7 days delivery."
       />
 
       {/* Toast Notification */}
