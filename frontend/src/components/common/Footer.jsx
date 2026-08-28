@@ -9,12 +9,11 @@ import {
   ArrowRight,
   Shield,
   Zap,
-  Heart,
-  ExternalLink
+  ShieldCheck
 } from 'lucide-react';
 import { siteConfig } from '../../config/siteConfig';
 import { useOrderModal } from '../../context/OrderModalContext';
-import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
+import { generateWhatsAppGeneralUrl, openWhatsAppChat, getSanitizedWhatsAppNumber } from '../../utils/whatsapp';
 import AshokaChakra from './AshokaChakra';
 import ThemeToggle from './ThemeToggle';
 
@@ -28,6 +27,7 @@ const InstagramIcon = ({ className = "w-4 h-4" }) => (
 
 export default function Footer() {
   const { openOrderModal } = useOrderModal();
+  const currentYear = new Date().getFullYear();
 
   const handleWhatsAppClick = () => {
     openWhatsAppChat(generateWhatsAppGeneralUrl());
@@ -123,7 +123,7 @@ export default function Footer() {
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                 <MessageCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <a
-                  href={`https://wa.me/${(siteConfig.whatsappNumber || '919064971842').replace(/[^0-9]/g, '')}`}
+                  href={`https://wa.me/${getSanitizedWhatsAppNumber()}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
@@ -151,92 +151,87 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Col 3: Quick Navigation */}
+          {/* Column 3: Navigation Links */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-900 dark:text-white mb-4">
-              Explore Studio
-            </h4>
-            <ul className="space-y-2.5 text-xs sm:text-sm">
-              {siteConfig.navLinks.map((item) => (
-                <li key={item.label}>
+            <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-4">Navigation</h4>
+            <ul className="space-y-2.5 text-xs">
+              {siteConfig.navLinks.map((link) => (
+                <li key={link.label}>
                   <Link
-                    to={item.href}
-                    className="text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors flex items-center gap-1.5"
+                    to={link.href}
+                    className="text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors inline-block"
                   >
-                    <span>{item.label}</span>
+                    {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Col 4: Top Demo Categories */}
+          {/* Column 4: Live Website Showcases */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-900 dark:text-white mb-4">
-              Demo Templates
-            </h4>
-            <ul className="space-y-2.5 text-xs sm:text-sm">
+            <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-4">Website Showcases</h4>
+            <ul className="space-y-2.5 text-xs">
               <li>
-                <Link to="/demos" className="text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-                  Restaurant & Cafe Demos
+                <Link to="/demos" className="text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                  All 12 Live Demos
                 </Link>
               </li>
               <li>
-                <Link to="/demos" className="text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-                  Salon & Spa Platforms
+                <Link to="/demos/lms" className="text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                  LMS & Course Selling
                 </Link>
               </li>
               <li>
-                <Link to="/demos" className="text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-                  E-Commerce Brand Stores
+                <Link to="/demos/cafe" className="text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                  Cafe & Roastery
                 </Link>
               </li>
               <li>
-                <Link to="/demos" className="text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-                  Agency & SaaS Landing Pages
+                <Link to="/demos/realestate" className="text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                  Real Estate & Villas
                 </Link>
               </li>
               <li>
-                <Link to="/demos" className="text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-                  Real Estate Portals
+                <Link to="/demos/jewellery" className="text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                  Jewellery & Luxury
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 5: Trust & Standards */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-900 dark:text-white mb-4">
-              Agency Standards
-            </h4>
-            <div className="space-y-3 text-xs text-slate-600 dark:text-slate-300">
-              <div className="flex items-start gap-2">
-                <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <span>48-Hour Turnaround Guarantee on showcase templates.</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Shield className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <span>100% Secure WhatsApp Direct Ordering Flow.</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <Globe className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                <span>Global High-Speed CDN & Custom Domain Setup.</span>
-              </div>
+          {/* Column 5: WhatsApp Instant Ordering Engine */}
+          <div className="space-y-4">
+            <h4 className="font-bold text-slate-900 dark:text-white text-sm">Launch Your Project</h4>
+            <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed">
+              Order directly on WhatsApp. 48-Hour delivery guarantee on all showcase live website setups.
+            </p>
+            <button
+              onClick={() => openOrderModal()}
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Instant Project Order</span>
+            </button>
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>48-Hour Turnaround Guarantee on showcase websites.</span>
             </div>
           </div>
-
         </div>
 
-        {/* Bottom Copyright & Indian Pride Line */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+        {/* Bottom Bar with Copyright, Legal Links, and Made in India Badge */}
+        <div className="mt-12 pt-8 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <p>© {currentYear} {siteConfig.brandName}. All rights reserved.</p>
+
           <div className="flex items-center gap-2">
-            <AshokaChakra size={13} />
-            <span>
-              © {new Date().getFullYear()} {siteConfig.brandName}. Proudly Crafted & Engineered in India.
+            <span className="text-[10px] font-bold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 px-2 py-0.5 rounded-full border border-amber-200/80 dark:border-amber-500/40 flex items-center gap-1">
+              <AshokaChakra size={11} />
+              <span>Made with Pride in India</span>
             </span>
           </div>
 
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-4">
             <ThemeToggle showLabel={true} />
             <a
               href={siteConfig.socialLinks.instagram}
@@ -248,7 +243,7 @@ export default function Footer() {
               <span>@{getInstagramUsername()}</span>
             </a>
             <a
-              href={`https://wa.me/${(siteConfig.whatsappNumber || '919064971842').replace(/[^0-9]/g, '')}`}
+              href={`https://wa.me/${getSanitizedWhatsAppNumber()}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-1 font-semibold"
