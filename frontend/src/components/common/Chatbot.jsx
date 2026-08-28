@@ -89,16 +89,16 @@ export default function Chatbot() {
           onClick={() => setIsOpen(!isOpen)}
           className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform active:scale-95 cursor-pointer relative ${
             isOpen
-              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+              ? 'bg-slate-900 text-white dark:bg-slate-800 dark:text-white border border-slate-200/20 dark:border-slate-700 hover:bg-slate-800 dark:hover:bg-slate-700 shadow-purple-500/10'
               : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 hover:scale-105'
           }`}
           aria-label={isOpen ? "Close WhatsApp Support" : "Open WhatsApp Support"}
         >
           {isOpen ? (
-            <X className="w-6 h-6 transition-transform rotate-0" />
+            <X className="w-6 h-6 text-white transition-transform rotate-0" />
           ) : (
             <>
-              <MessageCircle className="w-7 h-7 fill-white" />
+              <MessageCircle className="w-7 h-7 fill-white text-white" />
               {/* Online Pulse Dot */}
               <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900 animate-pulse" />
             </>
@@ -133,10 +133,10 @@ export default function Chatbot() {
 
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors cursor-pointer relative z-10"
+              className="p-1.5 text-slate-300 hover:text-white rounded-full hover:bg-slate-800 transition-colors cursor-pointer relative z-10"
               aria-label="Close Support"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 text-white" />
             </button>
 
             {/* Bottom Indian Flag rim */}
