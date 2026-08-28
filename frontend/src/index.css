@@ -576,3 +576,17 @@ html[data-theme="dark"] body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Auto-Slide Progress Bar Animation */
+@keyframes slideProgress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-slide-progress {
+  animation: slideProgress linear forwards;
+}

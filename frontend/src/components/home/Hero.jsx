@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -7,47 +7,201 @@ import {
   Globe,
   Zap,
   Star,
-  CheckCircle
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Pause,
+  Utensils,
+  Gem,
+  Building2,
+  Lock,
+  Eye,
+  Activity,
+  ShieldCheck,
+  GraduationCap
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import AshokaChakra from '../common/AshokaChakra';
+import { getDemoBySlug } from '../../data/demos';
 
 const heroShowcases = [
   {
-    id: 'restaurant',
-    title: 'Royal Spice & Gourmet Bistro',
-    category: 'Indian Dining & Café',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1600&auto=format&fit=crop',
-    slug: 'gourmet-bistro',
-    stat: '48h Launch'
+    id: 'lms',
+    title: 'SkillCraft Pro LMS & Course Selling',
+    shortName: 'LMS Platform',
+    category: 'EdTech & Course Selling',
+    image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1600&auto=format&fit=crop',
+    slug: 'lms',
+    stat: 'Full-Stack EdTech',
+    accentColor: 'from-blue-500/30 via-indigo-500/20 to-purple-500/30',
+    glowColor: 'rgba(59, 130, 246, 0.28)',
+    tag: 'Video Curriculum & Instant Checkout',
+    rating: '5.0 ★ (78+ Reviews)',
+    icon: GraduationCap
   },
   {
-    id: 'agency',
-    title: 'Nexus Digital Studio & Agency',
-    category: 'Creative Agency India',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1600&auto=format&fit=crop',
-    slug: 'nexus-creative-agency',
-    stat: 'High Ticket'
+    id: 'jewellery',
+    title: 'Aurum Heritage Jewellery Atelier',
+    shortName: 'Luxe Jewellery',
+    category: 'Luxury Bridal & Gold',
+    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1600&auto=format&fit=crop',
+    slug: 'jewellery',
+    stat: 'High Ticket',
+    accentColor: 'from-yellow-500/30 via-amber-500/20 to-emerald-500/30',
+    glowColor: 'rgba(234, 179, 8, 0.28)',
+    tag: 'Custom Bridal & Gold Inquiries',
+    rating: '5.0 ★ (64+ Reviews)',
+    icon: Gem
   },
   {
-    id: 'saas',
-    title: 'Pulse SaaS Platform',
-    category: 'Bangalore Tech Startup',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1600&auto=format&fit=crop',
-    slug: 'saas-launchpad-startup',
-    stat: '100 Speed'
+    id: 'realestate',
+    title: 'Elysian Prime Luxury Estates',
+    shortName: 'Real Estate',
+    category: 'Premium Real Estate',
+    image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600&auto=format&fit=crop',
+    slug: 'realestate',
+    stat: 'Ultra Modern',
+    accentColor: 'from-blue-500/30 via-cyan-500/20 to-indigo-500/30',
+    glowColor: 'rgba(14, 165, 233, 0.28)',
+    tag: 'Virtual Tours & High-Ticket Leads',
+    rating: '4.9 ★ (39+ Reviews)',
+    icon: Building2
+  },
+  {
+    id: 'boutique',
+    title: 'Zari & Silk Ethnic Fashion',
+    shortName: 'Ethnic Boutique',
+    category: 'Designer Haute Couture',
+    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1600&auto=format&fit=crop',
+    slug: 'boutique',
+    stat: 'Fast Loading',
+    accentColor: 'from-purple-500/30 via-pink-500/20 to-rose-500/30',
+    glowColor: 'rgba(236, 72, 153, 0.28)',
+    tag: 'Curated Lookbook & WhatsApp Buy',
+    rating: '4.8 ★ (52+ Reviews)',
+    icon: Sparkles
   }
 ];
+
+const AUTO_SLIDE_INTERVAL = 6500; // 6.5 seconds for relaxed showcase viewing
 
 export default function Hero() {
   const { openOrderModal } = useOrderModal();
   const [activeTab, setActiveTab] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isLiveLoading, setIsLiveLoading] = useState(true);
+
+  // Liquid Waterdrop Pill Indicator State & Refs
+  const tabContainerRef = useRef(null);
+  const tabRefs = useRef([]);
+  const [pillStyle, setPillStyle] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    opacity: 0
+  });
+
   const current = heroShowcases[activeTab];
+  const CurrentIcon = current.icon;
+
+  // Trigger 2-second smooth loading state on slide change
+  useEffect(() => {
+    setIsLiveLoading(true);
+    const loadTimer = setTimeout(() => {
+      setIsLiveLoading(false);
+    }, 1800);
+    return () => clearTimeout(loadTimer);
+  }, [activeTab]);
+
+  // Auto-slide effect with pause on hover
+  useEffect(() => {
+    if (isPaused) return;
+
+    const timer = setInterval(() => {
+      setActiveTab((prev) => (prev + 1) % heroShowcases.length);
+    }, AUTO_SLIDE_INTERVAL);
+
+    return () => clearInterval(timer);
+  }, [isPaused]);
+
+  // Update dynamic moving liquid waterdrop pill position
+  const updatePill = () => {
+    const activeEl = tabRefs.current[activeTab];
+    if (activeEl) {
+      setPillStyle({
+        left: activeEl.offsetLeft,
+        top: activeEl.offsetTop,
+        width: activeEl.offsetWidth,
+        height: activeEl.offsetHeight,
+        opacity: 1
+      });
+    }
+  };
+
+  useEffect(() => {
+    updatePill();
+    const frameId = requestAnimationFrame(updatePill);
+    const timeoutId = setTimeout(updatePill, 200);
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timeoutId);
+    };
+  }, [activeTab]);
+
+  // Recalculate on window resize
+  useEffect(() => {
+    window.addEventListener('resize', updatePill);
+    return () => window.removeEventListener('resize', updatePill);
+  }, [activeTab]);
+
+  // Handle tab selection without causing any scroll jump
+  const handleTabSelect = (idx, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const currentScrollY = window.scrollY;
+    setActiveTab(idx);
+
+    // Keep window scroll stable against iframe focus
+    requestAnimationFrame(() => {
+      window.scrollTo(0, currentScrollY);
+    });
+    setTimeout(() => {
+      window.scrollTo(0, currentScrollY);
+    }, 100);
+    setTimeout(() => {
+      window.scrollTo(0, currentScrollY);
+    }, 300);
+  };
+
+  const handleNext = () => {
+    const currentScrollY = window.scrollY;
+    setActiveTab((prev) => (prev + 1) % heroShowcases.length);
+    setTimeout(() => {
+      window.scrollTo(0, currentScrollY);
+    }, 50);
+  };
+
+  const handlePrev = () => {
+    const currentScrollY = window.scrollY;
+    setActiveTab((prev) => (prev - 1 + heroShowcases.length) % heroShowcases.length);
+    setTimeout(() => {
+      window.scrollTo(0, currentScrollY);
+    }, 50);
+  };
 
   return (
     <section className="relative pt-32 sm:pt-40 lg:pt-44 pb-16 sm:pb-20 overflow-hidden">
-      {/* Centered Ambient Section Glow */}
-      <div className="section-glow section-glow-blue top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[900px] h-[450px]" />
+      {/* Dynamic Ambient Hero Glow that shifts subtly with active tab */}
+      <div
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[950px] h-[500px] rounded-full blur-[100px] pointer-events-none transition-all duration-1000 -z-10 opacity-60 dark:opacity-40"
+        style={{
+          background: `radial-gradient(circle, ${current.glowColor} 0%, rgba(121, 40, 202, 0.08) 50%, transparent 75%)`
+        }}
+      />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
@@ -142,70 +296,309 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Sleek Minimal Showcase Frame with Dynamic Tabs */}
-        <div className="mt-14 sm:mt-16 max-w-4xl mx-auto">
+        {/* Sleek Ultra-Modern Showcase Frame with Dynamic Liquid Dock */}
+        <div
+          className="mt-14 sm:mt-16 max-w-4xl mx-auto"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+        >
 
-          {/* Minimal Tab Switcher */}
-          <div className="flex items-center justify-between gap-2 mb-3 px-2">
-            <div className="flex items-center gap-1.5 p-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md rounded-xl border border-slate-200/70 dark:border-slate-700/80 shadow-sm">
-              {heroShowcases.map((item, idx) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(idx)}
-                  className={`px-3 sm:px-4 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    activeTab === idx
-                      ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {item.title}
-                </button>
-              ))}
+          {/* Liquid Waterdrop Tab Switcher (Matching Top Navbar 3D Liquid Drop) */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4 px-1">
+            <div
+              ref={tabContainerRef}
+              className="relative flex items-center p-1 sm:p-1.5 rounded-full bg-slate-200/50 dark:bg-black/45 backdrop-blur-2xl border border-white/80 dark:border-white/10 shadow-inner overflow-x-auto max-w-full scrollbar-none"
+            >
+              {/* Animated iOS Liquid Waterdrop Pill Indicator with Glow Highlight */}
+              <div
+                className="ios-liquid-pill ios-liquid-glass absolute top-0 left-0 rounded-full pointer-events-none z-0"
+                style={{
+                  transform: `translate3d(${pillStyle.left}px, ${pillStyle.top}px, 0)`,
+                  width: `${pillStyle.width}px`,
+                  height: `${pillStyle.height}px`,
+                  opacity: pillStyle.opacity
+                }}
+              >
+                {/* Micro specular light highlight at the top of the pill */}
+                <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white dark:via-white/70 to-transparent" />
+              </div>
+
+              {/* Tab Buttons with Category Icons */}
+              {heroShowcases.map((item, idx) => {
+                const isActive = activeTab === idx;
+                const IconComponent = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    ref={(el) => (tabRefs.current[idx] = el)}
+                    onClick={(e) => handleTabSelect(idx, e)}
+                    className={`relative z-10 flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                      isActive
+                        ? 'text-slate-950 dark:text-white font-bold scale-[1.02]'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
+                    }`}
+                  >
+                    <IconComponent
+                      className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                        isActive ? 'text-purple-600 dark:text-purple-400 scale-110' : 'text-slate-400 dark:text-slate-500'
+                      }`}
+                    />
+                    <span>{item.shortName || item.title}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 px-3 py-1.5 rounded-xl border border-amber-200/60 dark:border-amber-500/40">
-              <AshokaChakra size={13} />
-              <span>Pan-India & Global Launch Engine</span>
+            {/* Auto-Slide Status & Play/Pause Interactive Switch */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setIsPaused(!isPaused)}
+                className="flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200/80 dark:border-slate-700/80 shadow-xs text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition-all cursor-pointer group"
+                title={isPaused ? 'Resume auto slide' : 'Pause auto slide'}
+              >
+                {isPaused ? (
+                  <>
+                    <Play className="w-3 h-3 text-amber-500 fill-amber-500 group-hover:scale-110 transition-transform" />
+                    <span>Resume</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <Pause className="w-3 h-3 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200" />
+                    <span>Auto-play</span>
+                  </>
+                )}
+              </button>
+
+              <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 px-3 py-1.5 rounded-xl border border-amber-200/60 dark:border-amber-500/40">
+                <AshokaChakra size={13} />
+                <span>Pan-India Live Engine</span>
+              </div>
             </div>
           </div>
 
-          {/* Clean Glass Showcase Container with Subtle Indian Bottom Accent */}
-          <div className="rounded-card sm:rounded-hero glass-panel p-2.5 sm:p-4 shadow-floating border border-white dark:border-slate-700/80 relative overflow-hidden">
+          {/* 3D Glass Mockup Browser Window Container with Glow */}
+          <div className="relative group">
+            {/* Ambient Backlight Glow that softly blooms on hover */}
+            <div
+              className="absolute -inset-1.5 rounded-[28px] sm:rounded-[36px] blur-xl opacity-40 dark:opacity-30 group-hover:opacity-60 transition-opacity duration-700 pointer-events-none -z-10"
+              style={{
+                background: `linear-gradient(135deg, ${current.glowColor}, rgba(147, 51, 234, 0.25))`
+              }}
+            />
 
-            <div className="relative rounded-xl sm:rounded-card overflow-hidden aspect-[16/10] bg-slate-100 dark:bg-slate-950 group">
-              <img
-                key={current.id}
-                src={current.image}
-                alt={current.title}
-                className="w-full h-full object-cover object-top group-hover:scale-103 transition-transform duration-700 ease-out animate-in fade-in"
-              />
+            {/* Main Outer Browser Window Frame */}
+            <div className="relative bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-[32px] border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
+              
+              {/* 1. macOS Safari Styled Header Bar */}
+              <div className="px-4 py-2.5 sm:py-3 bg-slate-100/90 dark:bg-slate-950/90 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                {/* Left Traffic Light Dots */}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80 shadow-xs" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80 shadow-xs" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 shadow-xs" />
+                </div>
 
-              {/* Minimal Clean Bottom Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent flex items-end p-4 sm:p-6">
-                <div className="text-white w-full flex items-center justify-between gap-4">
-                  <div>
-                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5">
-                      <AshokaChakra size={12} />
-                      <span>{current.category}</span>
-                    </span>
-                    <h3 className="text-base sm:text-xl font-bold leading-tight mt-0.5">
-                      {current.title}
-                    </h3>
-                  </div>
+                {/* Center Dynamic URL Pill */}
+                <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 text-[11px] font-mono text-slate-600 dark:text-slate-300 shadow-inner">
+                  <Lock className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="truncate max-w-[180px] sm:max-w-xs font-semibold">
+                    local2brand.com/demos/{current.slug}
+                  </span>
+                  <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold border border-emerald-200/70 dark:border-emerald-700/50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    LIVE
+                  </span>
+                </div>
 
-                  <Link
-                    to={`/demos/${current.slug}`}
-                    className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold text-xs shadow-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all inline-flex items-center gap-1.5"
-                  >
-                    <span>View Demo</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                  </Link>
+                {/* Right Status Badge */}
+                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  <span className="hidden sm:flex items-center gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-700/40">
+                    <Zap className="w-3 h-3" />
+                    <span>99/100 Speed</span>
+                  </span>
                 </div>
               </div>
+
+              {/* 2. Main Live Visual Area (No Scroll Interception) */}
+              <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden select-none">
+                {/* Continuous Smooth Progress Line */}
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-black/30 z-30 overflow-hidden">
+                  <div
+                    key={activeTab}
+                    className={`h-full bg-gradient-to-r from-amber-400 via-blue-500 to-purple-500 ${
+                      isPaused ? 'w-full opacity-30' : 'w-full animate-slide-progress'
+                    }`}
+                    style={{
+                      animationDuration: `${AUTO_SLIDE_INTERVAL}ms`
+                    }}
+                  />
+                </div>
+
+                {/* Dynamic Showcase Visual Display */}
+                {(() => {
+                  const currentDemoMeta = getDemoBySlug(current.slug) || getDemoBySlug(current.id);
+                  const isLiveReady = currentDemoMeta?.isPublished && Boolean(currentDemoMeta?.liveUrl);
+
+                  return (
+                    <div className="w-full h-full relative overflow-hidden select-none bg-slate-950">
+                      {/* Active Showcase Image with Cinematic Ken-Burns Transition */}
+                      <img
+                        key={current.id}
+                        src={current.image}
+                        alt={current.title}
+                        className="w-full h-full object-cover object-top transition-transform duration-1000 ease-out group-hover:scale-105 animate-in fade-in pointer-events-none select-none"
+                      />
+
+                      {/* Status Indicator Badge (Live vs Coming Soon) */}
+                      {isLiveReady ? (
+                        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 border border-emerald-300">
+                          <span className="w-2 h-2 rounded-full bg-slate-950 animate-ping" />
+                          <span>🟢 LIVE DEMO ONLINE</span>
+                        </div>
+                      ) : (
+                        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-black text-[11px] shadow-lg shadow-amber-500/20 border border-amber-300 animate-pulse">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping" />
+                          <span>COMING SOON</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Top-Left Floating 3D Micro Chip */}
+                <div className="absolute top-4 left-4 z-20 hidden xs:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/70 backdrop-blur-xl border border-white/20 shadow-lg text-white text-xs font-semibold animate-float">
+                  <CurrentIcon className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{current.tag}</span>
+                </div>
+
+                {/* Navigation Chevrons - High Z-Index & Stop Propagation */}
+                <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-3 sm:px-4 pointer-events-none z-30 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handlePrev();
+                    }}
+                    className="pointer-events-auto p-2.5 sm:p-3 rounded-full bg-slate-950/80 hover:bg-slate-900 text-white backdrop-blur-xl border border-white/30 shadow-2xl transition-all duration-200 hover:scale-115 cursor-pointer active:scale-95 flex items-center justify-center group/arrow"
+                    aria-label="Previous demo slide"
+                  >
+                    <ChevronLeft className="w-5 h-5 group-hover/arrow:-translate-x-0.5 transition-transform" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleNext();
+                    }}
+                    className="pointer-events-auto p-2.5 sm:p-3 rounded-full bg-slate-950/80 hover:bg-slate-900 text-white backdrop-blur-xl border border-white/30 shadow-2xl transition-all duration-200 hover:scale-115 cursor-pointer active:scale-95 flex items-center justify-center group/arrow"
+                    aria-label="Next demo slide"
+                  >
+                    <ChevronRight className="w-5 h-5 group-hover/arrow:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
+
+                {/* Rich Bottom Glass Banner (Pointer Events None on Container, Auto on Children) */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent flex items-end p-4 sm:p-6 z-20 pointer-events-none">
+                  <div className="text-white w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4 pointer-events-none">
+                    <div className="pointer-events-auto">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5 bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-400/30">
+                          <AshokaChakra size={11} />
+                          <span>{current.category}</span>
+                        </span>
+                        <span className="text-[10px] sm:text-xs font-bold bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-md text-slate-200">
+                          {current.stat}
+                        </span>
+                      </div>
+                      <h3 className="text-lg sm:text-2xl font-extrabold leading-tight mt-1.5 text-white tracking-tight drop-shadow-md">
+                        {current.title}
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 shrink-0 pointer-events-auto">
+                      <Link
+                        to={`/demos/${current.slug}`}
+                        className="px-4 py-2 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-2 group/btn hover:scale-102 cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-purple-600" />
+                        <span>View Live Demo</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover/btn:translate-x-0.5 transition-transform" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Bottom Showcase Bar with Dot Indicators, Navigation Arrows & Mini Metric */}
+              <div className="px-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200/70 dark:border-slate-800/80 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {/* Mini bottom Prev/Next arrow controls */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handlePrev();
+                      }}
+                      className="p-1.5 rounded-lg bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                      aria-label="Previous slide button"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleNext();
+                      }}
+                      className="p-1.5 rounded-lg bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
+                      aria-label="Next slide button"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* Dot Indicators */}
+                  <div className="flex items-center gap-1.5">
+                    {heroShowcases.map((item, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={(e) => handleTabSelect(idx, e)}
+                        className={`transition-all duration-300 rounded-full cursor-pointer ${
+                          activeTab === idx
+                            ? 'w-7 h-2 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 shadow-sm'
+                            : 'w-2 h-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600'
+                        }`}
+                        aria-label={`Switch to ${item.title}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                  <span className="hidden xs:inline">Indian Business Ready</span>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <span className="text-purple-600 dark:text-purple-400 font-bold">100% Customized For You</span>
+                </div>
+              </div>
+
             </div>
 
-            {/* Indian Tricolor bottom micro-accent */}
-            <div className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full bg-gradient-to-r from-amber-500/60 via-blue-500/40 to-emerald-500/60" />
+            {/* Indian Flag Tricolor Micro-Line Accent on Rim */}
+            <div
+              className="absolute bottom-0 left-8 right-8 h-[2px] rounded-full pointer-events-none opacity-80"
+              style={{
+                background: 'linear-gradient(90deg, rgba(255,153,51,0.9) 0%, rgba(255,255,255,0.6) 30%, rgba(0,114,255,0.8) 50%, rgba(255,255,255,0.6) 70%, rgba(19,136,8,0.9) 100%)'
+              }}
+            />
           </div>
 
         </div>
@@ -214,3 +607,5 @@ export default function Hero() {
     </section>
   );
 }
+
+

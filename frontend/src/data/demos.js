@@ -4,8 +4,21 @@
  * Accessible Pricing: Starter Demos @ ₹4,999 | Grand Niche Demos @ ₹14,999
  */
 
+const env = import.meta.env || {};
+
+const getEnvDemoConfig = (prefix) => {
+  const url = env[`VITE_DEMO_${prefix}_URL`] || '';
+  const statusEnv = env[`VITE_DEMO_${prefix}_STATUS`];
+  // If status is specified in env, use it (published | coming_soon).
+  // Defaults to coming_soon if empty or not published.
+  const status = statusEnv ? statusEnv.toLowerCase() : (url ? 'published' : 'coming_soon');
+  const isPublished = status === 'published' && Boolean(url);
+  return { liveUrl: url, status, isPublished };
+};
+
 export const demoCategories = [
   "All",
+  "LMS & Courses",
   "Restaurant",
   "Cafe",
   "Salon",
@@ -22,27 +35,28 @@ export const demoCategories = [
 
 export const demoWebsites = [
   {
-    id: "restaurant",
-    slug: "restaurant",
-    templateId: "restaurant",
-    title: "Royal Saffron Mughlai & Fine Dining",
-    category: "Restaurant",
-    badge: "Bestseller",
-    price: "$149",
-    priceInr: "₹4,999",
+    id: "lms",
+    slug: "lms",
+    templateId: "lms",
+    title: "SkillCraft Pro LMS & Online Course Selling Platform",
+    category: "LMS & Courses",
+    badge: "EdTech Flagship",
+    price: "$199",
+    priceInr: "₹6,999",
     turnaround: "3 - 7 Days",
-    rating: 4.9,
-    reviewsCount: 48,
-    shortDescription: "Ultra-luxury Indian fine dining template with interactive digital menu, table reservation engine, and WhatsApp ordering.",
-    description: "Designed for royal Mughlai restaurants, gourmet dining, and cloud kitchens. Features QR menus, WhatsApp table booking, Instagram feeds, and Google Maps integration.",
-    heroImage: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1400&auto=format&fit=crop",
+    rating: 5.0,
+    reviewsCount: 78,
+    ...getEnvDemoConfig("LMS"),
+    shortDescription: "Complete full-stack LMS & video course selling platform with curriculum player, student dashboard, quiz engine, and 1-click checkout.",
+    description: "Designed for online educators, course creators, coding bootcamps, and digital academies. Features video lesson streaming, student progress tracking, quizzes, downloadable resources, certificate generation, and instant WhatsApp / payment gateway checkout.",
+    heroImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Dynamic Filterable Food & Drinks Menu",
-      "One-click Table Booking via WhatsApp",
-      "Live Location, Open Hours & Google Reviews",
-      "100% Mobile & 4K Responsive Layout"
+      "Full Video Lecture Player & Lesson Roadmap",
+      "Student Dashboard with Progress Tracking & Quiz Engine",
+      "1-Click Instant Course Checkout & WhatsApp Enrollment",
+      "Automated Completion Certificate & Notes Download"
     ],
-    idealFor: "Fine dining restaurants, cafés, microbreweries, and cloud kitchens"
+    idealFor: "Online course creators, YouTube educators, coaching institutes & EdTech startups"
   },
   {
     id: "cafe",
@@ -56,6 +70,7 @@ export const demoWebsites = [
     turnaround: "3 - 7 Days",
     rating: 5.0,
     reviewsCount: 36,
+    ...getEnvDemoConfig("CAFE"),
     shortDescription: "Aesthetic specialty coffee bar & bakery website with single-origin brew showcase and cozy ambience tour.",
     description: "Designed for coffee roasteries, rooftop cafes, and artisanal bakeries. Includes live brew rate cards, Wi-Fi workspace highlights, and WhatsApp takeaway ordering.",
     heroImage: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1400&auto=format&fit=crop",
@@ -79,7 +94,8 @@ export const demoWebsites = [
     turnaround: "3 - 7 Days",
     rating: 4.9,
     reviewsCount: 42,
-    shortDescription: "Celebrity hair styling and luxury spa template with rate cards, treatment timings, and direct stylist booking.",
+    ...getEnvDemoConfig("SALON"),
+    shortDescription: "Celebrity hair styling and luxury spa website with rate cards, treatment timings, and direct stylist booking.",
     description: "Tailored for premium beauty salons, nail bars, and cosmetic clinics. Features treatment rate cards, stylist profiles, and WhatsApp appointment booking.",
     heroImage: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1400&auto=format&fit=crop",
     features: [
@@ -102,6 +118,7 @@ export const demoWebsites = [
     turnaround: "3 - 7 Days",
     rating: 4.8,
     reviewsCount: 39,
+    ...getEnvDemoConfig("GYM"),
     shortDescription: "High-intensity fitness center platform with trainer rosters, membership pass calculator, and trial passes.",
     description: "Built for gyms, CrossFit boxes, and MMA dojos. Showcases membership packages, trainer certifications, and 1-day free pass booking on WhatsApp.",
     heroImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1400&auto=format&fit=crop",
@@ -125,6 +142,7 @@ export const demoWebsites = [
     turnaround: "72 Hours",
     rating: 5.0,
     reviewsCount: 54,
+    ...getEnvDemoConfig("HOTEL"),
     shortDescription: "Ultra-luxury hotel & resort platform with room inventory tours, tariff cards, and concierge booking.",
     description: "Designed for boutique heritage hotels, luxury mountain resorts, and private pool villas. Includes suite amenity tours, seasonal packages, and VIP WhatsApp concierge.",
     heroImage: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1400&auto=format&fit=crop",
@@ -148,6 +166,7 @@ export const demoWebsites = [
     turnaround: "72 Hours",
     rating: 4.9,
     reviewsCount: 31,
+    ...getEnvDemoConfig("REALESTATE"),
     shortDescription: "High-ticket real estate brokerage platform with property listings, floor plans, and VIP site visit booking.",
     description: "Built for luxury real estate developers, property brokers, and gated communities. Features square-footage breakdowns, EMI calculators, and instant site visit schedules.",
     heroImage: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1400&auto=format&fit=crop",
@@ -171,6 +190,7 @@ export const demoWebsites = [
     turnaround: "3 - 7 Days",
     rating: 4.9,
     reviewsCount: 29,
+    ...getEnvDemoConfig("PHOTOGRAPHY"),
     shortDescription: "Cinematic photography portfolio with masonry gallery, client films, and destination wedding quote generator.",
     description: "Crafted for wedding cinematographers, editorial fashion photographers, and creative studios. Features full-bleed portfolios, equipment showcases, and WhatsApp booking.",
     heroImage: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?q=80&w=1400&auto=format&fit=crop",
@@ -194,6 +214,7 @@ export const demoWebsites = [
     turnaround: "3 - 7 Days",
     rating: 5.0,
     reviewsCount: 47,
+    ...getEnvDemoConfig("BOUTIQUE"),
     shortDescription: "High-end fashion boutique store with lookbooks, seasonal drops, fabric stories, and WhatsApp checkout.",
     description: "Designed for designer fashion labels, handcrafted ethnic boutiques, and artisanal jewellery brands. Features size charts, catalog filtering, and 1-click WhatsApp cart.",
     heroImage: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1400&auto=format&fit=crop",
@@ -217,6 +238,7 @@ export const demoWebsites = [
     turnaround: "3 - 7 Days",
     rating: 4.9,
     reviewsCount: 52,
+    ...getEnvDemoConfig("COACHING"),
     shortDescription: "Premier coaching institute website with batch curriculum, mentor profiles, and WhatsApp demo class booking.",
     description: "Designed for competitive exam institutes (JEE/NEET/UPSC), coding bootcamps, and executive coaching. Features ranker leaderboards, batch schedules, and WhatsApp registration.",
     heroImage: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=1400&auto=format&fit=crop",
@@ -240,6 +262,7 @@ export const demoWebsites = [
     turnaround: "3 - 7 Days",
     rating: 5.0,
     reviewsCount: 61,
+    ...getEnvDemoConfig("DENTAL"),
     shortDescription: "Modern medical & dental clinic website with doctor credentials, procedure rate cards, and appointment slots.",
     description: "Built for dental surgeons, polyclinics, and wellness practitioners. Features treatment guides, doctor accreditations, painless dentistry highlights, and WhatsApp appointments.",
     heroImage: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=1400&auto=format&fit=crop",
@@ -263,6 +286,7 @@ export const demoWebsites = [
     turnaround: "72 Hours",
     rating: 5.0,
     reviewsCount: 38,
+    ...getEnvDemoConfig("JEWELLERY"),
     shortDescription: "Ultra-luxury jewellery atelier website with certified gold/diamond showcase, hallmark guarantee, and VIP consultation.",
     description: "Designed for gold ateliers, diamond houses, and bridal jewellery showrooms. Features purity certifications, live gold rate ticker, virtual try-on booking, and WhatsApp sales.",
     heroImage: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1400&auto=format&fit=crop",
@@ -286,6 +310,7 @@ export const demoWebsites = [
     turnaround: "72 Hours",
     rating: 4.9,
     reviewsCount: 33,
+    ...getEnvDemoConfig("AUTOMOTIVE"),
     shortDescription: "Exotic supercar showroom & auto detailing platform with vehicle specs, financing calculator, and VIP test drive booking.",
     description: "Built for luxury pre-owned car showrooms, ceramic coating studios, and motorcycle dealerships. Features HP/0-100 specs, EMI estimates, and WhatsApp test drive scheduling.",
     heroImage: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=1400&auto=format&fit=crop",
@@ -301,6 +326,11 @@ export const demoWebsites = [
 
 export const getDemoBySlug = (slug) => {
   return demoWebsites.find(
-    (demo) => demo.slug === slug || demo.templateId === slug || demo.id === slug
+    (demo) =>
+      demo.slug?.toLowerCase() === slug?.toLowerCase() ||
+      demo.templateId?.toLowerCase() === slug?.toLowerCase() ||
+      demo.id?.toLowerCase() === slug?.toLowerCase()
   );
 };
+
+

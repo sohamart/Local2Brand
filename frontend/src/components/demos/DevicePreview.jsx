@@ -50,8 +50,8 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
     });
   };
 
-  const previewUrl = `/preview/${activeSlug}?embed=true`;
-  const fullScreenUrl = `/preview/${activeSlug}`;
+  const previewUrl = demo?.liveUrl || `/demos/${activeSlug}`;
+  const fullScreenUrl = demo?.liveUrl || `/demos/${activeSlug}`;
 
   const scaledWrapperWidth = targetWidth * scale;
   const scaledWrapperHeight = targetHeight * scale;

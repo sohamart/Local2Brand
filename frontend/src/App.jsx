@@ -29,7 +29,11 @@ import NotFound from './pages/NotFound';
 
 export default function App() {
   const location = useLocation();
-  const isLivePreview = location.pathname.startsWith('/preview');
+  const isLivePreview =
+    location.pathname.startsWith('/preview') ||
+    location.pathname.startsWith('/demos/') ||
+    location.pathname.startsWith('/demo/') ||
+    location.pathname.startsWith('/live');
   const isMaintenanceOrComingSoon = siteConfig.isMaintenanceMode || siteConfig.isComingSoonMode;
 
   // Check if admin bypass is currently active on this device
@@ -134,9 +138,11 @@ export default function App() {
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/portfolio" element={<Portfolio />} />
                 <Route path="/demos" element={<Demos />} />
-                <Route path="/demos/:slug" element={<DemoDetails />} />
-                <Route path="/demo/:slug" element={<DemoDetails />} />
+                <Route path="/demos/:slug" element={<LiveDemoViewer />} />
+                <Route path="/demo/:slug" element={<LiveDemoViewer />} />
                 <Route path="/preview/:templateId" element={<LiveDemoViewer />} />
+                <Route path="/live/:templateId" element={<LiveDemoViewer />} />
+                <Route path="/details/:slug" element={<DemoDetails />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="*" element={<NotFound />} />

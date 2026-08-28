@@ -27,8 +27,8 @@ export default function Demos() {
   return (
     <>
       <SEO
-        title="Ready-Made Website Templates & Demos — Fast 3 - 7 Days Delivery"
-        description="Choose from our curated collection of ready-made website templates for restaurants, salons, agencies, real estate, e-commerce, and startups. Direct WhatsApp ordering."
+        title="Live Website Demos & Interactive Showcases — LOCAL2BRAND"
+        description="Experience 100% live working websites for restaurants, salons, real estate, jewellery, boutiques, and gyms. Real-time menus, WhatsApp orders, and instant customization."
       />
 
       <div className="pt-28 xs:pt-32 sm:pt-40 pb-20">
@@ -37,27 +37,27 @@ export default function Demos() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
             <AshokaChakra size={13} />
-            <span>🇮🇳 Indian Business Ready • 3 - 7 Days Turnaround</span>
+            <span>🇮🇳 100% Live Interactive Websites • 48h to 7 Days Delivery</span>
           </div>
           <SectionHeading
-            badge="Live Template Marketplace"
-            title="Website Templates"
-            subtitle="Start with a battle-tested design you love. We'll customize it for your business in 3 to 7 days."
+            badge="Live Interactive Demos"
+            title="Explore Live Websites"
+            subtitle="Click any live demo to test real menus, table bookings, WhatsApp ordering, property tours, and instant lead capture in real-time."
           />
 
           {/* Quick Value Props */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 text-xs font-semibold text-slate-600 dark:text-slate-300">
             <span className="inline-flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>3 - 7 Days Rapid Delivery</span>
+              <span>Full Working Functionality</span>
             </span>
             <span className="inline-flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
               <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span>Starting from ₹9,999 / $399</span>
+              <span>Direct WhatsApp Integration</span>
             </span>
             <span className="inline-flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm">
               <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-              <span>100% Mobile & 4K Responsive</span>
+              <span>Customized for Your Brand</span>
             </span>
           </div>
 
@@ -71,7 +71,7 @@ export default function Demos() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search templates by industry, feature, or keyword (e.g. Restaurant, Agency, Salon...)"
+                placeholder="Search live demos by industry (e.g. Restaurant, Jewellery, Real Estate, Salon, Gym...)"
                 className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-sm text-sm sm:text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-purple-600 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all"
               />
               {searchQuery && (
