@@ -1,18 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * Unique 3D Liquid Scroll Reveal Component
- * Provides Apple/Linear-grade smooth scroll-triggered entrances with 3D liquid lift, unblur & stagger.
+ * Ultra-Optimized 120 FPS Scroll Reveal Component
+ * Uses pure GPU transform3d + opacity with zero expensive blur re-rasterization.
  */
 export default function ScrollReveal({
   children,
-  variant = 'fade-up', // 'fade-up', 'fade-down', 'fade-left', 'fade-right', 'zoom-in'
-  delay = 0, // delay in ms
-  duration = 750, // duration in ms
-  threshold = 0.12,
+  variant = 'fade-up',
+  delay = 0,
+  duration = 600,
+  threshold = 0.08,
   className = '',
-  cascade = false, // if true, staggers direct children automatically
-  staggerDelay = 80, // delay per child in ms if cascade is true
   ...props
 }) {
   const domRef = useRef(null);
@@ -28,7 +26,7 @@ export default function ScrollReveal({
       },
       {
         threshold,
-        rootMargin: '0px 0px -40px 0px',
+        rootMargin: '0px 0px -30px 0px',
       }
     );
 
@@ -42,31 +40,28 @@ export default function ScrollReveal({
     };
   }, [threshold]);
 
-  // Initial hidden transform styles based on variant
   const getInitialTransform = () => {
     switch (variant) {
       case 'fade-up':
-        return 'translate3d(0, 36px, 0) scale(0.97) rotateX(4deg)';
+        return 'translate3d(0, 24px, 0)';
       case 'fade-down':
-        return 'translate3d(0, -36px, 0) scale(0.97)';
+        return 'translate3d(0, -24px, 0)';
       case 'fade-left':
-        return 'translate3d(-40px, 0, 0) scale(0.98)';
+        return 'translate3d(-28px, 0, 0)';
       case 'fade-right':
-        return 'translate3d(40px, 0, 0) scale(0.98)';
+        return 'translate3d(28px, 0, 0)';
       case 'zoom-in':
-        return 'translate3d(0, 20px, 0) scale(0.92)';
+        return 'translate3d(0, 16px, 0) scale(0.96)';
       default:
-        return 'translate3d(0, 32px, 0)';
+        return 'translate3d(0, 20px, 0)';
     }
   };
 
   const style = {
     opacity: isVisible ? 1 : 0,
-    transform: isVisible ? 'translate3d(0, 0, 0) scale(1) rotateX(0deg)' : getInitialTransform(),
-    filter: isVisible ? 'blur(0px)' : 'blur(5px)',
-    transition: `opacity ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, filter ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
-    willChange: 'opacity, transform, filter',
-    transformStyle: 'preserve-3d',
+    transform: isVisible ? 'translate3d(0, 0, 0) scale(1)' : getInitialTransform(),
+    transition: `opacity ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms, transform ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+    willChange: 'opacity, transform',
   };
 
   return (

@@ -15,6 +15,7 @@ import {
 import { siteConfig } from '../../config/siteConfig';
 import AshokaChakra from './AshokaChakra';
 import ThemeToggle from './ThemeToggle';
+import LiquidBackground from './LiquidBackground';
 
 const InstagramIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -146,14 +147,15 @@ export default function MaintenanceMode({ onBypassSuccess }) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] dark:bg-[#07090E] flex flex-col items-center justify-between p-3.5 sm:p-6 lg:p-8 relative overflow-x-hidden font-sans text-slate-900 dark:text-slate-100 selection:bg-pink-600 selection:text-white transition-colors duration-300">
+    <div className="min-h-screen w-full bg-[#F8FAFC] dark:bg-[#07090E] flex flex-col justify-between p-3.5 sm:p-6 lg:p-8 relative font-sans text-slate-900 dark:text-slate-100 selection:bg-pink-600 selection:text-white transition-colors duration-300">
 
-      {/* Background Ambient Liquid Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[90vw] sm:w-[600px] h-[350px] bg-gradient-to-tr from-pink-400/20 via-purple-500/20 to-indigo-500/25 dark:from-pink-500/15 dark:via-purple-600/20 dark:to-indigo-600/25 rounded-full blur-[100px] sm:blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-20 -right-20 w-[280px] sm:w-[400px] h-[280px] sm:h-[400px] bg-amber-400/15 dark:bg-amber-500/10 rounded-full blur-[80px] pointer-events-none" />
+      {/* Ambient Liquid Background & Glows */}
+      <LiquidBackground />
+      <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[90vw] sm:w-[600px] h-[350px] bg-gradient-to-tr from-pink-400/20 via-purple-500/20 to-indigo-500/25 dark:from-pink-500/15 dark:via-purple-600/20 dark:to-indigo-600/25 rounded-full blur-[100px] sm:blur-[120px] pointer-events-none" />
+      <div className="fixed -bottom-20 -right-20 w-[280px] sm:w-[400px] h-[280px] sm:h-[400px] bg-amber-400/15 dark:bg-amber-500/10 rounded-full blur-[80px] pointer-events-none" />
 
       {/* Top Header Branding */}
-      <header className="w-full max-w-6xl mx-auto flex items-center justify-between py-3 sm:py-4 gap-2 relative z-10">
+      <header className="w-full max-w-6xl mx-auto flex items-center justify-between py-2 sm:py-4 gap-2 relative z-20 shrink-0">
         {/* Brand Logo */}
         <div className="flex items-center gap-2 sm:gap-2.5">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/20 border border-white/80 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
@@ -181,10 +183,8 @@ export default function MaintenanceMode({ onBypassSuccess }) {
 
         {/* Top Right Controls: Theme Toggle + Official Instagram Link */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          {/* Dark / Light Mode Toggle */}
           <ThemeToggle />
 
-          {/* Instagram Link */}
           <a
             href={siteConfig.socialLinks.instagram}
             target="_blank"
@@ -199,10 +199,10 @@ export default function MaintenanceMode({ onBypassSuccess }) {
       </header>
 
       {/* Center Main Stage: Coming Soon vs Maintenance Mode UI */}
-      <main className="w-full max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 py-4 sm:py-8 relative z-10">
+      <main className="w-full max-w-4xl mx-auto text-center space-y-6 sm:space-y-8 py-6 sm:py-10 my-auto relative z-20 flex-1 flex flex-col justify-center">
 
         {/* Status Pill Badge */}
-        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 max-w-full flex-wrap justify-center">
+        <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 max-w-full mx-auto flex-wrap justify-center">
           <span className={`w-2 h-2 rounded-full animate-ping shrink-0 ${isComingSoon ? 'bg-purple-500' : 'bg-amber-500'}`} />
           
           {isComingSoon ? (
@@ -248,9 +248,9 @@ export default function MaintenanceMode({ onBypassSuccess }) {
         </div>
 
         {/* Live Glass Countdown Timer Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-6 max-w-xl mx-auto px-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-6 max-w-xl mx-auto w-full px-2">
           {/* Days */}
-          <div className="glass-panel p-3 sm:p-5 rounded-2xl border border-white dark:border-slate-700/80 shadow-floating flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="glass-panel p-3 sm:p-5 rounded-2xl border border-white dark:border-slate-700/80 shadow-floating flex flex-col items-center justify-center relative overflow-hidden bg-white/80 dark:bg-slate-900/80">
             <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight font-mono">
               {String(timeLeft.days).padStart(2, '0')}
             </span>
@@ -261,7 +261,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
           </div>
 
           {/* Hours */}
-          <div className="glass-panel p-3 sm:p-5 rounded-2xl border border-white dark:border-slate-700/80 shadow-floating flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="glass-panel p-3 sm:p-5 rounded-2xl border border-white dark:border-slate-700/80 shadow-floating flex flex-col items-center justify-center relative overflow-hidden bg-white/80 dark:bg-slate-900/80">
             <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight font-mono">
               {String(timeLeft.hours).padStart(2, '0')}
             </span>
@@ -272,7 +272,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
           </div>
 
           {/* Minutes */}
-          <div className="glass-panel p-3 sm:p-5 rounded-2xl border border-white dark:border-slate-700/80 shadow-floating flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="glass-panel p-3 sm:p-5 rounded-2xl border border-white dark:border-slate-700/80 shadow-floating flex flex-col items-center justify-center relative overflow-hidden bg-white/80 dark:bg-slate-900/80">
             <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight font-mono">
               {String(timeLeft.minutes).padStart(2, '0')}
             </span>
@@ -283,7 +283,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
           </div>
 
           {/* Seconds */}
-          <div className="glass-panel p-3 sm:p-5 rounded-2xl border border-white dark:border-slate-700/80 shadow-floating flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="glass-panel p-3 sm:p-5 rounded-2xl border border-white dark:border-slate-700/80 shadow-floating flex flex-col items-center justify-center relative overflow-hidden bg-white/80 dark:bg-slate-900/80">
             <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-pink-600 dark:text-pink-400 tracking-tight font-mono animate-pulse">
               {String(timeLeft.seconds).padStart(2, '0')}
             </span>
@@ -406,7 +406,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
       </main>
 
       {/* Bottom Footer & Admin Bypass Launcher */}
-      <footer className="w-full max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 pt-3 sm:pt-4 pb-2 border-t border-slate-200/80 dark:border-slate-800 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 relative z-10 text-center sm:text-left">
+      <footer className="w-full max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 pt-3 sm:pt-4 pb-2 border-t border-slate-200/80 dark:border-slate-800 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 relative z-20 text-center sm:text-left shrink-0">
         <div className="flex items-center gap-1.5 justify-center sm:justify-start">
           <AshokaChakra size={11} />
           <span>© {new Date().getFullYear()} LOCAL2BRAND. Proudly Engineered in India.</span>
@@ -425,7 +425,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
 
       {/* Instagram DM Success Confirmation Modal */}
       {showInstaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" data-lenis-prevent="true">
           <div
             className="fixed inset-0 bg-slate-950/50 backdrop-blur-md"
             onClick={() => setShowInstaModal(false)}
@@ -469,7 +469,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
 
       {/* Admin Password Modal (Grants 10-Minute Device Bypass) */}
       {showAdminModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4" data-lenis-prevent="true">
           <div
             className="fixed inset-0 bg-slate-950/50 backdrop-blur-md transition-opacity"
             onClick={() => setShowAdminModal(false)}
@@ -541,7 +541,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
       )}
 
       {/* Bottom Tricolor Accent Line */}
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-blue-600 to-emerald-600" />
+      <div className="fixed bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-blue-600 to-emerald-600 z-30" />
     </div>
   );
 }
