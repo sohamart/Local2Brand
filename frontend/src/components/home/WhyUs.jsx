@@ -75,17 +75,17 @@ export default function WhyUs() {
             return (
               <div
                 key={feat.title}
-                className="glass-card p-6 rounded-card border border-white/95 group"
+                className="glass-card p-6 rounded-card border border-white/95 dark:border-slate-700/80 group"
               >
-                <div className="w-11 h-11 rounded-2xl bg-brand-50 border border-brand-100 flex items-center justify-center text-brand-600 mb-4 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                <div className="w-11 h-11 rounded-2xl bg-brand-50 dark:bg-brand-950/80 border border-brand-100 dark:border-brand-500/30 flex items-center justify-center text-brand-600 dark:text-brand-400 mb-4 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
                   <Icon className="w-5 h-5" />
                 </div>
 
-                <h3 className="text-base font-bold text-slate-900 tracking-tight mb-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight mb-2">
                   {feat.title}
                 </h3>
 
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
                   {feat.description}
                 </p>
               </div>

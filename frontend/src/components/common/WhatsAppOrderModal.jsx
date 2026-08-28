@@ -37,7 +37,6 @@ export default function WhatsAppOrderModal() {
       });
 
       // If user clicked an offer specifically (e.g. "Claim 20% OFF"), auto-apply!
-      // If user clicked generic "Get Started", do NOT auto-apply (they can click Apply).
       const shouldAutoApply = modalData.autoApplyOffer ||
         modalData.websiteType?.toLowerCase().includes('offer') ||
         modalData.websiteType?.toLowerCase().includes('20%') ||
@@ -120,9 +119,9 @@ export default function WhatsAppOrderModal() {
 
     const payload = {
       ...formData,
-      couponCode: isCouponApplied ? (couponInput.trim().toUpperCase() || 'INDIA2025') : '',
-      discountText: isCouponApplied ? '20% OFF Launch Special' : '',
-      finalPrice: isCouponApplied ? '20% OFF Discount Applied' : 'Standard Pricing'
+      coupon: isCouponApplied ? (couponInput.trim().toUpperCase() || 'INDIA2025') : '',
+      discountPercentage: isCouponApplied ? 20 : 0,
+      price: modalData.price || ''
     };
 
     const whatsappUrl = generateWhatsAppOrderUrl(payload);
@@ -158,7 +157,7 @@ export default function WhatsAppOrderModal() {
           role="dialog"
           aria-modal="true"
           data-lenis-prevent="true"
-          className="relative w-full max-w-2xl bg-white/98 backdrop-blur-2xl border border-white/95 rounded-2xl sm:rounded-modal shadow-glass-lg p-5 xs:p-6 sm:p-8 pointer-events-auto transition-all duration-300 animate-in fade-in zoom-in-95 my-auto overflow-hidden"
+          className="relative w-full max-w-2xl bg-white/98 dark:bg-slate-900/98 backdrop-blur-2xl border border-white/95 dark:border-slate-700/80 rounded-2xl sm:rounded-modal shadow-glass-lg p-5 xs:p-6 sm:p-8 pointer-events-auto transition-all duration-300 animate-in fade-in zoom-in-95 my-auto overflow-hidden"
         >
           {/* Top Tricolor Accent Bar */}
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-blue-600 to-emerald-600" />
@@ -166,7 +165,7 @@ export default function WhatsAppOrderModal() {
           {/* Close Button */}
           <button
             onClick={closeOrderModal}
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors focus:outline-none z-20 cursor-pointer"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none z-20 cursor-pointer"
             aria-label="Close Modal"
           >
             <X className="w-5 h-5" />
@@ -190,31 +189,33 @@ export default function WhatsAppOrderModal() {
 
           {/* Modal Header */}
           <div className="mb-4 sm:mb-5 pr-8">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">
               <AshokaChakra size={12} />
               <span>Direct WhatsApp Order Form</span>
             </div>
-            <h3 className="text-xl xs:text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
+            <h3 className="text-xl xs:text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug">
               {modalData.selectedDemo ? `Get "${modalData.selectedDemo}"` : 'Start Your Website'}
             </h3>
-            <p className="text-slate-600 text-xs sm:text-sm mt-1">
+            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1">
               Your project details and applied discount will open directly on WhatsApp with our founding team.
             </p>
           </div>
 
           {/* Interactive Coupon Box with Clear Apply & Applied States */}
-          <div className={`mb-5 p-3.5 rounded-2xl border transition-all duration-200 ${isCouponApplied
-              ? 'bg-emerald-50/90 border-emerald-300 shadow-xs'
-              : 'bg-amber-50/70 border-amber-200 shadow-xs'
-            }`}>
+          <div className={`mb-5 p-3.5 rounded-2xl border transition-all duration-200 ${
+            isCouponApplied
+              ? 'bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-500/40 shadow-xs'
+              : 'bg-amber-50/70 dark:bg-amber-950/60 border-amber-200 dark:border-amber-500/40 shadow-xs'
+          }`}>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs ${isCouponApplied ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-950'
-                  }`}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs ${
+                  isCouponApplied ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-950'
+                }`}>
                   <Tag className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                  <div className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5 flex-wrap">
+                  <div className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
                     <span>Coupon: <strong className="font-mono">{couponInput || 'NONE'}</strong></span>
                     {isCouponApplied ? (
                       <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-2xs animate-in zoom-in-95">
@@ -225,14 +226,14 @@ export default function WhatsAppOrderModal() {
                       <button
                         type="button"
                         onClick={handleQuickApplyIndia2025}
-                        className="px-2 py-0.5 rounded-full bg-amber-200 hover:bg-amber-300 text-amber-900 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        className="px-2 py-0.5 rounded-full bg-amber-200 hover:bg-amber-300 dark:bg-amber-900/80 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
                       >
-                        <Flame className="w-3 h-3 text-amber-700 fill-amber-600" />
+                        <Flame className="w-3 h-3 text-amber-700 dark:text-amber-300 fill-amber-600 dark:fill-amber-400" />
                         <span>Click to Apply INDIA2025</span>
                       </button>
                     )}
                   </div>
-                  <div className="text-[11px] text-slate-600 mt-0.5">
+                  <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
                     {isCouponApplied
                       ? '🎉 Flat 20% discount + Free 1-Year Custom Domain & SSL activated!'
                       : 'Apply coupon INDIA2025 to save 20% on your order.'}
@@ -249,7 +250,7 @@ export default function WhatsAppOrderModal() {
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                       placeholder="INDIA2025"
-                      className="w-28 px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-mono font-bold uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-28 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-mono font-bold uppercase text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                     <button
                       type="button"
@@ -261,14 +262,14 @@ export default function WhatsAppOrderModal() {
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-100/90 px-2.5 py-1 rounded-lg flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>APPLIED</span>
                     </span>
                     <button
                       type="button"
                       onClick={handleRemoveCoupon}
-                      className="text-[11px] font-semibold text-slate-500 hover:text-red-600 underline cursor-pointer"
+                      className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 underline cursor-pointer"
                     >
                       Remove
                     </button>
@@ -283,8 +284,8 @@ export default function WhatsAppOrderModal() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
               {/* Full Name */}
               <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Your Full Name <span className="text-pink-600">*</span>
+                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                  Your Full Name <span className="text-pink-600 dark:text-pink-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -293,14 +294,14 @@ export default function WhatsAppOrderModal() {
                   placeholder="e.g. Rahul Sharma"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
                 />
               </div>
 
               {/* Business / Brand Name */}
               <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  Business / Brand Name <span className="text-pink-600">*</span>
+                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                  Business / Brand Name <span className="text-pink-600 dark:text-pink-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -309,7 +310,7 @@ export default function WhatsAppOrderModal() {
                   placeholder="e.g. Sharma Jewels / Acme Inc"
                   value={formData.businessName}
                   onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
                 />
               </div>
             </div>
@@ -317,8 +318,8 @@ export default function WhatsAppOrderModal() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
               {/* WhatsApp / Phone */}
               <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                  WhatsApp / Phone Number <span className="text-pink-600">*</span>
+                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                  WhatsApp / Phone Number <span className="text-pink-600 dark:text-pink-400">*</span>
                 </label>
                 <input
                   type="tel"
@@ -327,13 +328,13 @@ export default function WhatsAppOrderModal() {
                   placeholder="e.g. +91 98765 43210"
                   value={formData.whatsapp}
                   onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
                 />
               </div>
 
               {/* Email Address */}
               <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                   Email Address
                 </label>
                 <input
@@ -342,7 +343,7 @@ export default function WhatsAppOrderModal() {
                   placeholder="rahul@business.com"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
                 />
               </div>
             </div>
@@ -350,14 +351,14 @@ export default function WhatsAppOrderModal() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
               {/* Website Type */}
               <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                   Website Type
                 </label>
                 <select
                   name="websiteType"
                   value={formData.websiteType}
                   onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
                 >
                   <option value="Starter Website (from ₹9,999)">Starter Website (from ₹9,999 / $399)</option>
                   <option value="Professional Website (from ₹19,999)">Professional Website (from ₹19,999 / $799)</option>
@@ -370,7 +371,7 @@ export default function WhatsAppOrderModal() {
 
               {/* Selected Demo */}
               <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                   Selected Demo Reference
                 </label>
                 <input
@@ -379,14 +380,14 @@ export default function WhatsAppOrderModal() {
                   placeholder="e.g. Gourmet Bistro, Nexus Studio..."
                   value={formData.selectedDemo}
                   onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
                 />
               </div>
             </div>
 
             {/* Additional Requirements */}
             <div>
-              <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+              <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                 Project Details / Preferred Colors
               </label>
               <textarea
@@ -395,7 +396,7 @@ export default function WhatsAppOrderModal() {
                 placeholder="Tell us about your brand, preferred launch date, GST requirements..."
                 value={formData.requirements}
                 onChange={handleChange}
-                className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 bg-white focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all resize-none"
+                className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all resize-none"
               ></textarea>
             </div>
 

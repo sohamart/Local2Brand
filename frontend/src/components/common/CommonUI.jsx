@@ -9,8 +9,9 @@ export function GlassCard({
 }) {
   return (
     <div
-      className={`rounded-card ${hoverEffect ? 'glass-card' : 'glass-panel'
-        } ${padding} ${className}`}
+      className={`rounded-card ${
+        hoverEffect ? 'glass-card' : 'glass-panel'
+      } ${padding} ${className}`}
       {...props}
     >
       {children}
@@ -37,7 +38,7 @@ export function GlassButton({
   const variantClasses = {
     primary: "glass-button-primary inline-flex items-center justify-center cursor-pointer",
     secondary: "glass-button-secondary inline-flex items-center justify-center cursor-pointer",
-    outline: "bg-transparent text-slate-800 border border-slate-300 hover:bg-slate-100/60 inline-flex items-center justify-center cursor-pointer transition-all",
+    outline: "bg-transparent text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 inline-flex items-center justify-center cursor-pointer transition-all",
     whatsapp: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 inline-flex items-center justify-center cursor-pointer transition-all"
   }[variant] || "glass-button-primary inline-flex items-center justify-center cursor-pointer";
 

@@ -55,7 +55,7 @@ export default function ProcessTimeline() {
         <div className="mt-16 grid grid-cols-1 md:grid-cols-5 gap-6 relative">
 
           {/* Subtle Connecting Line for Desktop */}
-          <div className="hidden md:block absolute top-1/2 left-8 right-8 h-1 bg-gradient-to-r from-brand-200 via-purple-400 to-pink-400 -translate-y-6 z-0 rounded-full opacity-60" />
+          <div className="hidden md:block absolute top-1/2 left-8 right-8 h-1 bg-gradient-to-r from-brand-200 via-purple-400 to-pink-400 dark:from-brand-900 dark:via-purple-700 dark:to-pink-700 -translate-y-6 z-0 rounded-full opacity-60" />
 
           {steps.map((item, index) => {
             const Icon = item.icon;
@@ -66,38 +66,45 @@ export default function ProcessTimeline() {
                 key={item.step}
                 onMouseEnter={() => setHoveredStep(index)}
                 onMouseLeave={() => setHoveredStep(null)}
-                className={`glass-card p-6 rounded-card border transition-all duration-300 relative z-10 flex flex-col justify-between cursor-pointer ${isHovered
-                    ? 'border-purple-400 shadow-glass-highlight -translate-y-3 bg-white'
-                    : 'border-white/95 shadow-glass bg-white/80'
-                  }`}
+                className={`glass-card p-6 rounded-card border transition-all duration-300 relative z-10 flex flex-col justify-between cursor-pointer ${
+                  isHovered
+                    ? 'border-purple-400 dark:border-purple-500 shadow-glass-highlight -translate-y-3 bg-white dark:bg-slate-900'
+                    : 'border-white/95 dark:border-slate-700/80 shadow-glass bg-white/80 dark:bg-slate-900/80'
+                }`}
               >
                 <div>
                   {/* Step Number & Icon */}
                   <div className="flex items-center justify-between mb-5">
-                    <span className={`text-2xl font-black font-mono transition-colors ${isHovered ? 'text-purple-600' : 'text-purple-600/30'
-                      }`}>
+                    <span
+                      className={`text-2xl font-black font-mono transition-colors ${
+                        isHovered ? 'text-purple-600 dark:text-purple-400' : 'text-purple-600/30 dark:text-purple-400/30'
+                      }`}
+                    >
                       {item.step}
                     </span>
-                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${isHovered
-                        ? 'l2b-gradient-bg text-white shadow-md shadow-purple-500/30 scale-110'
-                        : 'bg-purple-50 text-purple-600 border border-purple-100'
-                      }`}>
+                    <div
+                      className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${
+                        isHovered
+                          ? 'l2b-gradient-bg text-white shadow-md shadow-purple-500/30 scale-110'
+                          : 'bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/30'
+                      }`}
+                    >
                       <Icon className="w-5 h-5" />
                     </div>
                   </div>
 
-                  <h3 className="text-base font-bold text-slate-900 tracking-tight mb-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight mb-2">
                     {item.title}
                   </h3>
 
-                  <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+                  <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
                     {item.description}
                   </p>
                 </div>
 
-                <div className="pt-4 mt-4 border-t border-slate-100/80 flex items-center justify-between text-[11px] font-semibold text-purple-600">
+                <div className="pt-4 mt-4 border-t border-slate-100/80 dark:border-slate-800 flex items-center justify-between text-[11px] font-semibold text-purple-600 dark:text-purple-400">
                   <span>Phase 0{index + 1}</span>
-                  <span className="text-[10px] text-slate-400">Step {index + 1} of 5</span>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500">Step {index + 1} of 5</span>
                 </div>
               </div>
             );

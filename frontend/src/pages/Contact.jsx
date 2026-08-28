@@ -17,6 +17,14 @@ import { siteConfig } from '../config/siteConfig';
 import { generateWhatsAppOrderUrl, generateWhatsAppGeneralUrl, openWhatsAppChat } from '../utils/whatsapp';
 import AshokaChakra from '../components/common/AshokaChakra';
 
+const InstagramIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+  </svg>
+);
+
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
@@ -42,6 +50,11 @@ export default function Contact() {
     openWhatsAppChat(generateWhatsAppGeneralUrl("Hello LOCAL2BRAND, I want to discuss a project."));
   };
 
+  const getInstagramUsername = () => {
+    const handle = siteConfig.socialLinks.instagramHandle || siteConfig.socialLinks.instagram || '@local2brand';
+    return handle.replace(/https?:\/\/(www\.)?instagram\.com\//, '').replace(/@/, '').replace(/\/$/, '');
+  };
+
   return (
     <>
       <SEO
@@ -53,7 +66,7 @@ export default function Contact() {
 
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-900 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
             <AshokaChakra size={13} />
             <span>🇮🇳 Direct Indian Founders Line • 24/7 IST Support</span>
           </div>
@@ -72,22 +85,22 @@ export default function Contact() {
             <div className="lg:col-span-5 space-y-6">
 
               {/* WhatsApp VIP Card */}
-              <div className="glass-panel p-6 sm:p-8 rounded-card border-2 border-emerald-500/40 shadow-glass-lg relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-white to-white">
+              <div className="glass-panel p-6 sm:p-8 rounded-card border-2 border-emerald-500/40 shadow-glass-lg relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-white to-white dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md">
                     <MessageCircle className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-full">
                       Fastest Response
                     </span>
-                    <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">
+                    <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">
                       Direct WhatsApp Chat
                     </h3>
                   </div>
                 </div>
 
-                <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-6">
+                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed mb-6">
                   Skip the back-and-forth emails. Message our senior team directly on WhatsApp to get an immediate project estimate, discuss feature requirements, or request a custom demo showcase.
                 </p>
 
@@ -107,45 +120,67 @@ export default function Contact() {
               </div>
 
               {/* Direct Info List Card */}
-              <div className="glass-card p-6 sm:p-8 rounded-card border border-white/95 space-y-6">
-                <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-1.5">
+              <div className="glass-card p-6 sm:p-8 rounded-card border border-white/95 dark:border-slate-700/80 space-y-6">
+                <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-1.5">
                   <AshokaChakra size={12} />
                   <span>Studio Coordinates</span>
                 </h4>
 
-                <div className="space-y-4 text-xs sm:text-sm text-slate-600">
+                <div className="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
                   <div className="flex items-start gap-3">
-                    <Mail className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                    <MessageCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-bold text-slate-900">Email Inquiries</div>
-                      <a href={`mailto:${siteConfig.email}`} className="text-purple-600 hover:underline">
+                      <div className="font-bold text-slate-900 dark:text-white">Direct WhatsApp</div>
+                      <a
+                        href={`https://wa.me/${(siteConfig.whatsappNumber || '919064971842').replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-emerald-600 dark:text-emerald-400 hover:underline"
+                      >
+                        {siteConfig.displayWhatsApp || '+91 90649 71842'}
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <InstagramIcon className="w-5 h-5 text-pink-600 dark:text-pink-400 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-white">Official Instagram</div>
+                      <a
+                        href={siteConfig.socialLinks.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-pink-600 dark:text-pink-400 hover:underline"
+                      >
+                        @{getInstagramUsername()}
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Phone className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-white">Direct Phone</div>
+                      <a href={`tel:${siteConfig.phone.replace(/\s+/g, '')}`} className="hover:text-purple-600 dark:hover:text-purple-400">
+                        {siteConfig.phone}
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-white">Email Inquiries</div>
+                      <a href={`mailto:${siteConfig.email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
                         {siteConfig.email}
                       </a>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
-                    <Phone className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+                    <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-bold text-slate-900">Direct Phone</div>
-                      <a href={`tel:${siteConfig.whatsappNumber}`} className="hover:text-purple-600">
-                        {siteConfig.displayWhatsapp || siteConfig.phone}
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-slate-900">Operating Hours</div>
-                      <div>{siteConfig.hours}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-slate-900">Studio Location</div>
+                      <div className="font-bold text-slate-900 dark:text-white">Studio Location</div>
                       <div>Pan-India Hub & Global Edge Infrastructure</div>
                     </div>
                   </div>
@@ -156,16 +191,16 @@ export default function Contact() {
 
             {/* Right Column: Inquiry Form Card */}
             <div className="lg:col-span-7">
-              <div className="glass-panel p-6 sm:p-10 rounded-hero border border-white shadow-floating relative overflow-hidden">
+              <div className="glass-panel p-6 sm:p-10 rounded-hero border border-white dark:border-slate-700/80 shadow-floating relative overflow-hidden">
                 <div className="mb-6">
-                  <span className="text-xs font-bold uppercase tracking-widest text-amber-800 flex items-center gap-1.5 mb-1">
+                  <span className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300 flex items-center gap-1.5 mb-1">
                     <AshokaChakra size={12} />
                     <span>Project Inquiry Form</span>
                   </span>
-                  <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                  <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                     Tell us about your website vision.
                   </h3>
-                  <p className="text-slate-500 text-xs sm:text-sm mt-1">
+                  <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
                     Submitting this form connects you directly to WhatsApp with your pre-formatted order summary.
                   </p>
                 </div>
@@ -173,8 +208,8 @@ export default function Contact() {
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        Your Name <span className="text-pink-600">*</span>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                        Your Name <span className="text-pink-600 dark:text-pink-400">*</span>
                       </label>
                       <input
                         type="text"
@@ -183,13 +218,13 @@ export default function Contact() {
                         placeholder="e.g. Vikram Malhotra"
                         value={formData.name}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        Business / Brand Name <span className="text-pink-600">*</span>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                        Business / Brand Name <span className="text-pink-600 dark:text-pink-400">*</span>
                       </label>
                       <input
                         type="text"
@@ -198,15 +233,15 @@ export default function Contact() {
                         placeholder="e.g. Royal Organics"
                         value={formData.businessName}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                        WhatsApp Number <span className="text-pink-600">*</span>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
+                        WhatsApp Number <span className="text-pink-600 dark:text-pink-400">*</span>
                       </label>
                       <input
                         type="tel"
@@ -215,12 +250,12 @@ export default function Contact() {
                         placeholder="e.g. +91 98765 43210"
                         value={formData.whatsapp}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                         Email Address
                       </label>
                       <input
@@ -229,20 +264,20 @@ export default function Contact() {
                         placeholder="vikram@royalorganics.in"
                         value={formData.email}
                         onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                       Project Type
                     </label>
                     <select
                       name="websiteType"
                       value={formData.websiteType}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
                     >
                       <option value="Custom Business Website (from ₹9,999)">Custom Business Website (from ₹9,999 / $399)</option>
                       <option value="High-Converting Landing Page">High-Converting Landing Page</option>
@@ -254,7 +289,7 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                       Tell Us About Your Project & Features Needed
                     </label>
                     <textarea
@@ -263,7 +298,7 @@ export default function Contact() {
                       placeholder="Describe your target audience, preferred styles, timeline, GST requirements, or any specific demo you liked..."
                       value={formData.requirements}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 text-base sm:text-sm transition-all resize-none"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all resize-none"
                     ></textarea>
                   </div>
 
@@ -276,7 +311,7 @@ export default function Contact() {
                       <span>Submit & Open WhatsApp Inquiry</span>
                       <Send className="w-4 h-4 ml-1" />
                     </button>
-                    <p className="text-center text-[10px] text-slate-400 mt-2">
+                    <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-2">
                       Instant WhatsApp response within 15 minutes during IST business hours.
                     </p>
                   </div>

@@ -1,79 +1,66 @@
 import { siteConfig } from '../config/siteConfig';
 
 /**
- * Clean phone number to pure digits for wa.me URL
- * Strips '+', spaces, dashes, brackets etc.
+ * Returns a strictly numeric phone number string for WhatsApp URLs
  */
-function getSanitizedWhatsAppNumber() {
-  const rawNumber = 
-    import.meta.env.VITE_WHATSAPP_NUMBER || 
-    siteConfig.whatsappNumber || 
-    "919876543210";
-    
-  return String(rawNumber).replace(/[^0-9]/g, '');
+export function getSanitizedWhatsAppNumber() {
+  const envNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
+  if (envNumber) {
+    return String(envNumber).replace(/[^0-9]/g, '');
+  }
+  const configNumber = siteConfig.whatsappNumber || siteConfig.phone || '919064971842';
+  return String(configNumber).replace(/[^0-9]/g, '');
 }
 
 /**
- * Builds an encoded WhatsApp URL for custom website orders
+ * Generates direct WhatsApp message URL with order & requirements data
  */
-export function generateWhatsAppOrderUrl(formData = {}) {
+export function generateWhatsAppOrderUrl(orderData = {}) {
   const {
-    name = '',
-    businessName = '',
-    whatsapp = '',
-    email = '',
     websiteType = 'Custom Website',
+    businessName = 'Not specified',
+    name = '',
+    phone = '',
+    requirements = '',
     selectedDemo = '',
-    couponCode = '',
-    discountText = '',
-    finalPrice = '',
-    requirements = 'I would like to discuss a website tailored for my business.'
-  } = formData;
+    coupon = '',
+    discountPercentage = 0,
+    price = ''
+  } = orderData;
 
-  const brandName = import.meta.env.VITE_BRAND_NAME || siteConfig.brandName || "LOCAL2BRAND";
-  const targetNumber = getSanitizedWhatsAppNumber();
+  const number = getSanitizedWhatsAppNumber();
 
-  const lines = [
-    `👋 Hello ${brandName},`,
-    '',
-    'I want to start my website project with you.',
-    '',
-    `👤 *Name:* ${name || 'Not provided'}`,
-    `🏢 *Business / Brand:* ${businessName || 'Not provided'}`,
-    `📱 *WhatsApp/Phone:* ${whatsapp || 'Not provided'}`,
-    `📧 *Email:* ${email || 'Not provided'}`,
-    `🌐 *Website Type:* ${websiteType}`,
-    selectedDemo ? `🏷️ *Template Reference:* ${selectedDemo}` : '',
-    couponCode ? `🔥 *Applied Coupon:* ${couponCode} (${discountText || '20% OFF'})` : '',
-    finalPrice ? `💰 *Price Status:* ${finalPrice}` : '',
-    `📝 *Project Requirements:*`,
-    `${requirements || 'Ready for launch kickoff.'}`,
-    '',
-    'Please confirm project kickoff and next steps on WhatsApp.',
-    'Thank you!'
+  const messageLines = [
+    '✨ *LOCAL2BRAND — NEW PROJECT INQUIRY* ✨',
+    '━━━━━━━━━━━━━━━━━━━━',
+    `👤 *Client Name:* ${name || 'N/A'}`,
+    `📱 *Phone / Contact:* ${phone || 'N/A'}`,
+    `🏢 *Business / Brand:* ${businessName}`,
+    `🌐 *Requested Scope:* ${websiteType}`,
+    selectedDemo ? `🎯 *Chosen Demo:* ${selectedDemo}` : '',
+    price ? `💰 *Budget / Listed Tier:* ${price}` : '',
+    coupon ? `🏷️ *Coupon Applied:* ${coupon} (${discountPercentage}% OFF)` : '',
+    requirements ? `\n📝 *Project Requirements:*\n"${requirements}"` : '',
+    '\n━━━━━━━━━━━━━━━━━━━━',
+    '⚡ *Turnaround Goal:* 48-Hour Delivery',
+    '🇮🇳 *Origin:* local2brand.com'
   ].filter(Boolean);
 
-  const fullMessage = lines.join('\n');
-  const encoded = encodeURIComponent(fullMessage);
-  
-  return `https://wa.me/${targetNumber}?text=${encoded}`;
+  const encodedMessage = encodeURIComponent(messageLines.join('\n'));
+  return `https://wa.me/${number}?text=${encodedMessage}`;
 }
 
 /**
- * Builds a direct general consultation WhatsApp link
+ * Generates quick general WhatsApp support URL
  */
-export function generateWhatsAppGeneralUrl(customMessage = '') {
-  const brandName = import.meta.env.VITE_BRAND_NAME || siteConfig.brandName || "LOCAL2BRAND";
-  const targetNumber = getSanitizedWhatsAppNumber();
-
-  const defaultText = customMessage || 
-    `Hello ${brandName}, I would like to explore your website design & development services for my business.`;
-    
-  return `https://wa.me/${targetNumber}?text=${encodeURIComponent(defaultText)}`;
+export function generateWhatsAppGeneralUrl(inquiry = '') {
+  const number = getSanitizedWhatsAppNumber();
+  const text = inquiry || 'Hi LOCAL2BRAND team! I want to discuss a new website project for my brand.';
+  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
 /**
- * Helper to open WhatsApp URL in a new window/tab safely
+ * Opens WhatsApp in a new tab safely
  */
 export function openWhatsAppChat(url) {
   if (typeof window !== 'undefined') {

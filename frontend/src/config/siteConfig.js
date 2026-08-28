@@ -1,55 +1,40 @@
-/**
- * Centralized Site Configuration for LOCAL2BRAND
- * Dynamically populated from environment variables (.env) with robust fallbacks.
- */
-
 export const siteConfig = {
-  brandName: import.meta.env.VITE_BRAND_NAME || "LOCAL2BRAND",
-  tagline: import.meta.env.VITE_BRAND_TAGLINE || "Build Local. Think Global.",
-  shortDescription: import.meta.env.VITE_BRAND_SHORT_DESC || "We Build Digital Experiences That Turn Local Brands Into Big Brands.",
-  fullDescription: import.meta.env.VITE_BRAND_FULL_DESC || "LOCAL2BRAND designs and develops bespoke, high-converting websites and modern digital products for ambitious businesses ready to scale locally and globally.",
+  brandName: "LOCAL2BRAND",
+  domain: "local2brand.com",
+  tagline: "Build Local. Think Global.",
   
-  // WhatsApp & Contact details
-  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "918649814067", 
-  displayWhatsapp: import.meta.env.VITE_DISPLAY_WHATSAPP || "+918649814067",
-  email: import.meta.env.VITE_CONTACT_EMAIL || "stackaddacontact@.com",
-  phone: import.meta.env.VITE_CONTACT_PHONE || "+91 98765 43210",
-  address: import.meta.env.VITE_CONTACT_ADDRESS || "Pan-India Hub • Mumbai, Bengaluru, Delhi, Kolkata & Global Edge",
-  hours: import.meta.env.VITE_CONTACT_HOURS || "Mon - Sat: 9:00 AM - 9:00 PM IST",
+  // Dynamic Environment Integrations with Robust Fallbacks
+  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "919064971842",
+  displayWhatsApp: import.meta.env.VITE_DISPLAY_WHATSAPP || "+91 90649 71842",
+  phone: import.meta.env.VITE_CONTACT_PHONE || "+91 90649 71842",
+  email: import.meta.env.VITE_CONTACT_EMAIL || "hello@local2brand.com",
+  
+  turnaroundTime: "48 Hours",
+  startingPrice: "$399",
+  startingPriceInr: "₹9,999",
 
-  // Maintenance & Coming Soon Controls
-  isMaintenanceMode: import.meta.env.VITE_MAINTENANCE_MODE === "true",
-  isComingSoonMode: import.meta.env.VITE_COMING_SOON_MODE === "true",
-  launchTargetDate: import.meta.env.VITE_LAUNCH_TARGET_DATE || "2026-09-15T00:00:00",
-  adminBypassPassword: import.meta.env.VITE_ADMIN_BYPASS_PASSWORD || "admin123",
+  // Master Maintenance / Launch Gate
+  isMaintenanceMode: false,
+  isComingSoonMode: false,
 
-  // Instagram Configuration
-  instagramHandle: import.meta.env.VITE_INSTAGRAM_HANDLE || "local2brand",
-
+  // Social Links
   socialLinks: {
-    instagram: import.meta.env.VITE_INSTAGRAM_URL || `https://instagram.com/${import.meta.env.VITE_INSTAGRAM_HANDLE || "local2brand_official"}`,
-    facebook: import.meta.env.VITE_FACEBOOK_URL || "https://facebook.com/local2brand",
-    linkedin: import.meta.env.VITE_LINKEDIN_URL || "https://linkedin.com/company/local2brand",
-    youtube: import.meta.env.VITE_YOUTUBE_URL || "https://youtube.com/@local2brand",
-    twitter: import.meta.env.VITE_TWITTER_URL || "https://twitter.com/local2brand"
+    instagram: import.meta.env.VITE_INSTAGRAM_URL || "https://instagram.com/local2brand",
+    instagramHandle: import.meta.env.VITE_INSTAGRAM_HANDLE || "@local2brand",
+    whatsapp: `https://wa.me/${(import.meta.env.VITE_WHATSAPP_NUMBER || "919064971842").replace(/[^0-9]/g, '')}`,
+    linkedin: "https://linkedin.com/company/local2brand",
+    github: "https://github.com/local2brand",
+    twitter: "https://twitter.com/local2brand"
   },
 
+  // Primary Navigation Structure
   navLinks: [
     { label: "Home", href: "/" },
+    { label: "Templates", href: "/demos" },
     { label: "Services", href: "/services" },
-    { label: "Work", href: "/portfolio" },
     { label: "Pricing", href: "/pricing" },
-    { label: "Demos", href: "/demos" },
+    { label: "Portfolio", href: "/portfolio" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" }
-  ],
-
-  metrics: [
-    { value: import.meta.env.VITE_METRIC_SPEED || "99.8%", label: "Average PageSpeed", subtext: "Ultra-fast load times" },
-    { value: import.meta.env.VITE_METRIC_TURNAROUND || "48 Hrs", label: "Fast Turnaround", subtext: "For ready-made templates" },
-    { value: import.meta.env.VITE_METRIC_RESPONSIVE || "100%", label: "Mobile Responsive", subtext: "Pixel-perfect on all devices" },
-    { value: import.meta.env.VITE_METRIC_SUPPORT || "24/7", label: "Direct WhatsApp Support", subtext: "No automated bots" }
   ]
 };
-
-export default siteConfig;

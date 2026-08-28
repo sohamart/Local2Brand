@@ -30,8 +30,8 @@ export default function Testimonials() {
         />
 
         {/* Featured Testimonial Hero Glass Box */}
-        <div className="mt-16 max-w-4xl mx-auto glass-panel rounded-hero p-8 sm:p-12 border border-white shadow-floating relative">
-          <Quote className="w-12 h-12 text-purple-500/15 absolute top-6 right-8 pointer-events-none" />
+        <div className="mt-16 max-w-4xl mx-auto glass-panel rounded-hero p-8 sm:p-12 border border-white dark:border-slate-700/80 shadow-floating relative">
+          <Quote className="w-12 h-12 text-purple-500/15 dark:text-purple-400/20 absolute top-6 right-8 pointer-events-none" />
 
           {/* Rating stars */}
           <div className="flex items-center gap-1 text-amber-400 mb-6">
@@ -41,26 +41,26 @@ export default function Testimonials() {
           </div>
 
           {/* Quote text */}
-          <p className="text-slate-800 text-lg sm:text-2xl font-medium leading-relaxed italic mb-8">
+          <p className="text-slate-800 dark:text-slate-100 text-lg sm:text-2xl font-medium leading-relaxed italic mb-8">
             "{current.quote}"
           </p>
 
           {/* Client Bio & Navigation */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-6 border-t border-slate-200/60">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pt-6 border-t border-slate-200/60 dark:border-slate-800">
             <div className="flex items-center gap-4">
               <img
                 src={current.avatar}
                 alt={current.name}
-                className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-md"
+                className="w-14 h-14 rounded-full object-cover border-2 border-white dark:border-slate-700 shadow-md"
               />
               <div>
-                <h4 className="text-base font-bold text-slate-900">
+                <h4 className="text-base font-bold text-slate-900 dark:text-white">
                   {current.name}
                 </h4>
                 <p className="text-xs font-semibold l2b-gradient-text">
                   {current.role}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {current.business}
                 </p>
               </div>
@@ -70,17 +70,17 @@ export default function Testimonials() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePrev}
-                className="p-2.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 shadow-sm transition-all cursor-pointer"
+                className="p-2.5 rounded-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm transition-all cursor-pointer"
                 aria-label="Previous testimonial"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-xs font-semibold text-slate-500 px-2">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-2">
                 {activeIndex + 1} / {testimonials.length}
               </span>
               <button
                 onClick={handleNext}
-                className="p-2.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 shadow-sm transition-all cursor-pointer"
+                className="p-2.5 rounded-full bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm transition-all cursor-pointer"
                 aria-label="Next testimonial"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -95,23 +95,24 @@ export default function Testimonials() {
             <div
               key={item.id}
               onClick={() => setActiveIndex(idx)}
-              className={`p-5 rounded-card cursor-pointer transition-all duration-200 ${activeIndex === idx
-                  ? 'bg-white shadow-glass border-2 border-purple-500/80 scale-102'
-                  : 'glass-card hover:bg-white border border-white/80 opacity-70 hover:opacity-100'
-                }`}
+              className={`p-5 rounded-card cursor-pointer transition-all duration-200 ${
+                activeIndex === idx
+                  ? 'bg-white dark:bg-slate-900 shadow-glass border-2 border-purple-500/80 scale-102'
+                  : 'glass-card hover:bg-white dark:hover:bg-slate-900/90 border border-white/80 dark:border-slate-700/70 opacity-70 hover:opacity-100'
+              }`}
             >
               <div className="flex items-center gap-1 text-amber-400 mb-2">
                 {[...Array(item.rating)].map((_, i) => (
                   <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
                 ))}
               </div>
-              <p className="text-slate-700 text-xs line-clamp-2 italic mb-3">
+              <p className="text-slate-700 dark:text-slate-300 text-xs line-clamp-2 italic mb-3">
                 "{item.quote}"
               </p>
-              <div className="text-xs font-bold text-slate-900 truncate">
+              <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
                 {item.name}
               </div>
-              <div className="text-[11px] text-slate-500 truncate">
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                 {item.business}
               </div>
             </div>

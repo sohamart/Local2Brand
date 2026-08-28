@@ -1,123 +1,116 @@
-import React, { useState } from 'react';
-import {
-  X,
-  MessageCircle,
-  ChevronRight,
-  ChevronDown,
-  Sparkles,
-  Headphones,
-  ArrowRight,
-  Flame,
-  Send,
-  CheckCircle2,
-  Clock,
-  ShieldCheck
-} from 'lucide-react';
-import { useOrderModal } from '../../context/OrderModalContext';
-import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
+import React, { useState, useEffect } from 'react';
+import { MessageCircle, X, Sparkles, ArrowRight, HelpCircle, ChevronRight, Check } from 'lucide-react';
+import { generateWhatsAppGeneralUrl, generateWhatsAppOrderUrl, openWhatsAppChat } from '../../utils/whatsapp';
+import { siteConfig } from '../../config/siteConfig';
 import AshokaChakra from './AshokaChakra';
 
 const supportTopics = [
   {
-    id: 'offers',
-    icon: '🔥',
-    title: 'Launch Offer: 20% OFF Discount',
-    shortSummary: 'Get flat 20% discount with code INDIA2025 + Free SSL & Domain.',
-    fullAnswer: '🎉 **Launch Special Offer Active!**\n\n• **Flat 20% OFF** on all Ready-Made Website Templates\n• **Free 1-Year Custom Domain & SSL Certificate**\n• **Coupon Code:** `INDIA2025`\n\nClaim this discount directly when you order on WhatsApp!',
-    whatsappPrompt: 'Hello LOCAL2BRAND Founder, I want to claim the Launch Special 20% OFF Offer (Code: INDIA2025) for my website.',
-    hasClaimModal: true
-  },
-  {
     id: 'pricing',
-    icon: '💰',
-    title: 'Website Pricing & Inclusions',
-    shortSummary: 'Fixed packages: Starter (₹9,999 / $399) to Pro (₹19,999 / $799).',
-    fullAnswer: '💼 **Fixed Upfront Pricing Tiers:**\n\n• **Starter Tier:** ₹9,999 / $399 (Up to 5 Pages, 48h Turnaround, Mobile-Perfect)\n• **Professional Tier:** ₹19,999 / $799 (Up to 12 Pages, Custom Brand System & SEO)\n• **Custom Enterprise:** ₹39,999 / $1,499+ (Bespoke Web Apps & Portals)\n\n✅ 100% Lifetime Code Ownership • Zero Monthly Lock-ins!',
-    whatsappPrompt: 'Hello LOCAL2BRAND, I would like to discuss the pricing packages for my business website.'
+    question: 'How much does a website cost?',
+    shortAnswer: 'Our ready-made demo templates start at ₹9,999 / $399 with 48h delivery. Custom projects are quoted based on requirements.',
+    whatsappPrompt: 'Hi LOCAL2BRAND! I would like to know more about website pricing and packages.'
   },
   {
-    id: 'speed',
-    icon: '⚡',
-    title: 'Delivery Speed (48h Turnaround)',
-    shortSummary: 'Templates ready in 48-72h. Custom builds in 5-7 days.',
-    fullAnswer: '⚡ **Superfast Delivery Standard:**\n\n• **Ready-Made Templates:** Live in **48 to 72 Hours** with your real branding and content.\n• **Custom Websites:** **5 to 7 Business Days**.\n\nAll builds achieve a 98+ Google PageSpeed score!',
-    whatsappPrompt: 'Hello LOCAL2BRAND, I want a fast turnaround website delivered in 48 hours.'
+    id: 'turnaround',
+    question: 'How fast can my website launch?',
+    shortAnswer: 'Showcase demo templates launch in just 48 hours. Bespoke custom designs typically take 3 to 7 business days.',
+    whatsappPrompt: 'Hi LOCAL2BRAND! Can I get a website delivered in 48 hours?'
   },
   {
-    id: 'templates',
-    icon: '🗂️',
-    title: 'Browse 9+ Ready-Made Templates',
-    shortSummary: 'Restaurants, Salons, Gyms, Jewelry, Real Estate, E-commerce.',
-    fullAnswer: '🗂️ **Choose from 9+ Industry-Proven Templates:**\n\n• Gourmet Bistro (Restaurants)\n• Nexus Creative (Agencies)\n• Aurum Jewels (Jewelry & Retail)\n• PulseFit (Gyms & Fitness)\n• Velvet Luxe (Salons & Spas)\n• EstatePrime (Real Estate)\n\nWe customize your chosen design with your logo, products, and WhatsApp direct checkout!',
-    whatsappPrompt: 'Hello LOCAL2BRAND, please send me your top demo templates for my industry.'
+    id: 'coupon',
+    question: 'Is there a launch discount available?',
+    shortAnswer: 'Yes! Use coupon code INDIA2025 during WhatsApp order to claim an instant 20% discount + free SSL & domain.',
+    whatsappPrompt: 'Hi LOCAL2BRAND! I want to claim the INDIA2025 (20% OFF) coupon for my new website.'
   },
   {
-    id: 'gst',
-    icon: '🇮🇳',
-    title: 'GST Invoices & Payment Modes',
-    shortSummary: 'Official GST billing + UPI, NetBanking, RuPay & Cards.',
-    fullAnswer: '🇮🇳 **100% Indian Business Friendly:**\n\n• Official GST Tax Invoices provided for Input Tax Credit (ITC).\n• Payment Modes: UPI (GPay, PhonePe, Paytm), NetBanking, IMPS, NEFT, RuPay, and Global Credit/Debit Cards.',
-    whatsappPrompt: 'Hello LOCAL2BRAND, I want to discuss GST billing and payment details for my website project.'
+    id: 'process',
+    question: 'What is the ordering process?',
+    shortAnswer: 'Simply pick a design from our marketplace or share your concept. We build it, send a live preview for feedback, and deploy.',
+    whatsappPrompt: 'Hi LOCAL2BRAND! I want to understand your process for building my website.'
   },
   {
-    id: 'ownership',
-    icon: '💻',
-    title: 'Lifetime Code Ownership & Hosting',
-    shortSummary: 'You own 100% of the code forever. Free Vercel/Cloudflare setup.',
-    fullAnswer: '💻 **Lifetime Asset Ownership:**\n\n• You own 100% of your source code and design assets for life with zero recurring rental fees.\n• Deployed on ultra-fast global serverless edge infrastructure (Cloudflare / Vercel) with free SSL.',
-    whatsappPrompt: 'Hello LOCAL2BRAND, I want to know more about source code ownership and hosting setup.'
+    id: 'demo',
+    question: 'Can I customize a demo template?',
+    shortAnswer: '100%! We replace all text, images, colors, logos, and features with your exact brand identity and business offerings.',
+    whatsappPrompt: 'Hi LOCAL2BRAND! I want to customize a template for my business.'
   }
 ];
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [hasPrompted, setHasPrompted] = useState(false);
   const [selectedTopicId, setSelectedTopicId] = useState(null);
-  const { openOrderModal } = useOrderModal();
+
+  // Trigger floating pulse indicator once after 6 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHasPrompted(true);
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleGeneralWhatsApp = () => {
-    openWhatsAppChat(generateWhatsAppGeneralUrl('Hello LOCAL2BRAND, I want to discuss a website project for my business.'));
+    openWhatsAppChat(generateWhatsAppGeneralUrl());
+    setIsOpen(false);
   };
 
-  const handleTopicWhatsApp = (topic) => {
-    openWhatsAppChat(generateWhatsAppGeneralUrl(topic.whatsappPrompt));
+  const handleTopicWhatsApp = (prompt) => {
+    openWhatsAppChat(generateWhatsAppGeneralUrl(prompt));
+    setIsOpen(false);
   };
 
   return (
-    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 pointer-events-auto">
+    <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50">
 
-      {/* 1. Compact Floating Circular Button */}
-      <div className="relative group flex items-center justify-end">
-        {!isOpen && (
-          <div className="hidden sm:block absolute right-16 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-            <span>Direct WhatsApp Support</span>
-            <div className="absolute right-[-4px] top-1/2 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45" />
+      {/* 1. Floating WhatsApp Launcher Button */}
+      <div className="relative flex items-center justify-end">
+
+        {/* Attention Bubble on Desktop */}
+        {!isOpen && hasPrompted && (
+          <div
+            onClick={() => setIsOpen(true)}
+            className="hidden sm:flex items-center gap-2 mr-3 px-3.5 py-2 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/90 dark:border-slate-700/80 shadow-glass text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer animate-float"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span>Questions? Chat with founders</span>
+            <X
+              onClick={(e) => {
+                e.stopPropagation();
+                setHasPrompted(false);
+              }}
+              className="w-3.5 h-3.5 text-slate-400 hover:text-slate-700 dark:hover:text-white ml-1"
+            />
           </div>
         )}
 
+        {/* Primary Round Toggle Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white shadow-glass-highlight hover:shadow-2xl transition-all duration-300 transform active:scale-95 cursor-pointer relative ${isOpen
-              ? 'bg-slate-900 rotate-90 scale-100'
-              : 'l2b-gradient-bg animate-float hover:scale-108'
-            }`}
-          aria-label={isOpen ? "Close Support" : "Open WhatsApp Support"}
+          className={`w-13 h-13 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 transform active:scale-95 cursor-pointer relative ${
+            isOpen
+              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+              : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 hover:scale-105'
+          }`}
+          aria-label={isOpen ? "Close WhatsApp Support" : "Open WhatsApp Support"}
         >
           {isOpen ? (
-            <X className="w-6 h-6 text-white" />
+            <X className="w-6 h-6 transition-transform rotate-0" />
           ) : (
-            <div className="relative flex items-center justify-center">
-              <Headphones className="w-6 h-6 animate-pulse" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white animate-ping" />
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white" />
-            </div>
+            <>
+              <MessageCircle className="w-7 h-7 fill-white" />
+              {/* Online Pulse Dot */}
+              <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-white dark:border-slate-900 animate-pulse" />
+            </>
           )}
         </button>
+
       </div>
 
       {/* 2. Dedicated WhatsApp Support & Question Selector Card */}
       {isOpen && (
         <div
-          className="absolute bottom-16 sm:bottom-18 right-0 w-[320px] xs:w-[360px] sm:w-[395px] h-[520px] max-h-[82vh] bg-white/98 backdrop-blur-2xl rounded-3xl border border-white/95 shadow-2xl flex flex-col justify-between overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 ease-out"
+          className="absolute bottom-16 sm:bottom-18 right-0 w-[320px] xs:w-[360px] sm:w-[395px] h-[520px] max-h-[82vh] bg-white/98 dark:bg-slate-900/98 backdrop-blur-2xl rounded-3xl border border-white/95 dark:border-slate-700/80 shadow-2xl flex flex-col justify-between overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-300 ease-out"
           data-lenis-prevent="true"
         >
           {/* Header Bar */}
@@ -152,7 +145,7 @@ export default function Chatbot() {
 
           {/* Body Content with Smooth Scrolling */}
           <div
-            className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 bg-slate-50/60 modal-touch-scroll"
+            className="flex-1 p-3.5 sm:p-4 overflow-y-auto space-y-3 bg-slate-50/60 dark:bg-slate-950/60 modal-touch-scroll"
             data-lenis-prevent="true"
             style={{
               WebkitOverflowScrolling: 'touch',
@@ -185,10 +178,10 @@ export default function Chatbot() {
 
             {/* Topic Selectors Header */}
             <div className="pt-1 flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Frequently Asked Topics
               </span>
-              <span className="text-[10px] text-slate-400">Select any topic below</span>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500">Select any topic below</span>
             </div>
 
             {/* Questions / Topic Accordion List */}
@@ -199,88 +192,54 @@ export default function Chatbot() {
                 return (
                   <div
                     key={topic.id}
-                    className={`rounded-2xl border transition-all duration-200 overflow-hidden ${isSelected
-                        ? 'bg-white border-purple-300 shadow-md ring-1 ring-purple-400/20'
-                        : 'bg-white/90 border-slate-200/80 hover:border-slate-300 shadow-2xs'
-                      }`}
+                    className={`rounded-2xl border transition-all overflow-hidden ${
+                      isSelected
+                        ? 'bg-white dark:bg-slate-900 border-purple-300 dark:border-purple-500/50 shadow-sm'
+                        : 'bg-white/80 dark:bg-slate-900/80 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
                   >
-                    {/* Clickable Header */}
                     <button
                       onClick={() => setSelectedTopicId(isSelected ? null : topic.id)}
-                      className="w-full p-3 text-left flex items-center justify-between gap-2.5 cursor-pointer focus:outline-none"
+                      className="w-full p-3 text-left flex items-center justify-between gap-2 cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5 overflow-hidden">
-                        <span className="text-base shrink-0">{topic.icon}</span>
-                        <div className="overflow-hidden">
-                          <div className="text-xs font-bold text-slate-900 truncate">
-                            {topic.title}
-                          </div>
-                          {!isSelected && (
-                            <div className="text-[10px] text-slate-500 truncate">
-                              {topic.shortSummary}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="shrink-0 text-slate-400">
-                        {isSelected ? (
-                          <ChevronDown className="w-4 h-4 text-purple-600" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4" />
-                        )}
-                      </div>
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {topic.question}
+                      </span>
+                      <ChevronRight
+                        className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${
+                          isSelected ? 'rotate-90 text-purple-600 dark:text-purple-400' : ''
+                        }`}
+                      />
                     </button>
 
-                    {/* Expanded Content */}
                     {isSelected && (
-                      <div className="px-3 pb-3.5 pt-1 border-t border-slate-100 text-xs text-slate-700 space-y-3 animate-in fade-in duration-150">
-                        <div className="whitespace-pre-line leading-relaxed text-[11px]">
-                          {topic.fullAnswer}
-                        </div>
-
-                        <div className="pt-1 flex flex-wrap items-center gap-2">
-                          <button
-                            onClick={() => handleTopicWhatsApp(topic)}
-                            className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            <span>Ask This on WhatsApp</span>
-                          </button>
-
-                          {topic.hasClaimModal && (
-                            <button
-                              onClick={() => {
-                                setIsOpen(false);
-                                openOrderModal({ websiteType: 'Offer Code: INDIA2025 (20% OFF)' });
-                              }}
-                              className="py-2 px-3 rounded-xl text-white l2b-gradient-bg font-bold text-[11px] shadow-xs cursor-pointer hover:opacity-95"
-                            >
-                              Claim 20% OFF
-                            </button>
-                          )}
-                        </div>
+                      <div className="px-3 pb-3 pt-1 space-y-2.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800">
+                        <p className="leading-relaxed text-[11px]">
+                          {topic.shortAnswer}
+                        </p>
+                        <button
+                          onClick={() => handleTopicWhatsApp(topic.whatsappPrompt)}
+                          className="w-full py-2 px-3 rounded-xl bg-purple-50 dark:bg-purple-950/70 hover:bg-purple-100 dark:hover:bg-purple-900/80 text-purple-800 dark:text-purple-300 border border-purple-200/80 dark:border-purple-500/40 font-bold text-[11px] flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                          <span>Ask this on WhatsApp</span>
+                        </button>
                       </div>
                     )}
                   </div>
                 );
               })}
             </div>
+
           </div>
 
-          {/* Footer Quick Action */}
-          <div className="p-3 bg-white border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 shrink-0">
-            <span className="text-[11px]">⚡ 48-Hour Delivery Guarantee</span>
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                openOrderModal();
-              }}
-              className="text-xs font-bold text-purple-600 hover:text-purple-800 flex items-center gap-1 cursor-pointer"
-            >
-              <span>Start Project</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
+          {/* Footer Bar */}
+          <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[10px] text-slate-400 shrink-0">
+            <span className="flex items-center gap-1">
+              <AshokaChakra size={11} />
+              <span>LOCAL2BRAND • WhatsApp Support</span>
+            </span>
+            <span className="font-mono text-emerald-600 dark:text-emerald-400 font-semibold">{siteConfig.displayWhatsApp}</span>
           </div>
         </div>
       )}

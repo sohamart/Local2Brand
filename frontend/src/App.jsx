@@ -11,6 +11,7 @@ import Preloader from './components/common/Preloader';
 import MaintenanceMode from './components/common/MaintenanceMode';
 import { siteConfig } from './config/siteConfig';
 import { OrderModalProvider } from './context/OrderModalContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Pages
 import Home from './pages/Home';
@@ -77,66 +78,70 @@ export default function App() {
   // If maintenance / coming soon is active and NOT bypassed, show full countdown screen
   if (isMaintenanceOrComingSoon && !isBypassed) {
     return (
-      <MaintenanceMode onBypassSuccess={() => setIsBypassed(true)} />
+      <ThemeProvider>
+        <MaintenanceMode onBypassSuccess={() => setIsBypassed(true)} />
+      </ThemeProvider>
     );
   }
 
   return (
-    <OrderModalProvider>
-      <div className="relative min-h-screen flex flex-col font-sans text-slate-900 selection:bg-purple-600 selection:text-white">
-        <ScrollToTop />
+    <ThemeProvider>
+      <OrderModalProvider>
+        <div className="relative min-h-screen flex flex-col font-sans text-slate-900 dark:text-slate-100 selection:bg-purple-600 selection:text-white transition-colors duration-300">
+          <ScrollToTop />
 
-        {/* Animated Initial Liquid Glass Preloader */}
-        <Preloader />
+          {/* Animated Initial Liquid Glass Preloader */}
+          <Preloader />
 
-        {/* Floating Admin Bypass Active Pill Indicator */}
-        {isMaintenanceOrComingSoon && isBypassed && (
-          <div className="fixed bottom-3 left-3 z-[9999] p-2 sm:px-3 sm:py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md text-white text-[11px] font-bold shadow-2xl flex items-center gap-2 border border-slate-700">
-            <Unlock className="w-3.5 h-3.5 text-amber-400" />
-            <span>Admin Preview Active ({bypassMinutesRemaining}m left)</span>
-            <button
-              onClick={handleManualLock}
-              className="text-[10px] uppercase font-bold text-red-400 hover:text-red-300 underline ml-1 cursor-pointer"
-            >
-              Lock Site
-            </button>
+          {/* Floating Admin Bypass Active Pill Indicator */}
+          {isMaintenanceOrComingSoon && isBypassed && (
+            <div className="fixed bottom-3 left-3 z-[9999] p-2 sm:px-3 sm:py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md text-white text-[11px] font-bold shadow-2xl flex items-center gap-2 border border-slate-700">
+              <Unlock className="w-3.5 h-3.5 text-amber-400" />
+              <span>Admin Preview Active ({bypassMinutesRemaining}m left)</span>
+              <button
+                onClick={handleManualLock}
+                className="text-[10px] uppercase font-bold text-red-400 hover:text-red-300 underline ml-1 cursor-pointer"
+              >
+                Lock Site
+              </button>
+            </div>
+          )}
+
+          {/* Precision Fluid Pointer Dot & Ring Cursor */}
+          <CustomCursor />
+
+          {/* Ambient Liquid Glass Mesh Background */}
+          <LiquidBackground />
+
+          {/* Global Floating Glass Navbar */}
+          <Navbar />
+
+          {/* Dynamic Route Viewports */}
+          <div className="flex-1 z-10">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/portfolio" element={<Portfolio />} />
+              <Route path="/demos" element={<Demos />} />
+              <Route path="/demos/:slug" element={<DemoDetails />} />
+              <Route path="/demo/:slug" element={<DemoDetails />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </div>
-        )}
 
-        {/* Precision Fluid Pointer Dot & Ring Cursor */}
-        <CustomCursor />
+          {/* Global Footer */}
+          <Footer />
 
-        {/* Ambient Liquid Glass Mesh Background */}
-        <LiquidBackground />
+          {/* Floating Direct WhatsApp Support & Question Selector */}
+          <Chatbot />
 
-        {/* Global Floating Glass Navbar */}
-        <Navbar />
-
-        {/* Dynamic Route Viewports */}
-        <div className="flex-1 z-10">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/portfolio" element={<Portfolio />} />
-            <Route path="/demos" element={<Demos />} />
-            <Route path="/demos/:slug" element={<DemoDetails />} />
-            <Route path="/demo/:slug" element={<DemoDetails />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          {/* Global WhatsApp Order Modal */}
+          <WhatsAppOrderModal />
         </div>
-
-        {/* Global Footer */}
-        <Footer />
-
-        {/* Floating Direct WhatsApp Support & Question Selector */}
-        <Chatbot />
-
-        {/* Global WhatsApp Order Modal */}
-        <WhatsAppOrderModal />
-      </div>
-    </OrderModalProvider>
+      </OrderModalProvider>
+    </ThemeProvider>
   );
 }
