@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 
 const ThemeContext = createContext();
 
@@ -10,7 +11,7 @@ export function ThemeProvider({ children }) {
         return savedTheme;
       }
     }
-    return 'dark'; // Default to premium dark mode
+    return 'light'; // Default to clean, modern light mode
   });
 
   useEffect(() => {
@@ -29,8 +30,49 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('l2b_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
+  // Authentic Expanding Circular UI Reveal (New Theme expands outward from button)
+  const toggleTheme = (e) => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+
+    const rect = e?.currentTarget?.getBoundingClientRect();
+    const x = rect ? rect.left + rect.width / 2 : (e?.clientX ?? window.innerWidth / 2);
+    const y = rect ? rect.top + rect.height / 2 : (e?.clientY ?? window.innerHeight / 2);
+
+    // If browser supports Document View Transition API
+    if (
+      typeof document !== 'undefined' &&
+      document.startViewTransition &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      const maxDistance = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      const transition = document.startViewTransition(() => {
+        flushSync(() => {
+          setTheme(nextTheme);
+        });
+      });
+
+      transition.ready.then(() => {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${maxDistance}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 1100, // Luxurious slow 1.1s silky smooth circle reveal
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            pseudoElement: '::view-transition-new(root)',
+          }
+        );
+      });
+    } else {
+      setTheme(nextTheme);
+    }
   };
 
   return (

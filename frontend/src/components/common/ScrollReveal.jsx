@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * Ultra-Optimized 120 FPS Scroll Reveal Component
- * Uses pure GPU transform3d + opacity with zero expensive blur re-rasterization.
+ * High-Impact 120 FPS Mobile & Desktop Scroll Reveal Component
+ * Delivers pronounced, silky smooth 3D liquid lift & fade on mobile touch and desktop.
  */
 export default function ScrollReveal({
   children,
   variant = 'fade-up',
   delay = 0,
-  duration = 600,
-  threshold = 0.08,
+  duration = 700,
+  threshold = 0.05, // triggers reliably on mobile viewports
   className = '',
   ...props
 }) {
@@ -26,7 +26,7 @@ export default function ScrollReveal({
       },
       {
         threshold,
-        rootMargin: '0px 0px -30px 0px',
+        rootMargin: '0px 0px -25px 0px',
       }
     );
 
@@ -43,17 +43,17 @@ export default function ScrollReveal({
   const getInitialTransform = () => {
     switch (variant) {
       case 'fade-up':
-        return 'translate3d(0, 24px, 0)';
+        return 'translate3d(0, 32px, 0) scale(0.98)';
       case 'fade-down':
-        return 'translate3d(0, -24px, 0)';
+        return 'translate3d(0, -32px, 0) scale(0.98)';
       case 'fade-left':
-        return 'translate3d(-28px, 0, 0)';
+        return 'translate3d(-32px, 0, 0) scale(0.98)';
       case 'fade-right':
-        return 'translate3d(28px, 0, 0)';
+        return 'translate3d(32px, 0, 0) scale(0.98)';
       case 'zoom-in':
-        return 'translate3d(0, 16px, 0) scale(0.96)';
+        return 'translate3d(0, 20px, 0) scale(0.94)';
       default:
-        return 'translate3d(0, 20px, 0)';
+        return 'translate3d(0, 30px, 0)';
     }
   };
 
