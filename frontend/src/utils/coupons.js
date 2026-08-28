@@ -21,12 +21,43 @@ export const getAvailableCoupons = () => {
     console.error('Error parsing VITE_COUPONS_LIST', e);
   }
 
-  // Ensure default code is present
+  // Ensure default code is present if not defined
   if (!coupons[defaultCode.toUpperCase()]) {
     coupons[defaultCode.toUpperCase()] = defaultDiscount;
   }
 
   return coupons;
+};
+
+/**
+ * Returns list of featured/clickable coupons for the UI pill badges
+ * Driven by VITE_SHOW_FEATURED_COUPONS or entire VITE_COUPONS_LIST
+ */
+export const getFeaturedCouponsList = () => {
+  const allCoupons = getAvailableCoupons();
+  const featuredEnv = import.meta.env.VITE_SHOW_FEATURED_COUPONS;
+
+  if (featuredEnv && typeof featuredEnv === 'string') {
+    const requestedCodes = featuredEnv.split(',').map(c => c.trim().toUpperCase());
+    const list = [];
+    requestedCodes.forEach(code => {
+      if (allCoupons[code]) {
+        list.push({
+          code,
+          discountPercent: allCoupons[code],
+          label: `${code} (${allCoupons[code]}% OFF)`
+        });
+      }
+    });
+    if (list.length > 0) return list;
+  }
+
+  // Otherwise return top 3 from allCoupons
+  return Object.entries(allCoupons).slice(0, 4).map(([code, discount]) => ({
+    code,
+    discountPercent: discount,
+    label: `${code} (${discount}% OFF)`
+  }));
 };
 
 /**
@@ -65,4 +96,12 @@ export const getDefaultPromoCode = () => {
 
 export const getDefaultDiscountPercent = () => {
   return parseInt(import.meta.env.VITE_DEFAULT_PROMO_DISCOUNT || '20', 10);
+};
+
+export const getAvailableCouponsLabel = () => {
+  return import.meta.env.VITE_AVAILABLE_COUPONS_LABEL || 'Available Offers:';
+};
+
+export const getCouponSectionTitle = () => {
+  return import.meta.env.VITE_COUPON_SECTION_TITLE || 'Have a Promo Coupon Code?';
 };

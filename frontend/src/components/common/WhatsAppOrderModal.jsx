@@ -29,7 +29,10 @@ import ThemeToggle from './ThemeToggle';
 import {
   validateCouponCode,
   getDefaultPromoCode,
-  getDefaultDiscountPercent
+  getDefaultDiscountPercent,
+  getFeaturedCouponsList,
+  getAvailableCouponsLabel,
+  getCouponSectionTitle
 } from '../../utils/coupons';
 
 // Step 1: Industries & Niches (For Bespoke Wizard Mode)
@@ -136,6 +139,7 @@ export default function WhatsAppOrderModal() {
 
   // Dynamic Coupon State
   const defaultPromo = getDefaultPromoCode();
+  const featuredCoupons = getFeaturedCouponsList();
   const [couponInput, setCouponInput] = useState(defaultPromo);
   const [appliedCoupon, setAppliedCoupon] = useState(null); // { code, discountPercent }
   const [toastMessage, setToastMessage] = useState('');
@@ -709,7 +713,9 @@ export default function WhatsAppOrderModal() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Tag className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Have a Promo Coupon Code?</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {getCouponSectionTitle()}
+                    </span>
                   </div>
                   {appliedCoupon && (
                     <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
@@ -745,24 +751,29 @@ export default function WhatsAppOrderModal() {
                   )}
                 </div>
 
-                {/* Quick 1-Click Pill for Default Promo */}
-                {!appliedCoupon && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="text-[11px] text-slate-400">Available:</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCouponInput(defaultPromo);
-                        const result = validateCouponCode(defaultPromo);
-                        if (result.valid) {
-                          setAppliedCoupon({ code: result.code, discountPercent: result.discountPercent });
-                          triggerToast(result.message);
-                        }
-                      }}
-                      className="px-2.5 py-0.5 rounded-lg bg-purple-100 dark:bg-purple-950/60 hover:bg-purple-200 text-purple-700 dark:text-purple-300 text-[10px] font-mono font-bold border border-purple-200 dark:border-purple-800 transition-all cursor-pointer"
-                    >
-                      {defaultPromo} (20% OFF) ⚡ Click to Apply
-                    </button>
+                {/* Dynamic 1-Click Available Pills Driven from .env */}
+                {!appliedCoupon && featuredCoupons.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                      {getAvailableCouponsLabel()}
+                    </span>
+                    {featuredCoupons.map((c) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => {
+                          setCouponInput(c.code);
+                          const result = validateCouponCode(c.code);
+                          if (result.valid) {
+                            setAppliedCoupon({ code: result.code, discountPercent: result.discountPercent });
+                            triggerToast(result.message);
+                          }
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-purple-100/90 dark:bg-purple-950/70 hover:bg-purple-200 dark:hover:bg-purple-900 text-purple-700 dark:text-purple-300 text-[10px] font-mono font-bold border border-purple-200 dark:border-purple-800 transition-all cursor-pointer shadow-2xs"
+                      >
+                        {c.label} ⚡ Click to Apply
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -1100,10 +1111,19 @@ export default function WhatsAppOrderModal() {
                   </div>
 
                   {/* Promo Coupon in Wizard Mode */}
-                  <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Tag className="w-4 h-4 text-purple-600" />
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Promo Coupon</span>
+                  <div className="p-4 rounded-3xl bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-purple-600" />
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                          {getCouponSectionTitle()}
+                        </span>
+                      </div>
+                      {appliedCoupon && (
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200">
+                          ✓ {appliedCoupon.discountPercent}% OFF
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <input
@@ -1131,6 +1151,32 @@ export default function WhatsAppOrderModal() {
                         </button>
                       )}
                     </div>
+
+                    {/* Featured Pills */}
+                    {!appliedCoupon && featuredCoupons.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span className="text-[10px] text-slate-500 font-medium">
+                          {getAvailableCouponsLabel()}
+                        </span>
+                        {featuredCoupons.map((c) => (
+                          <button
+                            key={c.code}
+                            type="button"
+                            onClick={() => {
+                              setCouponInput(c.code);
+                              const result = validateCouponCode(c.code);
+                              if (result.valid) {
+                                setAppliedCoupon({ code: result.code, discountPercent: result.discountPercent });
+                                triggerToast(result.message);
+                              }
+                            }}
+                            className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/70 hover:bg-purple-200 text-purple-700 dark:text-purple-300 text-[10px] font-mono font-bold border border-purple-200 dark:border-purple-800 transition-all cursor-pointer"
+                          >
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

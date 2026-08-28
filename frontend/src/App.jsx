@@ -92,16 +92,17 @@ export default function App() {
           {/* Animated Initial Liquid Glass Preloader */}
           {!isLivePreview && <Preloader />}
 
-          {/* Admin Bypass Notification Floating Bar */}
+          {/* Admin Bypass Notification Floating Bar (Positioned at Bottom-Right away from Navbar) */}
           {isBypassed && isMaintenanceOrComingSoon && (
-            <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[999999] bg-amber-500/90 hover:bg-amber-500 backdrop-blur-md text-slate-950 px-4 py-1.5 rounded-full text-xs font-bold shadow-xl border border-amber-300 flex items-center gap-2 transition-all">
-              <Unlock className="w-3.5 h-3.5" />
-              <span>Admin Preview Active ({bypassMinutesRemaining}m left)</span>
+            <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[999999] bg-amber-500/95 hover:bg-amber-500 text-slate-950 px-4 py-2 rounded-2xl text-xs font-bold shadow-2xl border-2 border-amber-300 backdrop-blur-xl flex items-center gap-2.5 transition-all">
+              <Unlock className="w-4 h-4 text-slate-950 shrink-0" />
+              <span className="font-extrabold">Admin Preview ({bypassMinutesRemaining}m left)</span>
               <button
                 onClick={handleManualLock}
-                className="text-[10px] uppercase font-bold text-red-400 hover:text-red-300 underline ml-1 cursor-pointer"
+                className="text-[10px] uppercase font-black px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-xs ml-1 cursor-pointer transition-all"
+                title="Lock website back to Maintenance mode"
               >
-                Lock Site
+                Lock Site 🔒
               </button>
             </div>
           )}
