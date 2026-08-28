@@ -43,12 +43,12 @@ export default function DemoCard({ demo }) {
         </div>
 
         {/* Quick Overlay Action on Hover (Desktop) */}
-        <div className="hidden sm:flex absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center gap-2.5 p-4">
+        <div className="hidden sm:flex absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center gap-2.5 p-4">
           <Link
             to={`/demos/${demo.slug}`}
             className="px-4 py-2 rounded-btn bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold text-xs shadow-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5"
           >
-            <span>Preview Demo</span>
+            <span>📱 Device Preview & Details</span>
             <ExternalLink className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
           </Link>
           <button
@@ -116,7 +116,7 @@ export default function DemoCard({ demo }) {
               to={`/demos/${demo.slug}`}
               className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-center"
             >
-              Details
+              Device Demo
             </Link>
 
             <button

@@ -103,7 +103,17 @@ export default function DemoDetails() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                  <a
+                    href={`/preview/${demo.templateId || demo.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>Launch Live Demo</span>
+                    <ExternalLink className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  </a>
+
                   <button
                     onClick={handleOrder}
                     className="flex-1 sm:flex-none px-6 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white l2b-gradient-bg shadow-glass-highlight hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer hover:opacity-95"

@@ -24,9 +24,12 @@ import Demos from './pages/Demos';
 import DemoDetails from './pages/DemoDetails';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import LiveDemoViewer from './pages/LiveDemoViewer';
 import NotFound from './pages/NotFound';
 
 export default function App() {
+  const location = useLocation();
+  const isLivePreview = location.pathname.startsWith('/preview');
   const isMaintenanceOrComingSoon = siteConfig.isMaintenanceMode || siteConfig.isComingSoonMode;
 
   // Check if admin bypass is currently active on this device
@@ -61,16 +64,23 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isMaintenanceOrComingSoon]);
 
+  // Handle manual lock from bypass banner
   const handleManualLock = () => {
     localStorage.removeItem('l2b_admin_bypass_expiry');
     setIsBypassed(false);
+    window.location.reload();
   };
 
-  // If maintenance / coming soon is active and NOT bypassed, show full countdown screen
+  // Render maintenance screen if active and not bypassed
   if (isMaintenanceOrComingSoon && !isBypassed) {
     return (
       <ThemeProvider>
-        <MaintenanceMode onBypassSuccess={() => setIsBypassed(true)} />
+        <OrderModalProvider>
+          <div className="min-h-screen bg-[#07090e] font-sans text-slate-100 selection:bg-purple-600 selection:text-white">
+            <MaintenanceMode onBypassGranted={() => setIsBypassed(true)} />
+            <WhatsAppOrderModal />
+          </div>
+        </OrderModalProvider>
       </ThemeProvider>
     );
   }
@@ -80,12 +90,12 @@ export default function App() {
       <OrderModalProvider>
         <div className="relative min-h-screen flex flex-col font-sans text-slate-900 dark:text-slate-100 selection:bg-purple-600 selection:text-white transition-colors duration-300">
           {/* Animated Initial Liquid Glass Preloader */}
-          <Preloader />
+          {!isLivePreview && <Preloader />}
 
-          {/* Floating Admin Bypass Active Pill Indicator */}
-          {isMaintenanceOrComingSoon && isBypassed && (
-            <div className="fixed bottom-3 left-3 z-[9999] p-2 sm:px-3 sm:py-1.5 rounded-full bg-slate-900/90 backdrop-blur-md text-white text-[11px] font-bold shadow-2xl flex items-center gap-2 border border-slate-700">
-              <Unlock className="w-3.5 h-3.5 text-amber-400" />
+          {/* Admin Bypass Notification Floating Bar */}
+          {isBypassed && isMaintenanceOrComingSoon && (
+            <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[999999] bg-amber-500/90 hover:bg-amber-500 backdrop-blur-md text-slate-950 px-4 py-1.5 rounded-full text-xs font-bold shadow-xl border border-amber-300 flex items-center gap-2 transition-all">
+              <Unlock className="w-3.5 h-3.5" />
               <span>Admin Preview Active ({bypassMinutesRemaining}m left)</span>
               <button
                 onClick={handleManualLock}
@@ -100,10 +110,10 @@ export default function App() {
           <CustomCursor />
 
           {/* Ambient Liquid Glass Mesh Background */}
-          <LiquidBackground />
+          {!isLivePreview && <LiquidBackground />}
 
           {/* Global Floating Glass Navbar */}
-          <Navbar />
+          {!isLivePreview && <Navbar />}
 
           {/* Dynamic Route Viewports with Page Transition */}
           <div className="flex-1 z-10 flex flex-col">
@@ -116,6 +126,7 @@ export default function App() {
                 <Route path="/demos" element={<Demos />} />
                 <Route path="/demos/:slug" element={<DemoDetails />} />
                 <Route path="/demo/:slug" element={<DemoDetails />} />
+                <Route path="/preview/:templateId" element={<LiveDemoViewer />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="*" element={<NotFound />} />
@@ -124,10 +135,10 @@ export default function App() {
           </div>
 
           {/* Global Footer */}
-          <Footer />
+          {!isLivePreview && <Footer />}
 
           {/* Floating Direct WhatsApp Support & Question Selector */}
-          <Chatbot />
+          {!isLivePreview && <Chatbot />}
 
           {/* Global WhatsApp Order Modal */}
           <WhatsAppOrderModal />

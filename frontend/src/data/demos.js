@@ -1,268 +1,303 @@
 /**
  * Ready-Made Demo Website Marketplace Dataset
- * Designed for immediate client previews, device testing, and WhatsApp ordering.
+ * All 12 Standalone Demo Templates with live interactive previews and direct ordering.
  */
 
 export const demoCategories = [
   "All",
   "Restaurant",
+  "Cafe",
   "Salon",
-  "Agency",
-  "Portfolio",
+  "Gym",
+  "Hotel",
   "Real Estate",
-  "E-commerce",
-  "Startup",
-  "Local Business",
-  "Personal Brand"
+  "Photography",
+  "Boutique",
+  "Coaching",
+  "Dental",
+  "Jewellery",
+  "Automotive"
 ];
 
 export const demoWebsites = [
   {
-    id: "gourmet-bistro",
-    slug: "gourmet-bistro",
-    title: "Gourmet Bistro & Fine Dining",
+    id: "restaurant",
+    slug: "restaurant",
+    templateId: "restaurant",
+    title: "Royal Saffron Mughlai & Fine Dining",
     category: "Restaurant",
-    badge: "Best Seller",
-    price: "$399 / ₹12,999",
+    badge: "Bestseller",
+    price: "$399",
+    priceInr: "₹9,999",
     turnaround: "48 Hours",
     rating: 4.9,
-    reviewsCount: 38,
-    shortDescription: "Sleek dining and culinary experience template with interactive digital menu, table booking triggers, and ambient visuals.",
-    description: "An ultra-premium restaurant & café experience crafted for high-end dining spots, gourmet bistros, and cloud kitchens. Includes QR digital menus, reservation inquiry system, Instagram gallery feeds, and Google Maps integration.",
+    reviewsCount: 48,
+    shortDescription: "Ultra-luxury Indian fine dining template with interactive digital menu, table reservation engine, and WhatsApp ordering.",
+    description: "Designed for royal Mughlai restaurants, gourmet dining, and cloud kitchens. Features QR menus, WhatsApp table booking, Instagram feeds, and Google Maps integration.",
     heroImage: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1400&auto=format&fit=crop",
-    previewImages: [
-      "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1200&auto=format&fit=crop"
-    ],
     features: [
-      "Dynamic Filterable Food & Drinks Menu with dietary tags",
-      "One-click Table Booking via WhatsApp / Call",
-      "Live Location, Open Hours & Google Reviews Integration",
-      "Mobile-First Responsive Layout with 99+ PageSpeed",
-      "SEO schema optimized for 'Best Restaurant Near Me'"
+      "Dynamic Filterable Food & Drinks Menu",
+      "One-click Table Booking via WhatsApp",
+      "Live Location, Open Hours & Google Reviews",
+      "100% Mobile & 4K Responsive Layout"
     ],
-    technologies: ["React", "Tailwind CSS", "Lucide Icons", "Lenis Scroll", "WhatsApp Order"],
-    idealFor: "Fine dining restaurants, cafés, microbreweries, bakeries & cloud kitchens"
+    idealFor: "Fine dining restaurants, cafés, microbreweries, and cloud kitchens"
   },
   {
-    id: "luxe-salon-spa",
-    slug: "luxe-salon-spa",
-    title: "Aura Luxe Salon & Aesthetic Spa",
-    category: "Salon",
+    id: "cafe",
+    slug: "cafe",
+    templateId: "cafe",
+    title: "The Artisanal Roastery & Coffee Bar",
+    category: "Cafe",
     badge: "Trending",
-    price: "$449 / ₹14,999",
+    price: "$399",
+    priceInr: "₹9,999",
     turnaround: "48 Hours",
     rating: 5.0,
-    reviewsCount: 42,
-    shortDescription: "Elegant aesthetic salon, wellness spa, and hair styling studio website with service menus and appointment booking.",
-    description: "Designed for premium beauty salons, wellness clinics, nail bars, and cosmetic studios. Features aesthetic soft-blur glass aesthetics, service price list with durations, stylist profiles, and WhatsApp booking triggers.",
-    heroImage: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1400&auto=format&fit=crop",
-    previewImages: [
-      "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=1200&auto=format&fit=crop"
-    ],
+    reviewsCount: 36,
+    shortDescription: "Aesthetic specialty coffee bar & bakery website with single-origin brew showcase and cozy ambience tour.",
+    description: "Designed for coffee roasteries, rooftop cafes, and artisanal bakeries. Includes live brew rate cards, Wi-Fi workspace highlights, and WhatsApp takeaway ordering.",
+    heroImage: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Categorized Treatment & Styling Rate Cards",
-      "Direct WhatsApp Stylist Appointment booking",
-      "Before/After Transformation Gallery Showcase",
-      "Customer Testimonials & VIP Membership cards",
-      "Fast loading on mobile with touch-friendly navigation"
+      "Categorized Artisan Coffee & Pastry Showcase",
+      "Rooftop & Co-working Ambience Highlights",
+      "Instant WhatsApp Order & Reservation Trigger",
+      "Fast 99+ PageSpeed Mobile Performance"
     ],
-    technologies: ["React", "Tailwind CSS", "Framer Motion", "WhatsApp Engine"],
-    idealFor: "Hair salons, day spas, nail artists, skin clinics & bridal studios"
+    idealFor: "Artisanal cafes, coffee roasters, bakeries & tea bars"
   },
   {
-    id: "nexus-creative-agency",
-    slug: "nexus-creative-agency",
-    title: "Nexus Digital Studio & Agency",
-    category: "Agency",
-    badge: "Featured",
-    price: "$599 / ₹19,999",
-    turnaround: "3-4 Days",
-    rating: 4.9,
-    reviewsCount: 56,
-    shortDescription: "Ultra-modern agency portfolio with case studies, client logos, dynamic pricing, and lead generation funnels.",
-    description: "Engineered for marketing agencies, UI/UX design firms, and video production houses looking to establish credibility and close high-ticket clients with interactive case studies and smooth kinetic animations.",
-    heroImage: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1400&auto=format&fit=crop",
-    previewImages: [
-      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1200&auto=format&fit=crop"
-    ],
-    features: [
-      "Interactive Case Studies with KPI metrics & live deliverables",
-      "Service Capabilities Breakdown with interactive tabs",
-      "High-converting Client Inquiry & Project Estimator",
-      "Team Showcase and Global Client Proof Marquee",
-      "Liquid glass design language with custom cursor effects"
-    ],
-    technologies: ["React", "GSAP ScrollTrigger", "Tailwind CSS", "Lenis Smooth Scroll"],
-    idealFor: "Creative agencies, dev shops, video studios, PR firms & consultancies"
-  },
-  {
-    id: "elysian-real-estate",
-    slug: "elysian-real-estate",
-    title: "Elysian Prime Realty & Estates",
-    category: "Real Estate",
-    badge: "High Conversion",
-    price: "$649 / ₹21,999",
-    turnaround: "3-5 Days",
-    rating: 4.8,
-    reviewsCount: 29,
-    shortDescription: "Sophisticated luxury real estate showcase with property listings, amenity tours, and instant broker inquiries.",
-    description: "Tailor-made for real estate developers, property brokers, villa rentals, and luxury residential projects. Features interactive property filters, floor plan viewports, virtual tour CTAs, and instant WhatsApp brochure downloads.",
-    heroImage: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1400&auto=format&fit=crop",
-    previewImages: [
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop"
-    ],
-    features: [
-      "Filter properties by location, bedrooms, budget & category",
-      "High-res architectural photo gallery & floor plan viewer",
-      "WhatsApp 'Book a Site Visit' instant scheduling trigger",
-      "Mortgage/EMI Estimation Calculator widget",
-      "Neighborhood & nearby landmarks interactive map section"
-    ],
-    technologies: ["React", "Tailwind CSS", "Lucide Icons", "WhatsApp Integration"],
-    idealFor: "Real estate agents, property developers, luxury villa rentals & brokers"
-  },
-  {
-    id: "artisanal-ecommerce",
-    slug: "artisanal-ecommerce",
-    title: "Velour Artisanal Store & Catalog",
-    category: "E-commerce",
+    id: "salon",
+    slug: "salon",
+    templateId: "salon",
+    title: "Aura Luxe Unisex Salon & Aesthetic Spa",
+    category: "Salon",
     badge: "Popular",
-    price: "$549 / ₹18,999",
-    turnaround: "3-4 Days",
+    price: "$399",
+    priceInr: "₹9,999",
+    turnaround: "48 Hours",
     rating: 4.9,
-    reviewsCount: 47,
-    shortDescription: "Modern boutique product catalog with WhatsApp direct order checkout, category tabs, and product zoom.",
-    description: "Perfect for direct-to-consumer (D2C) brands, apparel boutiques, organic skincare, and handcrafted goods. Customers browse items and complete orders directly via WhatsApp with auto-calculated totals.",
-    heroImage: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1400&auto=format&fit=crop",
-    previewImages: [
-      "https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=1200&auto=format&fit=crop"
-    ],
+    reviewsCount: 42,
+    shortDescription: "Celebrity hair styling and luxury spa template with rate cards, treatment timings, and direct stylist booking.",
+    description: "Tailored for premium beauty salons, nail bars, and cosmetic clinics. Features treatment rate cards, stylist profiles, and WhatsApp appointment booking.",
+    heroImage: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Product Catalog with variant selectors (sizes, colors, scents)",
-      "WhatsApp Cart & Direct Order Generation",
-      "Customer Trust Badges, Returns Policy & Shipping Info",
-      "Instagram Feed and Customer Review UGC section",
-      "Speed-optimized for zero customer drop-off on mobile"
+      "Categorized Hair, Skin & Bridal Rate Cards",
+      "VIP Stylist Appointment Booking Form",
+      "Before & After Glamour Showcase",
+      "Soft Glass Aesthetics with Smooth Animations"
     ],
-    technologies: ["React", "Tailwind CSS", "WhatsApp Cart Engine", "GSAP"],
-    idealFor: "D2C brands, fashion boutiques, handcrafted gifts, cosmetics & home decor"
+    idealFor: "Hair salons, day spas, nail artists & bridal makeup studios"
   },
   {
-    id: "saas-launchpad-startup",
-    slug: "saas-launchpad-startup",
-    title: "Pulse SaaS & Tech Startup",
-    category: "Startup",
-    badge: "Tech Favorite",
-    price: "$699 / ₹23,999",
-    turnaround: "3-5 Days",
-    rating: 5.0,
-    reviewsCount: 34,
-    shortDescription: "High-conversion tech startup landing page with feature bento grid, interactive pricing, and product demo widgets.",
-    description: "Designed for SaaS products, AI startups, fintech apps, and B2B platforms. Highlights software benefits using Apple-inspired bento grids, interactive product demos, ROI calculators, and lead capture funnels.",
-    heroImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1400&auto=format&fit=crop",
-    previewImages: [
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?q=80&w=1200&auto=format&fit=crop"
-    ],
-    features: [
-      "Futuristic Bento Box UI highlighting key features",
-      "Interactive Monthly/Annual pricing switcher",
-      "Product comparison table & feature breakdown",
-      "Security compliance & enterprise trust seals",
-      "Waitlist / Demo request routing directly to WhatsApp"
-    ],
-    technologies: ["React", "Tailwind CSS", "GSAP", "Bento UI System"],
-    idealFor: "Software startups, mobile apps, AI tools, fintech & tech founders"
-  },
-  {
-    id: "vertex-architects",
-    slug: "vertex-architects",
-    title: "Vertex Architecture & Interior Studio",
-    category: "Portfolio",
-    badge: "Minimalist",
-    price: "$499 / ₹16,999",
-    turnaround: "48-72 Hours",
-    rating: 4.9,
-    reviewsCount: 22,
-    shortDescription: "Editorial-style showcase for architects, interior designers, and visual creators with full-bleed image galleries.",
-    description: "Clean, gallery-grade portfolio website with expansive typography, horizontal scroll projects, before/after architectural sliders, and client consultation bookings.",
-    heroImage: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?q=80&w=1400&auto=format&fit=crop",
-    previewImages: [
-      "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=1200&auto=format&fit=crop"
-    ],
-    features: [
-      "High-res Full Bleed Portfolio Showcase with lightbox",
-      "Interactive Project Specs (Area, Year, Materials, Location)",
-      "Consultation Inquiry form connected to WhatsApp",
-      "Awards & Publications editorial grid",
-      "Smooth Lenis inertia scrolling"
-    ],
-    technologies: ["React", "Tailwind CSS", "Lenis", "Lightbox Gallery"],
-    idealFor: "Architects, interior designers, photographers, landscape studios"
-  },
-  {
-    id: "apex-fitness-studio",
-    slug: "apex-fitness-studio",
-    title: "Apex Performance & Fitness Club",
-    category: "Local Business",
+    id: "gym",
+    slug: "gym",
+    templateId: "gym",
+    title: "IronCore Performance Gym & Crossfit",
+    category: "Gym",
     badge: "High Energy",
-    price: "$449 / ₹14,999",
+    price: "$399",
+    priceInr: "₹9,999",
     turnaround: "48 Hours",
-    rating: 4.8,
-    reviewsCount: 31,
-    shortDescription: "High-impact local gym, CrossFit, or yoga studio website with class schedules, trainer profiles, and free trial pass booking.",
-    description: "Built for local fitness clubs, personal trainers, and martial arts academies looking to convert neighborhood residents into paying members with instant trial booking and schedule tables.",
+    rating: 4.9,
+    reviewsCount: 52,
+    shortDescription: "High-intensity fitness center template with membership tier comparisons, trainer profiles, and free trial passes.",
+    description: "Engineered for gyms, crossfit boxes, and personal trainers to drive high-ticket membership signups with transparent pricing and WhatsApp trial bookings.",
     heroImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1400&auto=format&fit=crop",
-    previewImages: [
-      "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop"
-    ],
     features: [
-      "Interactive Weekly Class Timetable & Schedule",
-      "1-Click 'Claim Free 1-Day Pass' WhatsApp trigger",
-      "Trainer & Coach Profiles with certifications",
-      "Membership Tier pricing breakdown",
-      "Location map & neighborhood directions"
+      "Quarterly & Annual Membership Comparison Tables",
+      "Free 1-Day Trial Pass Lead Funnel",
+      "Crossfit & Personal Trainer Showcase",
+      "Mobile-Friendly Dark High-Octane Aesthetics"
     ],
-    technologies: ["React", "Tailwind CSS", "Lucide Icons", "WhatsApp Funnel"],
-    idealFor: "Gyms, CrossFit boxes, yoga studios, Pilates clinics, sports academies"
+    idealFor: "Gyms, crossfit boxes, yoga studios & fitness trainers"
   },
   {
-    id: "clara-consulting",
-    slug: "clara-consulting",
-    title: "Dr. Elena Vance — Executive Coaching",
-    category: "Personal Brand",
-    badge: "Authority",
-    price: "$499 / ₹16,999",
+    id: "hotel",
+    slug: "hotel",
+    templateId: "hotel",
+    title: "The Grand Heritage Palace & Royal Resort",
+    category: "Hotel",
+    badge: "5-Star Luxury",
+    price: "$549",
+    priceInr: "₹14,999",
+    turnaround: "3 Days",
+    rating: 5.0,
+    reviewsCount: 64,
+    shortDescription: "Royal Rajputana heritage hotel & resort website with room suite galleries, amenities showcase, and direct WhatsApp booking.",
+    description: "Designed for boutique heritage stays, luxury palace resorts, and vacation villas. Features interactive check-in date pickers, suite specifications, and concierge integration.",
+    heroImage: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1400&auto=format&fit=crop",
+    features: [
+      "Interactive Room & Luxury Suite Showcase",
+      "Direct Check-In Date Reservation Strip",
+      "Ayurvedic Spa & Lake View Pool Tour",
+      "Concierge WhatsApp Support Integration"
+    ],
+    idealFor: "Hotels, heritage stays, boutique resorts & vacation villas"
+  },
+  {
+    id: "realestate",
+    slug: "realestate",
+    templateId: "realestate",
+    title: "Prime Acres Luxury Living & Estates",
+    category: "Real Estate",
+    badge: "Featured",
+    price: "$549",
+    priceInr: "₹14,999",
+    turnaround: "3 Days",
+    rating: 4.9,
+    reviewsCount: 39,
+    shortDescription: "High-converting real estate agency template with property listings, floorplan highlights, and VIP site visit bookings.",
+    description: "Crafted for real estate brokers, luxury highrise builders, and property consultancies to capture verified buyer leads with zero brokerage branding.",
+    heroImage: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1400&auto=format&fit=crop",
+    features: [
+      "Luxury Penthouse & Villa Listing Cards",
+      "Instant WhatsApp Site Visit Scheduling",
+      "Location Advantage & Floorplan Highlights",
+      "100% Verified Title Trust Badges"
+    ],
+    idealFor: "Real estate brokers, builders, developers & property advisors"
+  },
+  {
+    id: "photography",
+    slug: "photography",
+    templateId: "photography",
+    title: "Lumière Cinematic Stories & Weddings",
+    category: "Photography",
+    badge: "Cinematic",
+    price: "$399",
+    priceInr: "₹9,999",
     turnaround: "48 Hours",
     rating: 5.0,
-    reviewsCount: 19,
-    shortDescription: "Authority-building personal brand site for consultants, keynote speakers, doctors, and executive coaches.",
-    description: "Establish elite credibility with a bespoke personal website. Features featured keynote clips, published books, podcast mentions, client testimonials, and 1-on-1 strategy call booking.",
-    heroImage: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1400&auto=format&fit=crop",
-    previewImages: [
-      "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?q=80&w=1200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1200&auto=format&fit=crop"
-    ],
+    reviewsCount: 45,
+    shortDescription: "Destination wedding and editorial photography portfolio with high-resolution visual storytelling and date checkers.",
+    description: "Built for wedding cinematographers and studio photographers to showcase destination albums, pre-wedding films, and book dates via WhatsApp.",
+    heroImage: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Keynote speaking and consulting package breakdown",
-      "Direct WhatsApp strategy session booking link",
-      "Media & Press logos (Forbes, TEDx, Bloomberg styling)",
-      "Newsletter / Lead magnet download trigger",
-      "Editorial blog / articles reader layout"
+      "Full-bleed Visual Storytelling Grids",
+      "Wedding Storyboard & Pre-wedding Film Teasers",
+      "Direct Date Availability Checker on WhatsApp",
+      "Dark Minimalist Aesthetic with Fast Loading"
     ],
-    technologies: ["React", "Tailwind CSS", "Glassmorphic Elements", "WhatsApp API"],
-    idealFor: "Consultants, doctors, keynote speakers, authors & C-suite executives"
+    idealFor: "Wedding photographers, cinematographers & fashion studios"
+  },
+  {
+    id: "boutique",
+    slug: "boutique",
+    templateId: "boutique",
+    title: "Vogue & Thread Haute Couture",
+    category: "Boutique",
+    badge: "Designer",
+    price: "$399",
+    priceInr: "₹9,999",
+    turnaround: "48 Hours",
+    rating: 4.9,
+    reviewsCount: 31,
+    shortDescription: "Designer bridal lehengas and handloom saree boutique template with digital lookbook and direct WhatsApp inquiries.",
+    description: "Engineered for fashion boutiques, couture designers, and ethnic wear showrooms to showcase seasonal collections and receive bespoke tailoring orders.",
+    heroImage: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=1400&auto=format&fit=crop",
+    features: [
+      "Handloom Saree & Bridal Lehenga Lookbook",
+      "Bespoke Sizing & Custom Color Inquiry Trigger",
+      "Direct WhatsApp Catalog Sharing",
+      "Royal Velvet & Purple Luxury Theme"
+    ],
+    idealFor: "Boutiques, designer wear, saree shops & fashion labels"
+  },
+  {
+    id: "coaching",
+    slug: "coaching",
+    templateId: "coaching",
+    title: "Apex Academy for IIT-JEE, NEET & Boards",
+    category: "Coaching",
+    badge: "High Conversion",
+    price: "$399",
+    priceInr: "₹9,999",
+    turnaround: "48 Hours",
+    rating: 4.9,
+    reviewsCount: 58,
+    shortDescription: "Premier coaching institute template with batch schedules, ranker results showcase, and free demo class bookings.",
+    description: "Built for coaching centers, tuition institutes, and ed-tech academies to generate qualified student admission inquiries with batch breakdowns.",
+    heroImage: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1400&auto=format&fit=crop",
+    features: [
+      "JEE, NEET & Foundation Batch Breakdown Cards",
+      "Free Demo Lecture Booking Funnel",
+      "Topper Ranks & Success Statistics Banner",
+      "Direct WhatsApp Admission Guidance"
+    ],
+    idealFor: "Coaching institutes, test prep academies & training centers"
+  },
+  {
+    id: "dental",
+    slug: "dental",
+    templateId: "dental",
+    title: "SmileCare Advanced Dental Clinic & Centre",
+    category: "Dental",
+    badge: "Medical Grade",
+    price: "$399",
+    priceInr: "₹9,999",
+    turnaround: "48 Hours",
+    rating: 5.0,
+    reviewsCount: 62,
+    shortDescription: "Sterilized dental and doctor chamber template with treatment pricing, doctor timings, and online consultation booking.",
+    description: "Designed for multi-speciality dental clinics, doctors, and diagnostic centers to build patient trust and simplify appointment scheduling.",
+    heroImage: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=1400&auto=format&fit=crop",
+    features: [
+      "Laser RCT, Aligners & Implant Treatment Cards",
+      "Patient Appointment Booking Form",
+      "Doctor Credentials & Clinic Sterilization Proof",
+      "One-Touch Emergency WhatsApp Contact"
+    ],
+    idealFor: "Dentists, doctors, polyclinics & healthcare centers"
+  },
+  {
+    id: "jewellery",
+    slug: "jewellery",
+    templateId: "jewellery",
+    title: "Karat Royale Luxury Jewels & Diamonds",
+    category: "Jewellery",
+    badge: "BIS Hallmarked",
+    price: "$549",
+    priceInr: "₹14,999",
+    turnaround: "3 Days",
+    rating: 5.0,
+    reviewsCount: 47,
+    shortDescription: "Gold and diamond jewelry atelier template with collection galleries, purity standards, and live rate inquiries.",
+    description: "Crafted for luxury jewelry showrooms, gold ateliers, and diamond merchants to showcase bridal sets, engagement rings, and gold purity trust.",
+    heroImage: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1400&auto=format&fit=crop",
+    features: [
+      "Solitaire Diamond & 22K Gold Collections",
+      "Daily Gold Rate WhatsApp Query Trigger",
+      "BIS 916 Hallmark & IGI Certification Trust",
+      "Deep Gold & Black Velvet Royal Ambiance"
+    ],
+    idealFor: "Jewelry showrooms, diamond ateliers & gift boutiques"
+  },
+  {
+    id: "automotive",
+    slug: "automotive",
+    templateId: "automotive",
+    title: "SpeedShift Performance Motors & Studio",
+    category: "Automotive",
+    badge: "Supercars",
+    price: "$549",
+    priceInr: "₹14,999",
+    turnaround: "3 Days",
+    rating: 4.9,
+    reviewsCount: 54,
+    shortDescription: "Supercar & superbike showroom template with vehicle specifications, test drive booking, and detailing service estimates.",
+    description: "Built for luxury pre-owned car showrooms, superbike studios, and ceramic coating detailing centers to capture high-ticket auto enthusiasts.",
+    heroImage: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1400&auto=format&fit=crop",
+    features: [
+      "Supercar & Superbike Inventory Showcase",
+      "Instant Test Drive VIP Booking on WhatsApp",
+      "Engine Specifications & Inspection Proof",
+      "Carbon Fiber Dark Performance Theme"
+    ],
+    idealFor: "Car showrooms, bike studios, detailing centers & garages"
   }
 ];
 
-export function getDemoBySlug(slug) {
-  return demoWebsites.find((item) => item.slug === slug || item.id === slug) || null;
-}
+export const getDemoBySlug = (slug) => {
+  return demoWebsites.find((demo) => demo.slug === slug || demo.id === slug) || demoWebsites[0];
+};
