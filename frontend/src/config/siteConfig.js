@@ -13,9 +13,9 @@ export const siteConfig = {
   startingPrice: "$399",
   startingPriceInr: "₹9,999",
 
-  // Master Maintenance / Launch Gate
-  isMaintenanceMode: false,
-  isComingSoonMode: false,
+  // Master Maintenance / Launch Gate (reads dynamically from .env)
+  isMaintenanceMode: String(import.meta.env.VITE_MAINTENANCE_MODE).toLowerCase() === 'true',
+  isComingSoonMode: String(import.meta.env.VITE_COMING_SOON_MODE).toLowerCase() === 'true',
 
   // Social Links
   socialLinks: {

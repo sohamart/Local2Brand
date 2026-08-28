@@ -10,6 +10,7 @@ import {
   LifeBuoy
 } from 'lucide-react';
 import SectionHeading from '../common/SectionHeading';
+import ScrollReveal from '../common/ScrollReveal';
 
 const whyFeatures = [
   {
@@ -65,27 +66,31 @@ export default function WhyUs() {
           subtitle="We combine senior-level UI/UX design with rock-solid frontend engineering to deliver websites that don't just exist—they convert."
         />
 
-        {/* 8 Features Bento / Grid */}
+        {/* 8 Features Bento / Grid with Staggered 3D Reveal */}
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {whyFeatures.map((feat) => {
+          {whyFeatures.map((feat, index) => {
             const Icon = feat.icon;
             return (
-              <div
+              <ScrollReveal
                 key={feat.title}
-                className="glass-card p-6 rounded-card border border-white/95 dark:border-slate-700/80 group"
+                variant="fade-up"
+                delay={index * 70}
+                duration={650}
               >
-                <div className="w-11 h-11 rounded-2xl bg-brand-50 dark:bg-brand-950/80 border border-brand-100 dark:border-brand-500/30 flex items-center justify-center text-brand-600 dark:text-brand-400 mb-4 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
-                  <Icon className="w-5 h-5" />
+                <div className="glass-card p-6 rounded-card border border-white/95 dark:border-slate-700/80 group h-full">
+                  <div className="w-11 h-11 rounded-2xl bg-brand-50 dark:bg-brand-950/80 border border-brand-100 dark:border-brand-500/30 flex items-center justify-center text-brand-600 dark:text-brand-400 mb-4 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300">
+                    <Icon className="w-5 h-5" />
+                  </div>
+
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight mb-2">
+                    {feat.title}
+                  </h3>
+
+                  <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
+                    {feat.description}
+                  </p>
                 </div>
-
-                <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight mb-2">
-                  {feat.title}
-                </h3>
-
-                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed">
-                  {feat.description}
-                </p>
-              </div>
+              </ScrollReveal>
             );
           })}
         </div>

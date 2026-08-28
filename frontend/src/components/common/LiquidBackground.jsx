@@ -12,6 +12,7 @@ export default function LiquidBackground() {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
+    // Mobile / Touch detection
     const isTouchDevice =
       typeof window !== 'undefined' &&
       (window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768);
@@ -20,16 +21,16 @@ export default function LiquidBackground() {
     const mouse = {
       x: -1000,
       y: -1000,
-      radius: 170,
+      radius: isTouchDevice ? 130 : 170,
     };
 
-    // Crisp grid node spacing
-    const spacing = 58;
+    // Crisp grid node spacing (responsive: 50px on mobile, 58px on desktop)
+    const spacing = isTouchDevice ? 50 : 58;
     let cols = Math.ceil(width / spacing) + 2;
     let rows = Math.ceil(height / spacing) + 2;
     let nodes = [];
 
-    // Slow, serene glowing energy streams traveling along the grid
+    // Slow, serene glowing energy streams (ONLY active in Dark Mode)
     const lightStreams = [];
     const maxStreams = isTouchDevice ? 4 : 8;
 
@@ -40,8 +41,8 @@ export default function LiquidBackground() {
 
       reset() {
         this.horizontal = Math.random() > 0.5;
-        this.speed = Math.random() * 0.8 + 0.6; // Very slow, calm speed
-        this.length = Math.random() * 220 + 140; // Long elegant glow trail
+        this.speed = Math.random() * 0.7 + 0.5; // Slow, calm speed
+        this.length = Math.random() * 200 + 120; // Long elegant glow trail
 
         if (this.horizontal) {
           this.r = Math.floor(Math.random() * rows);
@@ -52,7 +53,7 @@ export default function LiquidBackground() {
         }
 
         this.colorType = Math.random() > 0.4 ? 'cyan' : 'purple';
-        this.opacity = Math.random() * 0.35 + 0.45; // Gentle soft luminance
+        this.opacity = Math.random() * 0.3 + 0.45;
       }
 
       update() {
@@ -66,20 +67,16 @@ export default function LiquidBackground() {
       }
 
       draw(isDark, offsetX, offsetY) {
+        // LIGHT MODE DIRECTIVE: Lightings are ONLY drawn in dark mode!
+        if (!isDark) return;
+
         if (this.horizontal) {
           const streamY = offsetY + this.r * spacing;
           const headX = this.x;
           const tailX = Math.max(0, this.x - this.length);
 
           const grad = ctx.createLinearGradient(tailX, streamY, headX, streamY);
-          const col =
-            this.colorType === 'cyan'
-              ? isDark
-                ? '56, 189, 248'
-                : '0, 114, 255'
-              : isDark
-              ? '168, 85, 247'
-              : '121, 40, 202';
+          const col = this.colorType === 'cyan' ? '56, 189, 248' : '168, 85, 247';
 
           grad.addColorStop(0, `rgba(${col}, 0)`);
           grad.addColorStop(0.7, `rgba(${col}, ${this.opacity * 0.4})`);
@@ -90,12 +87,12 @@ export default function LiquidBackground() {
           ctx.moveTo(tailX, streamY);
           ctx.lineTo(headX, streamY);
           ctx.strokeStyle = grad;
-          ctx.lineWidth = 2.2;
+          ctx.lineWidth = 2.0;
           ctx.stroke();
 
-          // Soft glowing head node
+          // Glowing head node
           ctx.beginPath();
-          ctx.arc(headX, streamY, 2.2, 0, Math.PI * 2);
+          ctx.arc(headX, streamY, 2.0, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${col}, ${this.opacity * 0.9})`;
           ctx.fill();
         } else {
@@ -104,14 +101,7 @@ export default function LiquidBackground() {
           const tailY = Math.max(0, this.y - this.length);
 
           const grad = ctx.createLinearGradient(streamX, tailY, streamX, headY);
-          const col =
-            this.colorType === 'cyan'
-              ? isDark
-                ? '56, 189, 248'
-                : '0, 114, 255'
-              : isDark
-              ? '168, 85, 247'
-              : '121, 40, 202';
+          const col = this.colorType === 'cyan' ? '56, 189, 248' : '168, 85, 247';
 
           grad.addColorStop(0, `rgba(${col}, 0)`);
           grad.addColorStop(0.7, `rgba(${col}, ${this.opacity * 0.4})`);
@@ -121,11 +111,11 @@ export default function LiquidBackground() {
           ctx.moveTo(streamX, tailY);
           ctx.lineTo(streamX, headY);
           ctx.strokeStyle = grad;
-          ctx.lineWidth = 2.2;
+          ctx.lineWidth = 2.0;
           ctx.stroke();
 
           ctx.beginPath();
-          ctx.arc(streamX, headY, 2.2, 0, Math.PI * 2);
+          ctx.arc(streamX, headY, 2.0, 0, Math.PI * 2);
           ctx.fillStyle = `rgba(${col}, ${this.opacity * 0.9})`;
           ctx.fill();
         }
@@ -140,19 +130,17 @@ export default function LiquidBackground() {
         this.y = originY;
         this.vx = 0;
         this.vy = 0;
-        this.radius = 1.3;
+        this.radius = isTouchDevice ? 1.1 : 1.3;
       }
 
       update() {
-        if (isTouchDevice) return;
-
-        // Fluid Magnetic Repulsion from cursor
+        // Fluid Magnetic Repulsion from cursor / touch
         const dx = mouse.x - this.x;
         const dy = mouse.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
         if (distance < mouse.radius && distance > 0) {
-          const force = (1 - distance / mouse.radius) * 6.0;
+          const force = (1 - distance / mouse.radius) * (isTouchDevice ? 4.5 : 6.0);
           const angle = Math.atan2(dy, dx);
           this.vx -= Math.cos(angle) * force;
           this.vy -= Math.sin(angle) * force;
@@ -206,6 +194,18 @@ export default function LiquidBackground() {
       mouse.y = e.clientY;
     };
 
+    const handleTouchMove = (e) => {
+      if (e.touches && e.touches[0]) {
+        mouse.x = e.touches[0].clientX;
+        mouse.y = e.touches[0].clientY;
+      }
+    };
+
+    const handleTouchEnd = () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+    };
+
     const handleMouseLeave = () => {
       mouse.x = -1000;
       mouse.y = -1000;
@@ -219,7 +219,11 @@ export default function LiquidBackground() {
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('touchstart', handleTouchMove, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
     window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
@@ -265,7 +269,7 @@ export default function LiquidBackground() {
       ctx.strokeStyle = isDark
         ? 'rgba(255, 255, 255, 0.055)'
         : 'rgba(0, 114, 255, 0.075)';
-      ctx.lineWidth = 0.95;
+      ctx.lineWidth = isTouchDevice ? 0.85 : 0.95;
       ctx.stroke();
 
       // 2. Single Batched Fill for all intersection node dots
@@ -277,13 +281,15 @@ export default function LiquidBackground() {
       }
       ctx.fillStyle = isDark
         ? 'rgba(56, 189, 248, 0.28)'
-        : 'rgba(0, 114, 255, 0.22)';
+        : 'rgba(0, 114, 255, 0.2)';
       ctx.fill();
 
-      // 3. Slow, Serene Glowing Light Streams Traveling Along the Grid
-      for (let i = 0; i < lightStreams.length; i++) {
-        lightStreams[i].update();
-        lightStreams[i].draw(isDark, offsetX, offsetY);
+      // 3. Slow, Serene Glowing Light Streams (ONLY in Dark Mode)
+      if (isDark) {
+        for (let i = 0; i < lightStreams.length; i++) {
+          lightStreams[i].update();
+          lightStreams[i].draw(isDark, offsetX, offsetY);
+        }
       }
 
       animationFrameId = requestAnimationFrame(render);
@@ -294,14 +300,18 @@ export default function LiquidBackground() {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('touchstart', handleTouchMove);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" aria-hidden="true">
-      {/* Interactive Liquid Magnetic Grid with Slow Serene Light Streams Canvas */}
+      {/* Interactive Liquid Magnetic Grid Canvas */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full opacity-90 pointer-events-none"
