@@ -1,16 +1,20 @@
 /**
- * IronCore Performance Gym & Crossfit - Production Configuration
+ * IronCore Performance Gym & Crossfit Box - Production Configuration
  */
 export const gymConfig = {
   businessName: import.meta.env.VITE_DEMO_GYM_NAME || "IronCore Performance Gym",
   businessSubtitle: "Heavy Strength, Olympic Lifting & Crossfit Box",
-  tagline: import.meta.env.VITE_DEMO_GYM_TAGLINE || "Certified Biomechanics Coaching • Imported Rogue Equipment • Steam, Sauna & Recovery",
+  tagline: import.meta.env.VITE_DEMO_GYM_TAGLINE || "Certified Biomechanics Coaching • Imported Rogue Equipment • Steam, Sauna & Ice Bath Recovery",
   city: import.meta.env.VITE_DEMO_GYM_CITY || "Pune / Bengaluru / Mumbai",
   phone: import.meta.env.VITE_DEMO_GYM_PHONE || "+91 98765 43213",
   whatsapp: import.meta.env.VITE_DEMO_GYM_WHATSAPP || "919876543213",
   address: "Koregaon Park Main Road, Next to Gold Cinema, Pune - 411001",
   landmark: "10,000 sq.ft Dual Floor Facility with Dedicated Turf Area",
-  hours: "Mon - Sat: 5:30 AM - 10:30 PM | Sun: 7:00 AM - 2:00 PM",
+  hours: {
+    weekdays: "5:30 AM - 10:30 PM",
+    sunday: "7:00 AM - 2:00 PM",
+    days: "Open 7 Days a Week"
+  },
   heroImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1600&auto=format&fit=crop",
 
   activeCoupons: [
@@ -56,6 +60,38 @@ export const gymConfig = {
       specialty: "Crossfit & Functional Mobility",
       experience: "6+ Years • CrossFit Level 2 Trainer",
       image: "https://images.unsplash.com/photo-1548690312-e3b507d8c110?q=80&w=300&auto=format&fit=crop"
+    }
+  ],
+
+  testimonials: [
+    {
+      name: "Rohit Malhotra (Tech Lead)",
+      rating: 5,
+      comment: "Down 14 kgs in 5 months with Coach Vikram! The equipment quality is top notch and the steam/ice bath recovery is unbeatable.",
+      date: "Member for 8 Months",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop"
+    },
+    {
+      name: "Dr. Ananya Ray",
+      rating: 5,
+      comment: "Cleanest gym in Pune! Great crowd, functional turf area, and high-energy morning crossfit sessions.",
+      date: "Member for 1 Year",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop"
+    }
+  ],
+
+  faqs: [
+    {
+      q: "What is included in the Free 1-Day Trial Pass?",
+      a: "You get complete access to all strength machines, Olympic barbells, cardio turf, steam room, and a complimentary 15-minute InBody 570 body fat analysis with a coach."
+    },
+    {
+      q: "Can I freeze my membership if I travel?",
+      a: "Yes, Annual and 6-Month plans come with up to 45 days of complimentary membership freeze."
+    },
+    {
+      q: "Are personal trainers available for beginners?",
+      a: "Yes! All new members receive 2 free personal training orientation sessions to teach correct lifting form and injury prevention."
     }
   ]
 };

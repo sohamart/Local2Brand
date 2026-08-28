@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Building2,
   MapPin,
@@ -11,6 +11,9 @@ import {
   ShieldCheck,
   Calendar,
   Compass,
+  Star,
+  Tag,
+  ChevronDown,
   ArrowRight
 } from 'lucide-react';
 import { realEstateConfig } from './config';
@@ -18,12 +21,25 @@ import { realEstateConfig } from './config';
 export default function RealEstateDemo({ customConfig }) {
   const config = customConfig || realEstateConfig;
 
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [openFaq, setOpenFaq] = useState(null);
+
   const [visitForm, setVisitForm] = useState({
     name: '',
     phone: '',
     date: '',
-    property: 'The Sky Penthouse at Worli Sea Face'
+    property: 'The Sky Penthouse at Worli Sea Face',
+    notes: ''
   });
+
+  const filteredProperties = useMemo(() => {
+    return config.properties.filter(p => {
+      const matchCat = selectedCategory === "All" || p.category === selectedCategory;
+      const matchSearch = searchQuery === "" || p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.location.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchSearch;
+    });
+  }, [config.properties, selectedCategory, searchQuery]);
 
   const handleInquireProperty = (prop) => {
     const text =
@@ -45,8 +61,9 @@ export default function RealEstateDemo({ customConfig }) {
       `👤 Name: *${visitForm.name}*\n` +
       `📞 Phone: *${visitForm.phone}*\n` +
       `🏢 Interested Property: *${visitForm.property}*\n` +
-      `📅 Preferred Date: *${visitForm.date || 'This Weekend'}*\n\n` +
-      `Please arrange a site visit with your senior property consultant.`;
+      `📅 Preferred Date: *${visitForm.date || 'This Weekend'}*\n` +
+      (visitForm.notes ? `📝 Note: ${visitForm.notes}\n` : '') +
+      `\nPlease arrange a private site visit with your senior property consultant.`;
     window.open(`https://wa.me/${config.whatsapp}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -54,13 +71,15 @@ export default function RealEstateDemo({ customConfig }) {
     <div className="min-h-screen bg-[#080d17] text-[#f1f5f9] font-sans selection:bg-emerald-500 selection:text-white overflow-x-hidden">
       
       {/* Top Banner */}
-      <div className="bg-[#0b1b17] text-emerald-400 text-xs font-bold py-2 px-4 text-center border-b border-[#13382c]">
-        <span>🏡 100% RERA-VERIFIED PRIME RESIDENTIAL & COMMERCIAL DEVELOPMENTS • ZERO BROKERAGE DIRECT DEVELOPER DEALS</span>
+      <div className="bg-[#0b1b17] text-emerald-400 text-xs font-bold py-2 px-4 text-center border-b border-[#13382c] shadow-md">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 sm:gap-4 flex-wrap">
+          <span>🏡 100% RERA-VERIFIED PRIME RESIDENTIAL & COMMERCIAL PORTFOLIOS • ZERO BROKERAGE DEVELOPER PRICING</span>
+        </div>
       </div>
 
       {/* Sticky Navigation */}
       <nav className="sticky top-0 z-40 bg-[#0d1424]/95 backdrop-blur-2xl border-b border-slate-800 px-4 sm:px-8 py-3.5 shadow-xl">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black shadow-lg shadow-emerald-500/20">
               <Building2 className="w-5 h-5" />
@@ -72,9 +91,11 @@ export default function RealEstateDemo({ customConfig }) {
           </div>
 
           <div className="hidden md:flex items-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-400">
-            <a href="#properties" className="hover:text-emerald-400">Exclusive Listings</a>
+            <a href="#properties" className="hover:text-emerald-400">Listings</a>
+            <a href="#offers" className="hover:text-emerald-400">Assistance</a>
             <a href="#visit" className="hover:text-emerald-400">Book Site Visit</a>
-            <a href="#location" className="hover:text-emerald-400">HQ Address</a>
+            <a href="#reviews" className="hover:text-emerald-400">Reviews</a>
+            <a href="#location" className="hover:text-emerald-400">Realty HQ</a>
           </div>
 
           <a
@@ -86,14 +107,14 @@ export default function RealEstateDemo({ customConfig }) {
         </div>
       </nav>
 
-      {/* Hero */}
-      <header className="relative min-h-[75vh] flex items-center justify-center py-16 px-4 text-center">
+      {/* Hero Showcase */}
+      <header className="relative min-h-[80vh] flex items-center justify-center py-20 px-4 text-center overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src={config.heroImage} alt="Luxury Real Estate" className="w-full h-full object-cover brightness-[0.25]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#080d17] via-transparent to-transparent" />
+          <img src={config.heroImage} alt="Luxury Real Estate" className="w-full h-full object-cover brightness-[0.25] scale-105" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#080d17] via-[#080d17]/60 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto space-y-5">
+        <div className="relative z-10 max-w-4xl mx-auto space-y-6">
           <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest bg-[#0b241b] text-emerald-400 border border-[#16503b] inline-flex items-center gap-1.5 shadow-xl">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Curated Ultra-Luxury Penthouses & Hill Villas</span>
@@ -110,34 +131,108 @@ export default function RealEstateDemo({ customConfig }) {
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <a
               href="#properties"
-              className="px-7 py-3 rounded-full text-xs font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-xl shadow-emerald-500/20"
+              className="px-7 py-3 rounded-full text-xs font-bold bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-xl shadow-emerald-500/20 flex items-center gap-2"
             >
-              Browse Property Listings
+              <Building2 className="w-4 h-4" />
+              <span>Browse Property Listings</span>
             </a>
             <a
               href="#visit"
-              className="px-7 py-3 rounded-full text-xs font-bold bg-[#131d31] text-white border border-slate-700 hover:bg-[#1e2c47]"
+              className="px-7 py-3 rounded-full text-xs font-bold bg-[#131d31] text-white border border-slate-700 hover:bg-[#1e2c47] flex items-center gap-2"
             >
-              VIP Chauffeur Site Visit
+              <Calendar className="w-4 h-4 text-emerald-400" />
+              <span>VIP Chauffeur Site Visit</span>
             </a>
+          </div>
+
+          {/* Quick Credibility Trust Badges */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto pt-6 text-xs text-slate-400">
+            <div className="p-3 rounded-2xl bg-[#0f172a] border border-slate-800">
+              <span className="block font-black text-emerald-400 text-sm">100% RERA</span>
+              <span className="text-[11px]">Clear Legal Due Diligence</span>
+            </div>
+            <div className="p-3 rounded-2xl bg-[#0f172a] border border-slate-800">
+              <span className="block font-black text-emerald-400 text-sm">0% Brokerage</span>
+              <span className="text-[11px]">Direct Developer Allotment</span>
+            </div>
+            <div className="p-3 rounded-2xl bg-[#0f172a] border border-slate-800">
+              <span className="block font-black text-emerald-400 text-sm">Private Chauffeur</span>
+              <span className="text-[11px]">Complimentary Home Pickup</span>
+            </div>
+            <div className="p-3 rounded-2xl bg-[#0f172a] border border-slate-800">
+              <span className="block font-black text-emerald-400 text-sm">₹500 Cr+</span>
+              <span className="text-[11px]">Luxury Inventory Handled</span>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Properties Grid */}
-      <section id="properties" className="py-16 px-4 sm:px-8 max-w-6xl mx-auto">
-        <div className="text-center space-y-2 mb-12">
+      {/* Assistance Promo Offers Bar */}
+      <section id="offers" className="py-8 px-4 sm:px-8 max-w-7xl mx-auto">
+        <div className="p-5 sm:p-6 rounded-3xl bg-[#0e1b26] border border-[#1d354a] shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-center md:text-left">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center shrink-0">
+              <Tag className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Buyer Privilege</span>
+              <h3 className="text-base sm:text-lg font-bold text-white">Zero Brokerage & Free Stamp Duty Legal Check!</h3>
+            </div>
+          </div>
+
+          <a
+            href="#visit"
+            className="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs uppercase hover:bg-emerald-400"
+          >
+            Claim Buyer Pass
+          </a>
+        </div>
+      </section>
+
+      {/* Property Listings Suite */}
+      <section id="properties" className="py-16 px-4 sm:px-8 max-w-7xl mx-auto">
+        <div className="text-center space-y-3 mb-10">
           <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Verified Portfolios</span>
           <h2 className="text-3xl sm:text-4xl font-black text-white">Featured Luxury Residences</h2>
         </div>
 
+        {/* Search & Category Tabs */}
+        <div className="max-w-4xl mx-auto space-y-4 mb-10">
+          <div className="relative">
+            <Search className="w-5 h-5 text-emerald-500/70 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search properties by location (e.g. Worli, Bandra, Lonavala, 4 BHK...)"
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-[#0f172a] border border-slate-800 text-sm text-white focus:outline-none focus:border-emerald-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar justify-start sm:justify-center">
+            {config.categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
+                  selectedCategory === cat
+                    ? 'bg-emerald-500 text-slate-950 shadow-md'
+                    : 'bg-[#0f172a] text-slate-400 border border-slate-800 hover:bg-[#182438]'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {config.properties.map((prop) => (
+          {filteredProperties.map((prop) => (
             <div
               key={prop.id}
               className="rounded-3xl bg-[#0f172a] border border-slate-800 overflow-hidden flex flex-col justify-between hover:border-emerald-500/50 transition-all shadow-xl group"
             >
-              <div className="h-56 overflow-hidden relative">
+              <div className="h-60 overflow-hidden relative">
                 <img src={prop.image} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black uppercase">
                   {prop.status}
@@ -179,10 +274,14 @@ export default function RealEstateDemo({ customConfig }) {
         </div>
       </section>
 
-      {/* VIP Site Visit Form */}
-      <section id="visit" className="py-16 px-4 sm:px-8 bg-[#0b101c] border-t border-slate-800">
-        <div className="max-w-4xl mx-auto p-6 sm:p-8 rounded-3xl bg-[#121c32] border border-slate-700 space-y-4">
-          <h3 className="font-bold text-xl text-white">Schedule a Private VIP Site Visit</h3>
+      {/* VIP Site Visit Booking Suite */}
+      <section id="visit" className="py-20 px-4 sm:px-8 bg-[#0b101c] border-y border-slate-800">
+        <div className="max-w-4xl mx-auto p-6 sm:p-8 rounded-3xl bg-[#121c32] border border-slate-700 space-y-4 shadow-2xl">
+          <h3 className="font-bold text-xl text-white flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-emerald-400" />
+            <span>Schedule a Private VIP Site Visit</span>
+          </h3>
+
           <form onSubmit={handleVisitSubmit} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             <input
               type="text"
@@ -209,7 +308,7 @@ export default function RealEstateDemo({ customConfig }) {
             />
             <button
               type="submit"
-              className="sm:col-span-2 md:col-span-3 py-3 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs uppercase hover:bg-emerald-400 cursor-pointer flex items-center justify-center gap-2"
+              className="sm:col-span-2 md:col-span-3 py-3 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs uppercase hover:bg-emerald-400 cursor-pointer flex items-center justify-center gap-2 shadow-lg"
             >
               <Send className="w-4 h-4" />
               <span>Book Site Visit on WhatsApp</span>
@@ -218,14 +317,96 @@ export default function RealEstateDemo({ customConfig }) {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section id="reviews" className="py-16 px-4 sm:px-8 max-w-6xl mx-auto">
+        <div className="text-center space-y-2 mb-10">
+          <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Happy Homeowners</span>
+          <h2 className="text-3xl font-black text-white">Trusted by High Net-Worth Families</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {config.testimonials.map((t, i) => (
+            <div key={i} className="p-6 rounded-3xl bg-[#0f172a] border border-slate-800 space-y-3">
+              <div className="flex items-center gap-1 text-amber-400">
+                {[...Array(t.rating)].map((_, r) => <Star key={r} className="w-4 h-4 fill-amber-400" />)}
+              </div>
+              <p className="text-xs text-slate-300 italic leading-relaxed">"{t.comment}"</p>
+              <div className="flex items-center gap-3 pt-2 border-t border-slate-800">
+                <img src={t.avatar} alt={t.name} className="w-9 h-9 rounded-full object-cover border border-emerald-500/40" />
+                <div>
+                  <span className="font-bold text-xs text-white block">{t.name}</span>
+                  <span className="text-[10px] text-emerald-400">{t.date}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQs */}
+      <section className="py-16 px-4 sm:px-8 max-w-4xl mx-auto">
+        <div className="text-center space-y-2 mb-10">
+          <span className="text-xs font-bold uppercase tracking-widest text-emerald-400">Advisory Support</span>
+          <h2 className="text-3xl font-black text-white">Frequently Asked Questions</h2>
+        </div>
+
+        <div className="space-y-3">
+          {config.faqs.map((faq, i) => (
+            <div key={i} className="rounded-2xl bg-[#0f172a] border border-slate-800 overflow-hidden">
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                className="w-full p-4 text-left font-bold text-xs sm:text-sm text-white flex items-center justify-between gap-4 cursor-pointer"
+              >
+                <span>{faq.q}</span>
+                <ChevronDown className={`w-4 h-4 text-emerald-400 transition-transform ${openFaq === i ? 'rotate-180' : ''}`} />
+              </button>
+              {openFaq === i && (
+                <div className="px-4 pb-4 text-xs text-slate-400 leading-relaxed border-t border-slate-800 pt-2">
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer id="location" className="py-12 px-4 sm:px-8 border-t border-slate-800 text-slate-500 text-xs">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div>
-            <span className="font-bold text-sm text-white block">{config.businessName}</span>
-            <span>{config.address} • {config.hours}</span>
+      <footer id="location" className="py-12 px-4 sm:px-8 bg-[#05080e] border-t border-slate-800 text-slate-500 text-xs">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          <div className="space-y-2">
+            <span className="font-bold text-base text-white block">{config.businessName}</span>
+            <p className="text-xs">{config.tagline}</p>
           </div>
-          <span className="text-emerald-400 font-bold">Production Ready Template by LOCAL2BRAND</span>
+
+          <div>
+            <span className="font-bold text-white block mb-2 uppercase">HQ Address</span>
+            <div className="flex items-start gap-2">
+              <MapPin className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <span>{config.address}</span>
+            </div>
+          </div>
+
+          <div>
+            <span className="font-bold text-white block mb-2 uppercase">Office Hours</span>
+            <div>Weekdays: {config.hours.weekdays}</div>
+            <div>Weekends: {config.hours.weekends}</div>
+          </div>
+
+          <div>
+            <span className="font-bold text-white block mb-2 uppercase">WhatsApp Desk</span>
+            <a
+              href={`https://wa.me/${config.whatsapp}`}
+              className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 hover:bg-emerald-400"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>WhatsApp: {config.phone}</span>
+            </a>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>© {new Date().getFullYear()} {config.businessName}. All rights reserved.</span>
+          <span className="text-emerald-400 font-bold">Production Ready Platform by LOCAL2BRAND</span>
         </div>
       </footer>
 

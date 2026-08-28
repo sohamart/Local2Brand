@@ -128,13 +128,17 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
             </span>
           </div>
 
-          {/* Real Responsive Viewport Iframe Container */}
-          <div className="flex-1 w-full h-full bg-slate-950 relative overflow-hidden">
+          {/* Real Responsive Viewport Iframe Container with Full Scroll Support */}
+          <div
+            className="flex-1 w-full h-full bg-slate-950 relative overflow-hidden"
+            data-lenis-prevent="true"
+          >
             <iframe
               key={`${activeSlug}-${deviceMode}-${iframeKey}`}
               src={previewUrl}
               title={`${activeTitle} Live Interactive Preview`}
-              className="w-full h-full border-0 bg-slate-950"
+              className="w-full h-full border-0 bg-slate-950 block"
+              scrolling="yes"
               loading="lazy"
             />
           </div>
