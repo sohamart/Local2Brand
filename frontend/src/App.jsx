@@ -92,17 +92,22 @@ export default function App() {
           {/* Animated Initial Liquid Glass Preloader */}
           {!isLivePreview && <Preloader />}
 
-          {/* Admin Bypass Notification Floating Bar (Positioned at Bottom-Right away from Navbar) */}
+          {/* Ultra-Compact Admin Bypass Pill (Positioned at Bottom-Left to avoid Chatbot) */}
           {isBypassed && isMaintenanceOrComingSoon && (
-            <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[999999] bg-amber-500/95 hover:bg-amber-500 text-slate-950 px-4 py-2 rounded-2xl text-xs font-bold shadow-2xl border-2 border-amber-300 backdrop-blur-xl flex items-center gap-2.5 transition-all">
-              <Unlock className="w-4 h-4 text-slate-950 shrink-0" />
-              <span className="font-extrabold">Admin Preview ({bypassMinutesRemaining}m left)</span>
+            <div className="fixed bottom-4 left-4 sm:bottom-5 sm:left-5 z-[999999] flex items-center gap-1.5 p-1 pr-2 rounded-full bg-slate-900/90 hover:bg-slate-900 text-white backdrop-blur-xl border border-amber-400/80 shadow-2xl transition-all">
+              <div className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shrink-0">
+                <Unlock className="w-3 h-3" />
+              </div>
+              <span className="text-[11px] font-mono font-bold text-amber-300">
+                {bypassMinutesRemaining}m
+              </span>
               <button
                 onClick={handleManualLock}
-                className="text-[10px] uppercase font-black px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white shadow-xs ml-1 cursor-pointer transition-all"
-                title="Lock website back to Maintenance mode"
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-red-600/90 hover:bg-red-600 text-white transition-all cursor-pointer flex items-center gap-1 ml-0.5"
+                title="Lock website back to Maintenance/Coming Soon mode"
               >
-                Lock Site 🔒
+                <Lock className="w-2.5 h-2.5" />
+                <span>Lock</span>
               </button>
             </div>
           )}
