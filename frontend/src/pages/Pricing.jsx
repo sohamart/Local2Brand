@@ -66,14 +66,6 @@ export default function Pricing() {
         description="Explore our transparent fixed-price website packages and turnkey domain & hosting options. Starter, Professional, and Custom tiers with 3 - 7 days delivery."
       />
 
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[999999] px-5 py-3 rounded-2xl bg-purple-600 text-white font-bold text-xs shadow-2xl flex items-center gap-2 border border-purple-400 animate-bounce">
-          <Sparkles className="w-4 h-4 shrink-0" />
-          <span>{toastMsg}</span>
-        </div>
-      )}
-
       <div className="pt-28 xs:pt-32 sm:pt-40 pb-20">
 
         {/* Page Hero Header */}

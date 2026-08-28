@@ -1,22 +1,49 @@
-import React, { useState } from 'react';
-import { Monitor, Tablet, Smartphone, ExternalLink, ArrowRight, Sparkles, RefreshCw, Share2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Monitor, Tablet, Smartphone, ExternalLink, ArrowRight, Sparkles, RefreshCw, Share2, ZoomIn, ZoomOut } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import ShareDemoModal from './ShareDemoModal';
 
 export default function DevicePreview({ demo, image, title, aspectRatio }) {
-  const [deviceMode, setDeviceMode] = useState('desktop'); // Default to Desktop, switchable to Tablet & Mobile
+  const [deviceMode, setDeviceMode] = useState('desktop'); // 'desktop' | 'tablet' | 'mobile'
   const [iframeKey, setIframeKey] = useState(0);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { openOrderModal } = useOrderModal();
 
+  const stageRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
   const activeTitle = demo?.title || title || 'Website Demo';
   const activeCategory = demo?.category || 'Website Demo';
   const activeSlug = demo?.templateId || demo?.slug || 'restaurant';
-  const activePrice = demo?.priceInr || demo?.price || '₹9,999';
+  const activePrice = demo?.priceInr || demo?.price || '₹4,999';
+
+  // Target viewport dimensions for authentic emulation
+  const targetWidth = deviceMode === 'desktop' ? 1200 : deviceMode === 'tablet' ? 768 : 375;
+  const targetHeight = deviceMode === 'desktop' ? 750 : deviceMode === 'tablet' ? 960 : 667;
+
+  // Compute responsive scale so desktop/tablet frames scale down on mobile screens
+  useEffect(() => {
+    const computeScale = () => {
+      if (!stageRef.current) return;
+      const availableWidth = stageRef.current.clientWidth - 16; // minus padding
+      if (availableWidth < targetWidth) {
+        setScale(availableWidth / targetWidth);
+      } else {
+        setScale(1);
+      }
+    };
+
+    computeScale();
+    window.addEventListener('resize', computeScale);
+    return () => window.removeEventListener('resize', computeScale);
+  }, [deviceMode, targetWidth]);
 
   const handleOrder = () => {
     openOrderModal({
       selectedDemo: activeTitle,
+      templateId: activeSlug,
+      category: activeCategory,
+      flow: 'template',
       websiteType: `Template Customization: ${activeTitle}`,
       initialRequirements: `I want to order and customize the "${activeTitle}" (${activeCategory}) template.`,
       price: activePrice
@@ -26,23 +53,26 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
   const previewUrl = `/preview/${activeSlug}?embed=true`;
   const fullScreenUrl = `/preview/${activeSlug}`;
 
+  const scaledWrapperWidth = targetWidth * scale;
+  const scaledWrapperHeight = targetHeight * scale;
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Device Viewport Selector Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 glass-panel rounded-2xl border border-white/90 dark:border-slate-700/80 shadow-glass-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 glass-panel rounded-2xl border border-white/90 dark:border-slate-700/80 shadow-glass-sm bg-white/90 dark:bg-slate-900/90">
 
         {/* Device Switcher Buttons */}
-        <div className="flex items-center justify-center gap-1 p-1 bg-slate-100/90 dark:bg-slate-900/90 rounded-xl border border-slate-200/60 dark:border-slate-800">
+        <div className="flex items-center justify-center gap-1 p-1 bg-slate-100/90 dark:bg-slate-950/90 rounded-xl border border-slate-200/60 dark:border-slate-800">
           <button
             onClick={() => setDeviceMode('desktop')}
             className={`flex-1 sm:flex-none px-3.5 sm:px-4 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               deviceMode === 'desktop'
                 ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Monitor className="w-3.5 h-3.5" />
-            <span>🖥️ Desktop</span>
+            <span>🖥️ Desktop (1200px)</span>
           </button>
 
           <button
@@ -50,11 +80,11 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
             className={`flex-1 sm:flex-none px-3.5 sm:px-4 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               deviceMode === 'tablet'
                 ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Tablet className="w-3.5 h-3.5" />
-            <span>📱 Tablet (iPad)</span>
+            <span>📱 iPad (768px)</span>
           </button>
 
           <button
@@ -62,11 +92,11 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
             className={`flex-1 sm:flex-none px-3.5 sm:px-4 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               deviceMode === 'mobile'
                 ? 'bg-purple-600 text-white shadow-sm'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Smartphone className="w-3.5 h-3.5" />
-            <span>📱 Mobile (iPhone)</span>
+            <span>📱 Phone (375px)</span>
           </button>
         </div>
 
@@ -117,18 +147,19 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
         demo={demo || { title: activeTitle, slug: activeSlug, category: activeCategory }}
       />
 
-      {/* Interactive Device Stage Container */}
-      <div className="p-2 sm:p-6 lg:p-8 rounded-card sm:rounded-hero glass-card border border-white dark:border-slate-700/80 flex items-center justify-center min-h-[560px] sm:min-h-[720px] bg-slate-100/50 dark:bg-slate-950/50 overflow-hidden">
+      {/* Interactive Device Stage Container with Scaled Emulation */}
+      <div
+        ref={stageRef}
+        className="p-2 sm:p-6 lg:p-8 rounded-3xl glass-card border border-white/80 dark:border-slate-800 flex items-center justify-center min-h-[500px] sm:min-h-[720px] bg-slate-100/60 dark:bg-slate-950/60 overflow-hidden"
+      >
 
-        {/* Device Frame */}
+        {/* Outer Emulated Device Frame */}
         <div
-          className={`transition-all duration-500 ease-out bg-slate-950 rounded-2xl sm:rounded-[36px] border-4 sm:border-8 border-slate-900 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col ${
-            deviceMode === 'desktop'
-              ? 'w-full max-w-5xl h-[660px]'
-              : deviceMode === 'tablet'
-              ? 'w-[768px] max-w-full h-[680px]'
-              : 'w-[375px] max-w-full h-[680px]'
-          }`}
+          className="transition-all duration-300 ease-out bg-slate-950 rounded-2xl sm:rounded-[32px] border-4 sm:border-8 border-slate-900 dark:border-slate-850 shadow-2xl overflow-hidden flex flex-col mx-auto"
+          style={{
+            width: `${scaledWrapperWidth}px`,
+            maxWidth: '100%'
+          }}
         >
           {/* Top Device Header Bar with URL */}
           <div className="bg-slate-900 px-3 sm:px-4 py-2 flex items-center justify-between text-white/70 text-[9px] sm:text-[10px] shrink-0 border-b border-slate-800">
@@ -137,28 +168,42 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
               <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
             </div>
-            <div className="font-mono truncate max-w-[150px] sm:max-w-[280px] text-white/60 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-              local2brand.com/preview/{activeSlug} • {deviceMode === 'desktop' ? 'Desktop (1024px+)' : deviceMode === 'tablet' ? 'Tablet (768px)' : 'Mobile (375px)'}
+            <div className="font-mono truncate max-w-[140px] sm:max-w-[280px] text-white/60 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+              local2brand.com/preview/{activeSlug} • {deviceMode === 'desktop' ? 'Desktop 1200px' : deviceMode === 'tablet' ? 'iPad 768px' : 'iPhone 375px'}
             </div>
             <span className="text-emerald-400 font-bold text-[9px] flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Live Sim</span>
+              <span>{Math.round(scale * 100)}% Sim</span>
             </span>
           </div>
 
-          {/* Real Responsive Viewport Iframe Container with Full Scroll Support */}
+          {/* Scaled Responsive Viewport Container */}
           <div
-            className="flex-1 w-full h-full bg-slate-950 relative overflow-hidden"
+            className="bg-slate-950 relative overflow-hidden"
+            style={{
+              width: `${scaledWrapperWidth}px`,
+              height: `${scaledWrapperHeight}px`
+            }}
             data-lenis-prevent="true"
           >
-            <iframe
-              key={`${activeSlug}-${deviceMode}-${iframeKey}`}
-              src={previewUrl}
-              title={`${activeTitle} Live Interactive Preview`}
-              className="w-full h-full border-0 bg-slate-950 block"
-              scrolling="yes"
-              loading="lazy"
-            />
+            <div
+              style={{
+                width: `${targetWidth}px`,
+                height: `${targetHeight}px`,
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left'
+              }}
+              className="origin-top-left"
+            >
+              <iframe
+                key={`${activeSlug}-${deviceMode}-${iframeKey}`}
+                src={previewUrl}
+                title={`${activeTitle} Live Interactive Preview`}
+                className="w-full h-full border-0 bg-slate-950 block"
+                scrolling="yes"
+                loading="lazy"
+              />
+            </div>
           </div>
         </div>
 

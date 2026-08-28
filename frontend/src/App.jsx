@@ -39,18 +39,20 @@ export default function App() {
     return expiry && Date.now() < Number(expiry);
   });
 
-  const [bypassMinutesRemaining, setBypassMinutesRemaining] = useState(10);
+  const [bypassTimeFormatted, setBypassTimeFormatted] = useState('10:00');
 
   useEffect(() => {
     if (!isMaintenanceOrComingSoon) return;
 
-    // Check expiry interval every 15 seconds
-    const interval = setInterval(() => {
+    const updateTimer = () => {
       const expiry = localStorage.getItem('l2b_admin_bypass_expiry');
       if (expiry) {
         const remainingMs = Number(expiry) - Date.now();
         if (remainingMs > 0) {
-          setBypassMinutesRemaining(Math.ceil(remainingMs / (60 * 1000)));
+          const totalSec = Math.floor(remainingMs / 1000);
+          const mins = Math.floor(totalSec / 60);
+          const secs = totalSec % 60;
+          setBypassTimeFormatted(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`);
           setIsBypassed(true);
         } else {
           localStorage.removeItem('l2b_admin_bypass_expiry');
@@ -59,8 +61,10 @@ export default function App() {
       } else {
         setIsBypassed(false);
       }
-    }, 15000);
+    };
 
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, [isMaintenanceOrComingSoon]);
 
@@ -92,14 +96,14 @@ export default function App() {
           {/* Animated Initial Liquid Glass Preloader */}
           {!isLivePreview && <Preloader />}
 
-          {/* Ultra-Compact Admin Bypass Pill (Positioned at Bottom-Left to avoid Chatbot) */}
+          {/* Ultra-Compact Admin Bypass Pill with Live MM:SS Countdown Timer */}
           {isBypassed && isMaintenanceOrComingSoon && (
-            <div className="fixed bottom-4 left-4 sm:bottom-5 sm:left-5 z-[999999] flex items-center gap-1.5 p-1 pr-2 rounded-full bg-slate-900/90 hover:bg-slate-900 text-white backdrop-blur-xl border border-amber-400/80 shadow-2xl transition-all">
+            <div className="fixed bottom-4 left-4 sm:bottom-5 sm:left-5 z-[999999] flex items-center gap-1.5 p-1 pr-2 rounded-full bg-slate-900/95 hover:bg-slate-900 text-white backdrop-blur-xl border border-amber-400/80 shadow-2xl transition-all">
               <div className="w-5 h-5 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shrink-0">
                 <Unlock className="w-3 h-3" />
               </div>
-              <span className="text-[11px] font-mono font-bold text-amber-300">
-                {bypassMinutesRemaining}m
+              <span className="text-[11px] font-mono font-black text-amber-300 tracking-wider">
+                {bypassTimeFormatted}
               </span>
               <button
                 onClick={handleManualLock}
