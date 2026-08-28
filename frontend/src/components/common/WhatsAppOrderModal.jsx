@@ -24,14 +24,15 @@ import {
   Square,
   Globe,
   Server,
-  ShieldCheck
+  ShieldCheck,
+  Layout
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { generateWhatsAppOrderUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import { siteConfig } from '../../config/siteConfig';
 import ThemeToggle from './ThemeToggle';
 
-// Step 1: Industries & Niches
+// Step 1: Industries & Niches (For Bespoke Wizard Mode)
 const INDUSTRIES = [
   { id: 'Restaurant / Cafe', label: '🍽️ Restaurant / Cafe / Bakery', icon: '🍽️' },
   { id: 'E-Commerce / Retail', label: '🛍️ E-Commerce / Online Store', icon: '🛍️' },
@@ -88,7 +89,7 @@ const TIMELINES = [
   'Flexible / In Planning Phase'
 ];
 
-// Step 5: Budgets (Affordable Base Packages)
+// Step 5: Budgets
 const BUDGETS = [
   { id: 'Demo Template (₹4,999 - ₹14,999)', label: '₹4,999 - ₹14,999', desc: 'Ready-Made Demo Template Customization' },
   { id: 'Growth Business (₹19,999 - ₹29,999)', label: '₹19,999 - ₹29,999', desc: 'Custom Business Suite with Dynamic Features' },
@@ -98,6 +99,10 @@ const BUDGETS = [
 
 export default function WhatsAppOrderModal() {
   const { isOpen, modalData, closeOrderModal } = useOrderModal();
+
+  const isTemplateMode = !!modalData?.selectedDemo;
+  const selectedTemplateTitle = modalData?.selectedDemo || '';
+  const selectedTemplatePrice = modalData?.price || '₹4,999';
 
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 6;
@@ -115,9 +120,10 @@ export default function WhatsAppOrderModal() {
     brandingStatus: 'Yes, logo & colors are ready',
     timeline: '⚡ Urgent: Express 48 - 72 Hours Launch',
     budget: 'Demo Template (₹4,999 - ₹14,999)',
+    colorPreference: 'Keep Template Original Palette',
+    customColorInput: '',
     addDomain: false,
     addHosting: false,
-    hasOwnDomainHosting: true,
     couponCode: 'INDIA2025',
     isCouponApplied: false,
     clientName: '',
@@ -140,17 +146,13 @@ export default function WhatsAppOrderModal() {
         modalData.websiteType?.toLowerCase().includes('20%') ||
         modalData.websiteType?.toLowerCase().includes('india2025');
 
-      let initialIndustry = 'Restaurant / Cafe';
-      if (modalData.selectedDemo) {
-        const found = INDUSTRIES.find(i => modalData.selectedDemo.toLowerCase().includes(i.id.toLowerCase()));
-        if (found) initialIndustry = found.id;
-      }
-
       setFormData(prev => ({
         ...prev,
-        industry: initialIndustry,
-        businessName: modalData.selectedDemo ? `${modalData.selectedDemo} Customization` : '',
-        budget: modalData.price ? modalData.price : 'Demo Template (₹4,999 - ₹14,999)',
+        businessName: '',
+        colorPreference: 'Keep Template Original Palette',
+        customColorInput: '',
+        addDomain: false,
+        addHosting: false,
         isCouponApplied: !!isOffer
       }));
 
@@ -178,9 +180,7 @@ export default function WhatsAppOrderModal() {
     });
   };
 
-  // Strict Validation for each Step
   const handleNext = () => {
-    // Step 1 Validation
     if (currentStep === 1) {
       if (!formData.industry) {
         triggerToast('⚠️ Please select your business industry type!');
@@ -196,7 +196,6 @@ export default function WhatsAppOrderModal() {
       }
     }
 
-    // Step 2 Validation
     if (currentStep === 2) {
       if (!formData.businessName.trim()) {
         triggerToast('⚠️ Please enter your Brand / Business Name!');
@@ -208,7 +207,6 @@ export default function WhatsAppOrderModal() {
       }
     }
 
-    // Step 3 Validation
     if (currentStep === 3) {
       if (formData.selectedFeatures.length === 0 && !formData.customFeatureText.trim()) {
         triggerToast('⚠️ Please select at least 1 feature needed for your website!');
@@ -216,7 +214,6 @@ export default function WhatsAppOrderModal() {
       }
     }
 
-    // Step 4 Validation
     if (currentStep === 4) {
       if (!formData.themeStyle) {
         triggerToast('⚠️ Please select a design theme preference!');
@@ -228,7 +225,6 @@ export default function WhatsAppOrderModal() {
       }
     }
 
-    // Step 5 Validation
     if (currentStep === 5) {
       if (!formData.timeline) {
         triggerToast('⚠️ Please select your target launch timeline!');
@@ -252,10 +248,6 @@ export default function WhatsAppOrderModal() {
   };
 
   const generateOrderText = () => {
-    const activeIndustry = formData.industry === 'Other Custom Business' && formData.customIndustry
-      ? formData.customIndustry
-      : formData.industry;
-
     const couponText = formData.isCouponApplied ? `🎁 Promo Voucher: *INDIA2025 (20% OFF Activated)*\n` : '';
 
     const addonsList = [];
@@ -263,8 +255,42 @@ export default function WhatsAppOrderModal() {
     if (formData.addHosting) addonsList.push('⚡ Managed Cloud VPS Hosting + Free SSL (+₹1,999/yr)');
     if (!formData.addDomain && !formData.addHosting) addonsList.push('🔄 Client will use own Domain & Hosting (FREE Setup)');
 
+    if (isTemplateMode) {
+      // Template Specific WhatsApp Payload
+      const activeColor = formData.colorPreference === 'Custom Palette' && formData.customColorInput
+        ? formData.customColorInput
+        : formData.colorPreference;
+
+      return (
+        `🚀 *TEMPLATE CUSTOMIZATION ORDER - LOCAL2BRAND*\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `🌟 *Selected Template:* *${selectedTemplateTitle}*\n` +
+        `💰 *Base Price:* ${selectedTemplatePrice} (48-Hour Turnaround)\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `🏢 *Client Brand Name:* *${formData.businessName}*\n` +
+        `🎨 *Color & Styling:* ${activeColor}\n` +
+        `💎 *Assets & Menu:* ${formData.brandingStatus}\n` +
+        `🌐 *Infrastructure Addons:*\n` +
+        addonsList.map(a => `   • ${a}`).join('\n') + '\n' +
+        couponText +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `👤 *Client Name:* ${formData.clientName}\n` +
+        `📞 *WhatsApp Phone:* ${formData.whatsappPhone}\n` +
+        `📧 *Email:* ${formData.email}\n` +
+        `📍 *City / State:* ${formData.city}\n` +
+        (formData.extraNotes ? `📝 *Notes:* ${formData.extraNotes}\n` : '') +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `⚡ *Hi LOCAL2BRAND team, I want to customize this template for my business. Please send the final quote and start 48h setup!*`
+      );
+    }
+
+    // Bespoke Custom Project Builder Payload
+    const activeIndustry = formData.industry === 'Other Custom Business' && formData.customIndustry
+      ? formData.customIndustry
+      : formData.industry;
+
     return (
-      `🚀 *NEW PROJECT ONBOARDING BRIEF - LOCAL2BRAND*\n` +
+      `🚀 *NEW BESPOKE PROJECT BRIEF - LOCAL2BRAND*\n` +
       `━━━━━━━━━━━━━━━━━━━━\n` +
       `👤 *Client Name:* ${formData.clientName}\n` +
       `📞 *WhatsApp Phone:* ${formData.whatsappPhone}\n` +
@@ -276,14 +302,14 @@ export default function WhatsAppOrderModal() {
       `🎯 *Core Goal:* ${formData.goal}\n` +
       `🌐 *Existing Presence:* ${formData.existingWebsite} ${formData.customSocialLink ? `(${formData.customSocialLink})` : ''}\n` +
       `━━━━━━━━━━━━━━━━━━━━\n` +
-      `⚡ *REQUIRED FEATURES & MODULES:*\n` +
+      `⚡ *REQUIRED FEATURES:*\n` +
       formData.selectedFeatures.map((f, i) => `   ${i + 1}. ${f}`).join('\n') + '\n' +
       (formData.customFeatureText ? `   📝 Custom Addon: ${formData.customFeatureText}\n` : '') +
       `━━━━━━━━━━━━━━━━━━━━\n` +
       `🎨 *Theme Preference:* ${formData.themeStyle}\n` +
       `💎 *Brand Assets:* ${formData.brandingStatus}\n` +
       `⏱️ *Target Timeline:* ${formData.timeline}\n` +
-      `💰 *Base Website Budget:* ${formData.budget}\n` +
+      `💰 *Base Budget:* ${formData.budget}\n` +
       `🌐 *Domain & Hosting Addons:*\n` +
       addonsList.map(a => `   • ${a}`).join('\n') + '\n' +
       couponText +
@@ -296,7 +322,10 @@ export default function WhatsAppOrderModal() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Step 6 Strict Validation for All Contact Fields
+    if (!formData.businessName.trim()) {
+      triggerToast('⚠️ Please enter your Brand / Business Name!');
+      return;
+    }
     if (!formData.clientName.trim()) {
       triggerToast('⚠️ Please enter your Full Name!');
       return;
@@ -322,14 +351,14 @@ export default function WhatsAppOrderModal() {
   };
 
   const handleCopy = () => {
-    if (!formData.clientName.trim() || !formData.whatsappPhone.trim()) {
-      triggerToast('⚠️ Please enter your Name and WhatsApp Number first!');
+    if (!formData.businessName.trim() || !formData.clientName.trim() || !formData.whatsappPhone.trim()) {
+      triggerToast('⚠️ Please fill required details first!');
       return;
     }
     const text = generateOrderText();
     navigator.clipboard.writeText(text);
     setCopied(true);
-    triggerToast('📋 Complete project brief copied to clipboard!');
+    triggerToast('📋 Order brief copied to clipboard!');
     setTimeout(() => setCopied(false), 2500);
   };
 
@@ -346,23 +375,34 @@ export default function WhatsAppOrderModal() {
         </div>
       )}
 
-      {/* Main Modal Card Container with Full Light/Dark Support */}
+      {/* Main Modal Card Container */}
       <div className="relative w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 my-auto max-h-[92vh] transition-colors">
         
         {/* Top Header Bar */}
         <div className="px-5 sm:px-8 py-4 bg-slate-50/90 dark:bg-slate-950/90 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl l2b-gradient-bg flex items-center justify-center text-white font-black shadow-md">
-              <Sparkles className="w-4 h-4" />
+              {isTemplateMode ? <Layout className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                <span>Interactive Project Builder</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold uppercase">
-                  Step {currentStep} of {totalSteps}
-                </span>
+                <span>{isTemplateMode ? 'Template Fast-Track Setup' : 'Interactive Project Builder'}</span>
+                {!isTemplateMode && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold uppercase">
+                    Step {currentStep} of {totalSteps}
+                  </span>
+                )}
+                {isTemplateMode && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold uppercase">
+                    ⚡ 48-Hour Setup
+                  </span>
+                )}
               </h2>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">All fields required for accurate quotation & 48-hr deployment</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                {isTemplateMode
+                  ? 'All template features are pre-configured. Just specify your brand details & colors.'
+                  : 'Answer step-by-step to design your bespoke custom platform from scratch.'}
+              </p>
             </div>
           </div>
 
@@ -377,396 +417,231 @@ export default function WhatsAppOrderModal() {
           </div>
         </div>
 
-        {/* Animated Progress Line */}
-        <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 relative overflow-hidden">
-          <div
-            className="h-full l2b-gradient-bg transition-all duration-500 ease-out"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+        {/* Animated Progress Line (Only for Multi-Step Wizard) */}
+        {!isTemplateMode && (
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 relative overflow-hidden">
+            <div
+              className="h-full l2b-gradient-bg transition-all duration-500 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        )}
 
         {/* Dynamic Form Content Body (Scrollable) */}
         <div className="p-5 sm:p-8 flex-1 overflow-y-auto space-y-6 modal-touch-scroll" data-lenis-prevent="true">
           
-          {/* STEP 1: Industry & Goal */}
-          {currentStep === 1 && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 1: Project Niche</span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  What type of business is this website for? <span className="text-red-500">*</span>
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Select your industry preset or type your custom business below.</p>
-              </div>
-
-              {/* Industries Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                {INDUSTRIES.map((ind) => (
-                  <button
-                    key={ind.id}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, industry: ind.id })}
-                    className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
-                      formData.industry === ind.id
-                        ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm ring-1 ring-purple-500'
-                        : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
-                    }`}
-                  >
-                    <span className="text-base">{ind.icon}</span>
-                    <span className="truncate">{ind.id}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Custom Industry Input if "Other" selected */}
-              {formData.industry === 'Other Custom Business' && (
-                <div className="pt-1">
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Specify Your Custom Business Type <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Solar Energy Consultant, Pet Grooming, Law Firm..."
-                    value={formData.customIndustry}
-                    onChange={(e) => setFormData({ ...formData, customIndustry: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-purple-500/60 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
-                  />
+          {/* ======================================================== */}
+          {/* MODE 1: TEMPLATE CUSTOMIZATION FAST-TRACK (1-SCREEN RAPID) */}
+          {/* ======================================================== */}
+          {isTemplateMode ? (
+            <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
+              
+              {/* Selected Template Locked Banner */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 via-slate-50 to-purple-50 dark:from-purple-950/60 dark:via-slate-950 dark:to-purple-950/60 border border-purple-200 dark:border-purple-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl l2b-gradient-bg flex items-center justify-center text-white font-bold text-sm shrink-0">
+                    ✓
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 block">
+                      Pre-Selected Template
+                    </span>
+                    <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                      {selectedTemplateTitle}
+                    </h4>
+                  </div>
                 </div>
-              )}
 
-              {/* Primary Goal Selector */}
-              <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-800">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  What is the #1 Primary Goal of the Website? <span className="text-red-500">*</span>
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {GOALS.map((goal) => (
-                    <button
-                      key={goal}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, goal })}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        formData.goal === goal
-                          ? 'bg-purple-600 text-white shadow-md'
-                          : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {goal}
-                    </button>
-                  ))}
+                <div className="text-left sm:text-right shrink-0">
+                  <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 block">
+                    {selectedTemplatePrice}
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">
+                    ⚡ 48-Hour Live Delivery
+                  </span>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* STEP 2: Brand Identity */}
-          {currentStep === 2 && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 2: Brand Identity</span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Tell us about your brand & business</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">This helps us tailor your typography, domain, and structure.</p>
-              </div>
-
-              <div className="space-y-4">
+              {/* 1. Brand Name & Existing URL */}
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Brand / Business Name <span className="text-red-500">*</span>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Your Brand / Business Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Royal Saffron Mughlai or Apex Fitness"
+                    placeholder="e.g. Spice Symphony or Royal Fitness"
                     value={formData.businessName}
                     onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
                   />
                 </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Do you have an existing website or social media presence? <span className="text-red-500">*</span>
-                  </label>
-                  <div className="space-y-2">
-                    {[
-                      'No, this is a brand new project 🚀',
-                      'Yes, we need a complete modern redesign 🔄',
-                      'We currently only sell on Instagram / WhatsApp 📱'
-                    ].map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, existingWebsite: opt })}
-                        className={`w-full p-3 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                          formData.existingWebsite === opt
-                            ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200'
-                            : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                        }`}
-                      >
-                        <span>{opt}</span>
-                        {formData.existingWebsite === opt && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    Existing Website URL or Instagram Handle (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. @yourbrand or www.currentsite.com"
-                    value={formData.customSocialLink}
-                    onChange={(e) => setFormData({ ...formData, customSocialLink: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: Superpower Features */}
-          {currentStep === 3 && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 3: Features & Superpowers</span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  Select all the features your website needs <span className="text-red-500">*</span>
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Please select at least 1 core feature to power your platform.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {FEATURE_OPTIONS.map((feat) => {
-                  const isChecked = formData.selectedFeatures.includes(feat.id);
-                  return (
-                    <div
-                      key={feat.id}
-                      onClick={() => toggleFeature(feat.id)}
-                      className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${
-                        isChecked
-                          ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm'
-                          : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
-                      }`}
-                    >
-                      <span className="text-xs font-bold pr-2">{feat.label}</span>
-                      <div className="shrink-0">
-                        {isChecked ? (
-                          <div className="w-5 h-5 rounded-lg bg-purple-600 text-white flex items-center justify-center">
-                            <Check className="w-3.5 h-3.5" />
-                          </div>
-                        ) : (
-                          <div className="w-5 h-5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Any other custom feature or third-party integration needed?
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. CRM Sync, Zoho Books integration, Custom Calculator..."
-                  value={formData.customFeatureText}
-                  onChange={(e) => setFormData({ ...formData, customFeatureText: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4: Visual Theme & Branding */}
-          {currentStep === 4 && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 4: Design Aesthetics</span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  Choose your visual vibe & design theme <span className="text-red-500">*</span>
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Our senior UI/UX designers will craft your custom palette based on this.</p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {THEMES.map((th) => (
-                  <div
-                    key={th.id}
-                    onClick={() => setFormData({ ...formData, themeStyle: th.id })}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-                      formData.themeStyle === th.id
-                        ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-slate-900 dark:text-white shadow-md ring-1 ring-purple-500'
-                        : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-xs text-slate-900 dark:text-white">{th.name}</span>
-                        {formData.themeStyle === th.id && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{th.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+              {/* 2. Color Palette & Styling */}
+              <div className="space-y-2">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Do you already have a Logo and Branding Kit? <span className="text-red-500">*</span>
+                  Theme Colors & Aesthetic Preference <span className="text-red-500">*</span>
                 </label>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {[
-                    'Yes, logo & colors are ready! 🎨',
-                    'Need LOCAL2BRAND to design our logo & brand identity kit 💎',
-                    'Have rough ideas, need refinement during development ✨'
-                  ].map((status) => (
+                    'Keep Template Original Palette (Recommended) ✨',
+                    'Custom Brand Colors (e.g. Gold & Obsidian, Emerald) 🎨'
+                  ].map((colOpt) => (
                     <button
-                      key={status}
+                      key={colOpt}
                       type="button"
-                      onClick={() => setFormData({ ...formData, brandingStatus: status })}
-                      className={`w-full p-3 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                        formData.brandingStatus === status
+                      onClick={() => setFormData({ ...formData, colorPreference: colOpt })}
+                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                        formData.colorPreference === colOpt
                           ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200'
                           : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                       }`}
                     >
-                      <span>{status}</span>
-                      {formData.brandingStatus === status && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                      <span>{colOpt}</span>
+                      {formData.colorPreference === colOpt && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />}
                     </button>
                   ))}
                 </div>
-              </div>
-            </div>
-          )}
 
-          {/* STEP 5: Timeline, Budget & Infrastructure Addons */}
-          {currentStep === 5 && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 5: Budget & Infrastructure</span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  Package Tier & Turnkey Addons <span className="text-red-500">*</span>
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Affordable pricing with complete domain and cloud hosting clarity.</p>
-              </div>
-
-              {/* Base Budget Tiers */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Base Website Package <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {BUDGETS.map((b) => (
-                    <div
-                      key={b.id}
-                      onClick={() => setFormData({ ...formData, budget: b.id })}
-                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
-                        formData.budget === b.id
-                          ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-slate-900 dark:text-white shadow-sm'
-                          : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-black text-sm text-purple-600 dark:text-purple-400">{b.label}</span>
-                        {formData.budget === b.id && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
-                      </div>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400">{b.desc}</span>
-                    </div>
-                  ))}
-                </div>
+                {formData.colorPreference.includes('Custom') && (
+                  <div className="pt-2">
+                    <input
+                      type="text"
+                      placeholder="Specify your colors (e.g. #D4AF37 Gold & Deep Black / Royal Navy Blue)..."
+                      value={formData.customColorInput}
+                      onChange={(e) => setFormData({ ...formData, customColorInput: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-purple-500/60 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
+                )}
               </div>
 
-              {/* Turnkey Domain & Hosting Addon Checkboxes */}
-              <div className="space-y-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+              {/* 3. Turnkey Domain & Hosting Addons */}
+              <div className="space-y-2.5 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                    Turnkey Domain & Hosting Addons
+                    Infrastructure Addons (Optional)
                   </label>
-                  <span className="text-[10px] text-slate-400 font-semibold">(Separate optional charge)</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">(Separate optional fee)</span>
                 </div>
 
-                {/* Domain Checkbox */}
-                <div
-                  onClick={() => setFormData({ ...formData, addDomain: !formData.addDomain })}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    formData.addDomain
-                      ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-900 dark:text-purple-100'
-                      : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Globe className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                    <div>
-                      <div className="text-xs font-bold">🌐 Add Custom Domain (.com / .in / .co.in)</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Registered on your name with full DNS ownership</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Domain */}
+                  <div
+                    onClick={() => setFormData({ ...formData, addDomain: !formData.addDomain })}
+                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                      formData.addDomain
+                        ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-900 dark:text-purple-100'
+                        : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                      <div>
+                        <div className="text-xs font-bold">🌐 Custom Domain</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">.com / .in registration</div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-black text-xs text-purple-600 dark:text-purple-400">+₹999/yr</div>
+                      <div className="text-[9px] font-bold text-emerald-600">{formData.addDomain ? 'Added ✓' : '+ Add'}</div>
                     </div>
                   </div>
-                  <div className="text-right shrink-0 pl-2">
-                    <div className="font-extrabold text-xs text-purple-600 dark:text-purple-400">+₹999 / yr</div>
-                    <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">{formData.addDomain ? 'Added ✓' : '+ Add'}</div>
-                  </div>
-                </div>
 
-                {/* Cloud Hosting Checkbox */}
-                <div
-                  onClick={() => setFormData({ ...formData, addHosting: !formData.addHosting })}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    formData.addHosting
-                      ? 'bg-emerald-50 dark:bg-emerald-600/20 border-emerald-500 text-emerald-900 dark:text-emerald-100'
-                      : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <div>
-                      <div className="text-xs font-bold">⚡ Add Managed High-Speed Cloud VPS & SSL</div>
-                      <div className="text-[10px] text-slate-500 dark:text-slate-400">99.9% uptime SLA, daily cloud backups & global CDN</div>
+                  {/* Hosting */}
+                  <div
+                    onClick={() => setFormData({ ...formData, addHosting: !formData.addHosting })}
+                    className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                      formData.addHosting
+                        ? 'bg-emerald-50 dark:bg-emerald-600/20 border-emerald-500 text-emerald-900 dark:text-emerald-100'
+                        : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <div>
+                        <div className="text-xs font-bold">⚡ Cloud VPS + SSL</div>
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400">High-speed global CDN</div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-black text-xs text-emerald-600 dark:text-emerald-400">+₹1,999/yr</div>
+                      <div className="text-[9px] font-bold text-emerald-600">{formData.addHosting ? 'Added ✓' : '+ Add'}</div>
                     </div>
                   </div>
-                  <div className="text-right shrink-0 pl-2">
-                    <div className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400">+₹1,999 / yr</div>
-                    <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">{formData.addHosting ? 'Added ✓' : '+ Add'}</div>
-                  </div>
                 </div>
 
-                {/* Self-Host Notice */}
                 {!formData.addDomain && !formData.addHosting && (
                   <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium px-1 flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>You can connect your own domain & hosting account for <strong>FREE (₹0 extra)</strong>.</span>
+                    <span>You can connect your own domain & hosting account for <strong>FREE (₹0)</strong>.</span>
                   </p>
                 )}
               </div>
 
-              {/* Target Launch Speed */}
-              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              {/* 4. Client Contact Info */}
+              <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Target Launch Speed <span className="text-red-500">*</span>
+                  Contact Information & WhatsApp Dispatch <span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {TIMELINES.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, timeline: t })}
-                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all cursor-pointer ${
-                        formData.timeline === t
-                          ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm'
-                          : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Your Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Rahul Sharma"
+                      value={formData.clientName}
+                      onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">WhatsApp Phone Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 98765 43210"
+                      value={formData.whatsappPhone}
+                      onChange={(e) => setFormData({ ...formData, whatsappPhone: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address *</label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="rahul@company.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City / State *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Mumbai, Delhi, Kolkata..."
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Promo Coupon Pill */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-slate-50 dark:from-purple-950/80 dark:to-slate-950 border border-purple-200 dark:border-purple-800/80 flex items-center justify-between gap-3">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-50 to-slate-50 dark:from-purple-950/80 dark:to-slate-950 border border-purple-200 dark:border-purple-800/80 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <Tag className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   <div>
@@ -789,191 +664,420 @@ export default function WhatsAppOrderModal() {
                   {formData.isCouponApplied ? 'Applied ✓' : 'Apply 20% OFF'}
                 </button>
               </div>
-            </div>
-          )}
 
-          {/* STEP 6: Client Contact & Blueprint Review */}
-          {currentStep === 6 && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 6: Contact & Launch</span>
-                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Where should we send your Project Blueprint?</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Our senior team will connect on WhatsApp within 15 minutes with initial mockups.</p>
+              {/* Submit Buttons */}
+              <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                <button
+                  type="submit"
+                  className="w-full sm:flex-1 py-3.5 rounded-2xl l2b-gradient-bg text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl hover:opacity-95 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Order Template on WhatsApp ({selectedTemplatePrice}) 🚀</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-slate-200 dark:border-transparent"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  <span>{copied ? 'Copied!' : 'Copy Brief'}</span>
+                </button>
               </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Your Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Rahul Sharma"
-                      value={formData.clientName}
-                      onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
-                    />
+            </form>
+          ) : (
+            // ========================================================
+            // MODE 2: FULL BESPOKE 6-STEP PROJECT BUILDER WIZARD
+            // ========================================================
+            <div className="space-y-6">
+              
+              {/* STEP 1: Industry & Goal */}
+              {currentStep === 1 && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 1: Project Niche</span>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      What type of business is this website for? <span className="text-red-500">*</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Select your industry preset or type your custom business below.</p>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      WhatsApp Phone Number <span className="text-red-500">*</span>
+                  {/* Industries Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                    {INDUSTRIES.map((ind) => (
+                      <button
+                        key={ind.id}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, industry: ind.id })}
+                        className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+                          formData.industry === ind.id
+                            ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm ring-1 ring-purple-500'
+                            : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <span className="text-base">{ind.icon}</span>
+                        <span className="truncate">{ind.id}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Industry Input if "Other" selected */}
+                  {formData.industry === 'Other Custom Business' && (
+                    <div className="pt-1">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Specify Your Custom Business Type <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Solar Energy Consultant, Pet Grooming, Law Firm..."
+                        value={formData.customIndustry}
+                        onChange={(e) => setFormData({ ...formData, customIndustry: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-purple-500/60 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                      />
+                    </div>
+                  )}
+
+                  {/* Primary Goal Selector */}
+                  <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      What is the #1 Primary Goal of the Website? <span className="text-red-500">*</span>
                     </label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="+91 98765 43210"
-                      value={formData.whatsappPhone}
-                      onChange={(e) => setFormData({ ...formData, whatsappPhone: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {GOALS.map((goal) => (
+                        <button
+                          key={goal}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, goal })}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            formData.goal === goal
+                              ? 'bg-purple-600 text-white shadow-md'
+                              : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          }`}
+                        >
+                          {goal}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Email Address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="rahul@company.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
-                    />
+              {/* STEP 2: Brand Identity */}
+              {currentStep === 2 && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 2: Brand Identity</span>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Tell us about your brand & business</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">This helps us tailor your typography, domain, and structure.</p>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      Your City / State <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Mumbai, Delhi, Bengaluru, Dubai..."
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
-                    />
-                  </div>
-                </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Brand / Business Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Royal Saffron Mughlai or Apex Fitness"
+                        value={formData.businessName}
+                        onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                        className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Any specific instructions or inspiration links?</label>
-                  <textarea
-                    rows={2}
-                    placeholder="e.g. We love the clean minimalist look of Apple and want custom booking..."
-                    value={formData.extraNotes}
-                    onChange={(e) => setFormData({ ...formData, extraNotes: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white resize-none focus:outline-none focus:border-purple-500"
-                  />
-                </div>
-
-                {/* Brief Summary Box */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 space-y-1.5">
-                  <div className="flex items-center justify-between text-slate-900 dark:text-white font-bold pb-1 border-b border-slate-200 dark:border-slate-800">
-                    <span>Brief Summary</span>
-                    <span className="text-purple-600 dark:text-purple-400">{formData.industry}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 dark:text-slate-400">Brand:</span>
-                    <span className="font-bold text-slate-900 dark:text-white">{formData.businessName || 'New Project'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 dark:text-slate-400">Features:</span>
-                    <span className="font-bold text-purple-600 dark:text-purple-300">{formData.selectedFeatures.length} Superpowers Selected</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 dark:text-slate-400">Website Package:</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{formData.budget}</span>
-                  </div>
-                  
-                  {/* Domain & Hosting Summary */}
-                  {(formData.addDomain || formData.addHosting) ? (
-                    <div className="flex justify-between text-blue-600 dark:text-blue-400 font-bold">
-                      <span>Addons:</span>
-                      <span>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Do you have an existing website or social media presence? <span className="text-red-500">*</span>
+                      </label>
+                      <div className="space-y-2">
                         {[
-                          formData.addDomain ? 'Domain (+₹999)' : null,
-                          formData.addHosting ? 'Cloud Hosting (+₹1,999)' : null
-                        ].filter(Boolean).join(' + ')}
-                      </span>
+                          'No, this is a brand new project 🚀',
+                          'Yes, we need a complete modern redesign 🔄',
+                          'We currently only sell on Instagram / WhatsApp 📱'
+                        ].map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, existingWebsite: opt })}
+                            className={`w-full p-3 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                              formData.existingWebsite === opt
+                                ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200'
+                                : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                            }`}
+                          >
+                            <span>{opt}</span>
+                            {formData.existingWebsite === opt && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                      <span>Infrastructure:</span>
-                      <span>Own Domain & Hosting (FREE)</span>
-                    </div>
-                  )}
-
-                  {formData.isCouponApplied && (
-                    <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold pt-1 border-t border-slate-200 dark:border-slate-800">
-                      <span>Promo Discount:</span>
-                      <span>20% OFF Activated (INDIA2025)</span>
-                    </div>
-                  )}
+                  </div>
                 </div>
+              )}
 
-                {/* Action Submit Buttons */}
-                <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-                  <button
-                    type="submit"
-                    className="w-full sm:flex-1 py-3.5 rounded-2xl l2b-gradient-bg text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl hover:opacity-95 cursor-pointer"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>Submit & Open on WhatsApp 🚀</span>
-                  </button>
+              {/* STEP 3: Superpower Features */}
+              {currentStep === 3 && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 3: Features & Superpowers</span>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      Select all the features your website needs <span className="text-red-500">*</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Please select at least 1 core feature to power your platform.</p>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={handleCopy}
-                    className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-slate-200 dark:border-transparent"
-                  >
-                    {copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    <span>{copied ? 'Copied!' : 'Copy Brief'}</span>
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {FEATURE_OPTIONS.map((feat) => {
+                      const isChecked = formData.selectedFeatures.includes(feat.id);
+                      return (
+                        <div
+                          key={feat.id}
+                          onClick={() => toggleFeature(feat.id)}
+                          className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${
+                            isChecked
+                              ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm'
+                              : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                          }`}
+                        >
+                          <span className="text-xs font-bold pr-2">{feat.label}</span>
+                          <div className="shrink-0">
+                            {isChecked ? (
+                              <div className="w-5 h-5 rounded-lg bg-purple-600 text-white flex items-center justify-center">
+                                <Check className="w-3.5 h-3.5" />
+                              </div>
+                            ) : (
+                              <div className="w-5 h-5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </form>
+              )}
+
+              {/* STEP 4: Visual Theme & Branding */}
+              {currentStep === 4 && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 4: Design Aesthetics</span>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      Choose your visual vibe & design theme <span className="text-red-500">*</span>
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {THEMES.map((th) => (
+                      <div
+                        key={th.id}
+                        onClick={() => setFormData({ ...formData, themeStyle: th.id })}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                          formData.themeStyle === th.id
+                            ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-slate-900 dark:text-white shadow-md ring-1 ring-purple-500'
+                            : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-xs text-slate-900 dark:text-white">{th.name}</span>
+                            {formData.themeStyle === th.id && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{th.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 5: Timeline & Budget */}
+              {currentStep === 5 && (
+                <div className="space-y-6 animate-fade-in">
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 5: Budget & Addons</span>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      Target Budget & Turnkey Addons <span className="text-red-500">*</span>
+                    </h3>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Base Website Package <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {BUDGETS.map((b) => (
+                        <div
+                          key={b.id}
+                          onClick={() => setFormData({ ...formData, budget: b.id })}
+                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                            formData.budget === b.id
+                              ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-slate-900 dark:text-white shadow-sm'
+                              : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-black text-sm text-purple-600 dark:text-purple-400">{b.label}</span>
+                            {formData.budget === b.id && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                          </div>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">{b.desc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Addon Checkboxes */}
+                  <div className="space-y-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div
+                        onClick={() => setFormData({ ...formData, addDomain: !formData.addDomain })}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                          formData.addDomain
+                            ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-900'
+                            : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800'
+                        }`}
+                      >
+                        <span className="text-xs font-bold">🌐 Add Domain (.com / .in)</span>
+                        <span className="font-bold text-xs text-purple-600">+₹999/yr</span>
+                      </div>
+
+                      <div
+                        onClick={() => setFormData({ ...formData, addHosting: !formData.addHosting })}
+                        className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                          formData.addHosting
+                            ? 'bg-emerald-50 dark:bg-emerald-600/20 border-emerald-500 text-emerald-900'
+                            : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800'
+                        }`}
+                      >
+                        <span className="text-xs font-bold">⚡ Cloud VPS + SSL</span>
+                        <span className="font-bold text-xs text-emerald-600">+₹1,999/yr</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 6: Client Contact */}
+              {currentStep === 6 && (
+                <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in">
+                  <div className="space-y-1">
+                    <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 6: Contact & Launch</span>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Where should we send your Project Blueprint?</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Your Full Name *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Rahul Sharma"
+                        value={formData.clientName}
+                        onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">WhatsApp Phone Number *</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="+91 98765 43210"
+                        value={formData.whatsappPhone}
+                        onChange={(e) => setFormData({ ...formData, whatsappPhone: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Address *</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="rahul@company.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City / State *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Mumbai, Delhi, Kolkata..."
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Buttons */}
+                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                    <button
+                      type="submit"
+                      className="w-full sm:flex-1 py-3.5 rounded-2xl l2b-gradient-bg text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl hover:opacity-95 cursor-pointer"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>Submit & Open on WhatsApp 🚀</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-slate-200 dark:border-transparent"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      <span>{copied ? 'Copied!' : 'Copy Brief'}</span>
+                    </button>
+                  </div>
+                </form>
+              )}
+
             </div>
           )}
 
         </div>
 
-        {/* Bottom Navigation & Controls */}
-        <div className="px-5 sm:px-8 py-3.5 bg-slate-50/90 dark:bg-slate-950/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
-          {currentStep > 1 ? (
-            <button
-              type="button"
-              onClick={handleBack}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back</span>
-            </button>
-          ) : (
-            <span className="text-[11px] text-slate-500 font-medium">⚡ 48-Hour Turnaround Guarantee</span>
-          )}
+        {/* Bottom Navigation & Controls (Only for Bespoke Wizard Mode) */}
+        {!isTemplateMode && (
+          <div className="px-5 sm:px-8 py-3.5 bg-slate-50/90 dark:bg-slate-950/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+            {currentStep > 1 ? (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back</span>
+              </button>
+            ) : (
+              <span className="text-[11px] text-slate-500 font-medium">⚡ 48-Hour Turnaround Guarantee</span>
+            )}
 
-          {currentStep < totalSteps ? (
-            <button
-              type="button"
-              onClick={handleNext}
-              className="px-6 py-2.5 rounded-xl text-xs font-black uppercase l2b-gradient-bg text-white shadow-md hover:opacity-95 flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <span>Next Step</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          ) : (
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Ready for Launch!</span>
-            </span>
-          )}
-        </div>
+            {currentStep < totalSteps ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                className="px-6 py-2.5 rounded-xl text-xs font-black uppercase l2b-gradient-bg text-white shadow-md hover:opacity-95 flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <span>Next Step</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Ready for Launch!</span>
+              </span>
+            )}
+          </div>
+        )}
 
       </div>
     </div>

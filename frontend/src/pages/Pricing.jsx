@@ -7,6 +7,7 @@ import FAQSection from '../components/home/FAQSection';
 import FinalCTA from '../components/home/FinalCTA';
 import { useOrderModal } from '../context/OrderModalContext';
 import AshokaChakra from '../components/common/AshokaChakra';
+import ComingSoonModal from '../components/common/ComingSoonModal';
 
 // Subscription Plans (Marked as Coming Soon)
 const subscriptionPlans = [
@@ -56,14 +57,7 @@ export default function Pricing() {
   const { openOrderModal } = useOrderModal();
   const [currency, setCurrency] = useState('INR'); // 'INR' or 'USD'
   const [billingType, setBillingType] = useState('onetime'); // 'onetime' or 'subscription'
-  const [toastMsg, setToastMsg] = useState('');
-  const [showToast, setShowToast] = useState(false);
-
-  const triggerToast = (msg) => {
-    setToastMsg(msg);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 4000);
-  };
+  const [comingSoonPlan, setComingSoonPlan] = useState(null);
 
   return (
     <>
@@ -214,18 +208,24 @@ export default function Pricing() {
                         {plan.description}
                       </p>
 
-                      {/* Price Block */}
+                      {/* Price Block: Blurred Coming Soon Badge */}
                       <div className="pb-6 mb-6 border-b border-slate-200/70 dark:border-slate-800">
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
-                            {currency === 'USD' ? plan.price : plan.priceInr}
-                          </span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                            /{plan.billingNote}
+                        <div className="relative overflow-hidden p-3.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/80 flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                            <div>
+                              <span className="font-extrabold text-sm text-purple-900 dark:text-purple-200 block">Coming Soon</span>
+                              <span className="text-[11px] text-purple-700 dark:text-purple-400 font-medium">Pricing in Final Review</span>
+                            </div>
+                          </div>
+
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 line-through blur-[3px] select-none">
+                            ₹24,999
                           </span>
                         </div>
-                        <div className="text-xs font-bold text-purple-600 dark:text-purple-400 mt-2">
-                          ⚡ Turnaround: {plan.turnaround}
+
+                        <div className="text-xs font-bold text-purple-600 dark:text-purple-400 mt-2.5 flex items-center gap-1">
+                          <span>⚡ {plan.turnaround} Delivery Guarantee</span>
                         </div>
                       </div>
 
@@ -243,17 +243,14 @@ export default function Pricing() {
                     {/* Plan CTA */}
                     <div>
                       <button
-                        onClick={() => openOrderModal({
-                          websiteType: `Pricing Plan: ${plan.name}`,
-                          initialRequirements: `Interested in the ${plan.name} package (${currency === 'USD' ? plan.price : plan.priceInr}).`
-                        })}
+                        onClick={() => setComingSoonPlan(plan.name)}
                         className={`w-full py-4 px-6 rounded-btn font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
                           isPopular
                             ? 'text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95'
                             : 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700'
                         }`}
                       >
-                        <span>Choose {plan.name}</span>
+                        <span>Inquire & Request Quote 🚀</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
                       <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-2">
@@ -326,14 +323,14 @@ export default function Pricing() {
                     </ul>
                   </div>
 
-                  {/* Button Click triggers Coming Soon Notice */}
+                  {/* Button Click triggers Coming Soon Modal */}
                   <div>
                     <button
-                      onClick={() => triggerToast(`🚀 "${sub.name}" is Coming Soon! We're currently finalizing monthly care packages.`)}
+                      onClick={() => setComingSoonPlan(sub.name)}
                       className="w-full py-4 px-6 rounded-btn font-bold text-sm bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Clock className="w-4 h-4 text-amber-500" />
-                      <span>Coming Soon (Request Beta)</span>
+                      <span>Coming Soon (Request Early Access)</span>
                     </button>
                     <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-2">
                       Launching Q2 2026 • Contact team for beta invites
@@ -500,6 +497,13 @@ export default function Pricing() {
         <FinalCTA />
 
       </div>
+
+      {/* Dedicated Coming Soon Interactive Modal */}
+      <ComingSoonModal
+        isOpen={!!comingSoonPlan}
+        onClose={() => setComingSoonPlan(null)}
+        planName={comingSoonPlan || 'Pricing Package'}
+      />
     </>
   );
 }
