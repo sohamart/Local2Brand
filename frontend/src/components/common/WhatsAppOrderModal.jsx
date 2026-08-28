@@ -1,435 +1,884 @@
 import React, { useState, useEffect } from 'react';
-import { X, Send, Sparkles, Phone, MessageSquare, CheckCircle2, Tag, Check, AlertCircle, Flame } from 'lucide-react';
+import {
+  X,
+  Send,
+  Sparkles,
+  Phone,
+  MessageSquare,
+  CheckCircle2,
+  Tag,
+  Check,
+  AlertCircle,
+  Flame,
+  ArrowRight,
+  ArrowLeft,
+  Briefcase,
+  Layers,
+  Palette,
+  Clock,
+  DollarSign,
+  User,
+  Copy,
+  Sliders,
+  CheckSquare,
+  Square
+} from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { generateWhatsAppOrderUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import { siteConfig } from '../../config/siteConfig';
-import AshokaChakra from './AshokaChakra';
+import ThemeToggle from './ThemeToggle';
+
+// Step 1: Industries & Niches
+const INDUSTRIES = [
+  { id: 'Restaurant / Cafe', label: '🍽️ Restaurant / Cafe / Bakery', icon: '🍽️' },
+  { id: 'E-Commerce / Retail', label: '🛍️ E-Commerce / Online Store', icon: '🛍️' },
+  { id: 'Corporate / Agency', label: '🏢 Corporate / Agency / Brand', icon: '🏢' },
+  { id: 'Real Estate / Property', label: '🏡 Real Estate / Properties', icon: '🏡' },
+  { id: 'Salon / Spa / Beauty', label: '💇 Salon / Spa / Beauty Studio', icon: '💇' },
+  { id: 'Gym / Fitness Hub', label: '🏋️ Gym / Crossfit / Fitness Hub', icon: '🏋️' },
+  { id: 'Hotel / Resort', label: '🏨 Hotel / Resort / Homestay', icon: '🏨' },
+  { id: 'Coaching / Academy', label: '🎓 Coaching / EdTech / Training', icon: '🎓' },
+  { id: 'Clinic / Dental', label: '🦷 Clinic / Doctor / Healthcare', icon: '🦷' },
+  { id: 'Photography Studio', label: '📸 Photography / Wedding Studio', icon: '📸' },
+  { id: 'Jewellery Atelier', label: '💍 Jewellery / Luxury Retail', icon: '💍' },
+  { id: 'Automotive / Supercars', label: '🚗 Automotive / Car Showroom', icon: '🚗' },
+  { id: 'Custom Web App / SaaS', label: '⚡ Custom Web App / Software', icon: '⚡' },
+  { id: 'Other Custom Business', label: '✍️ Other / Custom Business', icon: '✍️' }
+];
+
+// Step 1: Goals
+const GOALS = [
+  'Direct WhatsApp Orders & Invoices',
+  'Lead Generation & High-Ticket Inquiries',
+  'Brand Authority & Client Trust',
+  'Online Bookings & Reservations',
+  'Product Sales & Catalog Showcase'
+];
+
+// Step 3: Features
+const FEATURE_OPTIONS = [
+  { id: 'WhatsApp Pipeline', label: '💬 WhatsApp Direct Checkout / Order Pipeline' },
+  { id: 'Payment Gateway', label: '💳 Online Payment Gateway (UPI / Razorpay / Stripe)' },
+  { id: 'Booking Engine', label: '📅 Interactive Booking & Appointment System' },
+  { id: 'Product Catalog', label: '🛒 Multi-Item Product Catalog with Filters' },
+  { id: 'Google SEO & Speed', label: '🔍 99+ Speed Score & Local SEO Optimization' },
+  { id: 'Admin CMS', label: '🔐 Simple Admin Dashboard to Edit Text & Images' },
+  { id: 'PWA Mobile App', label: '📱 PWA (Installable Mobile App Experience)' },
+  { id: 'Multi-Language', label: '🌐 Multi-Language Support (EN / Hindi / Bengali)' },
+  { id: 'AI Chatbot', label: '🤖 AI Live Chatbot for Automatic Lead Capture' },
+  { id: '3D & Motion', label: '✨ 3D Interactive Liquid Effects & Micro-Animations' }
+];
+
+// Step 4: Themes
+const THEMES = [
+  { id: 'Clean Minimalist', name: '⚪ Clean Minimalist & Modern', desc: 'Apple-inspired clean airy whites, subtle shadows, crisp typography' },
+  { id: 'Dark Luxury', name: '🌑 Dark Luxury & Neon Glow', desc: 'Obsidian blacks, sleek dark glass, vibrant glowing accents, high-end feel' },
+  { id: 'Vibrant Dynamic', name: '🌈 Vibrant & High Energy', desc: 'Bold gradients, lively pop colors, dynamic interactions & modern flair' },
+  { id: 'Glassmorphism 3D', name: '💎 Frosted Glassmorphic & Liquid', desc: 'Translucent glass panels, liquid blobs, smooth spatial motion' }
+];
+
+// Step 5: Timelines
+const TIMELINES = [
+  '⚡ Urgent: Express 48 - 72 Hours Launch',
+  '🗓️ 1 - 2 Weeks (Standard Delivery)',
+  '⏳ 3 - 4 Weeks (Deep Custom Build)',
+  'Flexible / In Planning Phase'
+];
+
+// Step 5: Budgets
+const BUDGETS = [
+  { id: 'Starter (₹9,999 - ₹14,999)', label: '₹9,999 - ₹14,999', desc: 'Starter High-Converting Launchpad' },
+  { id: 'Growth (₹19,999 - ₹34,999)', label: '₹19,999 - ₹34,999', desc: 'Full Business Suite with Integrations' },
+  { id: 'Custom Enterprise (₹49,999+)', label: '₹49,999+', desc: 'Bespoke Web App / Complex Platform' },
+  { id: 'Need Custom Quote', label: 'Custom Quote', desc: 'Discuss requirement & tailor price' }
+];
 
 export default function WhatsAppOrderModal() {
   const { isOpen, modalData, closeOrderModal } = useOrderModal();
 
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 6;
+
   const [formData, setFormData] = useState({
-    name: '',
+    industry: 'Restaurant / Cafe',
+    customIndustry: '',
+    goal: 'Direct WhatsApp Orders & Invoices',
     businessName: '',
-    whatsapp: '',
+    existingWebsite: 'No, this is a brand new project',
+    customSocialLink: '',
+    selectedFeatures: ['WhatsApp Pipeline', 'Google SEO & Speed'],
+    customFeatureText: '',
+    themeStyle: 'Clean Minimalist',
+    brandingStatus: 'Yes, logo & colors are ready',
+    timeline: '⚡ Urgent: Express 48 - 72 Hours Launch',
+    budget: 'Starter (₹9,999 - ₹14,999)',
+    couponCode: 'INDIA2025',
+    isCouponApplied: false,
+    clientName: '',
+    whatsappPhone: '',
     email: '',
-    websiteType: '',
-    selectedDemo: '',
-    requirements: ''
+    city: '',
+    extraNotes: ''
   });
 
-  const [couponInput, setCouponInput] = useState('INDIA2025');
-  const [isCouponApplied, setIsCouponApplied] = useState(false);
-  const [showAppliedToast, setShowAppliedToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setFormData({
-        name: '',
-        businessName: '',
-        whatsapp: '',
-        email: '',
-        websiteType: modalData.websiteType || 'Starter Website (from ₹9,999)',
-        selectedDemo: modalData.selectedDemo || '',
-        requirements: modalData.initialRequirements || ''
-      });
-
-      // If user clicked an offer specifically (e.g. "Claim 20% OFF"), auto-apply!
-      const shouldAutoApply = modalData.autoApplyOffer ||
+      setCurrentStep(1);
+      const isOffer =
+        modalData.autoApplyOffer ||
         modalData.websiteType?.toLowerCase().includes('offer') ||
         modalData.websiteType?.toLowerCase().includes('20%') ||
         modalData.websiteType?.toLowerCase().includes('india2025');
 
-      if (shouldAutoApply) {
-        setCouponInput('INDIA2025');
-        setIsCouponApplied(true);
-        setShowAppliedToast(true);
-        setToastMessage('🎉 Launch Offer "INDIA2025" Applied: Flat 20% OFF Activated!');
-        const timer = setTimeout(() => setShowAppliedToast(false), 4000);
-        return () => clearTimeout(timer);
-      } else {
-        setCouponInput('INDIA2025');
-        setIsCouponApplied(false);
-        setShowAppliedToast(false);
+      let initialIndustry = 'Restaurant / Cafe';
+      if (modalData.selectedDemo) {
+        const found = INDUSTRIES.find(i => modalData.selectedDemo.toLowerCase().includes(i.id.toLowerCase()));
+        if (found) initialIndustry = found.id;
       }
 
-      setIsSubmitting(false);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-      setShowAppliedToast(false);
-    }
+      setFormData(prev => ({
+        ...prev,
+        industry: initialIndustry,
+        businessName: modalData.selectedDemo ? `${modalData.selectedDemo} Customization` : '',
+        budget: modalData.price ? modalData.price : 'Starter (₹9,999 - ₹14,999)',
+        isCouponApplied: !!isOffer
+      }));
 
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+      if (isOffer) {
+        triggerToast('🎉 Launch Offer "INDIA2025" Applied: Flat 20% OFF Activated!');
+      }
+    }
   }, [isOpen, modalData]);
 
   if (!isOpen) return null;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const triggerToast = (msg) => {
+    setToastMessage(msg);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3500);
   };
 
-  const handleApplyCoupon = (e) => {
-    if (e) e.preventDefault();
-    const cleanCode = (couponInput || '').trim().toUpperCase();
+  const toggleFeature = (featId) => {
+    setFormData(prev => {
+      const exists = prev.selectedFeatures.includes(featId);
+      const updated = exists
+        ? prev.selectedFeatures.filter(f => f !== featId)
+        : [...prev.selectedFeatures, featId];
+      return { ...prev, selectedFeatures: updated };
+    });
+  };
 
-    if (cleanCode === 'INDIA2025' || cleanCode === 'LAUNCH20' || cleanCode === 'FESTIVE20') {
-      setCouponInput(cleanCode);
-      setIsCouponApplied(true);
-      setShowAppliedToast(true);
-      setToastMessage(`🎉 Coupon "${cleanCode}" Applied: Flat 20% OFF Activated!`);
-      setTimeout(() => setShowAppliedToast(false), 3500);
-    } else if (cleanCode === '') {
-      setIsCouponApplied(false);
-      setShowAppliedToast(true);
-      setToastMessage('Please enter a coupon code (e.g. INDIA2025).');
-      setTimeout(() => setShowAppliedToast(false), 2500);
-    } else {
-      setIsCouponApplied(false);
-      setShowAppliedToast(true);
-      setToastMessage('⚠️ Invalid code. Try using code "INDIA2025".');
-      setTimeout(() => setShowAppliedToast(false), 3000);
+  // Strict Validation for each Step
+  const handleNext = () => {
+    // Step 1 Validation
+    if (currentStep === 1) {
+      if (!formData.industry) {
+        triggerToast('⚠️ Please select your business industry type!');
+        return;
+      }
+      if (formData.industry === 'Other Custom Business' && !formData.customIndustry.trim()) {
+        triggerToast('⚠️ Please type your custom business type!');
+        return;
+      }
+      if (!formData.goal) {
+        triggerToast('⚠️ Please select the primary goal of your website!');
+        return;
+      }
+    }
+
+    // Step 2 Validation
+    if (currentStep === 2) {
+      if (!formData.businessName.trim()) {
+        triggerToast('⚠️ Please enter your Brand / Business Name!');
+        return;
+      }
+      if (!formData.existingWebsite) {
+        triggerToast('⚠️ Please select your current website/social status!');
+        return;
+      }
+    }
+
+    // Step 3 Validation
+    if (currentStep === 3) {
+      if (formData.selectedFeatures.length === 0 && !formData.customFeatureText.trim()) {
+        triggerToast('⚠️ Please select at least 1 feature needed for your website!');
+        return;
+      }
+    }
+
+    // Step 4 Validation
+    if (currentStep === 4) {
+      if (!formData.themeStyle) {
+        triggerToast('⚠️ Please select a design theme preference!');
+        return;
+      }
+      if (!formData.brandingStatus) {
+        triggerToast('⚠️ Please select your logo & branding kit status!');
+        return;
+      }
+    }
+
+    // Step 5 Validation
+    if (currentStep === 5) {
+      if (!formData.timeline) {
+        triggerToast('⚠️ Please select your target launch timeline!');
+        return;
+      }
+      if (!formData.budget) {
+        triggerToast('⚠️ Please select your estimated budget tier!');
+        return;
+      }
+    }
+
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
     }
   };
 
-  const handleQuickApplyIndia2025 = () => {
-    setCouponInput('INDIA2025');
-    setIsCouponApplied(true);
-    setShowAppliedToast(true);
-    setToastMessage('🎉 Coupon "INDIA2025" Applied: Flat 20% OFF Activated!');
-    setTimeout(() => setShowAppliedToast(false), 3500);
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
   };
 
-  const handleRemoveCoupon = () => {
-    setIsCouponApplied(false);
-    setCouponInput('');
-    setShowAppliedToast(true);
-    setToastMessage('Coupon removed.');
-    setTimeout(() => setShowAppliedToast(false), 2500);
+  const generateOrderText = () => {
+    const activeIndustry = formData.industry === 'Other Custom Business' && formData.customIndustry
+      ? formData.customIndustry
+      : formData.industry;
+
+    const couponText = formData.isCouponApplied ? `🎁 Promo Voucher: *INDIA2025 (20% OFF Activated)*\n` : '';
+
+    return (
+      `🚀 *NEW PROJECT ONBOARDING BRIEF - LOCAL2BRAND*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `👤 *Client Name:* ${formData.clientName}\n` +
+      `📞 *WhatsApp Phone:* ${formData.whatsappPhone}\n` +
+      `📧 *Email:* ${formData.email}\n` +
+      `📍 *City / Region:* ${formData.city}\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `🏢 *Business / Brand:* *${formData.businessName}*\n` +
+      `🎯 *Industry & Niche:* ${activeIndustry}\n` +
+      `🎯 *Core Goal:* ${formData.goal}\n` +
+      `🌐 *Existing Presence:* ${formData.existingWebsite} ${formData.customSocialLink ? `(${formData.customSocialLink})` : ''}\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `⚡ *REQUIRED FEATURES & MODULES:*\n` +
+      formData.selectedFeatures.map((f, i) => `   ${i + 1}. ${f}`).join('\n') + '\n' +
+      (formData.customFeatureText ? `   📝 Custom Addon: ${formData.customFeatureText}\n` : '') +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `🎨 *Theme Preference:* ${formData.themeStyle}\n` +
+      `💎 *Brand Assets:* ${formData.brandingStatus}\n` +
+      `⏱️ *Target Timeline:* ${formData.timeline}\n` +
+      `💰 *Budget Range:* ${formData.budget}\n` +
+      couponText +
+      (formData.extraNotes ? `📝 *Special Notes:* ${formData.extraNotes}\n` : '') +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `⚡ *Hi LOCAL2BRAND team, please review my complete project brief and send the initial blueprint & quote!*`
+    );
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    const payload = {
-      ...formData,
-      coupon: isCouponApplied ? (couponInput.trim().toUpperCase() || 'INDIA2025') : '',
-      discountPercentage: isCouponApplied ? 20 : 0,
-      price: modalData.price || ''
-    };
+    // Step 6 Strict Validation for All Contact Fields
+    if (!formData.clientName.trim()) {
+      triggerToast('⚠️ Please enter your Full Name!');
+      return;
+    }
+    if (!formData.whatsappPhone.trim() || formData.whatsappPhone.trim().length < 8) {
+      triggerToast('⚠️ Please enter a valid WhatsApp Phone Number!');
+      return;
+    }
+    if (!formData.email.trim() || !formData.email.includes('@')) {
+      triggerToast('⚠️ Please enter a valid Email Address!');
+      return;
+    }
+    if (!formData.city.trim()) {
+      triggerToast('⚠️ Please enter your City / State!');
+      return;
+    }
 
-    const whatsappUrl = generateWhatsAppOrderUrl(payload);
-
-    setTimeout(() => {
-      openWhatsAppChat(whatsappUrl);
-      setIsSubmitting(false);
-      closeOrderModal();
-    }, 300);
+    const text = generateOrderText();
+    const cleanNumber = (siteConfig.whatsappNumber || '919876543210').replace(/\D/g, '');
+    const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+    closeOrderModal();
   };
 
+  const handleCopy = () => {
+    if (!formData.clientName.trim() || !formData.whatsappPhone.trim()) {
+      triggerToast('⚠️ Please enter your Name and WhatsApp Number first!');
+      return;
+    }
+    const text = generateOrderText();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    triggerToast('📋 Complete project brief copied to clipboard!');
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const progressPercent = Math.round((currentStep / totalSteps) * 100);
+
   return (
-    <div
-      className="fixed inset-0 z-50 overflow-y-auto modal-touch-scroll"
-      data-lenis-prevent="true"
-      style={{
-        WebkitOverflowScrolling: 'touch',
-        overscrollBehavior: 'contain'
-      }}
-    >
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-950/50 backdrop-blur-md transition-opacity duration-300 z-0"
-        onClick={closeOrderModal}
-      />
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xl animate-fade-in overflow-y-auto">
+      
+      {/* Toast Alert */}
+      {showToast && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[999999] px-4 py-2.5 rounded-2xl bg-purple-600 text-white font-bold text-xs shadow-2xl flex items-center gap-2 border border-purple-400 animate-bounce">
+          <Sparkles className="w-4 h-4 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
 
-      {/* Scrollable Centering Container */}
-      <div
-        className="min-h-full flex items-center justify-center p-3.5 sm:p-6 py-8 sm:py-12 pointer-events-none relative z-10"
-        data-lenis-prevent="true"
-      >
-        <div
-          role="dialog"
-          aria-modal="true"
-          data-lenis-prevent="true"
-          className="relative w-full max-w-2xl bg-white/98 dark:bg-slate-900/98 backdrop-blur-2xl border border-white/95 dark:border-slate-700/80 rounded-2xl sm:rounded-modal shadow-glass-lg p-5 xs:p-6 sm:p-8 pointer-events-auto transition-all duration-300 animate-in fade-in zoom-in-95 my-auto overflow-hidden"
-        >
-          {/* Top Tricolor Accent Bar */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-blue-600 to-emerald-600" />
+      {/* Main Modal Card Container with Full Light/Dark Support */}
+      <div className="relative w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 my-auto max-h-[92vh] transition-colors">
+        
+        {/* Top Header Bar */}
+        <div className="px-5 sm:px-8 py-4 bg-slate-50/90 dark:bg-slate-950/90 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl l2b-gradient-bg flex items-center justify-center text-white font-black shadow-md">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                <span>Interactive Project Builder</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold uppercase">
+                  Step {currentStep} of {totalSteps}
+                </span>
+              </h2>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">All fields required for accurate quotation & 48-hr deployment</p>
+            </div>
+          </div>
 
-          {/* Close Button */}
-          <button
-            onClick={closeOrderModal}
-            className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus:outline-none z-20 cursor-pointer"
-            aria-label="Close Modal"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle size="sm" />
+            <button
+              onClick={closeOrderModal}
+              className="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-all cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
-          {/* Animated Offer Applied Popup / Toast Alert */}
-          {showAppliedToast && (
-            <div className="mb-4 p-3 rounded-xl bg-slate-900 text-white text-xs flex items-center justify-between gap-2 shadow-lg animate-in slide-in-from-top-2 duration-200 border border-slate-700">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400 shrink-0 animate-spin" />
-                <span className="font-bold text-slate-100">{toastMessage}</span>
+        {/* Animated Progress Line */}
+        <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 relative overflow-hidden">
+          <div
+            className="h-full l2b-gradient-bg transition-all duration-500 ease-out"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+
+        {/* Dynamic Form Content Body (Scrollable) */}
+        <div className="p-5 sm:p-8 flex-1 overflow-y-auto space-y-6 modal-touch-scroll" data-lenis-prevent="true">
+          
+          {/* STEP 1: Industry & Goal */}
+          {currentStep === 1 && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 1: Project Niche</span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  What type of business is this website for? <span className="text-red-500">*</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Select your industry preset or type your custom business below.</p>
               </div>
-              <button
-                onClick={() => setShowAppliedToast(false)}
-                className="text-slate-400 hover:text-white p-0.5 cursor-pointer"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+
+              {/* Industries Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                {INDUSTRIES.map((ind) => (
+                  <button
+                    key={ind.id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, industry: ind.id })}
+                    className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all flex items-center gap-2.5 cursor-pointer ${
+                      formData.industry === ind.id
+                        ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm ring-1 ring-purple-500'
+                        : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <span className="text-base">{ind.icon}</span>
+                    <span className="truncate">{ind.id}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom Industry Input if "Other" selected */}
+              {formData.industry === 'Other Custom Business' && (
+                <div className="pt-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Specify Your Custom Business Type <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Solar Energy Consultant, Pet Grooming, Law Firm..."
+                    value={formData.customIndustry}
+                    onChange={(e) => setFormData({ ...formData, customIndustry: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-purple-500/60 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  />
+                </div>
+              )}
+
+              {/* Primary Goal Selector */}
+              <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  What is the #1 Primary Goal of the Website? <span className="text-red-500">*</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {GOALS.map((goal) => (
+                    <button
+                      key={goal}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, goal })}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        formData.goal === goal
+                          ? 'bg-purple-600 text-white shadow-md'
+                          : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {goal}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Modal Header */}
-          <div className="mb-4 sm:mb-5 pr-8">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-2">
-              <AshokaChakra size={12} />
-              <span>Direct WhatsApp Order Form</span>
-            </div>
-            <h3 className="text-xl xs:text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug">
-              {modalData.selectedDemo ? `Get "${modalData.selectedDemo}"` : 'Start Your Website'}
-            </h3>
-            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mt-1">
-              Your project details and applied discount will open directly on WhatsApp with our founding team.
-            </p>
-          </div>
+          {/* STEP 2: Brand Identity */}
+          {currentStep === 2 && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 2: Brand Identity</span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Tell us about your brand & business</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">This helps us tailor your typography, domain, and structure.</p>
+              </div>
 
-          {/* Interactive Coupon Box with Clear Apply & Applied States */}
-          <div className={`mb-5 p-3.5 rounded-2xl border transition-all duration-200 ${
-            isCouponApplied
-              ? 'bg-emerald-50/90 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-500/40 shadow-xs'
-              : 'bg-amber-50/70 dark:bg-amber-950/60 border-amber-200 dark:border-amber-500/40 shadow-xs'
-          }`}>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-xs ${
-                  isCouponApplied ? 'bg-emerald-600 text-white' : 'bg-amber-500 text-slate-950'
-                }`}>
-                  <Tag className="w-4 h-4" />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Brand / Business Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Royal Saffron Mughlai or Apex Fitness"
+                    value={formData.businessName}
+                    onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                    className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                  />
                 </div>
-                <div className="text-left">
-                  <div className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
-                    <span>Coupon: <strong className="font-mono">{couponInput || 'NONE'}</strong></span>
-                    {isCouponApplied ? (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1 shadow-2xs animate-in zoom-in-95">
-                        <Check className="w-3 h-3" />
-                        <span>APPLIED (20% OFF)</span>
-                      </span>
-                    ) : (
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Do you have an existing website or social media presence? <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    {[
+                      'No, this is a brand new project 🚀',
+                      'Yes, we need a complete modern redesign 🔄',
+                      'We currently only sell on Instagram / WhatsApp 📱'
+                    ].map((opt) => (
                       <button
+                        key={opt}
                         type="button"
-                        onClick={handleQuickApplyIndia2025}
-                        className="px-2 py-0.5 rounded-full bg-amber-200 hover:bg-amber-300 dark:bg-amber-900/80 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        onClick={() => setFormData({ ...formData, existingWebsite: opt })}
+                        className={`w-full p-3 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                          formData.existingWebsite === opt
+                            ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200'
+                            : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        }`}
                       >
-                        <Flame className="w-3 h-3 text-amber-700 dark:text-amber-300 fill-amber-600 dark:fill-amber-400" />
-                        <span>Click to Apply INDIA2025</span>
+                        <span>{opt}</span>
+                        {formData.existingWebsite === opt && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />}
                       </button>
-                    )}
+                    ))}
                   </div>
-                  <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
-                    {isCouponApplied
-                      ? '🎉 Flat 20% discount + Free 1-Year Custom Domain & SSL activated!'
-                      : 'Apply coupon INDIA2025 to save 20% on your order.'}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                    Existing Website URL or Instagram Handle (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. @yourbrand or www.currentsite.com"
+                    value={formData.customSocialLink}
+                    onChange={(e) => setFormData({ ...formData, customSocialLink: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Superpower Features */}
+          {currentStep === 3 && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 3: Features & Superpowers</span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Select all the features your website needs <span className="text-red-500">*</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Please select at least 1 core feature to power your platform.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {FEATURE_OPTIONS.map((feat) => {
+                  const isChecked = formData.selectedFeatures.includes(feat.id);
+                  return (
+                    <div
+                      key={feat.id}
+                      onClick={() => toggleFeature(feat.id)}
+                      className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${
+                        isChecked
+                          ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm'
+                          : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                      }`}
+                    >
+                      <span className="text-xs font-bold pr-2">{feat.label}</span>
+                      <div className="shrink-0">
+                        {isChecked ? (
+                          <div className="w-5 h-5 rounded-lg bg-purple-600 text-white flex items-center justify-center">
+                            <Check className="w-3.5 h-3.5" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900" />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Any other custom feature or third-party integration needed?
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. CRM Sync, Zoho Books integration, Custom Calculator..."
+                  value={formData.customFeatureText}
+                  onChange={(e) => setFormData({ ...formData, customFeatureText: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: Visual Theme & Branding */}
+          {currentStep === 4 && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 4: Design Aesthetics</span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Choose your visual vibe & design theme <span className="text-red-500">*</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Our senior UI/UX designers will craft your custom palette based on this.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {THEMES.map((th) => (
+                  <div
+                    key={th.id}
+                    onClick={() => setFormData({ ...formData, themeStyle: th.id })}
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
+                      formData.themeStyle === th.id
+                        ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-slate-900 dark:text-white shadow-md ring-1 ring-purple-500'
+                        : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-xs text-slate-900 dark:text-white">{th.name}</span>
+                        {formData.themeStyle === th.id && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{th.desc}</p>
+                    </div>
                   </div>
+                ))}
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Do you already have a Logo and Branding Kit? <span className="text-red-500">*</span>
+                </label>
+                <div className="space-y-2">
+                  {[
+                    'Yes, logo & colors are ready! 🎨',
+                    'Need LOCAL2BRAND to design our logo & brand identity kit 💎',
+                    'Have rough ideas, need refinement during development ✨'
+                  ].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, brandingStatus: status })}
+                      className={`w-full p-3 rounded-2xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                        formData.brandingStatus === status
+                          ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200'
+                          : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <span>{status}</span>
+                      {formData.brandingStatus === status && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 5: Timeline & Budget */}
+          {currentStep === 5 && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 5: Timeline & Budget</span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Target launch timeline & budget tier <span className="text-red-500">*</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Transparent pricing with zero hidden fees and 48-hour turnarounds.</p>
+              </div>
+
+              <div className="space-y-3">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Target Launch Speed <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {TIMELINES.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, timeline: t })}
+                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all cursor-pointer ${
+                        formData.timeline === t
+                          ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm'
+                          : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Input & Apply / Remove Actions */}
-              <div className="flex items-center gap-1.5 shrink-0 justify-end">
-                {!isCouponApplied ? (
-                  <div className="flex items-center gap-1.5 w-full sm:w-auto">
+              <div className="space-y-3 pt-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Estimated Budget Tier <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {BUDGETS.map((b) => (
+                    <div
+                      key={b.id}
+                      onClick={() => setFormData({ ...formData, budget: b.id })}
+                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                        formData.budget === b.id
+                          ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-slate-900 dark:text-white shadow-sm'
+                          : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="font-black text-sm text-purple-600 dark:text-purple-400">{b.label}</span>
+                        {formData.budget === b.id && <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />}
+                      </div>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">{b.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Promo Coupon Pill */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-slate-50 dark:from-purple-950/80 dark:to-slate-950 border border-purple-200 dark:border-purple-800/80 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Tag className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <div>
+                    <span className="font-mono font-black text-xs text-purple-700 dark:text-purple-300 block">INDIA2025</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">Flat 20% OFF on all website development packages</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData({ ...formData, isCouponApplied: !formData.isCouponApplied });
+                    triggerToast(formData.isCouponApplied ? 'Coupon removed' : '🎉 Code INDIA2025 Applied: 20% OFF Activated!');
+                  }}
+                  className={`px-3 py-1.5 rounded-xl font-bold text-xs uppercase transition-all cursor-pointer ${
+                    formData.isCouponApplied
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-purple-600 hover:bg-purple-500 text-white shadow'
+                  }`}
+                >
+                  {formData.isCouponApplied ? 'Applied ✓' : 'Apply 20% OFF'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 6: Client Contact & Blueprint Review */}
+          {currentStep === 6 && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="space-y-1">
+                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 6: Contact & Launch</span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Where should we send your Project Blueprint?</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Our senior team will connect on WhatsApp within 15 minutes with initial mockups.</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Your Full Name <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      placeholder="INDIA2025"
-                      className="w-28 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-xs font-mono font-bold uppercase text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      required
+                      placeholder="e.g. Rahul Sharma"
+                      value={formData.clientName}
+                      onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
                     />
-                    <button
-                      type="button"
-                      onClick={handleApplyCoupon}
-                      className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 transition-all cursor-pointer shadow-xs active:scale-95"
-                    >
-                      Apply
-                    </button>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/90 dark:bg-emerald-950 px-2.5 py-1 rounded-lg flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>APPLIED</span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleRemoveCoupon}
-                      className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 underline cursor-pointer"
-                    >
-                      Remove
-                    </button>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      WhatsApp Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 98765 43210"
+                      value={formData.whatsappPhone}
+                      onChange={(e) => setFormData({ ...formData, whatsappPhone: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    />
                   </div>
-                )}
-              </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="rahul@company.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Your City / State <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Mumbai, Delhi, Bengaluru, Dubai..."
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Any specific instructions or inspiration links?</label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g. We love the clean minimalist look of Apple and want custom booking..."
+                    value={formData.extraNotes}
+                    onChange={(e) => setFormData({ ...formData, extraNotes: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white resize-none focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+
+                {/* Brief Summary Box */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 space-y-1.5">
+                  <div className="flex items-center justify-between text-slate-900 dark:text-white font-bold pb-1 border-b border-slate-200 dark:border-slate-800">
+                    <span>Brief Summary</span>
+                    <span className="text-purple-600 dark:text-purple-400">{formData.industry}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">Brand:</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{formData.businessName || 'New Project'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">Features:</span>
+                    <span className="font-bold text-purple-600 dark:text-purple-300">{formData.selectedFeatures.length} Superpowers Selected</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 dark:text-slate-400">Budget / Plan:</span>
+                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{formData.budget}</span>
+                  </div>
+                  {formData.isCouponApplied && (
+                    <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold pt-1 border-t border-slate-200 dark:border-slate-800">
+                      <span>Promo Discount:</span>
+                      <span>20% OFF Activated (INDIA2025)</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Submit Buttons */}
+                <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                  <button
+                    type="submit"
+                    className="w-full sm:flex-1 py-3.5 rounded-2xl l2b-gradient-bg text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl hover:opacity-95 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Submit & Open on WhatsApp 🚀</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopy}
+                    className="w-full sm:w-auto px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-all border border-slate-200 dark:border-transparent"
+                  >
+                    {copied ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    <span>{copied ? 'Copied!' : 'Copy Brief'}</span>
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
+          )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-              {/* Full Name */}
-              <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                  Your Full Name <span className="text-pink-600 dark:text-pink-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  placeholder="e.g. Rahul Sharma"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
-                />
-              </div>
-
-              {/* Business / Brand Name */}
-              <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                  Business / Brand Name <span className="text-pink-600 dark:text-pink-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="businessName"
-                  required
-                  placeholder="e.g. Sharma Jewels / Acme Inc"
-                  value={formData.businessName}
-                  onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-              {/* WhatsApp / Phone */}
-              <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                  WhatsApp / Phone Number <span className="text-pink-600 dark:text-pink-400">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="whatsapp"
-                  required
-                  placeholder="e.g. +91 98765 43210"
-                  value={formData.whatsapp}
-                  onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
-                />
-              </div>
-
-              {/* Email Address */}
-              <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="rahul@business.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-              {/* Website Type */}
-              <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                  Website Type
-                </label>
-                <select
-                  name="websiteType"
-                  value={formData.websiteType}
-                  onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
-                >
-                  <option value="Starter Website (from ₹9,999)">Starter Website (from ₹9,999 / $399)</option>
-                  <option value="Professional Website (from ₹19,999)">Professional Website (from ₹19,999 / $799)</option>
-                  <option value="Landing Page (from ₹5,999)">High-Converting Landing Page</option>
-                  <option value="Ready-Made Demo Customization">Ready-Made Demo Customization (48h)</option>
-                  <option value="D2C / E-commerce Store">D2C / E-commerce Store</option>
-                  <option value="Custom Enterprise Web App">Custom Enterprise Web App</option>
-                </select>
-              </div>
-
-              {/* Selected Demo */}
-              <div>
-                <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                  Selected Demo Reference
-                </label>
-                <input
-                  type="text"
-                  name="selectedDemo"
-                  placeholder="e.g. Gourmet Bistro, Nexus Studio..."
-                  value={formData.selectedDemo}
-                  onChange={handleChange}
-                  className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Additional Requirements */}
-            <div>
-              <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                Project Details / Preferred Colors
-              </label>
-              <textarea
-                name="requirements"
-                rows="2"
-                placeholder="Tell us about your brand, preferred launch date, GST requirements..."
-                value={formData.requirements}
-                onChange={handleChange}
-                className="w-full px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 focus:bg-white dark:focus:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all resize-none"
-              ></textarea>
-            </div>
-
-            {/* Submit Action */}
-            <div className="pt-2">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3.5 sm:py-4 px-6 rounded-btn font-bold text-sm sm:text-base text-white l2b-gradient-bg shadow-glass-highlight active:scale-[0.99] transition-all flex items-center justify-center gap-2 group cursor-pointer hover:opacity-95"
-              >
-                {isSubmitting ? (
-                  <span>Opening WhatsApp...</span>
-                ) : (
-                  <>
-                    <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                    <span>
-                      {isCouponApplied
-                        ? 'Send Order with 20% OFF to WhatsApp'
-                        : 'Send Order on WhatsApp'}
-                    </span>
-                    <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </button>
-              <p className="text-center text-[10px] sm:text-xs text-slate-400 mt-2">
-                Opens WhatsApp with your pre-formatted order summary & applied discount for instant kickoff.
-              </p>
-            </div>
-          </form>
-
-          {/* Bottom subtle tricolor rim */}
-          <div className="absolute bottom-0 left-6 right-6 h-[1.5px] bg-gradient-to-r from-amber-500/60 via-blue-500/40 to-emerald-500/60" />
         </div>
+
+        {/* Bottom Navigation & Controls */}
+        <div className="px-5 sm:px-8 py-3.5 bg-slate-50/90 dark:bg-slate-950/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+          {currentStep > 1 ? (
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200/80 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back</span>
+            </button>
+          ) : (
+            <span className="text-[11px] text-slate-500 font-medium">⚡ 48-Hour Turnaround Guarantee</span>
+          )}
+
+          {currentStep < totalSteps ? (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-6 py-2.5 rounded-xl text-xs font-black uppercase l2b-gradient-bg text-white shadow-md hover:opacity-95 flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <span>Next Step</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Ready for Launch!</span>
+            </span>
+          )}
+        </div>
+
       </div>
     </div>
   );

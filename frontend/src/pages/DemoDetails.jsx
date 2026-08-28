@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
 import { getDemoBySlug, demoWebsites } from '../data/demos';
 import { SEO } from '../components/common/CommonUI';
 import DevicePreview from '../components/demos/DevicePreview';
+import ShareDemoModal from '../components/demos/ShareDemoModal';
 import { useOrderModal } from '../context/OrderModalContext';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../utils/whatsapp';
 import AshokaChakra from '../components/common/AshokaChakra';
@@ -22,6 +23,7 @@ import AshokaChakra from '../components/common/AshokaChakra';
 export default function DemoDetails() {
   const { slug } = useParams();
   const { openOrderModal } = useOrderModal();
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const demo = getDemoBySlug(slug);
 
   if (!demo) {
@@ -123,6 +125,15 @@ export default function DemoDetails() {
                   </button>
 
                   <button
+                    onClick={() => setIsShareModalOpen(true)}
+                    className="p-3.5 rounded-xl text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                    title="Share this demo"
+                  >
+                    <Share2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <span className="hidden sm:inline font-bold text-xs">Share</span>
+                  </button>
+
+                  <button
                     onClick={handleAskQuestions}
                     className="p-3.5 rounded-xl text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 border border-emerald-200/90 dark:border-emerald-500/40 transition-all cursor-pointer"
                     title="Ask question on WhatsApp"
@@ -138,6 +149,13 @@ export default function DemoDetails() {
             <div className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full bg-gradient-to-r from-amber-500/60 via-blue-500/40 to-emerald-500/60" />
           </div>
         </div>
+
+        {/* Share Demo Modal */}
+        <ShareDemoModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          demo={demo}
+        />
 
         {/* Interactive Device Preview Simulator */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">

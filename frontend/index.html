@@ -1,19 +1,151 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="scroll-smooth" data-theme="light">
   <head>
+    <!-- Character Encoding & Viewport -->
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
-    <link rel="apple-touch-icon" href="/favicon.jpg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Primary Title & Meta Description -->
     <title>LOCAL2BRAND — Build Local. Think Global. | Premium Digital Agency</title>
-    <meta name="description" content="We build digital experiences that turn local brands into big brands. Premium custom websites, high-converting landing pages, and ready-made demo templates with WhatsApp ordering." />
-    
+    <meta name="title" content="LOCAL2BRAND — Build Local. Think Global. | Premium Digital Agency" />
+    <meta name="description" content="We build high-converting digital experiences that turn local businesses into iconic global brands. 48-Hour delivery, bespoke websites, eCommerce stores, and 12 niche commercial templates with WhatsApp checkout." />
+    <meta name="keywords" content="website development India, web design agency Mumbai, local to brand, restaurant website template, salon booking website, ecommerce web development, custom web applications, high converting landing pages, 48 hour website delivery, WhatsApp order integration" />
+    <meta name="author" content="LOCAL2BRAND" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://local2brand.com/" />
+
+    <!-- Geo Location Tags for Local SEO -->
+    <meta name="geo.region" content="IN-MH" />
+    <meta name="geo.placename" content="Mumbai, India" />
+    <meta name="geo.position" content="19.0760;72.8777" />
+    <meta name="ICBM" content="19.0760, 72.8777" />
+
+    <!-- Favicons & App Icons -->
+    <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.jpg" />
+    <meta name="theme-color" content="#7c3aed" />
+    <meta name="msapplication-TileColor" content="#7c3aed" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://local2brand.com/" />
+    <meta property="og:site_name" content="LOCAL2BRAND" />
+    <meta property="og:title" content="LOCAL2BRAND — Build Local. Think Global. | Premium Digital Agency" />
+    <meta property="og:description" content="We build high-converting digital experiences that turn local businesses into iconic global brands. 48-Hour delivery with full WhatsApp ordering integration." />
+    <meta property="og:image" content="https://local2brand.com/logo.jpg" />
+    <meta property="og:image:secure_url" content="https://local2brand.com/logo.jpg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="LOCAL2BRAND Official Brand Logo" />
+    <meta property="og:locale" content="en_IN" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://local2brand.com/" />
+    <meta name="twitter:title" content="LOCAL2BRAND — Build Local. Think Global." />
+    <meta name="twitter:description" content="We build high-converting digital experiences that turn local businesses into iconic global brands. 48-Hour delivery with full WhatsApp integration." />
+    <meta name="twitter:image" content="https://local2brand.com/logo.jpg" />
+    <meta name="twitter:site" content="@local2brand" />
+    <meta name="twitter:creator" content="@local2brand" />
+
     <!-- Preconnect to Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet" />
+
+    <!-- Structured Data 1: WebSite Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "LOCAL2BRAND",
+      "url": "https://local2brand.com/",
+      "description": "High-converting bespoke websites, e-commerce stores, and ready-made commercial niche templates with WhatsApp ordering.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://local2brand.com/demos?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Structured Data 2: Organization & ProfessionalService Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "LOCAL2BRAND",
+      "url": "https://local2brand.com/",
+      "logo": "https://local2brand.com/logo.jpg",
+      "image": "https://local2brand.com/logo.jpg",
+      "description": "We build digital experiences that turn local brands into big brands. Premium custom websites, high-converting landing pages, and commercial niche platforms.",
+      "priceRange": "₹9,999 - ₹99,999",
+      "telephone": "+919876543210",
+      "email": "hello@local2brand.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Mumbai",
+        "addressRegion": "Maharashtra",
+        "addressCountry": "IN"
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday"
+        ],
+        "opens": "09:00",
+        "closes": "21:00"
+      },
+      "sameAs": [
+        "https://www.instagram.com/local2brand_official",
+        "https://facebook.com/local2brand",
+        "https://linkedin.com/company/local2brand",
+        "https://twitter.com/local2brand"
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Website Development & Niche Solutions",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Starter High-Converting Business Website",
+              "description": "Custom designed responsive website delivered in 48 hours with WhatsApp order integration."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "E-Commerce & Digital Catalog Platform",
+              "description": "Full product catalog with cart, coupon engine, payment gateway, and WhatsApp checkout."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "12 Standalone Niche Commercial Website Templates",
+              "description": "Fully ready commercial website solutions for Restaurants, Cafes, Salons, Gyms, Hotels, Real Estate, Clinics, and Automotive."
+            }
+          }
+        ]
+      }
+    }
+    </script>
   </head>
-  <body class="bg-[#F8FAFC] text-slate-900 selection:bg-brand-600 selection:text-white antialiased overflow-x-hidden min-h-screen">
+  <body class="bg-[#F8FAFC] dark:bg-[#07090e] text-slate-900 dark:text-slate-100 selection:bg-brand-600 selection:text-white antialiased overflow-x-hidden min-h-screen transition-colors duration-300">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

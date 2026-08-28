@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, ShoppingBag, Sparkles, Clock, Star, ArrowRight } from 'lucide-react';
+import { ExternalLink, ShoppingBag, Sparkles, Clock, Star, ArrowRight, Share2 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
+import ShareDemoModal from './ShareDemoModal';
 
 export default function DemoCard({ demo }) {
   const { openOrderModal } = useOrderModal();
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const handleGetWebsite = (e) => {
     e.preventDefault();
@@ -111,7 +113,19 @@ export default function DemoCard({ demo }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsShareModalOpen(true);
+              }}
+              className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer"
+              title="Share this demo"
+            >
+              <Share2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            </button>
+
             <Link
               to={`/demos/${demo.slug}`}
               className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-center"
@@ -129,6 +143,13 @@ export default function DemoCard({ demo }) {
         </div>
 
       </div>
+
+      {/* Share Modal */}
+      <ShareDemoModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        demo={demo}
+      />
 
       {/* Subtle bottom tricolor accent */}
       <div className="absolute bottom-0 left-4 right-4 h-[1.5px] bg-gradient-to-r from-amber-400/40 via-blue-400/30 to-emerald-400/40 opacity-0 group-hover:opacity-100 transition-opacity" />

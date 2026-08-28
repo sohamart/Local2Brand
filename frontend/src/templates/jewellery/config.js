@@ -15,6 +15,11 @@ export const jewelleryConfig = {
     days: "Open 7 Days a Week"
   },
   heroImage: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_JEWELLERY_PRIMARY_COLOR || "#d4af37",
+    accentColor: import.meta.env.VITE_DEMO_JEWELLERY_ACCENT_COLOR || "#f3e5ab",
+    bgDark: import.meta.env.VITE_DEMO_JEWELLERY_BG_COLOR || "#0a0805"
+  },
 
   liveGoldRate: {
     gold22k: "₹6,850 / gm",

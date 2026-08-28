@@ -15,6 +15,11 @@ export const photographyConfig = {
     days: "Appointments Recommended"
   },
   heroImage: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_PHOTOGRAPHY_PRIMARY_COLOR || "#f43f5e",
+    accentColor: import.meta.env.VITE_DEMO_PHOTOGRAPHY_ACCENT_COLOR || "#fb7185",
+    bgDark: import.meta.env.VITE_DEMO_PHOTOGRAPHY_BG_COLOR || "#070709"
+  },
 
   activeCoupons: [
     { code: "EARLYBIRD20", discountPercent: 20, minOrder: 150000, label: "20% OFF on 2026-27 Wedding Dates Booked 3 Months in Advance" }

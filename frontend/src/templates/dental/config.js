@@ -15,6 +15,11 @@ export const dentalConfig = {
     days: "24/7 Emergency On-Call"
   },
   heroImage: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_DENTAL_PRIMARY_COLOR || "#06b6d4",
+    accentColor: import.meta.env.VITE_DEMO_DENTAL_ACCENT_COLOR || "#22d3ee",
+    bgDark: import.meta.env.VITE_DEMO_DENTAL_BG_COLOR || "#06111a"
+  },
 
   activeCoupons: [
     { code: "SMILECHECK", discountPercent: 100, minOrder: 0, label: "FREE 3D Digital Smile Scan & Oral Cancer Screening (Worth ₹1,500)" }

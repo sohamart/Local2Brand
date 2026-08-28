@@ -15,6 +15,11 @@ export const boutiqueConfig = {
     days: "Open 7 Days a Week"
   },
   heroImage: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_BOUTIQUE_PRIMARY_COLOR || "#9333ea",
+    accentColor: import.meta.env.VITE_DEMO_BOUTIQUE_ACCENT_COLOR || "#c084fc",
+    bgDark: import.meta.env.VITE_DEMO_BOUTIQUE_BG_COLOR || "#0b080d"
+  },
 
   activeCoupons: [
     { code: "COUTURE10", discountPercent: 10, minOrder: 5000, label: "10% OFF on Orders Above ₹5,000" }

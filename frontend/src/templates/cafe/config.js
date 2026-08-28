@@ -18,6 +18,11 @@ export const cafeConfig = {
     days: "Open 7 Days a Week"
   },
   heroImage: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_CAFE_PRIMARY_COLOR || "#c89666",
+    accentColor: import.meta.env.VITE_DEMO_CAFE_ACCENT_COLOR || "#deb887",
+    bgDark: import.meta.env.VITE_DEMO_CAFE_BG_COLOR || "#0f0c09"
+  },
 
   activeCoupons: [
     { code: "BREW10", discountPercent: 10, minOrder: 300, label: "10% OFF on Orders Above ₹300" },

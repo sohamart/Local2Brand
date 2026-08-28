@@ -15,6 +15,11 @@ export const automotiveConfig = {
     days: "Open 7 Days a Week"
   },
   heroImage: "https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_AUTOMOTIVE_PRIMARY_COLOR || "#f59e0b",
+    accentColor: import.meta.env.VITE_DEMO_AUTOMOTIVE_ACCENT_COLOR || "#fbbf24",
+    bgDark: import.meta.env.VITE_DEMO_AUTOMOTIVE_BG_COLOR || "#07090d"
+  },
 
   activeCoupons: [
     { code: "CERAMICFREE", discountPercent: 0, minOrder: 0, label: "FREE 9H Ceramic Coating & 1-Year Extended Warranty on All Car Deliveries" }

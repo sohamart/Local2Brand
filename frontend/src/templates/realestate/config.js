@@ -15,6 +15,11 @@ export const realEstateConfig = {
     days: "Open 7 Days for Site Visits"
   },
   heroImage: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_REALESTATE_PRIMARY_COLOR || "#10b981",
+    accentColor: import.meta.env.VITE_DEMO_REALESTATE_ACCENT_COLOR || "#34d399",
+    bgDark: import.meta.env.VITE_DEMO_REALESTATE_BG_COLOR || "#080d17"
+  },
 
   activeCoupons: [
     { code: "ZEROBROKERAGE", discountPercent: 0, minOrder: 0, label: "0% Brokerage & Free Stamp Duty Assistance on First 5 Bookings" }

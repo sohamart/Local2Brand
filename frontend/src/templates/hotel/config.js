@@ -16,6 +16,11 @@ export const hotelConfig = {
     reception: "24/7 Concierge & Front Desk"
   },
   heroImage: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_HOTEL_PRIMARY_COLOR || "#c5a059",
+    accentColor: import.meta.env.VITE_DEMO_HOTEL_ACCENT_COLOR || "#dfba73",
+    bgDark: import.meta.env.VITE_DEMO_HOTEL_BG_COLOR || "#070b12"
+  },
 
   activeCoupons: [
     { code: "STAYROYAL", discountPercent: 15, minOrder: 10000, label: "15% OFF on 2+ Nights Weekend Getaways" }

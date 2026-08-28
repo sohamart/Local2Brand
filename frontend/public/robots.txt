@@ -1,0 +1,13 @@
+# ==============================================================================
+# LOCAL2BRAND — Production Robots.txt
+# https://local2brand.com
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# Host & XML Sitemaps
+Host: https://local2brand.com
+Sitemap: https://local2brand.com/sitemap.xml

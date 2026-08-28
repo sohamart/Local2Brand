@@ -15,6 +15,11 @@ export const coachingConfig = {
     days: "Counselling Open 7 Days"
   },
   heroImage: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_COACHING_PRIMARY_COLOR || "#2563eb",
+    accentColor: import.meta.env.VITE_DEMO_COACHING_ACCENT_COLOR || "#60a5fa",
+    bgDark: import.meta.env.VITE_DEMO_COACHING_BG_COLOR || "#070e18"
+  },
 
   activeCoupons: [
     { code: "SCHOLAR90", discountPercent: 15, minOrder: 40000, label: "Up to 90% Scholarship via National Admission Test" }

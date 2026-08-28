@@ -17,7 +17,11 @@ export const restaurantConfig = {
     dinner: "7:00 PM - 11:45 PM",
     days: "Open 7 Days a Week"
   },
-  heroImage: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_RESTAURANT_PRIMARY_COLOR || "#d4af37",
+    accentColor: import.meta.env.VITE_DEMO_RESTAURANT_ACCENT_COLOR || "#f3e5ab",
+    bgDark: import.meta.env.VITE_DEMO_RESTAURANT_BG_COLOR || "#0a0705"
+  },
   fssaiNumber: "11521018000456",
   gstNumber: "27AAACR1234F1Z5",
 

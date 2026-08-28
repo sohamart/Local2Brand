@@ -16,6 +16,11 @@ export const gymConfig = {
     days: "Open 7 Days a Week"
   },
   heroImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_GYM_PRIMARY_COLOR || "#ff3b30",
+    accentColor: import.meta.env.VITE_DEMO_GYM_ACCENT_COLOR || "#ff6b00",
+    bgDark: import.meta.env.VITE_DEMO_GYM_BG_COLOR || "#07090c"
+  },
 
   activeCoupons: [
     { code: "TRANSFORM20", discountPercent: 20, minOrder: 10000, label: "20% OFF on Annual Elite Transformation Plan" }

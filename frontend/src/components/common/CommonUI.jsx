@@ -55,18 +55,4 @@ export function GlassButton({
   );
 }
 
-export function SEO({ title, description }) {
-  React.useEffect(() => {
-    if (title) {
-      document.title = `${title} | LOCAL2BRAND — Build Local. Think Global.`;
-    }
-    if (description) {
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', description);
-      }
-    }
-  }, [title, description]);
-
-  return null;
-}
+export { default as SEO } from './SEO';

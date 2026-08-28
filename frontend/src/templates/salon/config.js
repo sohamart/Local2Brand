@@ -16,6 +16,11 @@ export const salonConfig = {
     days: "Open 7 Days a Week"
   },
   heroImage: "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1600&auto=format&fit=crop",
+  theme: {
+    primaryColor: import.meta.env.VITE_DEMO_SALON_PRIMARY_COLOR || "#e05697",
+    accentColor: import.meta.env.VITE_DEMO_SALON_ACCENT_COLOR || "#f472b6",
+    bgDark: import.meta.env.VITE_DEMO_SALON_BG_COLOR || "#0c090e"
+  },
 
   activeCoupons: [
     { code: "GLOW15", discountPercent: 15, minOrder: 1500, label: "15% OFF on Medi-Facial Combos above ₹1,500" },

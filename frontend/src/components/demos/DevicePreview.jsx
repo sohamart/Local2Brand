@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Monitor, Tablet, Smartphone, ExternalLink, ArrowRight, Sparkles, RefreshCw } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, ExternalLink, ArrowRight, Sparkles, RefreshCw, Share2 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
+import ShareDemoModal from './ShareDemoModal';
 
 export default function DevicePreview({ demo, image, title, aspectRatio }) {
   const [deviceMode, setDeviceMode] = useState('desktop'); // Default to Desktop, switchable to Tablet & Mobile
   const [iframeKey, setIframeKey] = useState(0);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const { openOrderModal } = useOrderModal();
 
   const activeTitle = demo?.title || title || 'Website Demo';
@@ -69,13 +71,22 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
         </div>
 
         {/* Viewport Meta & Fullscreen Live Demo Link */}
-        <div className="flex items-center justify-between sm:justify-end gap-2.5">
+        <div className="flex items-center justify-between sm:justify-end gap-2">
           <button
             onClick={() => setIframeKey(k => k + 1)}
-            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 transition-all"
+            className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 transition-all cursor-pointer"
             title="Reload Preview"
           >
             <RefreshCw className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all flex items-center gap-1.5 cursor-pointer"
+            title="Share Demo Link"
+          >
+            <Share2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            <span className="hidden sm:inline">Share</span>
           </button>
 
           <a
@@ -98,6 +109,13 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
         </div>
 
       </div>
+
+      {/* Share Modal */}
+      <ShareDemoModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        demo={demo || { title: activeTitle, slug: activeSlug, category: activeCategory }}
+      />
 
       {/* Interactive Device Stage Container */}
       <div className="p-2 sm:p-6 lg:p-8 rounded-card sm:rounded-hero glass-card border border-white dark:border-slate-700/80 flex items-center justify-center min-h-[560px] sm:min-h-[720px] bg-slate-100/50 dark:bg-slate-950/50 overflow-hidden">

@@ -16,6 +16,7 @@ import { siteConfig } from '../../config/siteConfig';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import AshokaChakra from './AshokaChakra';
+import ThemeToggle from './ThemeToggle';
 
 const InstagramIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -235,7 +236,8 @@ export default function Footer() {
             </span>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            <ThemeToggle showLabel={true} />
             <a
               href={siteConfig.socialLinks.instagram}
               target="_blank"

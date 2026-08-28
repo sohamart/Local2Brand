@@ -14,6 +14,7 @@ import {
 import AshokaChakra from '../components/common/AshokaChakra';
 import { useOrderModal } from '../context/OrderModalContext';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../utils/whatsapp';
+import ShareDemoModal from '../components/demos/ShareDemoModal';
 
 // Import All 12 Standalone Demo Templates
 import RestaurantDemo from '../templates/restaurant/RestaurantDemo';
@@ -49,6 +50,7 @@ export default function LiveDemoViewer() {
   const [searchParams] = useSearchParams();
   const { openOrderModal } = useOrderModal();
   const [deviceMode, setDeviceMode] = useState('full'); // 'full', 'desktop', 'tablet', 'mobile'
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   const isEmbedded = searchParams.get('embed') === 'true' || (typeof window !== 'undefined' && window.self !== window.top);
 
@@ -154,6 +156,15 @@ export default function LiveDemoViewer() {
         {/* Right: Direct Order CTAs */}
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setIsShareModalOpen(true)}
+            className="p-1.5 px-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all flex items-center gap-1.5 cursor-pointer"
+            title="Share Demo"
+          >
+            <Share2 className="w-3.5 h-3.5 text-purple-400" />
+            <span className="hidden sm:inline">Share</span>
+          </button>
+
+          <button
             onClick={handleDirectWhatsApp}
             className="px-3.5 sm:px-4 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer"
           >
@@ -163,6 +174,13 @@ export default function LiveDemoViewer() {
           </button>
         </div>
       </div>
+
+      {/* Share Modal */}
+      <ShareDemoModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        demo={{ title: template.title, slug: templateId, category: template.category }}
+      />
 
       {/* Demo Viewport Area */}
       <div className="flex-1 flex justify-center items-start bg-[#030712] py-2 sm:py-4 px-0 sm:px-4 overflow-x-hidden">
