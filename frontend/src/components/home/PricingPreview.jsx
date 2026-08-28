@@ -11,9 +11,6 @@ export default function PricingPreview() {
 
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden">
-      {/* Subtle Ambient Section Glow */}
-      <div className="section-glow section-glow-purple top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[450px]" />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         <SectionHeading

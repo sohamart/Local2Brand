@@ -17,10 +17,7 @@ export default function FAQSection() {
 
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden">
-      {/* Subtle Ambient Section Glow */}
-      <div className="section-glow section-glow-blue top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px]" />
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         <SectionHeading
           badge="Frequently Asked Questions"

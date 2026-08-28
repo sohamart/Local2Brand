@@ -64,8 +64,11 @@ export default function Hero() {
         </div>
 
         {/* Hero Headline & Ultra-Minimal Copy */}
-        <div className="text-center max-w-3xl mx-auto space-y-5">
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.08]">
+        <div className="text-center max-w-3xl mx-auto space-y-5 relative">
+          {/* Radiant Title Spotlight Glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] sm:w-[750px] h-[220px] sm:h-[300px] bg-gradient-to-r from-blue-500/20 via-purple-500/25 to-pink-500/20 dark:from-blue-500/30 dark:via-purple-500/40 dark:to-pink-500/30 rounded-full blur-[70px] pointer-events-none -z-10 animate-pulse-glow" />
+
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.08] relative z-10">
             We Build Websites That Turn{' '}
             <span className="l2b-gradient-text whitespace-nowrap">
               Local Brands
@@ -73,7 +76,7 @@ export default function Hero() {
             Into Big Brands.
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto font-normal leading-relaxed">
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto font-normal leading-relaxed relative z-10">
             World-class UI/UX design, sub-second performance, and instant WhatsApp ordering for ambitious Indian businesses ready to scale globally.
           </p>
 
