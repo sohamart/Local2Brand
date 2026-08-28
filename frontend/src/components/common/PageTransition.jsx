@@ -3,8 +3,9 @@ import { useLocation } from 'react-router-dom';
 import AshokaChakra from './AshokaChakra';
 
 /**
- * Luxury 3D Dual Sliding Door Page Transition with Clean Minimalist Modern Core
- * Compact, ultra-sleek, and elegant centerpiece.
+ * Luxury 3D Dual Sliding Door Page Transition with Clean Square Emblem
+ * Features an extended 700ms center pause so the user can clearly admire the transition.
+ * Square 3D glass emblem core.
  */
 export default function PageTransition({ children }) {
   const location = useLocation();
@@ -18,16 +19,16 @@ export default function PageTransition({ children }) {
       setIsTransitioning(true);
       setTransitionKey((k) => k + 1);
 
-      // SWAP PAGE CONTENT ONLY AFTER DOORS ARE 100% SHUT IN THE CENTER (620ms)
+      // SWAP PAGE CONTENT IN THE MIDDLE OF THE EXTENDED CENTER PAUSE (720ms)
       const timer1 = setTimeout(() => {
         setDisplayLocation(location);
         window.scrollTo(0, 0);
-      }, 620);
+      }, 720);
 
-      // Clean up overlay after doors have fully opened (1650ms)
+      // Clean up overlay after doors have fully opened (1900ms)
       const timer2 = setTimeout(() => {
         setIsTransitioning(false);
-      }, 1650);
+      }, 1900);
 
       return () => {
         clearTimeout(timer1);
@@ -85,9 +86,9 @@ export default function PageTransition({ children }) {
             <div className={`absolute inset-y-0 left-16 w-[1px] ${isDark ? 'bg-white/5' : 'bg-slate-300/40'}`} />
           </div>
 
-          {/* Center Clean Minimalist Emblem Lock */}
+          {/* Center Clean Square 3D Emblem Lock */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none animate-auto-door-emblem-3d">
-            {/* Sleek Center Vertical Laser Seam */}
+            {/* Center Vertical Laser Seam */}
             <div
               className={`absolute top-0 bottom-0 w-[2px] ${
                 isDark
@@ -96,18 +97,18 @@ export default function PageTransition({ children }) {
               }`}
             />
 
-            {/* Clean, Compact Glass Badge */}
+            {/* Clean Square 3D Glass Badge */}
             <div
-              className={`relative z-10 flex items-center gap-3 px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-2xl border transition-all ${
+              className={`relative z-10 flex flex-col items-center justify-center gap-2 p-3.5 sm:p-4 rounded-2xl shadow-2xl backdrop-blur-2xl border transition-all ${
                 isDark
-                  ? 'bg-[#080b12]/95 border-purple-500/40 shadow-purple-500/20'
-                  : 'bg-white/95 border-slate-200 shadow-blue-500/15'
+                  ? 'bg-[#080b12]/95 border-purple-500/50 shadow-[0_0_35px_rgba(121,40,202,0.3)] ring-1 ring-purple-500/20'
+                  : 'bg-white/95 border-slate-200/90 shadow-[0_0_35px_rgba(0,114,255,0.15)] ring-1 ring-blue-400/20'
               }`}
             >
-              {/* Compact 3D Logo */}
+              {/* Square 3D Master Logo */}
               <div
-                className={`w-9 h-9 rounded-xl overflow-hidden shadow-md shrink-0 border flex items-center justify-center ${
-                  isDark ? 'border-white/20 bg-slate-900' : 'border-slate-200 bg-white'
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shadow-md shrink-0 border flex items-center justify-center ${
+                  isDark ? 'border-white/20 bg-slate-900 shadow-purple-500/20' : 'border-slate-200 bg-white shadow-blue-500/15'
                 }`}
               >
                 <img
@@ -117,25 +118,27 @@ export default function PageTransition({ children }) {
                 />
               </div>
 
-              {/* Sleek Brand Title */}
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={`text-base font-extrabold tracking-tight leading-none ${
-                    isDark ? 'text-white' : 'text-slate-900'
-                  }`}
-                >
-                  LOCAL<span className="l2b-gradient-text">2</span>BRAND
-                </span>
-                <span
-                  className={`inline-flex items-center gap-0.5 text-[8px] font-bold px-1 py-0.5 rounded border ${
-                    isDark
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                      : 'bg-amber-50 text-amber-900 border-amber-200'
-                  }`}
-                >
-                  <AshokaChakra size={9} />
-                  <span>IN</span>
-                </span>
+              {/* Square Base Title & Indian Pride */}
+              <div className="flex flex-col items-center gap-0.5 text-center">
+                <div className="flex items-center gap-1">
+                  <span
+                    className={`text-xs sm:text-sm font-black tracking-tight leading-none ${
+                      isDark ? 'text-white' : 'text-slate-900'
+                    }`}
+                  >
+                    LOCAL<span className="l2b-gradient-text">2</span>BRAND
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-0.5 text-[7px] font-bold px-1 py-0.2 rounded border ${
+                      isDark
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        : 'bg-amber-50 text-amber-900 border-amber-200'
+                    }`}
+                  >
+                    <AshokaChakra size={8} />
+                    <span>IN</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
