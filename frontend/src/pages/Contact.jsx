@@ -132,12 +132,12 @@ export default function Contact() {
                     <div>
                       <div className="font-bold text-slate-900 dark:text-white">Direct WhatsApp</div>
                       <a
-                        href={`https://wa.me/${(siteConfig.whatsappNumber || '919064971842').replace(/[^0-9]/g, '')}`}
+                        href={`https://wa.me/${getSanitizedWhatsAppNumber()}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-emerald-600 dark:text-emerald-400 hover:underline"
                       >
-                        {siteConfig.displayWhatsApp || '+91 90649 71842'}
+                        {siteConfig.displayWhatsApp || '+91 98765 43210'}
                       </a>
                     </div>
                   </div>

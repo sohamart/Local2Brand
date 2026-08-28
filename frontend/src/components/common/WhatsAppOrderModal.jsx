@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { siteConfig } from '../../config/siteConfig';
+import { getSanitizedWhatsAppNumber } from '../../utils/whatsapp';
 import ThemeToggle from './ThemeToggle';
 import {
   validateCouponCode,
@@ -437,7 +438,7 @@ export default function WhatsAppOrderModal() {
     if (!validateTemplateInputs()) return;
 
     const text = generateOrderText();
-    const cleanNumber = (siteConfig.whatsappNumber || '919876543210').replace(/\D/g, '');
+    const cleanNumber = getSanitizedWhatsAppNumber();
     const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
     closeOrderModal();
