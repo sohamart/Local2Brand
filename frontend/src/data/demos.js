@@ -1,6 +1,7 @@
 /**
  * Ready-Made Demo Website Marketplace Dataset
  * All 12 Standalone Demo Templates with live interactive previews and direct ordering.
+ * Accessible Pricing: Starter Demos @ ₹4,999 | Grand Niche Demos @ ₹14,999
  */
 
 export const demoCategories = [
@@ -27,8 +28,8 @@ export const demoWebsites = [
     title: "Royal Saffron Mughlai & Fine Dining",
     category: "Restaurant",
     badge: "Bestseller",
-    price: "$399",
-    priceInr: "₹9,999",
+    price: "$149",
+    priceInr: "₹4,999",
     turnaround: "48 Hours",
     rating: 4.9,
     reviewsCount: 48,
@@ -50,8 +51,8 @@ export const demoWebsites = [
     title: "The Artisanal Roastery & Coffee Bar",
     category: "Cafe",
     badge: "Trending",
-    price: "$399",
-    priceInr: "₹9,999",
+    price: "$149",
+    priceInr: "₹4,999",
     turnaround: "48 Hours",
     rating: 5.0,
     reviewsCount: 36,
@@ -73,8 +74,8 @@ export const demoWebsites = [
     title: "Aura Luxe Unisex Salon & Aesthetic Spa",
     category: "Salon",
     badge: "Popular",
-    price: "$399",
-    priceInr: "₹9,999",
+    price: "$149",
+    priceInr: "₹4,999",
     turnaround: "48 Hours",
     rating: 4.9,
     reviewsCount: 42,
@@ -96,208 +97,210 @@ export const demoWebsites = [
     title: "IronCore Performance Gym & Crossfit",
     category: "Gym",
     badge: "High Energy",
-    price: "$399",
-    priceInr: "₹9,999",
+    price: "$149",
+    priceInr: "₹4,999",
     turnaround: "48 Hours",
-    rating: 4.9,
-    reviewsCount: 52,
-    shortDescription: "High-intensity fitness center template with membership tier comparisons, trainer profiles, and free trial passes.",
-    description: "Engineered for gyms, crossfit boxes, and personal trainers to drive high-ticket membership signups with transparent pricing and WhatsApp trial bookings.",
+    rating: 4.8,
+    reviewsCount: 39,
+    shortDescription: "High-intensity fitness center platform with trainer rosters, membership pass calculator, and trial passes.",
+    description: "Built for gyms, CrossFit boxes, and MMA dojos. Showcases membership packages, trainer certifications, and 1-day free pass booking on WhatsApp.",
     heroImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Quarterly & Annual Membership Comparison Tables",
-      "Free 1-Day Trial Pass Lead Funnel",
-      "Crossfit & Personal Trainer Showcase",
-      "Mobile-Friendly Dark High-Octane Aesthetics"
+      "Membership Tier Passes & Pricing Cards",
+      "Coach & Elite Personal Trainer Rosters",
+      "Instant 1-Day Trial Pass Claim on WhatsApp",
+      "Dynamic Workout Schedule & Timings Table"
     ],
-    idealFor: "Gyms, crossfit boxes, yoga studios & fitness trainers"
+    idealFor: "Fitness clubs, gym chains, CrossFit centers & yoga studios"
   },
   {
     id: "hotel",
     slug: "hotel",
     templateId: "hotel",
-    title: "The Grand Heritage Palace & Royal Resort",
+    title: "The Grand Heritage Resort & Villa",
     category: "Hotel",
-    badge: "5-Star Luxury",
-    price: "$549",
+    badge: "Enterprise Suite",
+    price: "$449",
     priceInr: "₹14,999",
-    turnaround: "3 Days",
+    turnaround: "72 Hours",
     rating: 5.0,
-    reviewsCount: 64,
-    shortDescription: "Royal Rajputana heritage hotel & resort website with room suite galleries, amenities showcase, and direct WhatsApp booking.",
-    description: "Designed for boutique heritage stays, luxury palace resorts, and vacation villas. Features interactive check-in date pickers, suite specifications, and concierge integration.",
+    reviewsCount: 54,
+    shortDescription: "Ultra-luxury hotel & resort platform with room inventory tours, tariff cards, and concierge booking.",
+    description: "Designed for boutique heritage hotels, luxury mountain resorts, and private pool villas. Includes suite amenity tours, seasonal packages, and VIP WhatsApp concierge.",
     heroImage: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Interactive Room & Luxury Suite Showcase",
-      "Direct Check-In Date Reservation Strip",
-      "Ayurvedic Spa & Lake View Pool Tour",
-      "Concierge WhatsApp Support Integration"
+      "Filterable Presidential & Suite Room Inventory",
+      "Interactive WhatsApp Date & Guest Booking Flow",
+      "Resort Amenities & Dining Experiences Gallery",
+      "Full Concierge & Airport Transfer Inquiries"
     ],
-    idealFor: "Hotels, heritage stays, boutique resorts & vacation villas"
+    idealFor: "Resorts, boutique hotels, luxury villas & homestays"
   },
   {
     id: "realestate",
     slug: "realestate",
     templateId: "realestate",
-    title: "Prime Acres Luxury Living & Estates",
+    title: "Skyline Crown Luxury Properties & Villas",
     category: "Real Estate",
-    badge: "Featured",
-    price: "$549",
+    badge: "Enterprise Suite",
+    price: "$449",
     priceInr: "₹14,999",
-    turnaround: "3 Days",
+    turnaround: "72 Hours",
     rating: 4.9,
-    reviewsCount: 39,
-    shortDescription: "High-converting real estate agency template with property listings, floorplan highlights, and VIP site visit bookings.",
-    description: "Crafted for real estate brokers, luxury highrise builders, and property consultancies to capture verified buyer leads with zero brokerage branding.",
-    heroImage: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1400&auto=format&fit=crop",
+    reviewsCount: 31,
+    shortDescription: "High-ticket real estate brokerage platform with property listings, floor plans, and VIP site visit booking.",
+    description: "Built for luxury real estate developers, property brokers, and gated communities. Features square-footage breakdowns, EMI calculators, and instant site visit schedules.",
+    heroImage: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Luxury Penthouse & Villa Listing Cards",
-      "Instant WhatsApp Site Visit Scheduling",
-      "Location Advantage & Floorplan Highlights",
-      "100% Verified Title Trust Badges"
+      "Property Listings with BHK, Sq.ft & Price Filters",
+      "Interactive Site Visit & Brochure WhatsApp Download",
+      "Interactive Location Map & Nearby Connectivity Matrix",
+      "Lead Capture Modal with Instant WhatsApp Dispatch"
     ],
-    idealFor: "Real estate brokers, builders, developers & property advisors"
+    idealFor: "Real estate brokers, builders, luxury property developers & architects"
   },
   {
     id: "photography",
     slug: "photography",
     templateId: "photography",
-    title: "Lumière Cinematic Stories & Weddings",
+    title: "Lumière Cine & Destination Wedding Studio",
     category: "Photography",
-    badge: "Cinematic",
-    price: "$399",
-    priceInr: "₹9,999",
+    badge: "Creative",
+    price: "$149",
+    priceInr: "₹4,999",
     turnaround: "48 Hours",
-    rating: 5.0,
-    reviewsCount: 45,
-    shortDescription: "Destination wedding and editorial photography portfolio with high-resolution visual storytelling and date checkers.",
-    description: "Built for wedding cinematographers and studio photographers to showcase destination albums, pre-wedding films, and book dates via WhatsApp.",
-    heroImage: "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1400&auto=format&fit=crop",
+    rating: 4.9,
+    reviewsCount: 29,
+    shortDescription: "Cinematic photography portfolio with masonry gallery, client films, and destination wedding quote generator.",
+    description: "Crafted for wedding cinematographers, editorial fashion photographers, and creative studios. Features full-bleed portfolios, equipment showcases, and WhatsApp booking.",
+    heroImage: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Full-bleed Visual Storytelling Grids",
-      "Wedding Storyboard & Pre-wedding Film Teasers",
-      "Direct Date Availability Checker on WhatsApp",
-      "Dark Minimalist Aesthetic with Fast Loading"
+      "Masonry Visual Portfolio with Fullscreen Lightbox",
+      "Pre-Wedding, Destination & Portrait Packages",
+      "Instant Date Check & Custom Quote on WhatsApp",
+      "Client Testimonials & Published Magazine Badges"
     ],
-    idealFor: "Wedding photographers, cinematographers & fashion studios"
+    idealFor: "Wedding photographers, commercial studios, filmmakers & artists"
   },
   {
     id: "boutique",
     slug: "boutique",
     templateId: "boutique",
-    title: "Vogue & Thread Haute Couture",
+    title: "Vogue Sutra Handcrafted Ethnic & Couture",
     category: "Boutique",
-    badge: "Designer",
-    price: "$399",
-    priceInr: "₹9,999",
+    badge: "Retail Ready",
+    price: "$149",
+    priceInr: "₹4,999",
     turnaround: "48 Hours",
-    rating: 4.9,
-    reviewsCount: 31,
-    shortDescription: "Designer bridal lehengas and handloom saree boutique template with digital lookbook and direct WhatsApp inquiries.",
-    description: "Engineered for fashion boutiques, couture designers, and ethnic wear showrooms to showcase seasonal collections and receive bespoke tailoring orders.",
-    heroImage: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=1400&auto=format&fit=crop",
+    rating: 5.0,
+    reviewsCount: 47,
+    shortDescription: "High-end fashion boutique store with lookbooks, seasonal drops, fabric stories, and WhatsApp checkout.",
+    description: "Designed for designer fashion labels, handcrafted ethnic boutiques, and artisanal jewellery brands. Features size charts, catalog filtering, and 1-click WhatsApp cart.",
+    heroImage: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Handloom Saree & Bridal Lehenga Lookbook",
-      "Bespoke Sizing & Custom Color Inquiry Trigger",
-      "Direct WhatsApp Catalog Sharing",
-      "Royal Velvet & Purple Luxury Theme"
+      "Seasonal Couture Catalog with Price & Fabric Tags",
+      "1-Click WhatsApp Direct Buy & Custom Sizing Chat",
+      "Fabric Craftsmanship & Sustainable Heritage Story",
+      "Customer Reviews with Photo Gallery Highlights"
     ],
-    idealFor: "Boutiques, designer wear, saree shops & fashion labels"
+    idealFor: "Fashion boutiques, ethnic wear studios, jewelry shops & footwear"
   },
   {
     id: "coaching",
     slug: "coaching",
     templateId: "coaching",
-    title: "Apex Academy for IIT-JEE, NEET & Boards",
+    title: "Apex Horizon Academy & Premier EdTech",
     category: "Coaching",
-    badge: "High Conversion",
-    price: "$399",
-    priceInr: "₹9,999",
+    badge: "High Growth",
+    price: "$149",
+    priceInr: "₹4,999",
     turnaround: "48 Hours",
     rating: 4.9,
-    reviewsCount: 58,
-    shortDescription: "Premier coaching institute template with batch schedules, ranker results showcase, and free demo class bookings.",
-    description: "Built for coaching centers, tuition institutes, and ed-tech academies to generate qualified student admission inquiries with batch breakdowns.",
-    heroImage: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1400&auto=format&fit=crop",
+    reviewsCount: 52,
+    shortDescription: "Premier coaching institute website with batch curriculum, mentor profiles, and WhatsApp demo class booking.",
+    description: "Designed for competitive exam institutes (JEE/NEET/UPSC), coding bootcamps, and executive coaching. Features ranker leaderboards, batch schedules, and WhatsApp registration.",
+    heroImage: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "JEE, NEET & Foundation Batch Breakdown Cards",
-      "Free Demo Lecture Booking Funnel",
-      "Topper Ranks & Success Statistics Banner",
-      "Direct WhatsApp Admission Guidance"
+      "Interactive Course Curriculum & Fee Breakdown",
+      "Free 3-Day Trial Class Registration via WhatsApp",
+      "Top Rankers Wall of Fame & Success Stories",
+      "Faculty Credentials & Video Lecture Highlights"
     ],
-    idealFor: "Coaching institutes, test prep academies & training centers"
+    idealFor: "Coaching institutes, EdTech startups, language tutors & exam academies"
   },
   {
     id: "dental",
     slug: "dental",
     templateId: "dental",
-    title: "SmileCare Advanced Dental Clinic & Centre",
+    title: "Apex Care Multispeciality Dental & Implant Clinic",
     category: "Dental",
-    badge: "Medical Grade",
-    price: "$399",
-    priceInr: "₹9,999",
+    badge: "Healthcare",
+    price: "$149",
+    priceInr: "₹4,999",
     turnaround: "48 Hours",
     rating: 5.0,
-    reviewsCount: 62,
-    shortDescription: "Sterilized dental and doctor chamber template with treatment pricing, doctor timings, and online consultation booking.",
-    description: "Designed for multi-speciality dental clinics, doctors, and diagnostic centers to build patient trust and simplify appointment scheduling.",
+    reviewsCount: 61,
+    shortDescription: "Modern medical & dental clinic website with doctor credentials, procedure rate cards, and appointment slots.",
+    description: "Built for dental surgeons, polyclinics, and wellness practitioners. Features treatment guides, doctor accreditations, painless dentistry highlights, and WhatsApp appointments.",
     heroImage: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Laser RCT, Aligners & Implant Treatment Cards",
-      "Patient Appointment Booking Form",
-      "Doctor Credentials & Clinic Sterilization Proof",
-      "One-Touch Emergency WhatsApp Contact"
+      "Transparent Treatment Price & Procedure Guides",
+      "Doctor Credentials, BDS/MDS Degrees & Badges",
+      "1-Click WhatsApp Doctor Appointment Booking",
+      "Hygiene & Sterilization Safety Protocols Matrix"
     ],
-    idealFor: "Dentists, doctors, polyclinics & healthcare centers"
+    idealFor: "Dental clinics, medical doctors, physiotherapy centers & diagnostic labs"
   },
   {
     id: "jewellery",
     slug: "jewellery",
     templateId: "jewellery",
-    title: "Karat Royale Luxury Jewels & Diamonds",
+    title: "Aurum Royal Solitaires & 22K Gold Atelier",
     category: "Jewellery",
-    badge: "BIS Hallmarked",
-    price: "$549",
+    badge: "Enterprise Suite",
+    price: "$449",
     priceInr: "₹14,999",
-    turnaround: "3 Days",
+    turnaround: "72 Hours",
     rating: 5.0,
-    reviewsCount: 47,
-    shortDescription: "Gold and diamond jewelry atelier template with collection galleries, purity standards, and live rate inquiries.",
-    description: "Crafted for luxury jewelry showrooms, gold ateliers, and diamond merchants to showcase bridal sets, engagement rings, and gold purity trust.",
-    heroImage: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=1400&auto=format&fit=crop",
+    reviewsCount: 38,
+    shortDescription: "Ultra-luxury jewellery atelier website with certified gold/diamond showcase, hallmark guarantee, and VIP consultation.",
+    description: "Designed for gold ateliers, diamond houses, and bridal jewellery showrooms. Features purity certifications, live gold rate ticker, virtual try-on booking, and WhatsApp sales.",
+    heroImage: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Solitaire Diamond & 22K Gold Collections",
-      "Daily Gold Rate WhatsApp Query Trigger",
-      "BIS 916 Hallmark & IGI Certification Trust",
-      "Deep Gold & Black Velvet Royal Ambiance"
+      "Hallmarked 22K & Solitaire Diamond Collections",
+      "Live Gold Rate Indicator & Transparency Calculator",
+      "VIP Private Showroom Appointment Booking",
+      "BIS 916 Hallmark & Certified Diamond Badges"
     ],
-    idealFor: "Jewelry showrooms, diamond ateliers & gift boutiques"
+    idealFor: "Fine jewellery showrooms, gold merchants, diamond ateliers & bridal luxury"
   },
   {
     id: "automotive",
     slug: "automotive",
     templateId: "automotive",
-    title: "SpeedShift Performance Motors & Studio",
+    title: "Apex Velocity Supercars & Luxury Auto Showroom",
     category: "Automotive",
-    badge: "Supercars",
-    price: "$549",
+    badge: "Enterprise Suite",
+    price: "$449",
     priceInr: "₹14,999",
-    turnaround: "3 Days",
+    turnaround: "72 Hours",
     rating: 4.9,
-    reviewsCount: 54,
-    shortDescription: "Supercar & superbike showroom template with vehicle specifications, test drive booking, and detailing service estimates.",
-    description: "Built for luxury pre-owned car showrooms, superbike studios, and ceramic coating detailing centers to capture high-ticket auto enthusiasts.",
-    heroImage: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1400&auto=format&fit=crop",
+    reviewsCount: 33,
+    shortDescription: "Exotic supercar showroom & auto detailing platform with vehicle specs, financing calculator, and VIP test drive booking.",
+    description: "Built for luxury pre-owned car showrooms, ceramic coating studios, and motorcycle dealerships. Features HP/0-100 specs, EMI estimates, and WhatsApp test drive scheduling.",
+    heroImage: "https://images.unsplash.com/photo-1617814076367-b759c7d7e738?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Supercar & Superbike Inventory Showcase",
-      "Instant Test Drive VIP Booking on WhatsApp",
-      "Engine Specifications & Inspection Proof",
-      "Carbon Fiber Dark Performance Theme"
+      "Vehicle Fleet with BHP, Top Speed & Specs Comparison",
+      "Instant WhatsApp VIP Test Drive Booking Flow",
+      "Ceramic Coating & PPF Protection Packages",
+      "EMI Estimation & Trade-In Evaluation Forms"
     ],
-    idealFor: "Car showrooms, bike studios, detailing centers & garages"
+    idealFor: "Luxury car dealerships, ceramic coating studios, supercar brokers & auto garages"
   }
 ];
 
 export const getDemoBySlug = (slug) => {
-  return demoWebsites.find((demo) => demo.slug === slug || demo.id === slug) || demoWebsites[0];
+  return demoWebsites.find(
+    (demo) => demo.slug === slug || demo.templateId === slug || demo.id === slug
+  );
 };

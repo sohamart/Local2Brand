@@ -21,7 +21,10 @@ import {
   Copy,
   Sliders,
   CheckSquare,
-  Square
+  Square,
+  Globe,
+  Server,
+  ShieldCheck
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { generateWhatsAppOrderUrl, openWhatsAppChat } from '../../utils/whatsapp';
@@ -85,11 +88,11 @@ const TIMELINES = [
   'Flexible / In Planning Phase'
 ];
 
-// Step 5: Budgets
+// Step 5: Budgets (Affordable Base Packages)
 const BUDGETS = [
-  { id: 'Starter (₹9,999 - ₹14,999)', label: '₹9,999 - ₹14,999', desc: 'Starter High-Converting Launchpad' },
-  { id: 'Growth (₹19,999 - ₹34,999)', label: '₹19,999 - ₹34,999', desc: 'Full Business Suite with Integrations' },
-  { id: 'Custom Enterprise (₹49,999+)', label: '₹49,999+', desc: 'Bespoke Web App / Complex Platform' },
+  { id: 'Demo Template (₹4,999 - ₹14,999)', label: '₹4,999 - ₹14,999', desc: 'Ready-Made Demo Template Customization' },
+  { id: 'Growth Business (₹19,999 - ₹29,999)', label: '₹19,999 - ₹29,999', desc: 'Custom Business Suite with Dynamic Features' },
+  { id: 'Enterprise Bespoke (₹49,999+)', label: '₹49,999+', desc: 'Full Custom Scale Web App / Platform' },
   { id: 'Need Custom Quote', label: 'Custom Quote', desc: 'Discuss requirement & tailor price' }
 ];
 
@@ -111,7 +114,10 @@ export default function WhatsAppOrderModal() {
     themeStyle: 'Clean Minimalist',
     brandingStatus: 'Yes, logo & colors are ready',
     timeline: '⚡ Urgent: Express 48 - 72 Hours Launch',
-    budget: 'Starter (₹9,999 - ₹14,999)',
+    budget: 'Demo Template (₹4,999 - ₹14,999)',
+    addDomain: false,
+    addHosting: false,
+    hasOwnDomainHosting: true,
     couponCode: 'INDIA2025',
     isCouponApplied: false,
     clientName: '',
@@ -144,7 +150,7 @@ export default function WhatsAppOrderModal() {
         ...prev,
         industry: initialIndustry,
         businessName: modalData.selectedDemo ? `${modalData.selectedDemo} Customization` : '',
-        budget: modalData.price ? modalData.price : 'Starter (₹9,999 - ₹14,999)',
+        budget: modalData.price ? modalData.price : 'Demo Template (₹4,999 - ₹14,999)',
         isCouponApplied: !!isOffer
       }));
 
@@ -252,6 +258,11 @@ export default function WhatsAppOrderModal() {
 
     const couponText = formData.isCouponApplied ? `🎁 Promo Voucher: *INDIA2025 (20% OFF Activated)*\n` : '';
 
+    const addonsList = [];
+    if (formData.addDomain) addonsList.push('🌐 Custom Domain (.com / .in) (+₹999/yr)');
+    if (formData.addHosting) addonsList.push('⚡ Managed Cloud VPS Hosting + Free SSL (+₹1,999/yr)');
+    if (!formData.addDomain && !formData.addHosting) addonsList.push('🔄 Client will use own Domain & Hosting (FREE Setup)');
+
     return (
       `🚀 *NEW PROJECT ONBOARDING BRIEF - LOCAL2BRAND*\n` +
       `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -272,7 +283,9 @@ export default function WhatsAppOrderModal() {
       `🎨 *Theme Preference:* ${formData.themeStyle}\n` +
       `💎 *Brand Assets:* ${formData.brandingStatus}\n` +
       `⏱️ *Target Timeline:* ${formData.timeline}\n` +
-      `💰 *Budget Range:* ${formData.budget}\n` +
+      `💰 *Base Website Budget:* ${formData.budget}\n` +
+      `🌐 *Domain & Hosting Addons:*\n` +
+      addonsList.map(a => `   • ${a}`).join('\n') + '\n' +
       couponText +
       (formData.extraNotes ? `📝 *Special Notes:* ${formData.extraNotes}\n` : '') +
       `━━━━━━━━━━━━━━━━━━━━\n` +
@@ -630,42 +643,21 @@ export default function WhatsAppOrderModal() {
             </div>
           )}
 
-          {/* STEP 5: Timeline & Budget */}
+          {/* STEP 5: Timeline, Budget & Infrastructure Addons */}
           {currentStep === 5 && (
             <div className="space-y-6 animate-fade-in">
               <div className="space-y-1">
-                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 5: Timeline & Budget</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">Step 5: Budget & Infrastructure</span>
                 <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  Target launch timeline & budget tier <span className="text-red-500">*</span>
+                  Package Tier & Turnkey Addons <span className="text-red-500">*</span>
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Transparent pricing with zero hidden fees and 48-hour turnarounds.</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Affordable pricing with complete domain and cloud hosting clarity.</p>
               </div>
 
-              <div className="space-y-3">
+              {/* Base Budget Tiers */}
+              <div className="space-y-2">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Target Launch Speed <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {TIMELINES.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, timeline: t })}
-                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all cursor-pointer ${
-                        formData.timeline === t
-                          ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm'
-                          : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Estimated Budget Tier <span className="text-red-500">*</span>
+                  Base Website Package <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {BUDGETS.map((b) => (
@@ -684,6 +676,91 @@ export default function WhatsAppOrderModal() {
                       </div>
                       <span className="text-[11px] text-slate-500 dark:text-slate-400">{b.desc}</span>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Turnkey Domain & Hosting Addon Checkboxes */}
+              <div className="space-y-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Turnkey Domain & Hosting Addons
+                  </label>
+                  <span className="text-[10px] text-slate-400 font-semibold">(Separate optional charge)</span>
+                </div>
+
+                {/* Domain Checkbox */}
+                <div
+                  onClick={() => setFormData({ ...formData, addDomain: !formData.addDomain })}
+                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                    formData.addDomain
+                      ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-900 dark:text-purple-100'
+                      : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Globe className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold">🌐 Add Custom Domain (.com / .in / .co.in)</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">Registered on your name with full DNS ownership</div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 pl-2">
+                    <div className="font-extrabold text-xs text-purple-600 dark:text-purple-400">+₹999 / yr</div>
+                    <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">{formData.addDomain ? 'Added ✓' : '+ Add'}</div>
+                  </div>
+                </div>
+
+                {/* Cloud Hosting Checkbox */}
+                <div
+                  onClick={() => setFormData({ ...formData, addHosting: !formData.addHosting })}
+                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
+                    formData.addHosting
+                      ? 'bg-emerald-50 dark:bg-emerald-600/20 border-emerald-500 text-emerald-900 dark:text-emerald-100'
+                      : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <div>
+                      <div className="text-xs font-bold">⚡ Add Managed High-Speed Cloud VPS & SSL</div>
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400">99.9% uptime SLA, daily cloud backups & global CDN</div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 pl-2">
+                    <div className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400">+₹1,999 / yr</div>
+                    <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400">{formData.addHosting ? 'Added ✓' : '+ Add'}</div>
+                  </div>
+                </div>
+
+                {/* Self-Host Notice */}
+                {!formData.addDomain && !formData.addHosting && (
+                  <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium px-1 flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>You can connect your own domain & hosting account for <strong>FREE (₹0 extra)</strong>.</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Target Launch Speed */}
+              <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Target Launch Speed <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {TIMELINES.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, timeline: t })}
+                      className={`p-3 rounded-2xl border text-left text-xs font-bold transition-all cursor-pointer ${
+                        formData.timeline === t
+                          ? 'bg-purple-50 dark:bg-purple-600/20 border-purple-500 text-purple-700 dark:text-purple-200 shadow-sm'
+                          : 'bg-white dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      {t}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -811,9 +888,28 @@ export default function WhatsAppOrderModal() {
                     <span className="font-bold text-purple-600 dark:text-purple-300">{formData.selectedFeatures.length} Superpowers Selected</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500 dark:text-slate-400">Budget / Plan:</span>
+                    <span className="text-slate-500 dark:text-slate-400">Website Package:</span>
                     <span className="font-bold text-emerald-600 dark:text-emerald-400">{formData.budget}</span>
                   </div>
+                  
+                  {/* Domain & Hosting Summary */}
+                  {(formData.addDomain || formData.addHosting) ? (
+                    <div className="flex justify-between text-blue-600 dark:text-blue-400 font-bold">
+                      <span>Addons:</span>
+                      <span>
+                        {[
+                          formData.addDomain ? 'Domain (+₹999)' : null,
+                          formData.addHosting ? 'Cloud Hosting (+₹1,999)' : null
+                        ].filter(Boolean).join(' + ')}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-slate-500 dark:text-slate-400">
+                      <span>Infrastructure:</span>
+                      <span>Own Domain & Hosting (FREE)</span>
+                    </div>
+                  )}
+
                   {formData.isCouponApplied && (
                     <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold pt-1 border-t border-slate-200 dark:border-slate-800">
                       <span>Promo Discount:</span>

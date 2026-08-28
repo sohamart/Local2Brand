@@ -31,18 +31,18 @@ import JewelleryDemo from '../templates/jewellery/JewelleryDemo';
 import AutomotiveDemo from '../templates/automotive/AutomotiveDemo';
 
 const templateRegistry = {
-  'restaurant': { title: 'Restaurant & Fine Dining', category: 'Food & Beverage', component: RestaurantDemo, price: '₹9,999 / $399' },
-  'cafe': { title: 'Café & Roastery', category: 'Food & Beverage', component: CafeDemo, price: '₹9,999 / $399' },
-  'salon': { title: 'Salon & Spa Studio', category: 'Beauty & Wellness', component: SalonDemo, price: '₹9,999 / $399' },
-  'gym': { title: 'Gym & Crossfit Hub', category: 'Fitness & Health', component: GymDemo, price: '₹9,999 / $399' },
-  'hotel': { title: 'Hotel & Luxury Resort', category: 'Hospitality', component: HotelDemo, price: '₹14,999 / $549' },
-  'realestate': { title: 'Real Estate & Properties', category: 'Real Estate', component: RealEstateDemo, price: '₹14,999 / $549' },
-  'photography': { title: 'Photography & Wedding Studio', category: 'Creative & Media', component: PhotographyDemo, price: '₹9,999 / $399' },
-  'boutique': { title: 'Boutique & Fashion House', category: 'E-commerce & Retail', component: BoutiqueDemo, price: '₹9,999 / $399' },
-  'coaching': { title: 'Coaching & Academy', category: 'Education', component: CoachingDemo, price: '₹9,999 / $399' },
-  'dental': { title: 'Dental & Clinic Chamber', category: 'Healthcare', component: DentalDemo, price: '₹9,999 / $399' },
-  'jewellery': { title: 'Jewellery & Gold Atelier', category: 'Luxury Retail', component: JewelleryDemo, price: '₹14,999 / $549' },
-  'automotive': { title: 'Automotive & Superbikes', category: 'Automobile', component: AutomotiveDemo, price: '₹14,999 / $549' }
+  'restaurant': { title: 'Restaurant & Fine Dining', category: 'Food & Beverage', component: RestaurantDemo, price: '₹4,999 / $149' },
+  'cafe': { title: 'Café & Roastery', category: 'Food & Beverage', component: CafeDemo, price: '₹4,999 / $149' },
+  'salon': { title: 'Salon & Spa Studio', category: 'Beauty & Wellness', component: SalonDemo, price: '₹4,999 / $149' },
+  'gym': { title: 'Gym & Crossfit Hub', category: 'Fitness & Health', component: GymDemo, price: '₹4,999 / $149' },
+  'hotel': { title: 'Hotel & Luxury Resort', category: 'Hospitality', component: HotelDemo, price: '₹14,999 / $449' },
+  'realestate': { title: 'Real Estate & Properties', category: 'Real Estate', component: RealEstateDemo, price: '₹14,999 / $449' },
+  'photography': { title: 'Photography & Wedding Studio', category: 'Creative & Media', component: PhotographyDemo, price: '₹4,999 / $149' },
+  'boutique': { title: 'Boutique & Fashion House', category: 'E-commerce & Retail', component: BoutiqueDemo, price: '₹4,999 / $149' },
+  'coaching': { title: 'Coaching & Academy', category: 'Education', component: CoachingDemo, price: '₹4,999 / $149' },
+  'dental': { title: 'Dental & Clinic Chamber', category: 'Healthcare', component: DentalDemo, price: '₹4,999 / $149' },
+  'jewellery': { title: 'Jewellery & Gold Atelier', category: 'Luxury Retail', component: JewelleryDemo, price: '₹14,999 / $449' },
+  'automotive': { title: 'Automotive & Superbikes', category: 'Automobile', component: AutomotiveDemo, price: '₹14,999 / $449' }
 };
 
 export default function LiveDemoViewer() {
