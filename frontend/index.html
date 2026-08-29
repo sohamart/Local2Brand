@@ -1,6 +1,29 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth" data-theme="light">
+<html lang="en" class="scroll-smooth">
   <head>
+    <!-- Instant Theme Initializer (Prevents FOUC / Light mode blink on refresh) -->
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('l2b_theme');
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = (saved === 'dark' || saved === 'light') ? saved : (prefersDark ? 'dark' : 'light');
+          var root = document.documentElement;
+          if (theme === 'dark') {
+            root.classList.add('dark');
+            root.classList.remove('light');
+            root.setAttribute('data-theme', 'dark');
+            root.style.colorScheme = 'dark';
+          } else {
+            root.classList.add('light');
+            root.classList.remove('dark');
+            root.setAttribute('data-theme', 'light');
+            root.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Character Encoding & Viewport -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />

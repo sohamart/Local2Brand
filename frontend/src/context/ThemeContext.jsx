@@ -10,8 +10,14 @@ export function ThemeProvider({ children }) {
       if (savedTheme === 'light' || savedTheme === 'dark') {
         return savedTheme;
       }
+      if (document.documentElement.classList.contains('dark')) {
+        return 'dark';
+      }
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark';
+      }
     }
-    return 'light'; // Default to clean, modern light mode
+    return 'light';
   });
 
   useEffect(() => {
