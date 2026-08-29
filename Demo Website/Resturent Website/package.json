@@ -2,14 +2,16 @@
   "name": "resturent-website",
   "version": "1.0.0",
   "description": "L'Amour Gourmet Luxury Restaurant Web Platform with Online Ordering, WhatsApp, Razorpay, Live Tracking & Admin Panel",
-  "main": "server/index.js",
+  "main": "backend/index.js",
   "scripts": {
-    "server": "node server/index.js",
-    "client": "npm --prefix client run dev",
-    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"npm run server\" \"npm run client\"",
-    "build": "npm --prefix client run build",
-    "vercel-build": "npm --prefix client install && npm --prefix client run build",
-    "start": "node server/index.js"
+    "server": "node backend/index.js",
+    "backend": "node backend/index.js",
+    "client": "npm --prefix frontend run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run server\" \"npm run client\"",
+    "build": "npm --prefix frontend run build",
+    "vercel-build": "cd frontend && npm install && npm run build",
+    "start": "node backend/index.js"
   },
   "keywords": [
     "restaurant",

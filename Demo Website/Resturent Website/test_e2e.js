@@ -254,7 +254,7 @@ async function runTests() {
   console.log('✅ Forgot Password OTP Dispatch:', forgotRes);
 
   // Read OTP from DB directly for test automation
-  const db = require('./server/db');
+  const db = require('./backend/db');
   const otpRecord = db.prepare('SELECT otp FROM password_resets WHERE email = ? ORDER BY id DESC LIMIT 1').get('customer@example.com');
   console.log('   Retrieved OTP Code from DB:', otpRecord.otp);
 
