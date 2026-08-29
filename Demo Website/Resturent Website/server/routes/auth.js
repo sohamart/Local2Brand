@@ -79,7 +79,8 @@ router.post('/login', async (req, res) => {
       email: user.email,
       phone: user.phone,
       address: user.address,
-      role: user.role
+      role: user.role,
+      profile_image: user.profile_image || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80'
     };
 
     const token = jwt.sign(userData, JWT_SECRET, { expiresIn: '7d' });
@@ -195,7 +196,7 @@ router.post('/reset-password', async (req, res) => {
 // Get Current Profile
 router.get('/me', authenticateToken, (req, res) => {
   try {
-    const user = db.prepare('SELECT id, name, email, phone, address, role, created_at FROM users WHERE id = ?').get(req.user.id);
+    const user = db.prepare('SELECT id, name, email, phone, address, role, profile_image, created_at FROM users WHERE id = ?').get(req.user.id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -208,13 +209,17 @@ router.get('/me', authenticateToken, (req, res) => {
 // Update Profile
 router.put('/me', authenticateToken, (req, res) => {
   try {
-    const { name, phone, address } = req.body;
+    const { name, phone, address, profile_image } = req.body;
     db.prepare(`
-      UPDATE users SET name = COALESCE(?, name), phone = COALESCE(?, phone), address = COALESCE(?, address)
+      UPDATE users SET 
+        name = COALESCE(?, name), 
+        phone = COALESCE(?, phone), 
+        address = COALESCE(?, address),
+        profile_image = COALESCE(?, profile_image)
       WHERE id = ?
-    `).run(name, phone, address, req.user.id);
+    `).run(name, phone, address, profile_image, req.user.id);
 
-    const updatedUser = db.prepare('SELECT id, name, email, phone, address, role FROM users WHERE id = ?').get(req.user.id);
+    const updatedUser = db.prepare('SELECT id, name, email, phone, address, role, profile_image FROM users WHERE id = ?').get(req.user.id);
     res.json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update profile' });

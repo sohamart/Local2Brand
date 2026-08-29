@@ -16,6 +16,7 @@ router.get('/admin/all', requireAdmin, (req, res) => {
         u.phone, 
         u.address, 
         u.role, 
+        u.profile_image,
         u.created_at,
         COUNT(o.id) as total_orders,
         COALESCE(SUM(CASE WHEN o.order_status != 'cancelled' THEN o.total ELSE 0 END), 0) as total_spent,
@@ -44,6 +45,7 @@ router.get('/admin/riders', requireAdmin, (req, res) => {
         u.phone, 
         u.address, 
         u.role, 
+        u.profile_image,
         u.created_at,
         (SELECT COUNT(*) FROM orders WHERE (driver_phone = u.phone OR driver_name = u.name) AND order_status = 'delivered') as completed_deliveries,
         (SELECT COUNT(*) FROM orders WHERE (driver_phone = u.phone OR driver_name = u.name) AND order_status = 'out_for_delivery') as active_deliveries
@@ -62,7 +64,7 @@ router.get('/admin/riders', requireAdmin, (req, res) => {
 // Admin: Register New Delivery Partner / Rider
 router.post('/admin/create-rider', requireAdmin, async (req, res) => {
   try {
-    const { name, email, password, phone, vehicle, address } = req.body;
+    const { name, email, password, phone, vehicle, address, profile_image } = req.body;
 
     if (!name || !email || !password || !phone) {
       return res.status(400).json({ error: 'Rider name, email, phone number and initial password are required' });
@@ -76,13 +78,14 @@ router.post('/admin/create-rider', requireAdmin, async (req, res) => {
 
     const hashedPassword = bcrypt.hashSync(password, 10);
     const riderAddress = vehicle ? `${vehicle} • ${address || 'Hub Station'}` : (address || 'Express Delivery Hub');
+    const riderImage = profile_image || 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&auto=format&fit=crop&q=80';
 
     const result = db.prepare(`
-      INSERT INTO users (name, email, password, phone, address, role)
-      VALUES (?, ?, ?, ?, ?, 'delivery')
-    `).run(name.trim(), normalizedEmail, hashedPassword, phone.trim(), riderAddress.trim());
+      INSERT INTO users (name, email, password, phone, address, role, profile_image)
+      VALUES (?, ?, ?, ?, ?, 'delivery', ?)
+    `).run(name.trim(), normalizedEmail, hashedPassword, phone.trim(), riderAddress.trim(), riderImage);
 
-    const createdRider = db.prepare('SELECT id, name, email, phone, address, role, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);
+    const createdRider = db.prepare('SELECT id, name, email, phone, address, role, profile_image, created_at FROM users WHERE id = ?').get(result.lastInsertRowid);
 
     // Send Welcome Rider Email
     emailService.sendMail({

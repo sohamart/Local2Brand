@@ -158,6 +158,10 @@ router.get('/track/:id', (req, res) => {
       order.delivery_otp = freshOtp;
     }
 
+    // Attach rider profile photo if assigned
+    const driverUser = db.prepare('SELECT profile_image FROM users WHERE role = ? AND (phone = ? OR name = ?)').get('delivery', order.driver_phone || '', order.driver_name || '');
+    order.driver_image = driverUser?.profile_image || 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&auto=format&fit=crop&q=80';
+
     order.items = JSON.parse(order.items_json);
 
     // Get restaurant settings for map origin

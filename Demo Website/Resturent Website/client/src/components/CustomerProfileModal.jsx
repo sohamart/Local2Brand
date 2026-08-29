@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   User, 
@@ -12,20 +12,34 @@ import {
   Bike,
   Sparkles,
   CheckCircle,
-  Clock
+  Clock,
+  Camera,
+  Image as ImageIcon,
+  UploadCloud
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
+
+const AVATAR_PRESETS = [
+  { label: 'Foodie VIP', url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80' },
+  { label: 'Gourmet Patron', url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' },
+  { label: 'Executive Chef', url: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=400&auto=format&fit=crop&q=80' },
+  { label: 'Express Rider', url: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&auto=format&fit=crop&q=80' },
+  { label: 'Royal Guest', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80' }
+];
 
 export default function CustomerProfileModal({ isOpen, onClose, onTrackOrder, onOpenRider }) {
   const { user, logout, updateProfile } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [editForm, setEditForm] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
-    address: user?.address || ''
+    address: user?.address || '',
+    profile_image: user?.profile_image || ''
   });
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -35,7 +49,8 @@ export default function CustomerProfileModal({ isOpen, onClose, onTrackOrder, on
       setEditForm({
         name: user.name || '',
         phone: user.phone || '',
-        address: user.address || ''
+        address: user.address || '',
+        profile_image: user.profile_image || ''
       });
       fetchOrders();
     }
@@ -50,6 +65,25 @@ export default function CustomerProfileModal({ isOpen, onClose, onTrackOrder, on
       console.error('Failed to load my orders:', err);
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const uploadRes = await api.uploadImage(formData);
+      if (uploadRes?.url) {
+        setEditForm(prev => ({ ...prev, profile_image: uploadRes.url }));
+      }
+    } catch (err) {
+      alert('Photo upload failed: ' + err.message);
+    } finally {
+      setUploadingPhoto(false);
     }
   };
 
@@ -70,6 +104,7 @@ export default function CustomerProfileModal({ isOpen, onClose, onTrackOrder, on
   if (!isOpen || !user) return null;
 
   const totalSpent = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+  const currentAvatar = editForm.profile_image || user.profile_image || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80';
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/90 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 text-[#F3E9D8] font-sans">
@@ -77,22 +112,28 @@ export default function CustomerProfileModal({ isOpen, onClose, onTrackOrder, on
         className="relative w-full max-w-3xl my-auto sm:my-6 bg-[#171310] border-0 sm:border sm:border-[#A9865A]/40 rounded-none sm:rounded-3xl overflow-hidden shadow-2xl space-y-0 flex flex-col max-h-[96vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Top Header */}
         <div className="p-4 sm:p-6 bg-[#0f0c0a] border-b border-[#A9865A]/20 flex items-center justify-between gap-3 font-mono">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-[#231d19] border border-[#A9865A]/40 flex items-center justify-center text-[#E8AC4E] font-bold text-base sm:text-lg shrink-0 shadow-inner">
-              {user.name ? user.name[0].toUpperCase() : 'U'}
+            <div className="relative">
+              <img 
+                src={currentAvatar} 
+                alt={user.name} 
+                className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl object-cover border-2 border-[#E8AC4E] shadow-md shrink-0"
+              />
+              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#171310]"></span>
             </div>
+
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="font-display text-base sm:text-xl font-bold text-[#F3E9D8] truncate">{user.name}</h3>
                 {user.role === 'delivery' ? (
                   <span className="px-2 py-0.5 rounded bg-[#D8632C]/20 text-[#D8632C] border border-[#D8632C]/40 text-[9px] font-bold shrink-0">
-                    🛵 Rider
+                    🛵 Rider Partner
                   </span>
                 ) : user.role === 'admin' ? (
                   <span className="px-2 py-0.5 rounded bg-[#33402E] text-[#92b584] text-[9px] font-bold shrink-0">
-                    👑 Admin
+                    👑 Master Admin
                   </span>
                 ) : (
                   <span className="px-2 py-0.5 rounded bg-[#231d19] text-[#E8AC4E] border border-[#A9865A]/30 text-[9px] font-bold shrink-0">
@@ -108,7 +149,7 @@ export default function CustomerProfileModal({ isOpen, onClose, onTrackOrder, on
             {user.role === 'delivery' && onOpenRider && (
               <button
                 onClick={() => { onClose(); onOpenRider(); }}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#D8632C] hover:bg-[#e37440] text-slate-950 font-bold text-[11px] sm:text-xs transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#D8632C] hover:bg-[#e37440] text-slate-950 font-bold text-[11px] sm:text-xs transition-colors shadow-md"
               >
                 <Bike className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Rider Hub</span>
@@ -154,14 +195,73 @@ export default function CustomerProfileModal({ isOpen, onClose, onTrackOrder, on
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6 font-mono text-xs flex-1">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6">
             
-            {/* Left: Profile Form */}
+            {/* Left: Profile Form & Photo Selector */}
             <div className="md:col-span-5 space-y-3">
               <h4 className="font-bold text-[#E8AC4E] uppercase tracking-wider flex items-center gap-1.5">
                 <User className="w-4 h-4 text-[#A9865A]" />
-                <span>Delivery Profile Details</span>
+                <span>Profile & Photo Settings</span>
               </h4>
 
               <form onSubmit={handleUpdate} className="space-y-3 bg-[#0f0c0a] p-3.5 sm:p-4 rounded-2xl border border-[#A9865A]/25">
+                {/* Avatar Preview & Upload Controls */}
+                <div className="space-y-2 border-b border-[#A9865A]/20 pb-3">
+                  <span className="text-[10px] text-[#A9865A] uppercase font-bold block">Profile Avatar Image</span>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={currentAvatar}
+                      alt="Avatar preview"
+                      className="w-14 h-14 rounded-2xl object-cover border-2 border-[#E8AC4E] shadow shrink-0"
+                    />
+
+                    <div className="space-y-1.5 flex-1 min-w-0">
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        disabled={uploadingPhoto}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full py-1.5 px-2 rounded-xl bg-[#231d19] hover:bg-[#332b25] border border-[#A9865A]/40 text-[#E8AC4E] font-bold text-[10px] flex items-center justify-center gap-1 transition-colors"
+                      >
+                        {uploadingPhoto ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
+                        <span>{uploadingPhoto ? 'Uploading Photo...' : 'Upload New Photo'}</span>
+                      </button>
+
+                      <input
+                        type="text"
+                        placeholder="Or paste image URL"
+                        value={editForm.profile_image}
+                        onChange={(e) => setEditForm({ ...editForm, profile_image: e.target.value })}
+                        className="w-full px-2 py-1 bg-[#171310] border border-[#A9865A]/30 rounded-lg text-white text-[10px] focus:outline-none focus:border-[#D8632C]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Avatar Quick Presets */}
+                  <div className="pt-1">
+                    <span className="text-[9px] text-[#A9865A] block mb-1">Quick Avatar Presets:</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {AVATAR_PRESETS.map((p, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setEditForm(prev => ({ ...prev, profile_image: p.url }))}
+                          className={`w-7 h-7 rounded-lg overflow-hidden border transition-all ${
+                            editForm.profile_image === p.url ? 'border-[#E8AC4E] ring-2 ring-[#E8AC4E]/40 scale-105' : 'border-[#A9865A]/30 opacity-70 hover:opacity-100'
+                          }`}
+                          title={p.label}
+                        >
+                          <img src={p.url} alt={p.label} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-[#A9865A] text-[11px] block mb-1">Full Name</label>
                   <input

@@ -1,12 +1,34 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 const bcrypt = require('bcryptjs');
 
-const dbPath = path.join(__dirname, 'restaurant.db');
+let dbPath;
+if (process.env.VERCEL) {
+  const tmpDbPath = path.join('/tmp', 'restaurant.db');
+  const defaultDbPath = path.join(__dirname, 'restaurant.db');
+  if (!fs.existsSync(tmpDbPath) && fs.existsSync(defaultDbPath)) {
+    try {
+      fs.copyFileSync(defaultDbPath, tmpDbPath);
+    } catch (err) {
+      console.error('Failed to copy initial database to /tmp:', err);
+    }
+  }
+  dbPath = tmpDbPath;
+} else {
+  dbPath = path.join(__dirname, 'restaurant.db');
+}
+
 const db = new Database(dbPath);
 
-// Enable WAL mode for better concurrency
-db.pragma('journal_mode = WAL');
+// Concurrency mode
+try {
+  if (process.env.VERCEL) {
+    db.pragma('journal_mode = DELETE');
+  } else {
+    db.pragma('journal_mode = WAL');
+  }
+} catch (e) {}
 
 // Initialize Tables
 db.exec(`
@@ -181,6 +203,19 @@ try {
 } catch (e) {
   // Column already exists
 }
+
+try {
+  db.prepare("ALTER TABLE users ADD COLUMN profile_image TEXT").run();
+} catch (e) {
+  // Column already exists
+}
+
+// Seed default profile images if empty
+try {
+  db.prepare("UPDATE users SET profile_image = 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=400&auto=format&fit=crop&q=80' WHERE role = 'admin' AND (profile_image IS NULL OR profile_image = '')").run();
+  db.prepare("UPDATE users SET profile_image = 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&auto=format&fit=crop&q=80' WHERE role = 'delivery' AND (profile_image IS NULL OR profile_image = '')").run();
+  db.prepare("UPDATE users SET profile_image = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80' WHERE email = 'customer@example.com' AND (profile_image IS NULL OR profile_image = '')").run();
+} catch (e) {}
 
 // Seed Default Settings using environment variables with fallbacks
 const defaultSettings = {

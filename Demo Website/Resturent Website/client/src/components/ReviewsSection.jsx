@@ -135,12 +135,19 @@ export default function ReviewsSection() {
                 </div>
 
                 <div className="pt-4 border-t border-[#A9865A]/15 flex items-center justify-between font-mono">
-                  <div>
-                    <h4 className="font-bold text-xs text-[#F3E9D8] truncate max-w-[120px]">{rev.user_name}</h4>
-                    <span className="text-[10px] text-[#A9865A] block">{rev.dish_name || 'Verified Foodie'}</span>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <img
+                      src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.user_name)}&backgroundColor=d8632c,e8ac4e,33402e&textColor=ffffff`}
+                      alt={rev.user_name}
+                      className="w-8 h-8 rounded-full object-cover border border-[#E8AC4E]/60 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-xs text-[#F3E9D8] truncate max-w-[120px]">{rev.user_name}</h4>
+                      <span className="text-[10px] text-[#A9865A] block truncate">{rev.dish_name || 'Verified Foodie'}</span>
+                    </div>
                   </div>
 
-                  <span className="text-[10px] text-[#92b584] flex items-center gap-1 font-bold">
+                  <span className="text-[10px] text-[#92b584] flex items-center gap-1 font-bold shrink-0">
                     <CheckCircle className="w-3 h-3" />
                     Verified
                   </span>

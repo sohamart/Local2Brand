@@ -192,12 +192,20 @@ export default function Navbar({
             <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={onOpenProfile}
-                className="btn-brass-pill px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs flex items-center gap-1.5 shrink-0"
+                className="btn-brass-pill px-2 sm:px-2.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shrink-0"
                 title="Your Profile"
               >
-                <div className="w-5 h-5 rounded-full bg-[#D8632C]/20 border border-[#D8632C]/50 flex items-center justify-center text-[#E8AC4E] font-bold text-[10px] font-mono shrink-0">
-                  {user.name ? user.name[0].toUpperCase() : 'U'}
-                </div>
+                {user.profile_image ? (
+                  <img
+                    src={user.profile_image}
+                    alt={user.name}
+                    className="w-5 h-5 rounded-full object-cover border border-[#E8AC4E] shrink-0"
+                  />
+                ) : (
+                  <div className="w-5 h-5 rounded-full bg-[#D8632C]/20 border border-[#D8632C]/50 flex items-center justify-center text-[#E8AC4E] font-bold text-[10px] font-mono shrink-0">
+                    {user.name ? user.name[0].toUpperCase() : 'U'}
+                  </div>
+                )}
                 <span className="hidden md:inline max-w-[70px] truncate text-[#F3E9D8]">{user.name}</span>
               </button>
 
@@ -360,8 +368,12 @@ export default function Navbar({
                     onClick={() => { setMobileMenuOpen(false); onOpenProfile(); }}
                     className="flex-1 py-2.5 rounded-xl bg-[#231d19] border border-[#A9865A]/40 text-[#F3E9D8] font-bold flex items-center justify-center gap-2 text-xs"
                   >
-                    <User className="w-4 h-4 text-[#E8AC4E]" />
-                    <span>My Profile</span>
+                    {user.profile_image ? (
+                      <img src={user.profile_image} alt={user.name} className="w-5 h-5 rounded-full object-cover border border-[#E8AC4E]" />
+                    ) : (
+                      <User className="w-4 h-4 text-[#E8AC4E]" />
+                    )}
+                    <span className="truncate">{user.name}</span>
                   </button>
 
                   <button

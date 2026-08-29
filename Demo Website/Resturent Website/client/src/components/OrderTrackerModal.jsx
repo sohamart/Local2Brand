@@ -292,8 +292,13 @@ export default function OrderTrackerModal({ orderId, onClose }) {
                 {/* 2. Assigned Delivery Rider Card with Live Chat & Calling */}
                 <div className="p-4 rounded-2xl bg-[#0f0c0a] border border-[#A9865A]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-[#231d19] border border-[#A9865A]/40 flex items-center justify-center text-[#E8AC4E] shrink-0 shadow-inner">
-                      <Bike className="w-6 h-6 text-[#D8632C]" />
+                    <div className="relative shrink-0">
+                      <img
+                        src={order.driver_image || 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&auto=format&fit=crop&q=80'}
+                        alt={driverName}
+                        className="w-12 h-12 rounded-2xl object-cover border-2 border-[#E8AC4E] shadow-md shrink-0"
+                      />
+                      <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#0f0c0a]"></span>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">

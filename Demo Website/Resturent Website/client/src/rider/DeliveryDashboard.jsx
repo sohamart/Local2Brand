@@ -197,8 +197,13 @@ export default function DeliveryDashboard({ onClose }) {
         {/* 1. Mobile-First Sticky Top Header Bar */}
         <div className="sticky top-0 z-30 bg-[#0f0c0a]/95 backdrop-blur-md border-b border-[#A9865A]/25 p-3.5 sm:p-5 flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#231d19] border border-[#A9865A]/40 flex items-center justify-center text-[#E8AC4E] shrink-0 shadow-inner">
-              <Bike className="w-5 h-5 sm:w-6 sm:h-6 text-[#D8632C]" />
+            <div className="relative shrink-0">
+              <img
+                src={user?.profile_image || 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&auto=format&fit=crop&q=80'}
+                alt={user?.name || 'Rider'}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl object-cover border-2 border-[#E8AC4E] shadow shrink-0"
+              />
+              <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#171310] ${isOnline ? 'bg-emerald-500' : 'bg-gray-500'}`}></span>
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">

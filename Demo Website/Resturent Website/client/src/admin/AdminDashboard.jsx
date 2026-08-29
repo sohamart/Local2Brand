@@ -397,8 +397,13 @@ export default function AdminDashboard({ onClose }) {
       {/* Top Navbar */}
       <header className="h-16 bg-[#171310] border-b border-[#A9865A]/25 px-4 sm:px-6 flex items-center justify-between shrink-0 font-mono">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-[#231d19] border border-[#A9865A]/40 flex items-center justify-center text-[#D8632C]">
-            <ShieldCheck className="w-5 h-5" />
+          <div className="relative shrink-0">
+            <img
+              src={user?.profile_image || 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=400&auto=format&fit=crop&q=80'}
+              alt="Admin Profile"
+              className="w-9 h-9 rounded-xl object-cover border border-[#E8AC4E] shadow shrink-0"
+            />
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#171310]"></span>
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -1672,11 +1677,18 @@ export default function AdminDashboard({ onClose }) {
                   <tbody className="divide-y divide-[#A9865A]/15 text-[#D6C8B2]">
                     {filteredUsers.map((u) => (
                       <tr key={u.id} className="hover:bg-[#231d19]/40">
-                        <td className="p-4 font-bold text-[#F3E9D8] flex items-center gap-2">
-                          <span className="w-7 h-7 rounded-full bg-[#D8632C]/20 text-[#E8AC4E] flex items-center justify-center font-bold">
-                            {u.name ? u.name[0] : 'U'}
-                          </span>
-                          <span>{u.name}</span>
+                        <td className="p-4 font-bold text-[#F3E9D8] flex items-center gap-2.5">
+                          <img
+                            src={u.profile_image || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80'}
+                            alt={u.name}
+                            className="w-8 h-8 rounded-xl object-cover border border-[#E8AC4E] shrink-0 shadow-sm"
+                          />
+                          <div>
+                            <span className="block">{u.name}</span>
+                            <span className="text-[10px] text-[#A9865A] font-normal font-mono">
+                              {u.role === 'delivery' ? '🛵 Rider' : u.role === 'admin' ? '👑 Admin' : '✨ Member'}
+                            </span>
+                          </div>
                         </td>
                         <td className="p-4 text-[#A9865A]">{u.email}</td>
                         <td className="p-4">{u.phone || '—'}</td>
@@ -1740,19 +1752,25 @@ export default function AdminDashboard({ onClose }) {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {ridersList.map((rider) => (
                       <div key={rider.id} className="p-4 rounded-2xl bg-[#231d19] border border-[#A9865A]/25 space-y-2 flex flex-col justify-between">
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-sm text-[#F3E9D8] flex items-center gap-1.5">
-                              <Bike className="w-4 h-4 text-[#D8632C]" />
-                              <span>{rider.name}</span>
-                            </span>
-                            <span className="px-2 py-0.5 rounded bg-[#33402E] text-[#92b584] font-mono text-[9px] font-bold">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <img
+                                src={rider.profile_image || 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&auto=format&fit=crop&q=80'}
+                                alt={rider.name}
+                                className="w-9 h-9 rounded-xl object-cover border border-[#D8632C] shrink-0 shadow-sm"
+                              />
+                              <div className="min-w-0">
+                                <span className="font-bold text-sm text-[#F3E9D8] block truncate">{rider.name}</span>
+                                <span className="text-[10px] text-[#A9865A] block truncate font-mono">{rider.email}</span>
+                              </div>
+                            </div>
+                            <span className="px-2 py-0.5 rounded bg-[#33402E] text-[#92b584] font-mono text-[9px] font-bold shrink-0">
                               Active Partner
                             </span>
                           </div>
-                          <p className="text-xs text-[#E8AC4E]">📞 {rider.phone}</p>
-                          <p className="text-[11px] text-[#A9865A]">{rider.email}</p>
-                          <p className="text-[11px] text-[#D6C8B2] truncate">🛵 {rider.address || 'Express Thermal Bike'}</p>
+                          <p className="text-xs text-[#E8AC4E] font-mono">📞 {rider.phone}</p>
+                          <p className="text-[11px] text-[#D6C8B2] truncate font-mono">🛵 {rider.address || 'Express Thermal Bike'}</p>
                         </div>
 
                         <div className="pt-2 border-t border-[#A9865A]/15 flex items-center justify-between text-[11px]">
