@@ -1,4 +1,8 @@
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
+let rawBase = (import.meta.env.VITE_API_BASE_URL || '/api').trim();
+if (rawBase.startsWith('VITE_API_BASE_URL=')) {
+  rawBase = rawBase.replace(/^VITE_API_BASE_URL=\s*/, '');
+}
+const API_BASE = rawBase.replace(/\/+$/, '');
 
 export async function request(endpoint, options = {}) {
   const token = localStorage.getItem('lamour_token');
