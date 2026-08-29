@@ -7,7 +7,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "node -e \"const fs = require('fs'); fs.mkdirSync('dist', {recursive: true}); fs.writeFileSync('dist/index.html', '<h1>L\\'Amour Gourmet API is Live</h1>'); console.log('✅ Backend build ready');\"",
+    "build": "node -e \"console.log('✅ Express Serverless API ready')\"",
     "start": "node index.js",
     "dev": "node --watch index.js"
   },

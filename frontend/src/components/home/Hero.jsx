@@ -18,7 +18,8 @@ import {
   Lock,
   Eye,
   Activity,
-  ShieldCheck
+  ShieldCheck,
+  GraduationCap
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import AshokaChakra from '../common/AshokaChakra';
@@ -26,18 +27,18 @@ import { getDemoBySlug } from '../../data/demos';
 
 const heroShowcases = [
   {
-    id: 'restaurant',
-    title: "L'Amour Gourmet Restaurant & Charcoal Grill",
-    shortName: 'Gourmet Restaurant',
-    category: 'Fine Dining & Grill',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1600&auto=format&fit=crop',
-    slug: 'restaurant',
-    stat: 'High Converting',
-    accentColor: 'from-amber-500/30 via-red-500/20 to-orange-500/30',
-    glowColor: 'rgba(239, 68, 68, 0.28)',
-    tag: 'Digital Menu & Table Reservation',
-    rating: '5.0 ★ (84+ Reviews)',
-    icon: Utensils
+    id: 'lms',
+    title: 'SkillCraft Pro LMS & Course Selling',
+    shortName: 'LMS Platform',
+    category: 'EdTech & Course Selling',
+    image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1600&auto=format&fit=crop',
+    slug: 'lms',
+    stat: 'Full-Stack EdTech',
+    accentColor: 'from-blue-500/30 via-indigo-500/20 to-purple-500/30',
+    glowColor: 'rgba(59, 130, 246, 0.28)',
+    tag: 'Video Curriculum & Instant Checkout',
+    rating: '5.0 ★ (78+ Reviews)',
+    icon: GraduationCap
   },
   {
     id: 'jewellery',
@@ -332,16 +333,14 @@ export default function Hero() {
                     type="button"
                     ref={(el) => (tabRefs.current[idx] = el)}
                     onClick={(e) => handleTabSelect(idx, e)}
-                    className={`relative z-10 flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 cursor-pointer whitespace-nowrap ${
-                      isActive
+                    className={`relative z-10 flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 cursor-pointer whitespace-nowrap ${isActive
                         ? 'text-slate-950 dark:text-white font-bold scale-[1.02]'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
-                    }`}
+                      }`}
                   >
                     <IconComponent
-                      className={`w-3.5 h-3.5 transition-transform duration-300 ${
-                        isActive ? 'text-purple-600 dark:text-purple-400 scale-110' : 'text-slate-400 dark:text-slate-500'
-                      }`}
+                      className={`w-3.5 h-3.5 transition-transform duration-300 ${isActive ? 'text-purple-600 dark:text-purple-400 scale-110' : 'text-slate-400 dark:text-slate-500'
+                        }`}
                     />
                     <span>{item.shortName || item.title}</span>
                   </button>
@@ -390,7 +389,7 @@ export default function Hero() {
 
             {/* Main Outer Browser Window Frame */}
             <div className="relative bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-[32px] border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
-              
+
               {/* 1. macOS Safari Styled Header Bar */}
               <div className="px-4 py-2.5 sm:py-3 bg-slate-100/90 dark:bg-slate-950/90 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
                 {/* Left Traffic Light Dots */}
@@ -427,9 +426,8 @@ export default function Hero() {
                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-black/30 z-30 overflow-hidden">
                   <div
                     key={activeTab}
-                    className={`h-full bg-gradient-to-r from-amber-400 via-blue-500 to-purple-500 ${
-                      isPaused ? 'w-full opacity-30' : 'w-full animate-slide-progress'
-                    }`}
+                    className={`h-full bg-gradient-to-r from-amber-400 via-blue-500 to-purple-500 ${isPaused ? 'w-full opacity-30' : 'w-full animate-slide-progress'
+                      }`}
                     style={{
                       animationDuration: `${AUTO_SLIDE_INTERVAL}ms`
                     }}
@@ -571,11 +569,10 @@ export default function Hero() {
                         key={idx}
                         type="button"
                         onClick={(e) => handleTabSelect(idx, e)}
-                        className={`transition-all duration-300 rounded-full cursor-pointer ${
-                          activeTab === idx
+                        className={`transition-all duration-300 rounded-full cursor-pointer ${activeTab === idx
                             ? 'w-7 h-2 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 shadow-sm'
                             : 'w-2 h-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600'
-                        }`}
+                          }`}
                         aria-label={`Switch to ${item.title}`}
                       />
                     ))}

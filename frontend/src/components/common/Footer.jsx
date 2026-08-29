@@ -178,8 +178,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/demos/restaurant" className="text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
-                  Restaurant & Grill
+                <Link to="/demos/lms" className="text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                  LMS & Course Selling
                 </Link>
               </li>
               <li>

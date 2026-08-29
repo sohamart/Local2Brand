@@ -1,88 +1,72 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth">
-  <head>
-    <!-- Instant Theme Initializer (Prevents FOUC / Light mode blink on refresh) -->
-    <script>
-      (function() {
-        try {
-          var saved = localStorage.getItem('l2b_theme');
-          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var theme = (saved === 'dark' || saved === 'light') ? saved : (prefersDark ? 'dark' : 'light');
-          var root = document.documentElement;
-          if (theme === 'dark') {
-            root.classList.add('dark');
-            root.classList.remove('light');
-            root.setAttribute('data-theme', 'dark');
-            root.style.colorScheme = 'dark';
-          } else {
-            root.classList.add('light');
-            root.classList.remove('dark');
-            root.setAttribute('data-theme', 'light');
-            root.style.colorScheme = 'light';
-          }
-        } catch (e) {}
-      })();
-    </script>
+<html lang="en" class="scroll-smooth" data-theme="light">
 
-    <!-- Character Encoding & Viewport -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<head>
+  <!-- Character Encoding & Viewport -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <!-- Primary Title & Meta Description -->
-    <title>LOCAL2BRAND — Build Local. Think Global. | Premium Digital Agency</title>
-    <meta name="title" content="LOCAL2BRAND — Build Local. Think Global. | Premium Digital Agency" />
-    <meta name="description" content="We build high-converting digital experiences that turn local businesses into iconic global brands. 48-Hour delivery, bespoke websites, eCommerce stores, and 12 niche commercial templates with WhatsApp checkout." />
-    <meta name="keywords" content="website development India, web design agency Mumbai, local to brand, restaurant website template, salon booking website, ecommerce web development, custom web applications, high converting landing pages, 48 hour website delivery, WhatsApp order integration" />
-    <meta name="author" content="LOCAL2BRAND" />
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
-    <meta name="googlebot" content="index, follow" />
+  <!-- Primary Title & Meta Description -->
+  <title>LOCAL2BRAND — Build Local. Think Global. | Premium Digital Agency</title>
+  <meta name="title" content="LOCAL2BRAND — Build Local. Think Global. | Premium Digital Agency" />
+  <meta name="description"
+    content="We build high-converting digital experiences that turn local businesses into iconic global brands. 48-Hour delivery, bespoke websites, eCommerce stores, and 12 niche commercial templates with WhatsApp checkout." />
+  <meta name="keywords"
+    content="website development India, web design agency Mumbai, local to brand, restaurant website template, salon booking website, ecommerce web development, custom web applications, high converting landing pages, 48 hour website delivery, WhatsApp order integration" />
+  <meta name="author" content="LOCAL2BRAND" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="googlebot" content="index, follow" />
 
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://local2brand.com/" />
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://local2brand.com/" />
 
-    <!-- Geo Location Tags for Local SEO -->
-    <meta name="geo.region" content="IN-MH" />
-    <meta name="geo.placename" content="Mumbai, India" />
-    <meta name="geo.position" content="19.0760;72.8777" />
-    <meta name="ICBM" content="19.0760, 72.8777" />
+  <!-- Geo Location Tags for Local SEO -->
+  <meta name="geo.region" content="IN-MH" />
+  <meta name="geo.placename" content="Mumbai, India" />
+  <meta name="geo.position" content="19.0760;72.8777" />
+  <meta name="ICBM" content="19.0760, 72.8777" />
 
-    <!-- Favicons & App Icons -->
-    <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.jpg" />
-    <meta name="theme-color" content="#7c3aed" />
-    <meta name="msapplication-TileColor" content="#7c3aed" />
+  <!-- Favicons & App Icons -->
+  <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.jpg" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="msapplication-TileColor" content="#7c3aed" />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://local2brand.com/" />
-    <meta property="og:site_name" content="LOCAL2BRAND" />
-    <meta property="og:title" content="LOCAL2BRAND — Build Local. Think Global. | Premium Digital Agency" />
-    <meta property="og:description" content="We build high-converting digital experiences that turn local businesses into iconic global brands. 48-Hour delivery with full WhatsApp ordering integration." />
-    <meta property="og:image" content="https://local2brand.com/logo.jpg" />
-    <meta property="og:image:secure_url" content="https://local2brand.com/logo.jpg" />
-    <meta property="og:image:type" content="image/jpeg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="LOCAL2BRAND Official Brand Logo" />
-    <meta property="og:locale" content="en_IN" />
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://local2brand.com/" />
+  <meta property="og:site_name" content="LOCAL2BRAND" />
+  <meta property="og:title" content="LOCAL2BRAND — Build Local. Think Global. | Premium Digital Agency" />
+  <meta property="og:description"
+    content="We build high-converting digital experiences that turn local businesses into iconic global brands. 48-Hour delivery with full WhatsApp ordering integration." />
+  <meta property="og:image" content="https://local2brand.com/logo.jpg" />
+  <meta property="og:image:secure_url" content="https://local2brand.com/logo.jpg" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="LOCAL2BRAND Official Brand Logo" />
+  <meta property="og:locale" content="en_IN" />
 
-    <!-- Twitter Cards -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://local2brand.com/" />
-    <meta name="twitter:title" content="LOCAL2BRAND — Build Local. Think Global." />
-    <meta name="twitter:description" content="We build high-converting digital experiences that turn local businesses into iconic global brands. 48-Hour delivery with full WhatsApp integration." />
-    <meta name="twitter:image" content="https://local2brand.com/logo.jpg" />
-    <meta name="twitter:site" content="@local2brand" />
-    <meta name="twitter:creator" content="@local2brand" />
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:url" content="https://local2brand.com/" />
+  <meta name="twitter:title" content="LOCAL2BRAND — Build Local. Think Global." />
+  <meta name="twitter:description"
+    content="We build high-converting digital experiences that turn local businesses into iconic global brands. 48-Hour delivery with full WhatsApp integration." />
+  <meta name="twitter:image" content="https://local2brand.com/logo.jpg" />
+  <meta name="twitter:site" content="@local2brand" />
+  <meta name="twitter:creator" content="@local2brand" />
 
-    <!-- Preconnect to Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet" />
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
+    rel="stylesheet" />
 
-    <!-- Structured Data 1: WebSite Schema -->
-    <script type="application/ld+json">
+  <!-- Structured Data 1: WebSite Schema -->
+  <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
@@ -97,8 +81,8 @@
     }
     </script>
 
-    <!-- Structured Data 2: Organization & ProfessionalService Schema -->
-    <script type="application/ld+json">
+  <!-- Structured Data 2: Organization & ProfessionalService Schema -->
+  <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "ProfessionalService",
@@ -167,9 +151,12 @@
       }
     }
     </script>
-  </head>
-  <body class="bg-[#F8FAFC] dark:bg-[#07090e] text-slate-900 dark:text-slate-100 selection:bg-brand-600 selection:text-white antialiased overflow-x-hidden min-h-screen transition-colors duration-300">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+</head>
+
+<body
+  class="bg-[#F8FAFC] dark:bg-[#07090e] text-slate-900 dark:text-slate-100 selection:bg-brand-600 selection:text-white antialiased overflow-x-hidden min-h-screen transition-colors duration-300">
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

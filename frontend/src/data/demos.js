@@ -18,6 +18,7 @@ const getEnvDemoConfig = (prefix) => {
 
 export const demoCategories = [
   "All",
+  "LMS & Courses",
   "Restaurant",
   "Cafe",
   "Salon",
@@ -34,28 +35,28 @@ export const demoCategories = [
 
 export const demoWebsites = [
   {
-    id: "restaurant",
-    slug: "restaurant",
-    templateId: "restaurant",
-    title: "L'Amour Gourmet Restaurant & Charcoal Grill",
-    category: "Restaurant",
-    badge: "Flagship",
+    id: "lms",
+    slug: "lms",
+    templateId: "lms",
+    title: "SkillCraft Pro LMS & Online Course Selling Platform",
+    category: "LMS & Courses",
+    badge: "EdTech Flagship",
     price: "$199",
     priceInr: "₹6,999",
     turnaround: "3 - 7 Days",
     rating: 5.0,
-    reviewsCount: 84,
-    ...getEnvDemoConfig("RESTAURANT"),
-    shortDescription: "Fine dining restaurant & bar website with interactive live digital menu, online table reservations, and 1-click WhatsApp order dispatch.",
-    description: "Designed for premium dine-in restaurants, cloud kitchens, BBQ grills, and fine dining lounges. Features categorized chef specials, dish allergens/spice indicators, table reservation system, rider dispatch integration, and instant WhatsApp food checkout.",
-    heroImage: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1400&auto=format&fit=crop",
+    reviewsCount: 78,
+    ...getEnvDemoConfig("LMS"),
+    shortDescription: "Complete full-stack LMS & video course selling platform with curriculum player, student dashboard, quiz engine, and 1-click checkout.",
+    description: "Designed for online educators, course creators, coding bootcamps, and digital academies. Features video lesson streaming, student progress tracking, quizzes, downloadable resources, certificate generation, and instant WhatsApp / payment gateway checkout.",
+    heroImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop",
     features: [
-      "Interactive Digital Menu with Veg/Non-Veg & Spice Filters",
-      "Instant WhatsApp Food Ordering & Delivery Dispatch",
-      "VIP Table Reservation & Event Booking System",
-      "Dynamic Customer Reviews & Chef Recommendations"
+      "Full Video Lecture Player & Lesson Roadmap",
+      "Student Dashboard with Progress Tracking & Quiz Engine",
+      "1-Click Instant Course Checkout & WhatsApp Enrollment",
+      "Automated Completion Certificate & Notes Download"
     ],
-    idealFor: "Fine dining restaurants, cafes, cloud kitchens, bistros & BBQ grills"
+    idealFor: "Online course creators, YouTube educators, coaching institutes & EdTech startups"
   },
   {
     id: "cafe",
