@@ -8,12 +8,15 @@ import {
   ArrowRight, 
   Tag, 
   Truck,
-  Sparkles
+  Sparkles,
+  Bike
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
 
 export default function CartDrawer({ onProceedCheckout }) {
+  const { user } = useAuth();
   const { 
     cart, 
     isCartOpen, 
@@ -236,17 +239,29 @@ export default function CartDrawer({ onProceedCheckout }) {
               </div>
 
               {/* Proceed */}
-              <button
-                disabled={subtotal < minOrder}
-                onClick={() => {
-                  closeCart();
-                  onProceedCheckout();
-                }}
-                className="btn-ember-primary w-full py-3.5 rounded-full text-xs font-sans font-bold flex items-center justify-center gap-2"
-              >
-                <span>Proceed to Checkout</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              {user?.role === 'delivery' ? (
+                <div className="p-3 rounded-2xl bg-[#231d19] border border-[#D8632C]/40 text-[#E8AC4E] font-mono text-[11px] space-y-1 text-center">
+                  <div className="flex items-center justify-center gap-1.5 font-bold text-[#D8632C]">
+                    <Bike className="w-3.5 h-3.5" />
+                    <span>Rider Partner Account</span>
+                  </div>
+                  <p className="text-[10px] text-[#A9865A]">
+                    Rider accounts cannot place food orders. Please sign in with a customer account.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  disabled={subtotal < minOrder}
+                  onClick={() => {
+                    closeCart();
+                    onProceedCheckout();
+                  }}
+                  className="btn-ember-primary w-full py-3.5 rounded-full text-xs font-sans font-bold flex items-center justify-center gap-2"
+                >
+                  <span>Proceed to Checkout</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
 
             </div>
           )}

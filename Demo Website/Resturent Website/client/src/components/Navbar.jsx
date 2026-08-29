@@ -172,20 +172,31 @@ export default function Navbar({
             )}
           </div>
 
-          {/* Cart / Tray Button */}
-          <button
-            onClick={openCart}
-            className="btn-ember-primary px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs flex items-center gap-1 sm:gap-2 transition-transform active:scale-95 shrink-0"
-            title="Open Dish Tray"
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            <span className="font-sans font-bold hidden xs:inline text-xs">Tray</span>
-            {totalItemCount > 0 && (
-              <span className="font-mono font-bold bg-[#171310] text-[#E8AC4E] px-1.5 py-0.2 rounded-full text-[10px] sm:text-xs">
-                {totalItemCount}
-              </span>
-            )}
-          </button>
+          {/* Cart / Tray Button (Only for Customers / Guests) */}
+          {user?.role !== 'delivery' ? (
+            <button
+              onClick={openCart}
+              className="btn-ember-primary px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs flex items-center gap-1 sm:gap-2 transition-transform active:scale-95 shrink-0"
+              title="Open Dish Tray"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span className="font-sans font-bold hidden xs:inline text-xs">Tray</span>
+              {totalItemCount > 0 && (
+                <span className="font-mono font-bold bg-[#171310] text-[#E8AC4E] px-1.5 py-0.2 rounded-full text-[10px] sm:text-xs">
+                  {totalItemCount}
+                </span>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={onOpenRider}
+              className="px-3 py-1.5 sm:py-2 rounded-full bg-[#D8632C] hover:bg-[#e37440] text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-transform active:scale-95 shrink-0 shadow-md"
+              title="Open Rider Delivery Hub"
+            >
+              <Bike className="w-3.5 h-3.5" />
+              <span>Rider Hub</span>
+            </button>
+          )}
 
           {/* Auth Button */}
           {user ? (

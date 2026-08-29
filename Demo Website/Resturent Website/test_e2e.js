@@ -89,6 +89,29 @@ async function runTests() {
   })).json();
   console.log('✅ Geo-Fence Non-Burdwan Address Rejection:', invalidGeoOrder.error);
 
+  // Test Rider Account Order Restriction
+  const riderUserLogin = await (await fetch(`${BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'rider@restaurant.com', password: 'rider123' })
+  })).json();
+  const riderOrderAttempt = await (await fetch(`${BASE}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: riderUserLogin.user.id,
+      customer_name: riderUserLogin.user.name,
+      customer_phone: '+91 98300 55443',
+      delivery_address: 'Badamtala, Burdwan - 713101, West Bengal',
+      items: [{ id: sampleDish.id, name: sampleDish.name, price: sampleDish.price, quantity: 1, is_veg: 0 }],
+      subtotal: 380,
+      delivery_fee: 0,
+      total: 380,
+      payment_method: 'cod'
+    })
+  })).json();
+  console.log('✅ Rider Account Order Restriction:', riderOrderAttempt.error);
+
   const orderRes = await (await fetch(`${BASE}/orders`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

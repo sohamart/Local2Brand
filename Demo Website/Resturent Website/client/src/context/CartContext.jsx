@@ -1,10 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useSettings } from './SettingsContext';
+import { useAuth } from './AuthContext';
+import { Bike, X, LogOut, UserCheck } from 'lucide-react';
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const { settings } = useSettings();
+  const { user, logout } = useAuth();
+  
   const [cart, setCart] = useState(() => {
     try {
       const saved = localStorage.getItem('lamour_cart');
@@ -17,12 +21,26 @@ export function CartProvider({ children }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [coupon, setCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
+  const [riderWarningModal, setRiderWarningModal] = useState(false);
+
+  // If user is a rider, automatically clear any cart tray
+  useEffect(() => {
+    if (user?.role === 'delivery') {
+      setCart([]);
+      setIsCartOpen(false);
+    }
+  }, [user?.role]);
 
   useEffect(() => {
     localStorage.setItem('lamour_cart', JSON.stringify(cart));
   }, [cart]);
 
   const addToCart = (item, quantity = 1) => {
+    if (user?.role === 'delivery') {
+      setRiderWarningModal(true);
+      return false;
+    }
+
     setCart(prev => {
       const existing = prev.find(i => i.id === item.id);
       if (existing) {
@@ -31,9 +49,15 @@ export function CartProvider({ children }) {
       return [...prev, { ...item, quantity }];
     });
     setIsCartOpen(true);
+    return true;
   };
 
   const updateQuantity = (itemId, quantity) => {
+    if (user?.role === 'delivery') {
+      setRiderWarningModal(true);
+      return;
+    }
+
     if (quantity <= 0) {
       removeFromCart(itemId);
       return;
@@ -48,6 +72,14 @@ export function CartProvider({ children }) {
   const clearCart = () => {
     setCart([]);
     setCoupon(null);
+  };
+
+  const openCart = () => {
+    if (user?.role === 'delivery') {
+      setRiderWarningModal(true);
+      return;
+    }
+    setIsCartOpen(true);
   };
 
   const applyCoupon = (code) => {
@@ -91,17 +123,17 @@ export function CartProvider({ children }) {
   }
 
   const total = Math.max(0, subtotal + deliveryFee - discount);
-  const totalItemCount = cart.reduce((sum, i) => sum + i.quantity, 0);
+  const totalItemCount = user?.role === 'delivery' ? 0 : cart.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
     <CartContext.Provider value={{
-      cart,
+      cart: user?.role === 'delivery' ? [] : cart,
       addToCart,
       updateQuantity,
       removeFromCart,
       clearCart,
       isCartOpen,
-      openCart: () => setIsCartOpen(true),
+      openCart,
       closeCart: () => setIsCartOpen(false),
       coupon,
       couponError,
@@ -111,9 +143,71 @@ export function CartProvider({ children }) {
       deliveryFee,
       discount,
       total,
-      totalItemCount
+      totalItemCount,
+      riderWarningModal,
+      closeRiderWarning: () => setRiderWarningModal(false)
     }}>
       {children}
+
+      {/* Global Rider Account Restriction Warning Popup */}
+      {riderWarningModal && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fade-in font-sans">
+          <div 
+            className="relative w-full max-w-md bg-[#231d19] border-2 border-[#D8632C] rounded-3xl p-6 text-[#F3E9D8] shadow-2xl space-y-4 my-auto text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setRiderWarningModal(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg bg-[#171310] text-[#A9865A] hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-14 h-14 rounded-2xl bg-[#D8632C]/20 border-2 border-[#D8632C] flex items-center justify-center mx-auto text-[#D8632C] shadow-lg shadow-[#D8632C]/20">
+              <Bike className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#D8632C]/20 text-[#D8632C] text-[10px] font-mono font-bold uppercase tracking-wider border border-[#D8632C]/40">
+                Rider Partner Account
+              </span>
+              <h3 className="font-display text-xl font-bold text-[#F3E9D8] pt-1">
+                You Cannot Order or Add to Cart
+              </h3>
+              <p className="text-xs text-[#D6C8B2] font-mono leading-relaxed pt-1">
+                You are currently logged in as Delivery Partner <strong>({user?.name || 'Rider'})</strong>. Delivery accounts are exclusively reserved for courier logistics and cannot place food orders.
+              </p>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-[#171310] border border-[#A9865A]/25 text-left font-mono text-[11px] text-[#A9865A] space-y-1">
+              <p>💡 <strong>What should you do?</strong></p>
+              <p>• To order food: Log out and sign in with a regular <strong>Customer Account</strong>.</p>
+              <p>• To deliver food: Open your <strong>Rider Delivery Hub</strong>.</p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-2 font-mono text-xs">
+              <button
+                onClick={() => setRiderWarningModal(false)}
+                className="py-2.5 px-4 rounded-xl bg-[#171310] border border-[#A9865A]/30 text-[#A9865A] hover:text-white font-bold transition-colors"
+              >
+                Dismiss
+              </button>
+
+              <button
+                onClick={() => {
+                  setRiderWarningModal(false);
+                  logout();
+                }}
+                className="btn-ember-primary flex-1 py-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-lg"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Switch to Customer Account</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </CartContext.Provider>
   );
 }

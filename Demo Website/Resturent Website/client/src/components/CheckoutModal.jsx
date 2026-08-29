@@ -83,6 +83,11 @@ export default function CheckoutModal({ isOpen, onClose, onOrderPlaced }) {
     e.preventDefault();
     setError('');
 
+    if (user?.role === 'delivery') {
+      setError('🛵 Delivery Partner / Rider accounts are restricted from placing customer food orders. Please sign in with a customer account.');
+      return;
+    }
+
     if (!formData.name.trim() || !formData.phone.trim() || !formData.address.trim()) {
       setError('Please provide your name, phone number, and delivery address.');
       return;
@@ -305,6 +310,17 @@ export default function CheckoutModal({ isOpen, onClose, onOrderPlaced }) {
         {/* Form Body */}
         <form onSubmit={handlePlaceOrder} className="p-6 sm:p-8 space-y-6">
           
+          {user?.role === 'delivery' && (
+            <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-400 text-amber-900 font-mono text-xs space-y-1.5 shadow-sm">
+              <div className="flex items-center gap-2 font-bold text-sm text-amber-800">
+                <span>🛵 Rider Partner Account Restriction</span>
+              </div>
+              <p>
+                You are currently logged in as a <strong>Delivery Partner ({user.name})</strong>. Rider accounts are designated exclusively for delivery logistics and cannot place food orders. Please sign in with a customer account to place an order.
+              </p>
+            </div>
+          )}
+
           {error && (
             <div className="p-3 rounded-xl bg-red-100 border border-red-300 text-red-800 text-xs font-mono">
               {error}
@@ -606,10 +622,12 @@ export default function CheckoutModal({ isOpen, onClose, onOrderPlaced }) {
           {/* Place Order CTA */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-4 rounded-full bg-[#D8632C] hover:bg-[#e37440] disabled:opacity-50 text-[#171310] font-sans font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-98"
+            disabled={loading || user?.role === 'delivery'}
+            className="w-full py-4 rounded-full bg-[#D8632C] hover:bg-[#e37440] disabled:opacity-50 disabled:cursor-not-allowed text-[#171310] font-sans font-bold text-sm shadow-xl flex items-center justify-center gap-2 transition-transform active:scale-98"
           >
-            {loading ? (
+            {user?.role === 'delivery' ? (
+              <span>🛵 Rider Accounts Cannot Place Food Orders</span>
+            ) : loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Firing Ticket in Kitchen...</span>

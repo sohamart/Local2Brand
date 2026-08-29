@@ -37,6 +37,16 @@ router.post('/', (req, res) => {
       return res.status(400).json({ error: 'Customer details, delivery address, and items are required' });
     }
 
+    // Restrict Delivery Partner / Rider accounts from placing food orders
+    if (user_id) {
+      const orderingUser = db.prepare('SELECT role FROM users WHERE id = ?').get(user_id);
+      if (orderingUser && orderingUser.role === 'delivery') {
+        return res.status(403).json({ 
+          error: 'Delivery Partner / Rider accounts are restricted from placing food orders. Please sign in with a customer account.' 
+        });
+      }
+    }
+
     // Geo-Fence Delivery Restriction Check (Burdwan, West Bengal, India)
     const isRestricted = db.prepare("SELECT value FROM site_settings WHERE key = 'delivery_restriction_enabled'").get()?.value !== 'false';
     if (isRestricted) {
