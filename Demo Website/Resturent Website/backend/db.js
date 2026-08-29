@@ -6,20 +6,26 @@ const bcrypt = require('bcryptjs');
 let dbPath;
 if (process.env.VERCEL) {
   const tmpDbPath = path.join('/tmp', 'restaurant.db');
-  const defaultDbPath = path.join(__dirname, 'restaurant.db');
-  if (!fs.existsSync(tmpDbPath) && fs.existsSync(defaultDbPath)) {
+  const candidates = [
+    path.join(__dirname, 'restaurant.db'),
+    path.join(__dirname, '..', 'restaurant.db'),
+    path.join(process.cwd(), 'restaurant.db')
+  ];
+  const foundDbPath = candidates.find(p => fs.existsSync(p));
+  if (!fs.existsSync(tmpDbPath) && foundDbPath) {
     try {
-      fs.copyFileSync(defaultDbPath, tmpDbPath);
+      fs.copyFileSync(foundDbPath, tmpDbPath);
     } catch (err) {
       console.error('Failed to copy initial database to /tmp:', err);
     }
   }
-  dbPath = tmpDbPath;
+  dbPath = fs.existsSync(tmpDbPath) ? tmpDbPath : (foundDbPath || path.join(__dirname, 'restaurant.db'));
 } else {
   dbPath = path.join(__dirname, 'restaurant.db');
 }
 
 const db = new Database(dbPath);
+
 
 // Concurrency mode
 try {

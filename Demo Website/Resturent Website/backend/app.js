@@ -42,7 +42,7 @@ const uploadsDir = path.join(__dirname, 'uploads');
 app.use('/uploads', express.static(uploadsDir));
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get(['/health', '/api/health'], (req, res) => {
   res.json({
     status: 'online',
     timestamp: new Date().toISOString(),
