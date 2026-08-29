@@ -26,17 +26,17 @@ import { getDemoBySlug } from '../../data/demos';
 
 const heroShowcases = [
   {
-    id: 'cafe',
-    title: 'The Artisanal Roastery & Coffee Bar',
-    shortName: 'Artisanal Cafe',
-    category: 'Specialty Cafe & Bakery',
-    image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1600&auto=format&fit=crop',
-    slug: 'cafe',
-    stat: 'Trending Niche',
-    accentColor: 'from-amber-500/30 via-orange-500/20 to-yellow-500/30',
-    glowColor: 'rgba(245, 158, 11, 0.28)',
-    tag: 'Menu Showcase & WhatsApp Orders',
-    rating: '5.0 ★ (36+ Reviews)',
+    id: 'restaurant',
+    title: "L'Amour Gourmet Restaurant & Charcoal Grill",
+    shortName: 'Gourmet Restaurant',
+    category: 'Fine Dining & Grill',
+    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1600&auto=format&fit=crop',
+    slug: 'restaurant',
+    stat: 'High Converting',
+    accentColor: 'from-amber-500/30 via-red-500/20 to-orange-500/30',
+    glowColor: 'rgba(239, 68, 68, 0.28)',
+    tag: 'Digital Menu & Table Reservation',
+    rating: '5.0 ★ (84+ Reviews)',
     icon: Utensils
   },
   {
