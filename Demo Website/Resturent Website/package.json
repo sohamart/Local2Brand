@@ -1,42 +1,16 @@
 {
   "name": "resturent-website",
   "version": "1.0.0",
-  "description": "L'Amour Gourmet Luxury Restaurant Web Platform with Online Ordering, WhatsApp, Razorpay, Live Tracking & Admin Panel",
-  "main": "backend/index.js",
+  "private": true,
+  "description": "L'Amour Gourmet Restaurant Platform",
   "scripts": {
-    "server": "node backend/index.js",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"node backend/index.js\" \"npm --prefix frontend run dev\"",
     "backend": "node backend/index.js",
-    "client": "npm --prefix frontend run dev",
     "frontend": "npm --prefix frontend run dev",
-    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run server\" \"npm run client\"",
     "build": "npm --prefix frontend run build",
-    "vercel-build": "cd frontend && npm install && npm run build",
     "start": "node backend/index.js"
   },
-  "keywords": [
-    "restaurant",
-    "food-delivery",
-    "razorpay",
-    "whatsapp-order",
-    "order-tracking",
-    "admin-dashboard"
-  ],
-  "author": "Antigravity",
-  "license": "ISC",
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.6.2",
-    "cloudinary": "^2.11.0",
-    "concurrently": "^9.2.1",
-    "cors": "^2.8.5",
-    "dotenv": "^17.3.1",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "multer": "^2.3.0",
-    "nodemailer": "^9.0.6",
-    "razorpay": "^2.9.6"
-  },
   "devDependencies": {
-    "form-data": "^4.0.6"
+    "concurrently": "^9.2.1"
   }
 }
