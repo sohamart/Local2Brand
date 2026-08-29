@@ -595,6 +595,18 @@ export default function AdminDashboard({ onClose }) {
             </button>
 
             <button
+              onClick={() => setActiveTab('fleet')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition-all ${
+                activeTab === 'fleet'
+                  ? 'bg-[#E8AC4E] text-[#171310] shadow-lg'
+                  : 'text-[#D6C8B2] hover:bg-[#1f1915] hover:text-white'
+              }`}
+            >
+              <Bike className="w-4 h-4 text-[#D8632C]" />
+              <span>Delivery Partners ({ridersList.length})</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('reservations')}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-bold transition-all ${
                 activeTab === 'reservations'
@@ -1727,14 +1739,14 @@ export default function AdminDashboard({ onClose }) {
                 )}
               </div>
 
-              {/* Delivery Fleet & Registered Riders */}
+              {/* Delivery Fleet & Registered Delivery Partners */}
               <div className="p-6 rounded-3xl bg-[#171310] border border-[#A9865A]/30 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <Bike className="w-5 h-5 text-[#D8632C]" />
                     <div>
-                      <h3 className="font-bold text-[#F3E9D8] text-sm">Delivery Fleet & Registered Riders ({ridersList.length})</h3>
-                      <p className="text-xs text-[#A9865A]">Manage delivery partners, assign credentials & view delivery metrics</p>
+                      <h3 className="font-bold text-[#F3E9D8] text-sm">Delivery Fleet & Delivery Partners ({ridersList.length})</h3>
+                      <p className="text-xs text-[#A9865A]">Register new delivery partners, set login credentials & view completed drops</p>
                     </div>
                   </div>
                   <button
@@ -1742,12 +1754,12 @@ export default function AdminDashboard({ onClose }) {
                     className="btn-ember-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>Register New Rider</span>
+                    <span>Register New Delivery Partner</span>
                   </button>
                 </div>
 
                 {ridersList.length === 0 ? (
-                  <p className="text-[#A9865A] text-xs">No registered delivery riders yet.</p>
+                  <p className="text-[#A9865A] text-xs">No registered delivery partners yet. Click Register New Delivery Partner to onboard.</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {ridersList.map((rider) => (
@@ -1766,7 +1778,7 @@ export default function AdminDashboard({ onClose }) {
                               </div>
                             </div>
                             <span className="px-2 py-0.5 rounded bg-[#33402E] text-[#92b584] font-mono text-[9px] font-bold shrink-0">
-                              Active Partner
+                              Delivery Partner
                             </span>
                           </div>
                           <p className="text-xs text-[#E8AC4E] font-mono">📞 {rider.phone}</p>
@@ -1780,7 +1792,7 @@ export default function AdminDashboard({ onClose }) {
                           <button
                             onClick={() => handleDeleteRider(rider.id, rider.name)}
                             className="text-red-400 hover:text-red-300 flex items-center gap-1 text-[10px]"
-                            title="Remove Rider"
+                            title="Remove Delivery Partner"
                           >
                             <Trash2 className="w-3 h-3" />
                             <span>Remove</span>
@@ -1791,6 +1803,93 @@ export default function AdminDashboard({ onClose }) {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* STANDALONE DELIVERY PARTNERS TAB */}
+          {activeTab === 'fleet' && (
+            <div className="space-y-6 font-mono text-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-xl font-bold text-[#F3E9D8] flex items-center gap-2">
+                    <Bike className="w-6 h-6 text-[#D8632C]" />
+                    <span>Delivery Partners & Fleet Directory</span>
+                  </h2>
+                  <p className="text-xs text-[#A9865A]">Register accounts for delivery boys/riders so they can log into the Delivery Partner Portal</p>
+                </div>
+                <button
+                  onClick={() => setShowAddRiderModal(true)}
+                  className="btn-ember-primary px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Register New Delivery Partner</span>
+                </button>
+              </div>
+
+              {ridersList.length === 0 ? (
+                <div className="p-8 rounded-3xl bg-[#171310] border border-[#A9865A]/30 text-center space-y-3">
+                  <Bike className="w-10 h-10 text-[#A9865A] mx-auto opacity-50" />
+                  <p className="text-[#F3E9D8] font-bold">No Delivery Partners Registered Yet</p>
+                  <p className="text-[#A9865A] text-xs max-w-md mx-auto">
+                    Click "+ Register New Delivery Partner" to create login credentials (email & password) for your delivery agents.
+                  </p>
+                  <button
+                    onClick={() => setShowAddRiderModal(true)}
+                    className="btn-ember-primary px-5 py-2 rounded-full font-bold text-xs"
+                  >
+                    Register First Partner
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {ridersList.map((rider) => (
+                    <div key={rider.id} className="p-5 rounded-3xl bg-[#171310] border border-[#A9865A]/30 space-y-3 flex flex-col justify-between shadow-md hover:border-[#E8AC4E] transition-colors">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#A9865A]/20">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <img
+                              src={rider.profile_image || 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=400&auto=format&fit=crop&q=80'}
+                              alt={rider.name}
+                              className="w-10 h-10 rounded-2xl object-cover border border-[#D8632C] shrink-0 shadow"
+                            />
+                            <div className="min-w-0">
+                              <span className="font-bold text-sm text-[#F3E9D8] block truncate">{rider.name}</span>
+                              <span className="text-[10px] text-[#A9865A] block truncate font-mono">{rider.email}</span>
+                            </div>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-full bg-[#33402E] text-[#92b584] font-mono text-[9px] font-bold shrink-0 border border-[#92b584]/30">
+                            ● Active
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5 text-xs text-[#D6C8B2]">
+                          <p className="flex items-center gap-2">
+                            <Phone className="w-3.5 h-3.5 text-[#E8AC4E]" />
+                            <a href={`tel:${rider.phone}`} className="text-[#E8AC4E] hover:underline font-bold">{rider.phone}</a>
+                          </p>
+                          <p className="flex items-center gap-2 text-[11px] truncate">
+                            <Bike className="w-3.5 h-3.5 text-[#D8632C]" />
+                            <span>{rider.vehicle || rider.address || 'Express Thermal Bike'}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-[#A9865A]/20 flex items-center justify-between">
+                        <span className="text-[#92b584] font-bold text-xs">
+                          ✓ {rider.completed_deliveries || 0} Orders Dropped
+                        </span>
+                        <button
+                          onClick={() => handleDeleteRider(rider.id, rider.name)}
+                          className="px-2.5 py-1 bg-red-950/50 hover:bg-red-900 text-red-300 rounded-lg flex items-center gap-1 text-[11px] font-bold transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -2100,7 +2199,7 @@ export default function AdminDashboard({ onClose }) {
 
             <form onSubmit={handleCreateRider} className="space-y-3">
               <div>
-                <label className="text-[#D6C8B2] block mb-1">Rider Full Name *</label>
+                <label className="text-[#D6C8B2] block mb-1">Delivery Partner Full Name *</label>
                 <input
                   type="text"
                   required
@@ -2112,11 +2211,11 @@ export default function AdminDashboard({ onClose }) {
               </div>
 
               <div>
-                <label className="text-[#D6C8B2] block mb-1">Rider Login Email *</label>
+                <label className="text-[#D6C8B2] block mb-1">Partner Login Email *</label>
                 <input
                   type="email"
                   required
-                  placeholder="e.g. rahul.rider@restaurant.com"
+                  placeholder="e.g. rahul.delivery@restaurant.com"
                   value={newRiderData.email}
                   onChange={(e) => setNewRiderData({ ...newRiderData, email: e.target.value })}
                   className="w-full px-3 py-2 bg-[#171310] border border-[#A9865A]/30 rounded-xl text-white focus:outline-none focus:border-[#D8632C]"
@@ -2148,7 +2247,7 @@ export default function AdminDashboard({ onClose }) {
               </div>
 
               <div>
-                <label className="text-[#D6C8B2] block mb-1">Vehicle Details & Registration</label>
+                <label className="text-[#D6C8B2] block mb-1">Vehicle Details & Registration Plate</label>
                 <input
                   type="text"
                   placeholder="e.g. Hero Splendor • WB 02 AX 1234"
@@ -2159,10 +2258,10 @@ export default function AdminDashboard({ onClose }) {
               </div>
 
               <div>
-                <label className="text-[#D6C8B2] block mb-1">Station Hub / Area</label>
+                <label className="text-[#D6C8B2] block mb-1">Station Hub / Assigned Delivery Zone</label>
                 <input
                   type="text"
-                  placeholder="e.g. Express Delivery Hub 4"
+                  placeholder="e.g. Burdwan Central Hub"
                   value={newRiderData.address}
                   onChange={(e) => setNewRiderData({ ...newRiderData, address: e.target.value })}
                   className="w-full px-3 py-2 bg-[#171310] border border-[#A9865A]/30 rounded-xl text-white focus:outline-none focus:border-[#D8632C]"
@@ -2175,7 +2274,7 @@ export default function AdminDashboard({ onClose }) {
                 className="btn-ember-primary w-full py-3 rounded-full font-bold text-xs flex items-center justify-center gap-2 mt-2"
               >
                 {creatingRider ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bike className="w-4 h-4" />}
-                <span>Create Rider Account</span>
+                <span>Register Delivery Partner</span>
               </button>
             </form>
           </div>

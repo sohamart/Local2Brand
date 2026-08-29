@@ -202,7 +202,7 @@ export default function AuthModal({ isOpen, onClose, defaultAdminMode = false, o
             {isForgotPassword 
               ? 'Reset Password' 
               : authMode === 'rider'
-              ? 'Rider Partner Hub'
+              ? 'Delivery Partner Portal'
               : authMode === 'admin' 
               ? 'Kitchen Admin Hub' 
               : authMode === 'register' 
@@ -224,7 +224,7 @@ export default function AuthModal({ isOpen, onClose, defaultAdminMode = false, o
 
         {/* Mode Switcher Tabs */}
         {!isForgotPassword && (
-          <div className="grid grid-cols-4 gap-1 bg-[#171310] p-1 mb-4 rounded-xl border border-[#A9865A]/20 font-mono text-[11px]">
+          <div className="grid grid-cols-4 gap-1 bg-[#171310] p-1 mb-4 rounded-xl border border-[#A9865A]/20 font-mono text-[10px] sm:text-[11px]">
             <button
               type="button"
               onClick={() => { setAuthMode('customer'); setError(''); }}
@@ -242,7 +242,7 @@ export default function AuthModal({ isOpen, onClose, defaultAdminMode = false, o
                 authMode === 'rider' ? 'bg-[#D8632C] text-white font-bold shadow' : 'text-[#D6C8B2] hover:text-white'
               }`}
             >
-              Rider
+              Delivery Partner
             </button>
             
             <button
@@ -282,7 +282,7 @@ export default function AuthModal({ isOpen, onClose, defaultAdminMode = false, o
               onClick={() => handleQuickDemo('rider')}
               className="py-1 px-1.5 rounded-lg bg-[#171310] border border-[#D8632C]/50 text-[10px] text-[#D8632C] font-bold text-center hover:border-[#D8632C] transition-colors truncate"
             >
-              🛵 Rider Demo
+              🛵 Delivery Partner Demo
             </button>
             <button
               type="button"

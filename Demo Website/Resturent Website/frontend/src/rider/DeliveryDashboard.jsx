@@ -210,12 +210,12 @@ export default function DeliveryDashboard({ onClose }) {
                 <h2 className="font-display text-sm sm:text-lg font-bold text-[#F3E9D8] truncate">
                   {user?.name || 'Vikram Express'}
                 </h2>
-                <span className="px-1.5 py-0.5 rounded bg-[#33402E] text-[#92b584] text-[9px] font-mono font-bold shrink-0">
-                  Rider
+                <span className="px-2 py-0.5 rounded bg-[#33402E] text-[#92b584] text-[9px] font-mono font-bold shrink-0 border border-[#92b584]/30">
+                  Delivery Partner
                 </span>
               </div>
               <span className="text-[10px] sm:text-xs text-[#A9865A] font-mono truncate block">
-                Thermal Bike • DL 04 EV 8892
+                {user?.vehicle || user?.address || 'Express Thermal Partner'}
               </span>
             </div>
           </div>
