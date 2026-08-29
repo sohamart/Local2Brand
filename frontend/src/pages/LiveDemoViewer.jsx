@@ -248,40 +248,67 @@ export default function LiveDemoViewer() {
                 onLoad={() => setIsLoadingIframe(false)}
               />
 
-              {/* Quick Floating Live Action Banner */}
-              <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between p-3 rounded-2xl bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700/80 shadow-2xl text-slate-900 dark:text-white">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={activeDemo.heroImage}
-                    alt={activeDemo.title}
-                    className="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-white/20"
-                  />
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold">{activeDemo.title}</h4>
-                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                      <span>⚡ 48h Delivery</span>
-                      <span>•</span>
-                      <span>{activeDemo.priceInr || activeDemo.price}</span>
-                    </p>
+              {/* Ultra-Responsive Floating Live Action & Order Bar */}
+              <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 z-20 p-2.5 sm:p-3.5 rounded-2xl bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xl text-slate-900 dark:text-white transition-all">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  
+                  {/* Left: Thumbnail & Project Meta */}
+                  <div className="flex items-center gap-2.5 sm:gap-3.5 w-full sm:w-auto">
+                    <img
+                      src={activeDemo.heroImage}
+                      alt={activeDemo.title}
+                      className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shrink-0 shadow-xs"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs sm:text-sm font-bold truncate text-slate-900 dark:text-white">
+                        {activeDemo.title}
+                      </h4>
+                      <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-semibold flex-wrap mt-0.5">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                          {activeDemo.priceInr || activeDemo.price}
+                        </span>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                          <Clock className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                          48h Delivery
+                        </span>
+                        <span className="hidden xs:inline">•</span>
+                        <span className="hidden xs:inline text-amber-600 dark:text-amber-400 font-bold">
+                          20% Launch Discount
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <a
-                    href={activeDemo.liveUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition-all"
-                  >
-                    <span>Full Screen Tab</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                  </a>
-                  <button
-                    onClick={handleOrder}
-                    className="px-4 py-2 rounded-xl l2b-gradient-bg text-xs font-bold text-white shadow-lg hover:opacity-95 transition-all cursor-pointer"
-                  >
-                    <span>Order This Website</span>
-                  </button>
+                  {/* Right: Actions */}
+                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                    <Link
+                      to={`/details/${activeDemo.slug}`}
+                      className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5"
+                    >
+                      <span>📱 Specs & Devices</span>
+                    </Link>
+
+                    <a
+                      href={activeDemo.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 transition-all"
+                      title="Open full website in new tab"
+                    >
+                      <span>Open Tab</span>
+                      <ExternalLink className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                    </a>
+
+                    <button
+                      onClick={handleOrder}
+                      className="flex-1 sm:flex-none px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl l2b-gradient-bg text-xs sm:text-sm font-bold text-white shadow-lg hover:opacity-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Order Website</span>
+                    </button>
+                  </div>
+
                 </div>
               </div>
             </div>

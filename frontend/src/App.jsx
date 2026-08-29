@@ -132,26 +132,27 @@ export default function App() {
           {/* Dynamic Route Viewports with Page Transition */}
           <div className="flex-1 z-10 flex flex-col">
             <PageTransition>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/portfolio" element={<Portfolio />} />
-                <Route path="/demos" element={<Demos />} />
-                <Route path="/demos/:slug" element={<LiveDemoViewer />} />
-                <Route path="/demo/:slug" element={<LiveDemoViewer />} />
-                <Route path="/preview/:templateId" element={<LiveDemoViewer />} />
-                <Route path="/live/:templateId" element={<LiveDemoViewer />} />
-                <Route path="/details/:slug" element={<DemoDetails />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <div className="flex-1 flex flex-col min-h-0">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/services" element={<Services />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/portfolio" element={<Portfolio />} />
+                  <Route path="/demos" element={<Demos />} />
+                  <Route path="/demos/:slug" element={<LiveDemoViewer />} />
+                  <Route path="/demo/:slug" element={<LiveDemoViewer />} />
+                  <Route path="/preview/:templateId" element={<LiveDemoViewer />} />
+                  <Route path="/live/:templateId" element={<LiveDemoViewer />} />
+                  <Route path="/details/:slug" element={<DemoDetails />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                {/* Global Footer enclosed inside PageTransition */}
+                {!isLivePreview && <Footer />}
+              </div>
             </PageTransition>
           </div>
-
-          {/* Global Footer */}
-          {!isLivePreview && <Footer />}
 
           {/* Floating Direct WhatsApp Support & Question Selector */}
           {!isLivePreview && <Chatbot />}
