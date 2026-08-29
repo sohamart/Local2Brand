@@ -1,7 +1,7 @@
 {
   "name": "lamour-restaurant-backend",
-  "version": "1.0.0",
-  "description": "L'Amour Gourmet Restaurant Backend API",
+  "version": "1.0.1",
+  "description": "L'Amour Gourmet Restaurant Serverless Backend API",
   "main": "index.js",
   "engines": {
     "node": ">=18.0.0"
