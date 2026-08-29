@@ -18,6 +18,7 @@ import Footer from './components/Footer';
 import AuthModal from './components/AuthModal';
 import CustomerProfileModal from './components/CustomerProfileModal';
 import AdminDashboard from './admin/AdminDashboard';
+import DeliveryDashboard from './rider/DeliveryDashboard';
 
 import { MessageSquare, Phone, Bike, ShoppingBag } from 'lucide-react';
 
@@ -35,6 +36,7 @@ function RestaurantApp() {
   const [authAdminDefault, setAuthAdminDefault] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isRiderOpen, setIsRiderOpen] = useState(false);
 
   // Visitor Tracking Session
   useEffect(() => {
@@ -72,6 +74,7 @@ function RestaurantApp() {
         onOpenTracker={(id) => setTrackingOrderId(id)}
         onOpenReservation={() => setIsReservationOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
+        onOpenRider={() => setIsRiderOpen(true)}
       />
 
       {/* Main Page Flow */}
@@ -110,8 +113,19 @@ function RestaurantApp() {
         onOpenAuth={() => setIsAuthOpen(true)}
       />
 
-      {/* Floating Bottom Action Buttons (WhatsApp, Phone, Floating Mobile Cart) */}
+      {/* Floating Bottom Action Buttons (WhatsApp, Phone, Floating Mobile Cart, Rider Hub) */}
       <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
+        {/* Quick Rider Hub Button for Delivery Partners */}
+        {user?.role === 'delivery' && (
+          <button
+            onClick={() => setIsRiderOpen(true)}
+            className="w-14 h-14 rounded-full bg-[#D8632C] hover:bg-[#e67540] text-slate-950 flex items-center justify-center shadow-2xl shadow-[#D8632C]/60 transition-transform hover:scale-110 active:scale-95 animate-pulse"
+            title="Open Rider Delivery Dashboard"
+          >
+            <Bike className="w-7 h-7 text-[#171310]" />
+          </button>
+        )}
+
         {/* Direct WhatsApp Quick Chat */}
         <a
           href={`https://wa.me/${settings.whatsapp_number}?text=${encodeURIComponent("Hello L'Amour Gourmet, I'd like to place an order or ask a question!")}`}
@@ -168,6 +182,8 @@ function RestaurantApp() {
         onLoginSuccess={(loggedInUser) => {
           if (loggedInUser?.role === 'admin' || authAdminDefault) {
             setIsAdminOpen(true);
+          } else if (loggedInUser?.role === 'delivery') {
+            setIsRiderOpen(true);
           } else {
             setIsProfileOpen(true);
           }
@@ -178,11 +194,18 @@ function RestaurantApp() {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         onTrackOrder={(id) => setTrackingOrderId(id)}
+        onOpenRider={() => setIsRiderOpen(true)}
       />
 
       {isAdminOpen && (
         <AdminDashboard
           onClose={() => setIsAdminOpen(false)}
+        />
+      )}
+
+      {isRiderOpen && (
+        <DeliveryDashboard
+          onClose={() => setIsRiderOpen(false)}
         />
       )}
 

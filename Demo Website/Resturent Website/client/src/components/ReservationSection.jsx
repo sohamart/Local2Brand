@@ -240,11 +240,11 @@ export default function ReservationSection({ isOpenModal = false, onCloseModal }
 
   if (isOpenModal) {
     return (
-      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
-        <div className="relative w-full max-w-3xl my-3 sm:my-8">
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/90 backdrop-blur-md flex items-start sm:items-center justify-center p-0 sm:p-4">
+        <div className="relative w-full max-w-3xl min-h-screen sm:min-h-0 sm:my-6 bg-[#231d19] border-0 sm:border sm:border-[#A9865A]/40 rounded-none sm:rounded-3xl overflow-hidden shadow-2xl">
           <button
             onClick={onCloseModal}
-            className="absolute top-4 right-4 z-20 p-2 rounded-xl bg-[#171310] text-[#D6C8B2] hover:text-white border border-[#A9865A]/30"
+            className="absolute top-4 right-4 z-20 p-2 rounded-xl bg-[#171310] text-[#D6C8B2] hover:text-white border border-[#A9865A]/30 transition-colors shadow-lg"
           >
             ✕
           </button>

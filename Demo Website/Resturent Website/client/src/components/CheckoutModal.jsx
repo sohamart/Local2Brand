@@ -88,6 +88,48 @@ export default function CheckoutModal({ isOpen, onClose, onOrderPlaced }) {
       return;
     }
 
+    // Client-side Geo-Fence check
+    const isRestricted = settings.delivery_restriction_enabled !== 'false';
+    if (isRestricted) {
+      const addr = formData.address.toLowerCase();
+      const pinMatch = formData.address.match(/\b\d{6}\b/);
+      const userPin = pinMatch ? pinMatch[0] : null;
+
+      const allowedPincodes = (settings.delivery_allowed_pincodes || '713101, 713102, 713103, 713104, 713105')
+        .split(',')
+        .map(p => p.trim())
+        .filter(Boolean);
+
+      const isBurdwanAddress = 
+        addr.includes('burdwan') || 
+        addr.includes('bardhaman') || 
+        addr.includes('barddhaman') || 
+        addr.includes('purba bardhaman') ||
+        addr.includes('curzon gate') ||
+        addr.includes('golapbag') ||
+        addr.includes('badamtala') ||
+        addr.includes('birhata') ||
+        addr.includes('khagragarh') ||
+        addr.includes('nutanganj') ||
+        addr.includes('alisha') ||
+        addr.includes('baburbag') ||
+        addr.includes('bajepratappur') ||
+        addr.includes('ullhas') ||
+        addr.includes('borehat') ||
+        addr.includes('shaktigarh') ||
+        (userPin && allowedPincodes.includes(userPin));
+
+      if (userPin && allowedPincodes.length > 0 && !allowedPincodes.includes('*') && !allowedPincodes.includes(userPin)) {
+        setError(`Delivery is currently limited to Burdwan (PIN: ${allowedPincodes.join(', ')}), West Bengal. Pincode ${userPin} is outside our delivery zone.`);
+        return;
+      }
+
+      if (!isBurdwanAddress) {
+        setError('We currently deliver exclusively within Burdwan (Bardhaman), West Bengal, India. Please select or enter a valid address in Burdwan.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -271,16 +313,28 @@ export default function CheckoutModal({ isOpen, onClose, onOrderPlaced }) {
 
           {/* Destination Details */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-[#171310] flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#D8632C]" />
-                1. Delivery Destination
-              </h4>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="font-mono text-xs font-bold uppercase tracking-wider text-[#171310] flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#D8632C]" />
+                  1. Delivery Destination
+                </h4>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[10px] font-mono font-bold text-[#92b584] bg-[#33402E]/20 px-2 py-0.5 rounded border border-[#92b584]/30 flex items-center gap-1">
+                    <span>🇮🇳 India</span>
+                    <span>•</span>
+                    <span>West Bengal</span>
+                    <span>•</span>
+                    <span>📍 Burdwan (Bardhaman) Zone</span>
+                  </span>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={handleDetectLocation}
                 disabled={locating}
-                className="font-mono text-xs font-bold text-[#D8632C] hover:underline flex items-center gap-1"
+                className="font-mono text-xs font-bold text-[#D8632C] hover:underline flex items-center gap-1 shrink-0"
               >
                 <Navigation className={`w-3 h-3 ${locating ? 'animate-spin' : ''}`} />
                 <span>{locating ? 'Locating...' : 'Use Current GPS'}</span>
@@ -295,7 +349,7 @@ export default function CheckoutModal({ isOpen, onClose, onOrderPlaced }) {
                   <input
                     type="text"
                     required
-                    placeholder="Guest Name"
+                    placeholder="e.g. Rahul Sharma"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     className="w-full pl-9 pr-3 py-2 bg-white border border-[#D6C8B2] rounded-xl text-xs text-[#171310] placeholder-[#A9865A] focus:outline-none focus:border-[#D8632C]"
@@ -319,12 +373,54 @@ export default function CheckoutModal({ isOpen, onClose, onOrderPlaced }) {
               </div>
             </div>
 
+            {/* Burdwan Popular Neighborhood Quick Selector */}
+            <div className="p-3 rounded-2xl bg-[#ede1ce]/60 border border-[#D6C8B2] space-y-1.5">
+              <span className="font-mono text-[10px] font-bold text-[#524438] uppercase block">
+                ⚡ Quick Select Burdwan Delivery Area:
+              </span>
+              <div className="flex flex-wrap gap-1.5 font-mono text-[10px]">
+                {[
+                  { name: 'Curzon Gate', pin: '713101' },
+                  { name: 'Golapbag', pin: '713104' },
+                  { name: 'Badamtala', pin: '713101' },
+                  { name: 'Birhata', pin: '713102' },
+                  { name: 'Khagragarh', pin: '713104' },
+                  { name: 'Nutanganj', pin: '713102' },
+                  { name: 'Alisha', pin: '713103' },
+                  { name: 'Baburbag', pin: '713104' },
+                  { name: 'Bajepratappur', pin: '713101' },
+                  { name: 'Ullhas', pin: '713103' },
+                  { name: 'Borehat', pin: '713102' },
+                  { name: 'Shaktigarh', pin: '713149' }
+                ].map((spot) => (
+                  <button
+                    key={spot.name}
+                    type="button"
+                    onClick={() => {
+                      const prefix = formData.address.split(',')[0].trim();
+                      const housePart = prefix && !prefix.includes('Burdwan') ? `${prefix}, ` : 'Flat/House No., ';
+                      setFormData({
+                        ...formData,
+                        address: `${housePart}${spot.name}, Burdwan - ${spot.pin}, West Bengal`
+                      });
+                    }}
+                    className="px-2 py-1 rounded-lg bg-white border border-[#D6C8B2] hover:border-[#D8632C] hover:text-[#D8632C] transition-colors text-[#171310]"
+                  >
+                    📍 {spot.name} ({spot.pin})
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div>
-              <label className="font-mono text-xs font-semibold text-[#524438] block mb-1">Delivery Address *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-mono text-xs font-semibold text-[#524438] block">Delivery Address in Burdwan *</label>
+                <span className="font-mono text-[10px] text-[#A9865A]">Must be within Burdwan (Bardhaman), WB</span>
+              </div>
               <textarea
                 required
                 rows={2}
-                placeholder="House / Flat No., Apartment / Street, Landmark"
+                placeholder="e.g. Flat 3B, Sunshine Apartments, Badamtala, Burdwan - 713101, West Bengal"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 className="w-full p-3 bg-white border border-[#D6C8B2] rounded-xl text-xs text-[#171310] placeholder-[#A9865A] focus:outline-none focus:border-[#D8632C] resize-none"

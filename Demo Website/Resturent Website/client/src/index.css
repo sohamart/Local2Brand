@@ -42,6 +42,27 @@
     font-family: 'IBM Plex Mono', monospace;
   }
 
+  /* Hide all scrollbars globally for Chrome, Safari, Edge, Firefox */
+  * {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE and Edge */
+  }
+
+  *::-webkit-scrollbar,
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  div::-webkit-scrollbar,
+  nav::-webkit-scrollbar,
+  aside::-webkit-scrollbar,
+  main::-webkit-scrollbar,
+  section::-webkit-scrollbar,
+  textarea::-webkit-scrollbar {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
+    background: transparent !important;
+  }
+
   /* Keyboard focus states using brass outline */
   *:focus-visible {
     outline: 2px solid var(--color-brass);
@@ -236,12 +257,36 @@
   animation: printFeed 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Prefers reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+/* Custom Scrollbar Removal Utility */
+.scrollbar-none {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Professional Print Styles for Invoices & KOTs */
+@media print {
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  @page {
+    margin: 8mm;
+    size: auto;
   }
 }
+
+

@@ -117,6 +117,22 @@ db.exec(`
     last_ping DATETIME DEFAULT CURRENT_TIMESTAMP,
     current_page TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS password_resets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL,
+    otp TEXT NOT NULL,
+    token TEXT NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 // Seed Default Admin User if not exists
@@ -137,6 +153,33 @@ if (!demoCustomer) {
     INSERT INTO users (name, email, password, phone, address, role)
     VALUES (?, ?, ?, ?, ?, ?)
   `).run('Rahul Sharma', 'customer@example.com', customerPass, '+91 98765 12345', 'Flat 402, Royal Palms, Park Street, City', 'customer');
+}
+
+// Seed Demo Delivery Partner if not exists
+const riderEmail = (process.env.DEFAULT_RIDER_EMAIL || 'rider@restaurant.com').toLowerCase().trim();
+const demoRider = db.prepare('SELECT id FROM users WHERE email = ?').get(riderEmail);
+if (!demoRider) {
+  const riderName = process.env.DEFAULT_RIDER_NAME || 'Vikram Express (Rider)';
+  const riderPass = bcrypt.hashSync(process.env.DEFAULT_RIDER_PASS || 'rider123', 10);
+  const riderPhone = process.env.DEFAULT_RIDER_PHONE || '+91 98300 55443';
+  const riderVehicle = process.env.DEFAULT_RIDER_VEHICLE || 'Express Thermal Bike (DL 04 EV 8892)';
+  db.prepare(`
+    INSERT INTO users (name, email, password, phone, address, role)
+    VALUES (?, ?, ?, ?, ?, 'delivery')
+  `).run(riderName, riderEmail, riderPass, riderPhone, riderVehicle);
+}
+
+// Ensure driver_vehicle and delivery_otp columns exist in orders table
+try {
+  db.prepare("ALTER TABLE orders ADD COLUMN driver_vehicle TEXT DEFAULT 'Express Thermal Bike (DL 04 EV 8892)'").run();
+} catch (e) {
+  // Column already exists
+}
+
+try {
+  db.prepare("ALTER TABLE orders ADD COLUMN delivery_otp TEXT DEFAULT '4829'").run();
+} catch (e) {
+  // Column already exists
 }
 
 // Seed Default Settings using environment variables with fallbacks
@@ -163,7 +206,23 @@ const defaultSettings = {
   enable_razorpay: process.env.ENABLE_RAZORPAY || "true",
   razorpay_key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_YourKeyHere123",
   razorpay_key_secret: process.env.RAZORPAY_KEY_SECRET || "YourSecretKeyHere",
-  allow_mock_razorpay_if_unconfigured: "true"
+  allow_mock_razorpay_if_unconfigured: "true",
+  // Email & SMTP Notification Settings
+  enable_email_notifications: process.env.ENABLE_EMAIL_NOTIFICATIONS || "true",
+  smtp_host: process.env.SMTP_HOST || "smtp.gmail.com",
+  smtp_port: process.env.SMTP_PORT || "587",
+  smtp_user: process.env.SMTP_USER || "",
+  smtp_pass: process.env.SMTP_PASS || "",
+  smtp_from: process.env.SMTP_FROM || "L'Amour Gourmet <notifications@lamourgourmet.com>",
+  smtp_secure: process.env.SMTP_SECURE || "false",
+  admin_notification_email: process.env.ADMIN_EMAIL || "admin@restaurant.com",
+  // Delivery Geo-Fence Zone & Service Area (Burdwan, WB, India)
+  delivery_restriction_enabled: process.env.DELIVERY_RESTRICTION_ENABLED || "true",
+  delivery_allowed_country: process.env.DELIVERY_ALLOWED_COUNTRY || "India",
+  delivery_allowed_state: process.env.DELIVERY_ALLOWED_STATE || "West Bengal",
+  delivery_allowed_city: process.env.DELIVERY_ALLOWED_CITY || "Burdwan",
+  delivery_allowed_pincodes: process.env.DELIVERY_ALLOWED_PINCODES || "713101, 713102, 713103, 713104, 713105",
+  delivery_allowed_areas: process.env.DELIVERY_ALLOWED_AREAS || "Curzon Gate, Golapbag, Badamtala, Khagragarh, Alisha, Baburbag, Birhata, Nutanganj, Bajepratappur, Ullhas, Borehat, Radhanagar, Shaktigarh"
 };
 
 const insertSetting = db.prepare('INSERT OR IGNORE INTO site_settings (key, value) VALUES (?, ?)');

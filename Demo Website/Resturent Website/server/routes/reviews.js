@@ -29,7 +29,7 @@ router.get('/', (req, res) => {
 // Post review (Public)
 router.post('/', (req, res) => {
   try {
-    const { user_name, rating, comment, dish_name } = req.body;
+    const { user_name, email, rating, comment, dish_name } = req.body;
 
     if (!user_name || !rating || !comment) {
       return res.status(400).json({ error: 'Name, rating, and feedback comment are required' });
@@ -46,6 +46,12 @@ router.post('/', (req, res) => {
     );
 
     const review = db.prepare('SELECT * FROM reviews WHERE id = ?').get(result.lastInsertRowid);
+
+    if (email) {
+      const emailService = require('../services/emailService');
+      emailService.sendReviewThankYouEmail(email, user_name, dish_name).catch(() => {});
+    }
+
     res.status(201).json({
       message: 'Thank you for your generous feedback!',
       review

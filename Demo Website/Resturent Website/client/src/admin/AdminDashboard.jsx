@@ -36,7 +36,9 @@ import {
   QrCode,
   Upload,
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Mail,
+  Send
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -73,6 +75,24 @@ export default function AdminDashboard({ onClose }) {
   const [invoiceOrder, setInvoiceOrder] = useState(null);
   const [showSecretKey, setShowSecretKey] = useState(false);
 
+  const [subscribers, setSubscribers] = useState([]);
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [testEmailTarget, setTestEmailTarget] = useState('admin@restaurant.com');
+  const [showSmtpPass, setShowSmtpPass] = useState(false);
+
+  // Delivery Fleet State
+  const [ridersList, setRidersList] = useState([]);
+  const [showAddRiderModal, setShowAddRiderModal] = useState(false);
+  const [creatingRider, setCreatingRider] = useState(false);
+  const [newRiderData, setNewRiderData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    vehicle: 'Express Thermal Bike (DL 04 EV 8892)',
+    address: 'Express Delivery Hub 4'
+  });
+
   useEffect(() => {
     loadAllAdminData();
     const interval = setInterval(loadOrdersAndAnalytics, 8000);
@@ -87,9 +107,79 @@ export default function AdminDashboard({ onClose }) {
       loadSettings(),
       loadUsers(),
       loadReservations(),
-      loadReviews()
+      loadReviews(),
+      loadSubscribers(),
+      loadRiders()
     ]);
     setLoading(false);
+  };
+
+  const loadRiders = async () => {
+    try {
+      const data = await api.getRidersDirectory();
+      setRidersList(data || []);
+    } catch (err) {
+      console.error('Failed to load riders:', err);
+    }
+  };
+
+  const handleCreateRider = async (e) => {
+    e.preventDefault();
+    setCreatingRider(true);
+    try {
+      const res = await api.createRider(newRiderData);
+      showToast(res.message || 'Delivery rider registered successfully!');
+      setShowAddRiderModal(false);
+      setNewRiderData({
+        name: '',
+        email: '',
+        password: '',
+        phone: '',
+        vehicle: 'Express Thermal Bike (DL 04 EV 8892)',
+        address: 'Express Delivery Hub 4'
+      });
+      await loadRiders();
+    } catch (err) {
+      alert('Failed to register rider: ' + err.message);
+    } finally {
+      setCreatingRider(false);
+    }
+  };
+
+  const handleDeleteRider = async (id, name) => {
+    if (!window.confirm(`Are you sure you want to remove rider ${name}?`)) return;
+    try {
+      const res = await api.deleteRider(id);
+      showToast(res.message || 'Rider removed successfully');
+      await loadRiders();
+    } catch (err) {
+      alert('Failed to delete rider: ' + err.message);
+    }
+  };
+
+  const loadSubscribers = async () => {
+    try {
+      const data = await api.getNewsletterSubscribers();
+      setSubscribers(data || []);
+    } catch (err) {
+      console.error('Failed to load newsletter subscribers:', err);
+    }
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!testEmailTarget) {
+      alert('Please enter a target email address.');
+      return;
+    }
+    setTestingEmail(true);
+    try {
+      const res = await api.sendTestEmail(testEmailTarget);
+      showToast(res.message || 'Test email dispatched successfully!');
+    } catch (err) {
+      alert('Failed to send test email: ' + err.message);
+    } finally {
+      setTestingEmail(false);
+    }
   };
 
   const loadOrdersAndAnalytics = async () => {
@@ -1290,6 +1380,250 @@ export default function AdminDashboard({ onClose }) {
                   </p>
                 </div>
 
+                {/* Delivery Geo-Fencing & Service Area (Burdwan, West Bengal, India) */}
+                <div className="p-6 rounded-3xl bg-[#171310] border border-[#A9865A]/30 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h3 className="font-bold text-[#E8AC4E] uppercase tracking-wider flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-[#D8632C]" />
+                        <span>Delivery Zones & Regional Geo-Fencing</span>
+                      </h3>
+                      <p className="text-[#A9865A] text-xs mt-0.5">
+                        Restrict online order delivery strictly to Burdwan (Purba Bardhaman), West Bengal, India
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {adminSettings.delivery_restriction_enabled !== 'false' ? (
+                        <span className="px-2.5 py-1 rounded-full bg-[#33402E] text-[#92b584] font-bold text-[10px] flex items-center gap-1 border border-[#33402E]">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Burdwan Geo-Fence Active</span>
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full bg-[#231d19] text-amber-300 font-bold text-[10px] border border-amber-500/30">
+                          Open Worldwide
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-[#D6C8B2] block mb-1">Enforce Regional Restriction</label>
+                      <select
+                        value={adminSettings.delivery_restriction_enabled !== 'false' ? 'true' : 'false'}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, delivery_restriction_enabled: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs"
+                      >
+                        <option value="true">Strict (Deliver Only in Burdwan Zone)</option>
+                        <option value="false">Disabled (Accept All Locations)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[#D6C8B2] block mb-1">Deliverable Country</label>
+                      <input
+                        type="text"
+                        value={adminSettings.delivery_allowed_country || 'India'}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, delivery_allowed_country: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[#D6C8B2] block mb-1">Deliverable State</label>
+                      <input
+                        type="text"
+                        value={adminSettings.delivery_allowed_state || 'West Bengal'}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, delivery_allowed_state: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[#D6C8B2] block mb-1">Deliverable City / District</label>
+                      <input
+                        type="text"
+                        value={adminSettings.delivery_allowed_city || 'Burdwan'}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, delivery_allowed_city: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="text-[#D6C8B2] block mb-1">Allowed Pincodes (comma-separated)</label>
+                      <input
+                        type="text"
+                        placeholder="713101, 713102, 713103, 713104, 713105"
+                        value={adminSettings.delivery_allowed_pincodes || '713101, 713102, 713103, 713104, 713105'}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, delivery_allowed_pincodes: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="text-[#D6C8B2] block mb-1">Deliverable Neighborhoods / Hotspot Areas</label>
+                      <textarea
+                        rows={2}
+                        value={adminSettings.delivery_allowed_areas || 'Curzon Gate, Golapbag, Badamtala, Khagragarh, Alisha, Baburbag, Birhata, Nutanganj, Bajepratappur, Ullhas, Borehat, Radhanagar, Shaktigarh'}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, delivery_allowed_areas: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-[#A9865A]">
+                    📍 Any delivery address entered at checkout that falls outside Burdwan (Purba Bardhaman), West Bengal, India will be politely prompted with an active zone alert.
+                  </p>
+                </div>
+
+                {/* SMTP & Automated Email Notifications Settings */}
+                <div className="p-6 rounded-3xl bg-[#171310] border border-[#A9865A]/30 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h3 className="font-bold text-[#E8AC4E] uppercase tracking-wider flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-[#D8632C]" />
+                        <span>SMTP & Automated Email Notifications</span>
+                      </h3>
+                      <p className="text-[#A9865A] text-xs mt-0.5">
+                        Automated emails for registrations, login alerts, forgot password OTPs, order invoices & live tracking, reservations, and Smoke Club newsletters
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {adminSettings.enable_email_notifications !== 'false' ? (
+                        <span className="px-2.5 py-1 rounded-full bg-[#33402E] text-[#92b584] font-bold text-[10px] flex items-center gap-1 border border-[#33402E]">
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Email System Active</span>
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full bg-[#231d19] text-red-400 font-bold text-[10px] border border-red-500/30">
+                          Disabled
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[#D6C8B2] block mb-1">Enable Automated Emails</label>
+                      <select
+                        value={adminSettings.enable_email_notifications !== 'false' ? 'true' : 'false'}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, enable_email_notifications: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs"
+                      >
+                        <option value="true">Active (Send Emails On All Events)</option>
+                        <option value="false">Mute / Disabled</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[#D6C8B2] block mb-1">Admin Alert Notification Email</label>
+                      <input
+                        type="email"
+                        placeholder="admin@restaurant.com"
+                        value={adminSettings.admin_notification_email || ''}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, admin_notification_email: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs placeholder-[#A9865A]/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[#D6C8B2] block mb-1">SMTP Host</label>
+                      <input
+                        type="text"
+                        placeholder="smtp.gmail.com"
+                        value={adminSettings.smtp_host || 'smtp.gmail.com'}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, smtp_host: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs placeholder-[#A9865A]/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[#D6C8B2] block mb-1">SMTP Port</label>
+                      <input
+                        type="number"
+                        placeholder="587"
+                        value={adminSettings.smtp_port || '587'}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, smtp_port: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs placeholder-[#A9865A]/50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[#D6C8B2] block mb-1">SMTP Username / Email</label>
+                      <input
+                        type="text"
+                        placeholder="your_email@gmail.com"
+                        value={adminSettings.smtp_user || ''}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, smtp_user: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs placeholder-[#A9865A]/50"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[#D6C8B2]">SMTP Password / App Password</label>
+                        <button
+                          type="button"
+                          onClick={() => setShowSmtpPass(!showSmtpPass)}
+                          className="text-[10px] text-[#A9865A] hover:text-[#E8AC4E] flex items-center gap-1"
+                        >
+                          {showSmtpPass ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                          <span>{showSmtpPass ? 'Hide' : 'Reveal'}</span>
+                        </button>
+                      </div>
+                      <input
+                        type={showSmtpPass ? "text" : "password"}
+                        placeholder="••••••••••••••••"
+                        value={adminSettings.smtp_pass || ''}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, smtp_pass: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs placeholder-[#A9865A]/50"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="text-[#D6C8B2] block mb-1">Sender "From" Email Display Name & Address</label>
+                      <input
+                        type="text"
+                        placeholder="L'Amour Gourmet <notifications@lamourgourmet.com>"
+                        value={adminSettings.smtp_from || "L'Amour Gourmet & Grill <contact@lamourgourmet.com>"}
+                        onChange={(e) => setAdminSettings({ ...adminSettings, smtp_from: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#231d19] border border-[#A9865A]/30 rounded-xl text-white font-mono text-xs placeholder-[#A9865A]/50"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Send Live Test Email Card */}
+                  <div className="p-4 rounded-2xl bg-[#0f0c0a] border border-[#A9865A]/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="w-full sm:w-auto">
+                      <span className="font-bold text-[#E8AC4E] text-xs block">Test Email Dispatch</span>
+                      <p className="text-[10px] text-[#A9865A]">Verify your SMTP configuration by dispatching a test email</p>
+                    </div>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <input
+                        type="email"
+                        placeholder="recipient@example.com"
+                        value={testEmailTarget}
+                        onChange={(e) => setTestEmailTarget(e.target.value)}
+                        className="px-3 py-1.5 bg-[#171310] border border-[#A9865A]/30 rounded-xl text-white text-xs font-mono w-full sm:w-48"
+                      />
+                      <button
+                        type="button"
+                        disabled={testingEmail}
+                        onClick={handleSendTestEmail}
+                        className="px-4 py-1.5 rounded-xl bg-[#231d19] hover:bg-[#332b25] text-[#E8AC4E] border border-[#A9865A]/40 font-bold text-xs flex items-center gap-1.5 shrink-0"
+                      >
+                        {testingEmail ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        <span>Send Test</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-[#A9865A]">
+                    💡 Works with any SMTP provider (Gmail App Passwords, Brevo, SendGrid, Amazon SES, Outlook). When SMTP credentials are left blank, all email notifications run in sandbox simulation mode without breaking.
+                  </p>
+                </div>
+
                 <button
                   type="submit"
                   className="btn-ember-primary px-8 py-3.5 rounded-full font-sans font-bold text-xs flex items-center gap-2"
@@ -1353,6 +1687,91 @@ export default function AdminDashboard({ onClose }) {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* VIP Smoke Club Newsletter Subscribers */}
+              <div className="p-6 rounded-3xl bg-[#171310] border border-[#A9865A]/30 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-[#E8AC4E]" />
+                    <h3 className="font-bold text-[#F3E9D8] text-sm">VIP Smoke Club Subscribers ({subscribers.length})</h3>
+                  </div>
+                  <span className="text-[10px] bg-[#231d19] text-[#E8AC4E] px-2.5 py-1 rounded-full border border-[#A9865A]/30 font-bold">
+                    Automated 20% Promo Sent
+                  </span>
+                </div>
+
+                {subscribers.length === 0 ? (
+                  <p className="text-[#A9865A] text-xs">No email subscribers yet.</p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-48 overflow-y-auto">
+                    {subscribers.map((sub) => (
+                      <div key={sub.id} className="p-2.5 rounded-xl bg-[#231d19] border border-[#A9865A]/20 flex items-center justify-between text-xs">
+                        <span className="text-[#F3E9D8] truncate max-w-[180px]">{sub.email}</span>
+                        <span className="text-[10px] text-[#A9865A] shrink-0">{new Date(sub.created_at).toLocaleDateString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Delivery Fleet & Registered Riders */}
+              <div className="p-6 rounded-3xl bg-[#171310] border border-[#A9865A]/30 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Bike className="w-5 h-5 text-[#D8632C]" />
+                    <div>
+                      <h3 className="font-bold text-[#F3E9D8] text-sm">Delivery Fleet & Registered Riders ({ridersList.length})</h3>
+                      <p className="text-xs text-[#A9865A]">Manage delivery partners, assign credentials & view delivery metrics</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAddRiderModal(true)}
+                    className="btn-ember-primary px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Register New Rider</span>
+                  </button>
+                </div>
+
+                {ridersList.length === 0 ? (
+                  <p className="text-[#A9865A] text-xs">No registered delivery riders yet.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {ridersList.map((rider) => (
+                      <div key={rider.id} className="p-4 rounded-2xl bg-[#231d19] border border-[#A9865A]/25 space-y-2 flex flex-col justify-between">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-sm text-[#F3E9D8] flex items-center gap-1.5">
+                              <Bike className="w-4 h-4 text-[#D8632C]" />
+                              <span>{rider.name}</span>
+                            </span>
+                            <span className="px-2 py-0.5 rounded bg-[#33402E] text-[#92b584] font-mono text-[9px] font-bold">
+                              Active Partner
+                            </span>
+                          </div>
+                          <p className="text-xs text-[#E8AC4E]">📞 {rider.phone}</p>
+                          <p className="text-[11px] text-[#A9865A]">{rider.email}</p>
+                          <p className="text-[11px] text-[#D6C8B2] truncate">🛵 {rider.address || 'Express Thermal Bike'}</p>
+                        </div>
+
+                        <div className="pt-2 border-t border-[#A9865A]/15 flex items-center justify-between text-[11px]">
+                          <span className="text-[#92b584] font-bold">
+                            ✓ {rider.completed_deliveries || 0} Delivered
+                          </span>
+                          <button
+                            onClick={() => handleDeleteRider(rider.id, rider.name)}
+                            className="text-red-400 hover:text-red-300 flex items-center gap-1 text-[10px]"
+                            title="Remove Rider"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Remove</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1641,6 +2060,104 @@ export default function AdminDashboard({ onClose }) {
                 className="btn-ember-primary w-full py-2.5 mt-4 rounded-full font-sans font-bold"
               >
                 Save Dish Plate
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Register New Rider Modal */}
+      {showAddRiderModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="relative w-full max-w-md bg-[#231d19] border border-[#A9865A]/40 rounded-3xl p-6 text-[#F3E9D8] font-mono text-xs space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-[#A9865A]/20">
+              <h3 className="font-bold text-sm text-[#E8AC4E] flex items-center gap-2">
+                <Bike className="w-4 h-4 text-[#D8632C]" />
+                <span>Register New Delivery Partner</span>
+              </h3>
+              <button onClick={() => setShowAddRiderModal(false)} className="p-1 rounded bg-[#171310] text-[#A9865A] hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateRider} className="space-y-3">
+              <div>
+                <label className="text-[#D6C8B2] block mb-1">Rider Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rahul Express"
+                  value={newRiderData.name}
+                  onChange={(e) => setNewRiderData({ ...newRiderData, name: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#171310] border border-[#A9865A]/30 rounded-xl text-white focus:outline-none focus:border-[#D8632C]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[#D6C8B2] block mb-1">Rider Login Email *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. rahul.rider@restaurant.com"
+                  value={newRiderData.email}
+                  onChange={(e) => setNewRiderData({ ...newRiderData, email: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#171310] border border-[#A9865A]/30 rounded-xl text-white focus:outline-none focus:border-[#D8632C]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[#D6C8B2] block mb-1">Initial Password *</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={newRiderData.password}
+                  onChange={(e) => setNewRiderData({ ...newRiderData, password: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#171310] border border-[#A9865A]/30 rounded-xl text-white focus:outline-none focus:border-[#D8632C]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[#D6C8B2] block mb-1">Mobile Phone Number *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="+91 98765 43210"
+                  value={newRiderData.phone}
+                  onChange={(e) => setNewRiderData({ ...newRiderData, phone: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#171310] border border-[#A9865A]/30 rounded-xl text-white focus:outline-none focus:border-[#D8632C]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[#D6C8B2] block mb-1">Vehicle Details & Registration</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Hero Splendor • WB 02 AX 1234"
+                  value={newRiderData.vehicle}
+                  onChange={(e) => setNewRiderData({ ...newRiderData, vehicle: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#171310] border border-[#A9865A]/30 rounded-xl text-white focus:outline-none focus:border-[#D8632C]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[#D6C8B2] block mb-1">Station Hub / Area</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Express Delivery Hub 4"
+                  value={newRiderData.address}
+                  onChange={(e) => setNewRiderData({ ...newRiderData, address: e.target.value })}
+                  className="w-full px-3 py-2 bg-[#171310] border border-[#A9865A]/30 rounded-xl text-white focus:outline-none focus:border-[#D8632C]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={creatingRider}
+                className="btn-ember-primary w-full py-3 rounded-full font-bold text-xs flex items-center justify-center gap-2 mt-2"
+              >
+                {creatingRider ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bike className="w-4 h-4" />}
+                <span>Create Rider Account</span>
               </button>
             </form>
           </div>

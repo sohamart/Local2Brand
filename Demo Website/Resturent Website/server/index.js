@@ -31,6 +31,7 @@ app.use('/api/settings', require('./routes/settings'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/newsletter', require('./routes/newsletter'));
 
 // Serve uploaded images statically
 const uploadsDir = path.join(__dirname, 'uploads');

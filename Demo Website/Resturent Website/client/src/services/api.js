@@ -31,6 +31,8 @@ export const api = {
   // Auth
   login: (credentials) => request('/auth/login', { method: 'POST', body: credentials }),
   register: (userData) => request('/auth/register', { method: 'POST', body: userData }),
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: { email } }),
+  resetPassword: (payload) => request('/auth/reset-password', { method: 'POST', body: payload }),
   getMe: () => request('/auth/me'),
   updateProfile: (data) => request('/auth/me', { method: 'PUT', body: data }),
 
@@ -54,6 +56,14 @@ export const api = {
   },
   updateOrderStatus: (id, statusData) => request(`/orders/admin/${id}/status`, { method: 'PATCH', body: statusData }),
 
+  // Delivery Partner / Rider APIs
+  getDriverAvailableOrders: () => request('/orders/driver/available'),
+  getDriverActiveOrders: () => request('/orders/driver/my-active'),
+  getDriverHistory: () => request('/orders/driver/history'),
+  acceptDriverOrder: (id, vehicle) => request(`/orders/driver/${id}/accept`, { method: 'POST', body: { vehicle } }),
+  updateDriverOrderStatus: (id, payload) => request(`/orders/driver/${id}/status`, { method: 'PATCH', body: payload }),
+  updateDriverLocation: (lat, lng) => request('/orders/driver/location', { method: 'POST', body: { lat, lng } }),
+
   // Razorpay
   getRazorpayConfig: () => request('/razorpay/config'),
   createRazorpayOrder: (orderPayload) => request('/razorpay/create-order', { method: 'POST', body: orderPayload }),
@@ -75,13 +85,21 @@ export const api = {
   getSettings: () => request('/settings'),
   getAdminSettings: () => request('/settings/admin'),
   updateSettings: (settings) => request('/settings/admin', { method: 'PUT', body: settings }),
+  sendTestEmail: (target_email) => request('/settings/admin/test-email', { method: 'POST', body: { target_email } }),
+
+  // Newsletter
+  subscribeNewsletter: (email) => request('/newsletter/subscribe', { method: 'POST', body: { email } }),
+  getNewsletterSubscribers: () => request('/newsletter/admin/all'),
 
   // Analytics & Visits
   recordVisit: (data) => request('/analytics/visit', { method: 'POST', body: data }),
   getAnalyticsOverview: () => request('/analytics/admin/overview'),
 
-  // Users Directory (Admin)
+  // Users & Riders Directory (Admin)
   getUsersDirectory: () => request('/users/admin/all'),
+  getRidersDirectory: () => request('/users/admin/riders'),
+  createRider: (riderData) => request('/users/admin/create-rider', { method: 'POST', body: riderData }),
+  deleteRider: (id) => request(`/users/admin/rider/${id}`, { method: 'DELETE' }),
 
   // Image Upload
   uploadImage: async (file) => {

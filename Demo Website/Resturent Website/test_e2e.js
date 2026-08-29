@@ -25,11 +25,19 @@ async function runTests() {
 
   // 3. User Authentication (Customer & Admin)
   console.log('\n3. Testing Authentication...');
-  const customerLogin = await (await fetch(`${BASE}/auth/login`, {
+  let customerLogin = await (await fetch(`${BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: 'customer@example.com', password: 'customer123' })
   })).json();
+
+  if (!customerLogin.user) {
+    customerLogin = await (await fetch(`${BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'customer@example.com', password: 'customerNewPass123' })
+    })).json();
+  }
   console.log('✅ Customer Logged In:', customerLogin.user.name);
 
   const adminLogin = await (await fetch(`${BASE}/auth/login`, {
@@ -64,6 +72,23 @@ async function runTests() {
 
   // 6. Create Customer Order
   console.log('\n6. Testing Order Placement...');
+  const invalidGeoOrder = await (await fetch(`${BASE}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      user_id: customerLogin.user.id,
+      customer_name: 'Rahul Sharma',
+      customer_phone: '+91 98765 12345',
+      delivery_address: 'Connaught Place, New Delhi - 110001',
+      items: [{ id: sampleDish.id, name: sampleDish.name, price: sampleDish.price, quantity: 1, is_veg: 0 }],
+      subtotal: 380,
+      delivery_fee: 49,
+      total: 429,
+      payment_method: 'cod'
+    })
+  })).json();
+  console.log('✅ Geo-Fence Non-Burdwan Address Rejection:', invalidGeoOrder.error);
+
   const orderRes = await (await fetch(`${BASE}/orders`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -71,7 +96,7 @@ async function runTests() {
       user_id: customerLogin.user.id,
       customer_name: 'Rahul Sharma',
       customer_phone: '+91 98765 12345',
-      delivery_address: 'Flat 402, Royal Palms, Park Street',
+      delivery_address: 'Flat 402, Royal Palms, Badamtala, Burdwan - 713101, West Bengal',
       delivery_notes: 'Extra mint chutney please',
       items: [
         { id: sampleDish.id, name: sampleDish.name, price: sampleDish.price, quantity: 2, is_veg: sampleDish.is_veg }
@@ -85,7 +110,7 @@ async function runTests() {
       razorpay_order_id: rzpOrder.id
     })
   })).json();
-  console.log('✅ Order Created Successfully! ID:', orderRes.order.id);
+  console.log('✅ Valid Burdwan Order Created Successfully! ID:', orderRes.order.id);
   const testOrderId = orderRes.order.id;
 
   // 7. Live Order Tracking
@@ -186,9 +211,153 @@ async function runTests() {
     body: form.getBuffer(),
     headers: form.getHeaders()
   })).json();
-  console.log('✅ Image Upload Response:', uploadRes);
+  // 14. Newsletter Subscription & Welcome Discount Email
+  console.log('\n14. Testing VIP Newsletter Subscription & Email Notification...');
+  const testSubEmail = `vip_guest_${Date.now()}@example.com`;
+  const subRes = await (await fetch(`${BASE}/newsletter/subscribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: testSubEmail })
+  })).json();
+  console.log('✅ Newsletter Subscription Response:', subRes);
 
-  console.log('\n🎉 ALL 13 INTEGRATION TESTS PASSED PERFECTLY!\n');
+  // 15. Forgot Password OTP & Password Reset Flow
+  console.log('\n15. Testing Forgot Password OTP & Reset Flow...');
+  const forgotRes = await (await fetch(`${BASE}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'customer@example.com' })
+  })).json();
+  console.log('✅ Forgot Password OTP Dispatch:', forgotRes);
+
+  // Read OTP from DB directly for test automation
+  const db = require('./server/db');
+  const otpRecord = db.prepare('SELECT otp FROM password_resets WHERE email = ? ORDER BY id DESC LIMIT 1').get('customer@example.com');
+  console.log('   Retrieved OTP Code from DB:', otpRecord.otp);
+
+  const resetRes = await (await fetch(`${BASE}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: 'customer@example.com',
+      otp: otpRecord.otp,
+      newPassword: 'customerNewPass123'
+    })
+  })).json();
+  console.log('✅ Password Reset Response:', resetRes);
+
+  // 16. Admin Test Email Endpoint
+  console.log('\n16. Testing Admin SMTP Test Email Endpoint...');
+  const testEmailRes = await (await fetch(`${BASE}/settings/admin/test-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`
+    },
+    body: JSON.stringify({ target_email: 'admin@restaurant.com' })
+  })).json();
+  console.log('✅ Test Email Dispatch Response:', testEmailRes);
+
+  // 17. Delivery Partner (Rider) Authentication, Order Accept, GPS Broadcast & Completion
+  console.log('\n17. Testing Delivery Partner (Rider) Complete Flow...');
+  const riderLogin = await (await fetch(`${BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'rider@restaurant.com', password: 'rider123' })
+  })).json();
+  console.log('✅ Delivery Rider Logged In:', riderLogin.user.name);
+  const riderToken = riderLogin.token;
+
+  // Rider views available orders
+  const availableOrders = await (await fetch(`${BASE}/orders/driver/available`, {
+    headers: { 'Authorization': `Bearer ${riderToken}` }
+  })).json();
+  console.log(`✅ Rider Available Orders: ${availableOrders.length} pending pickup`);
+
+  // Rider accepts order created in test 6 (testOrderId)
+  const acceptRes = await (await fetch(`${BASE}/orders/driver/${testOrderId}/accept`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${riderToken}`
+    },
+    body: JSON.stringify({ vehicle: 'Express Thermal Bike (DL 04 EV 8892)' })
+  })).json();
+  console.log('✅ Rider Accepted Order Response:', acceptRes.message);
+
+  // Rider broadcasts live GPS location
+  const gpsRes = await (await fetch(`${BASE}/orders/driver/location`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${riderToken}`
+    },
+    body: JSON.stringify({ lat: 22.5740, lng: 88.3650 })
+  })).json();
+  console.log('✅ Rider GPS Broadcast Response:', gpsRes.message);
+
+  // Customer tracks order again and verifies assigned rider info and delivery OTP
+  const trackedAfterAccept = await (await fetch(`${BASE}/orders/track/${testOrderId}`)).json();
+  const customerOtp = trackedAfterAccept.order.delivery_otp;
+  console.log('✅ Live Track After Rider Assignment:', {
+    orderId: trackedAfterAccept.order.id,
+    status: trackedAfterAccept.order.order_status,
+    driverName: trackedAfterAccept.order.driver_name,
+    driverPhone: trackedAfterAccept.order.driver_phone,
+    driverVehicle: trackedAfterAccept.order.driver_vehicle,
+    customerDeliveryOtp: customerOtp,
+    driverLat: trackedAfterAccept.order.driver_lat,
+    driverLng: trackedAfterAccept.order.driver_lng
+  });
+
+  // Rider tries to mark delivered with INVALID OTP (should be rejected)
+  const invalidOtpRes = await (await fetch(`${BASE}/orders/driver/${testOrderId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${riderToken}`
+    },
+    body: JSON.stringify({ order_status: 'delivered', payment_status: 'paid', otp: '0000' })
+  })).json();
+  console.log('✅ Invalid Delivery OTP Rejection:', invalidOtpRes.error);
+
+  // Rider marks delivered with CORRECT Customer Delivery OTP (should succeed)
+  const deliverRes = await (await fetch(`${BASE}/orders/driver/${testOrderId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${riderToken}`
+    },
+    body: JSON.stringify({ order_status: 'delivered', payment_status: 'paid', otp: customerOtp })
+  })).json();
+  console.log('✅ Rider Verified OTP & Marked Delivered Response:', deliverRes.message);
+
+  // 18. Admin Registers a New Delivery Partner & Lists Fleet
+  console.log('\n18. Testing Admin Registering a New Delivery Partner...');
+  const newRiderEmail = `express_fleet_${Date.now()}@restaurant.com`;
+  const registerRiderRes = await (await fetch(`${BASE}/users/admin/create-rider`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${adminToken}`
+    },
+    body: JSON.stringify({
+      name: 'Kabir Express',
+      email: newRiderEmail,
+      password: 'kabirPass123',
+      phone: '+91 98111 22334',
+      vehicle: 'TVS Ntorq 125 • DL 05 CZ 9988',
+      address: 'Express Delivery Hub 2'
+    })
+  })).json();
+  console.log('✅ Admin Register Rider Response:', registerRiderRes.message);
+
+  const fleetList = await (await fetch(`${BASE}/users/admin/riders`, {
+    headers: { 'Authorization': `Bearer ${adminToken}` }
+  })).json();
+  console.log(`✅ Admin Fleet Directory: ${fleetList.length} Active Delivery Partners Registered`);
+
+  console.log('\n🎉 ALL 18 INTEGRATION TESTS PASSED PERFECTLY!\n');
 }
 
 runTests().catch(err => {

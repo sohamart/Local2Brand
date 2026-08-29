@@ -27,8 +27,15 @@ router.post('/', (req, res) => {
     );
 
     const reservation = db.prepare('SELECT * FROM reservations WHERE id = ?').get(result.lastInsertRowid);
+
+    // Send Table Reservation Confirmation Email asynchronously
+    const emailService = require('../services/emailService');
+    emailService.sendReservationConfirmationEmail(reservation).catch(err => {
+      console.error('Reservation confirmation email error:', err.message);
+    });
+
     res.status(201).json({
-      message: 'Table reservation submitted successfully! We will confirm via SMS / WhatsApp.',
+      message: 'Table reservation submitted successfully! Confirmation email dispatched.',
       reservation
     });
   } catch (err) {
