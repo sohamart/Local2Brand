@@ -206,7 +206,7 @@ export default function AuthModal({ isOpen, onClose, defaultAdminMode = false, o
               : authMode === 'admin' 
               ? 'Kitchen Admin Hub' 
               : authMode === 'register' 
-              ? 'Join Dining Club' 
+              ? 'Register New Account' 
               : 'Customer Sign In'}
           </h3>
           <p className="font-mono text-xs text-[#A9865A] mt-1">
@@ -217,7 +217,7 @@ export default function AuthModal({ isOpen, onClose, defaultAdminMode = false, o
               : authMode === 'admin' 
               ? 'Manage live dispatch, menu items & payment switches' 
               : authMode === 'register' 
-              ? 'Create an account to save tickets & receive discount vouchers' 
+              ? 'Register a new account to place orders and track live deliveries' 
               : 'Access your order history & live tracking'}
           </p>
         </div>
@@ -262,7 +262,7 @@ export default function AuthModal({ isOpen, onClose, defaultAdminMode = false, o
                 authMode === 'register' ? 'bg-[#E8AC4E] text-[#171310] font-bold shadow' : 'text-[#D6C8B2] hover:text-white'
               }`}
             >
-              Join
+              Register
             </button>
           </div>
         )}
@@ -517,10 +517,37 @@ export default function AuthModal({ isOpen, onClose, defaultAdminMode = false, o
                   : authMode === 'admin' 
                   ? 'Access Admin Dashboard' 
                   : authMode === 'register' 
-                  ? 'Create Member Account' 
+                  ? 'Register Account' 
                   : 'Sign In'}
               </span>
             </button>
+
+            {/* Quick Helper Switcher for New Users */}
+            <div className="text-center mt-3 font-mono text-xs text-[#A9865A]">
+              {authMode === 'register' ? (
+                <p>
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('customer'); setError(''); }}
+                    className="text-[#E8AC4E] font-bold hover:underline"
+                  >
+                    Sign In
+                  </button>
+                </p>
+              ) : (
+                <p>
+                  New customer?{' '}
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('register'); setError(''); }}
+                    className="text-[#E8AC4E] font-bold hover:underline"
+                  >
+                    Register here
+                  </button>
+                </p>
+              )}
+            </div>
           </form>
         )}
 
