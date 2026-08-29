@@ -1,6 +1,10 @@
 {
   "version": 2,
-  "outputDirectory": "dist",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "restaurant.db"
+    }
+  },
   "headers": [
     {
       "source": "/api/(.*)",
@@ -24,11 +28,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/index.js"
+      "destination": "/api/index.js"
     },
     {
       "source": "/(.*)",
-      "destination": "/index.js"
+      "destination": "/api/index.js"
     }
   ]
 }
