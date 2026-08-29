@@ -18,7 +18,6 @@ const getEnvDemoConfig = (prefix) => {
 
 export const demoCategories = [
   "All",
-  "LMS & Courses",
   "Restaurant",
   "Cafe",
   "Salon",
@@ -34,30 +33,6 @@ export const demoCategories = [
 ];
 
 export const demoWebsites = [
-  {
-    id: "lms",
-    slug: "lms",
-    templateId: "lms",
-    title: "SkillCraft Pro LMS & Online Course Selling Platform",
-    category: "LMS & Courses",
-    badge: "EdTech Flagship",
-    price: "$199",
-    priceInr: "₹6,999",
-    turnaround: "3 - 7 Days",
-    rating: 5.0,
-    reviewsCount: 78,
-    ...getEnvDemoConfig("LMS"),
-    shortDescription: "Complete full-stack LMS & video course selling platform with curriculum player, student dashboard, quiz engine, and 1-click checkout.",
-    description: "Designed for online educators, course creators, coding bootcamps, and digital academies. Features video lesson streaming, student progress tracking, quizzes, downloadable resources, certificate generation, and instant WhatsApp / payment gateway checkout.",
-    heroImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop",
-    features: [
-      "Full Video Lecture Player & Lesson Roadmap",
-      "Student Dashboard with Progress Tracking & Quiz Engine",
-      "1-Click Instant Course Checkout & WhatsApp Enrollment",
-      "Automated Completion Certificate & Notes Download"
-    ],
-    idealFor: "Online course creators, YouTube educators, coaching institutes & EdTech startups"
-  },
   {
     id: "cafe",
     slug: "cafe",
