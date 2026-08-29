@@ -7,7 +7,6 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "node -e \"const fs = require('fs'); fs.mkdirSync('dist', {recursive: true}); fs.writeFileSync('dist/index.html', ''); console.log('✅ Backend build ready');\"",
     "start": "node index.js",
     "dev": "node --watch index.js"
   },
