@@ -28,6 +28,7 @@ import { useOrderModal } from '../../context/OrderModalContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
+import DashboardLoader from '../../components/common/DashboardLoader';
 import { SEO } from '../../components/common/CommonUI';
 
 const STATUS_BADGES = {
@@ -97,13 +98,18 @@ export default function UserDashboard() {
 
     setUploadingAvatar(true);
     try {
-      const uploadRes = await api.uploadFile(file);
-      if (uploadRes.success && uploadRes.url) {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('file', file);
+      const uploadRes = await api.post('/upload', formData);
+      if (uploadRes && uploadRes.success && uploadRes.url) {
         setAvatarUrl(uploadRes.url);
         await updateProfile({ avatar: uploadRes.url });
         setSaveSuccess(true);
         toast.success('Avatar updated successfully! 🖼️');
         setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        throw new Error(uploadRes?.message || 'Upload failed');
       }
     } catch (err) {
       toast.error('Avatar upload failed: ' + err.message);
@@ -131,10 +137,11 @@ export default function UserDashboard() {
 
   if (authLoading || (loading && !user)) {
     return (
-      <div className="min-h-screen pt-44 pb-20 flex flex-col items-center justify-center space-y-4">
-        <div className="w-10 h-10 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-xs font-bold text-slate-500">Loading Client Dashboard...</p>
-      </div>
+      <DashboardLoader
+        title="Loading Client Workspace..."
+        subtitle="Connecting to real-time specifications, quote updates & inquiries"
+        role="client"
+      />
     );
   }
 

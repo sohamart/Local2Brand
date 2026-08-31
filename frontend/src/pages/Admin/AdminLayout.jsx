@@ -22,6 +22,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import ThemeToggle from '../../components/common/ThemeToggle';
 import AshokaChakra from '../../components/common/AshokaChakra';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard, exact: true },
@@ -44,10 +45,11 @@ export default function AdminLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-36 px-4 text-center space-y-4 flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-xs text-slate-400 font-bold">Verifying Admin Privileges...</p>
-      </div>
+      <DashboardLoader
+        title="Verifying Admin Privileges..."
+        subtitle="Connecting to LOCAL2BRAND master database & security matrix"
+        role="admin"
+      />
     );
   }
 
