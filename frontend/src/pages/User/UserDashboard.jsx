@@ -177,11 +177,12 @@ export default function UserDashboard() {
 
   if (authLoading || (loading && !user)) {
     return (
-      <DashboardLoader
-        title="Loading Client Workspace..."
-        subtitle="Connecting to real-time specifications, quote updates & inquiries"
-        role="client"
-      />
+      <div className="min-h-screen pt-36 pb-20 flex items-center justify-center">
+        <DashboardLoader
+          title="Loading Client Workspace..."
+          role="client"
+        />
+      </div>
     );
   }
 

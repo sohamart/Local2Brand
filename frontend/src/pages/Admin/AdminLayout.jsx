@@ -45,11 +45,12 @@ export default function AdminLayout() {
 
   if (loading) {
     return (
-      <DashboardLoader
-        title="Verifying Admin Privileges..."
-        subtitle="Connecting to LOCAL2BRAND master database & security matrix"
-        role="admin"
-      />
+      <div className="min-h-screen pt-36 pb-20 flex items-center justify-center">
+        <DashboardLoader
+          title="Verifying Admin Privileges..."
+          role="admin"
+        />
+      </div>
     );
   }
 
