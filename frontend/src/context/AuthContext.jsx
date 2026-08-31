@@ -4,8 +4,20 @@ import api from '../services/api';
 
 const AuthContext = createContext();
 
+export function ThemeProvider() {}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('l2b_cached_user');
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {}
+      }
+    }
+    return null;
+  });
   const [token, setToken] = useState(() => localStorage.getItem('l2b_auth_token'));
   const [loading, setLoading] = useState(true);
 
@@ -22,12 +34,12 @@ export function AuthProvider({ children }) {
           const res = await api.get('/auth/me');
           if (res.success && res.user) {
             setUser(res.user);
+            localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
           } else {
             logout(false);
           }
         } catch (err) {
-          console.warn('Session expired or invalid token');
-          logout(false);
+          console.warn('Session check notice, using cached profile:', err.message);
         }
       }
       setLoading(false);
@@ -52,6 +64,7 @@ export function AuthProvider({ children }) {
       api.setToken(res.token);
       setToken(res.token);
       setUser(res.user);
+      localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
       toast.success(`Welcome back, ${res.user.name || 'User'}! 👋`);
       return res.user;
     }
@@ -65,6 +78,7 @@ export function AuthProvider({ children }) {
       api.setToken(res.token);
       setToken(res.token);
       setUser(res.user);
+      localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
       toast.success(`Welcome to LOCAL2BRAND, ${res.user.name || 'User'}! 🎉`);
       return res.user;
     }
@@ -76,6 +90,7 @@ export function AuthProvider({ children }) {
     api.setToken(null);
     setToken(null);
     setUser(null);
+    localStorage.removeItem('l2b_cached_user');
     if (showToast) {
       toast.info('Logged out successfully. See you soon! 👋');
     }
@@ -85,6 +100,7 @@ export function AuthProvider({ children }) {
     const res = await api.put('/auth/update-profile', profileData);
     if (res.success && res.user) {
       setUser((prev) => ({ ...prev, ...res.user }));
+      localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
       return res.user;
     }
     throw new Error(res.message || 'Update failed');
