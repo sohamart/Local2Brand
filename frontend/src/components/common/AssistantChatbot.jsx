@@ -514,56 +514,70 @@ export default function AssistantChatbot() {
                     </div>
                   )}
 
-                  <div
-                    className={`max-w-[86%] sm:max-w-[82%] rounded-2xl p-3 sm:p-3.5 text-xs shadow-xs transition-all ${
-                      isUser
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-xs font-medium'
-                        : msg.isError
-                        ? 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-200 rounded-bl-xs'
-                        : 'bg-slate-100/95 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/70 rounded-bl-xs shadow-sm'
-                    }`}
-                  >
-                    {renderMessageContent(msg.content)}
+                  {isUser ? (
+                    <div className="max-w-[86%] sm:max-w-[82%] rounded-2xl rounded-br-xs p-3 sm:p-3.5 text-xs font-medium bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white shadow-md shadow-purple-500/20">
+                      {renderMessageContent(msg.content)}
+                    </div>
+                  ) : (
+                    <div className="max-w-[86%] sm:max-w-[82%] rounded-2xl rounded-bl-xs p-[1.5px] relative overflow-hidden shadow-xs group">
+                      {/* Animated Conic Border on AI Message Bubble */}
+                      <span className="absolute -inset-[150%] rounded-2xl bg-[conic-gradient(from_0deg,transparent_0_240deg,#a855f7_280deg,#ec4899_320deg,#6366f1_360deg)] animate-spin-conic pointer-events-none opacity-60 dark:opacity-80" />
 
-                    {/* AI Provider attribution tag */}
-                    {!isUser && msg.provider && msg.provider !== 'unknown' && (
-                      <div className="mt-2.5 pt-1.5 border-t border-slate-200/60 dark:border-slate-700/50 text-[9px] text-slate-400 dark:text-slate-500 font-mono flex items-center justify-between">
-                        <span className="flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400">
-                          <span>⚡</span>
-                          <span>{msg.provider}</span>
-                          {msg.model && <span className="opacity-70">({msg.model})</span>}
-                        </span>
-                        {msg.timestamp && (
-                          <span>
-                            {new Date(msg.timestamp).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
+                      {/* Inner High-Contrast Message Core */}
+                      <div
+                        className={`relative z-10 w-full h-full rounded-2xl rounded-bl-xs p-3 sm:p-3.5 text-xs ${
+                          msg.isError
+                            ? 'bg-rose-50/95 dark:bg-rose-950/90 text-rose-900 dark:text-rose-200 border border-rose-200 dark:border-rose-800'
+                            : 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/80 dark:border-slate-800/80 shadow-xs'
+                        }`}
+                      >
+                        {renderMessageContent(msg.content)}
+
+                        {/* AI Provider attribution tag */}
+                        {msg.provider && msg.provider !== 'unknown' && (
+                          <div className="mt-2.5 pt-1.5 border-t border-slate-200/60 dark:border-slate-700/50 text-[9px] text-slate-400 dark:text-slate-500 font-mono flex items-center justify-between">
+                            <span className="flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400">
+                              <span>⚡</span>
+                              <span>{msg.provider}</span>
+                              {msg.model && <span className="opacity-70">({msg.model})</span>}
+                            </span>
+                            {msg.timestamp && (
+                              <span>
+                                {new Date(msg.timestamp).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
 
-            {/* Typing Animation */}
+            {/* Typing Animation with Animated Border */}
             {isTyping && (
               <div className="flex items-start gap-2.5">
                 <div className="w-7 h-7 rounded-xl l2b-gradient-bg text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5">
                   <Sparkles className="w-3.5 h-3.5 animate-spin" />
                 </div>
-                <div className="p-3 rounded-2xl rounded-bl-xs bg-slate-100/95 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/70 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium ml-1.5">
-                    L2B AI is thinking...
-                  </span>
+                <div className="rounded-2xl rounded-bl-xs p-[1.5px] relative overflow-hidden shadow-xs">
+                  <span className="absolute -inset-[150%] rounded-2xl bg-[conic-gradient(from_0deg,transparent_0_240deg,#a855f7_280deg,#ec4899_320deg,#6366f1_360deg)] animate-spin-conic pointer-events-none opacity-70" />
+                  <div className="relative z-10 p-3 rounded-2xl rounded-bl-xs bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/80 dark:border-slate-800/80 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium ml-1.5">
+                      L2B AI is generating response...
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
+
 
             {/* PREMIUM SUGGESTED QUESTIONS SYSTEM */}
             {messages.length <= 2 && !isTyping && (
