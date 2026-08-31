@@ -48,7 +48,8 @@ class ApiClient {
     }
 
     const controller = new AbortController();
-    const timeoutDuration = options.timeout || (endpoint.includes('/chat') ? 45000 : 12000);
+    const isLongRunning = endpoint.includes('/chat') || endpoint.includes('broadcast') || endpoint.includes('email');
+    const timeoutDuration = options.timeout || (isLongRunning ? 60000 : 15000);
     const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
     const config = {

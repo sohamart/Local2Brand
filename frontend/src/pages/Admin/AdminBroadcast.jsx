@@ -384,69 +384,69 @@ export default function AdminBroadcast() {
 
           {/* Email Inbox Emulation Container */}
           <div
-            className={`mx-auto rounded-3xl bg-[#f1f5f9] border border-slate-300 dark:border-slate-800 shadow-2xl overflow-hidden transition-all ${
+            className={`mx-auto rounded-2xl bg-slate-100 dark:bg-[#070a12] border border-slate-300 dark:border-slate-800 shadow-2xl overflow-hidden transition-all ${
               previewDevice === 'mobile' ? 'max-w-sm' : 'w-full'
             }`}
           >
             {/* Simulated Mail Client Header */}
-            <div className="p-3.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 space-y-1.5 text-[11px] text-slate-500">
+            <div className="p-3.5 bg-white dark:bg-[#0b0f19] border-b border-slate-200 dark:border-slate-800 space-y-1.5 text-[11px] text-slate-500 dark:text-slate-400">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-purple-700 dark:text-purple-400 font-bold">From: LOCAL2BRAND Agency &lt;hello@local2brand.com&gt;</span>
+                <span className="font-mono text-purple-600 dark:text-purple-400 font-bold">From: LOCAL2BRAND Agency &lt;hello@local2brand.com&gt;</span>
                 <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300 font-mono font-bold">TLS SSL</span>
               </div>
               <div className="text-slate-700 dark:text-slate-300 font-semibold truncate">
-                <span className="text-slate-400">To: </span>
+                <span className="text-slate-400 dark:text-slate-500">To: </span>
                 <span>{targetAudience === 'all' ? 'All Registered Users' : `${targetAudience.toUpperCase()} Audience`}</span>
               </div>
               <div className="text-slate-900 dark:text-white font-bold text-xs truncate">
-                <span className="text-slate-400 font-normal">Subject: </span>
+                <span className="text-slate-400 dark:text-slate-500 font-normal">Subject: </span>
                 <span>{subject || 'No Subject Specified'}</span>
               </div>
             </div>
 
             {/* Email Body Canvas */}
-            <div className="p-3 sm:p-5 bg-[#f1f5f9]">
-              <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-4 sm:p-6 bg-slate-100 dark:bg-[#070a12]">
+              <div className="rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-md">
                 
-                {/* 5px Gradient Bar */}
-                <div className="h-1.5 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600" />
+                {/* 4px Gradient Bar */}
+                <div className="h-1 bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-500" />
 
                 {/* Email Header */}
-                <div className="p-6 text-center border-b border-slate-100 space-y-2 bg-white">
-                  <div className="inline-block px-3.5 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-[10px] font-extrabold tracking-wider uppercase">
+                <div className="p-6 text-center border-b border-slate-100 dark:border-slate-800/80 space-y-2 bg-white dark:bg-[#111827]">
+                  <div className="inline-block px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 text-purple-700 dark:text-purple-300 text-[10px] font-bold tracking-wider uppercase">
                     ⚡ OFFICIAL AGENCY BROADCAST
                   </div>
-                  <h1 className="text-xl font-black text-slate-900 tracking-tight">
-                    LOCAL<span className="text-fuchsia-600">2</span>BRAND
+                  <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                    LOCAL<span className="text-pink-500">2</span>BRAND
                   </h1>
-                  <p className="text-[11px] text-slate-500 font-semibold tracking-wide uppercase">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold tracking-wide uppercase">
                     HIGH-PERFORMANCE DIGITAL AGENCY &amp; ENGINEERING
                   </p>
                 </div>
 
                 {/* Hero Title */}
                 {heading && (
-                  <div className="px-6 pt-5 pb-1 bg-white">
-                    <h2 className="text-base font-extrabold text-slate-900 leading-snug">
+                  <div className="px-6 pt-5 pb-1 bg-white dark:bg-[#111827]">
+                    <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100 leading-snug">
                       {heading}
                     </h2>
                   </div>
                 )}
 
                 {/* Message Box */}
-                <div className="p-6 pt-2 space-y-4 text-xs bg-white">
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 leading-relaxed whitespace-pre-line text-slate-700 break-words">
+                <div className="p-6 pt-2 space-y-4 text-xs bg-white dark:bg-[#111827]">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#162032] border border-slate-200 dark:border-slate-800 leading-relaxed whitespace-pre-line text-slate-700 dark:text-slate-200 break-words">
                     {messageHtml || 'Email body text will appear here...'}
                   </div>
 
                   {/* CTA Button */}
                   {actionText && actionUrl && (
-                    <div className="pt-2 text-center">
+                    <div className="pt-3 text-center">
                       <a
                         href={actionUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-block px-6 py-3 rounded-xl font-extrabold text-xs text-white bg-gradient-to-r from-purple-600 to-pink-600 shadow-md shadow-purple-500/20 hover:opacity-95 transition-all"
+                        className="inline-block px-7 py-3 rounded-xl font-black text-xs text-white bg-gradient-to-r from-violet-600 via-fuchsia-600 to-rose-500 shadow-lg shadow-fuchsia-500/30 hover:opacity-95 transition-all tracking-wide"
                       >
                         {actionText} &rarr;
                       </a>
@@ -455,12 +455,12 @@ export default function AdminBroadcast() {
                 </div>
 
                 {/* Email Footer */}
-                <div className="p-4 bg-slate-50 border-t border-slate-200 text-center space-y-1.5 text-[10px] text-slate-500">
+                <div className="p-4 bg-slate-50 dark:bg-[#0b0f19] border-t border-slate-200 dark:border-slate-800 text-center space-y-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                   <p>You received this official dispatch as a registered client on LOCAL2BRAND.</p>
-                  <p className="text-slate-600 font-medium">
+                  <p className="text-slate-600 dark:text-slate-400 font-medium">
                     ✉️ stackaddacontact@gmail.com • sohamduttabwn@gmail.com
                   </p>
-                  <p className="text-slate-400 font-semibold pt-0.5">
+                  <p className="text-slate-400 dark:text-slate-500 font-semibold pt-0.5">
                     © {new Date().getFullYear()} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved.
                   </p>
                 </div>
