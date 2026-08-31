@@ -213,25 +213,32 @@ export const dataStore = {
   },
 
   async updateSettings(updates) {
+    const { _id, ...cleanUpdates } = updates;
+    let savedSettings = null;
+
     if (isDbConnected()) {
       try {
         const { SiteSettings } = await import('../models/SiteSettings.js');
-        const { _id, ...cleanUpdates } = updates;
         let s = await SiteSettings.findOne();
         if (!s) {
           s = new SiteSettings({ ...DEFAULT_SETTINGS, ...cleanUpdates });
         } else {
           Object.assign(s, cleanUpdates);
         }
-        return await s.save();
+        savedSettings = await s.save();
       } catch (err) {
-        console.warn('MongoDB updateSettings notice:', err.message);
+        console.warn('MongoDB updateSettings notice, syncing to local fallback:', err.message);
       }
     }
-    const current = await this.getSettings();
-    const updated = { ...current, ...updates, updatedAt: new Date().toISOString() };
+
+    const current = (await this.getSettings()) || {};
+    const updated = {
+      ...current,
+      ...(savedSettings ? (savedSettings.toObject ? savedSettings.toObject() : savedSettings) : cleanUpdates),
+      updatedAt: new Date().toISOString()
+    };
     writeLocalStore('settings', [updated]);
-    return updated;
+    return savedSettings || updated;
   },
 
   // Query Leads

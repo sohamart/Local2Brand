@@ -8,7 +8,17 @@ import { demoCategories, demoWebsites } from '../../data/demos';
 import api from '../../services/api';
 
 export default function DemoShowcase() {
-  const [demosList, setDemosList] = useState(demoWebsites);
+  const [demosList, setDemosList] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('l2b_cached_demos');
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {}
+      }
+    }
+    return [];
+  });
   const [activeCategory, setActiveCategory] = useState('All');
 
   useEffect(() => {
@@ -16,15 +26,8 @@ export default function DemoShowcase() {
       try {
         const res = await api.get('/demos');
         if (res.success && Array.isArray(res.demos) && res.demos.length > 0) {
-          const merged = res.demos.map((apiDemo) => {
-            const staticMatch = demoWebsites.find((d) => d.slug === apiDemo.slug || d.templateId === apiDemo.templateId);
-            return {
-              ...(staticMatch || {}),
-              ...apiDemo,
-              isPublished: apiDemo.status === 'published' || (apiDemo.status !== 'coming_soon' && apiDemo.isPublished !== false)
-            };
-          });
-          setDemosList(merged);
+          setDemosList(res.demos);
+          localStorage.setItem('l2b_cached_demos', JSON.stringify(res.demos));
         }
       } catch (err) {
         console.warn('Using default demo dataset fallback:', err);
@@ -32,6 +35,14 @@ export default function DemoShowcase() {
     };
     fetchDemos();
   }, []);
+
+  const dynamicCategories = React.useMemo(() => {
+    const cats = new Set(['All']);
+    demosList.forEach((d) => {
+      if (d.category) cats.add(d.category);
+    });
+    return Array.from(cats);
+  }, [demosList]);
 
   const filteredDemos = activeCategory === 'All'
     ? demosList
@@ -51,7 +62,7 @@ export default function DemoShowcase() {
         {/* Category Filters Bar with Fade-Up */}
         <ScrollReveal variant="fade-up" delay={100} duration={600}>
           <div className="mt-12 flex items-center justify-start sm:justify-center overflow-x-auto pb-4 pt-1 no-scrollbar gap-2">
-            {demoCategories.map((cat) => {
+            {dynamicCategories.map((cat) => {
               const isActive = activeCategory === cat;
               return (
                 <button
@@ -74,7 +85,7 @@ export default function DemoShowcase() {
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {filteredDemos.slice(0, 6).map((demo, index) => (
             <ScrollReveal
-              key={demo.id}
+              key={demo._id || demo.slug || demo.id}
               variant="fade-up"
               delay={index * 90}
               duration={700}

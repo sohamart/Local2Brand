@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { dataStore } from '../config/dataAdapter.js';
 
 export const getSettings = async (req, res) => {
@@ -40,7 +41,10 @@ export const updateSettings = async (req, res) => {
       if (req.body[f] !== undefined) updates[f] = req.body[f];
     });
 
-    if (req.user) updates.updatedBy = req.user.id;
+    const userId = req.user?.id || req.user?._id;
+    if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+      updates.updatedBy = userId;
+    }
 
     const settings = await dataStore.updateSettings(updates);
 
@@ -50,6 +54,7 @@ export const updateSettings = async (req, res) => {
       settings,
     });
   } catch (error) {
+    console.error('Update settings error:', error);
     return res.status(500).json({
       success: false,
       message: error.message || 'Error updating settings',

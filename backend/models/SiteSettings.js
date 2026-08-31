@@ -66,6 +66,7 @@ const siteSettingsSchema = new mongoose.Schema(
     announcementBar: {
       enabled: { type: Boolean, default: true },
       text: { type: String, default: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025' },
+      badge: { type: String, default: 'FLASH OFFER' },
       link: { type: String, default: '/pricing' },
     },
     bannerImage: {

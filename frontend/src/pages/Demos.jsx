@@ -3,38 +3,53 @@ import { Search, Sparkles, Filter, CheckCircle2, ArrowRight } from 'lucide-react
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
 import DemoCard from '../components/demos/DemoCard';
-import { demoCategories, demoWebsites } from '../data/demos';
 import FinalCTA from '../components/home/FinalCTA';
 import AshokaChakra from '../components/common/AshokaChakra';
+import DashboardLoader from '../components/common/DashboardLoader';
 import api from '../services/api';
 
 export default function Demos() {
-  const [demosList, setDemosList] = useState(demoWebsites);
+  const [demosList, setDemosList] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('l2b_cached_demos');
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch (e) {}
+      }
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(demosList.length === 0);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchDemos = async () => {
-      try {
-        const res = await api.get('/demos');
-        if (res.success && Array.isArray(res.demos) && res.demos.length > 0) {
-          // Merge API demos with static demo attributes if needed
-          const merged = res.demos.map((apiDemo) => {
-            const staticMatch = demoWebsites.find((d) => d.slug === apiDemo.slug || d.templateId === apiDemo.templateId);
-            return {
-              ...(staticMatch || {}),
-              ...apiDemo,
-              isPublished: apiDemo.status === 'published' || (apiDemo.status !== 'coming_soon' && apiDemo.isPublished !== false)
-            };
-          });
-          setDemosList(merged);
-        }
-      } catch (err) {
-        console.warn('Using default demo dataset fallback:', err);
+  const fetchDemos = async () => {
+    try {
+      const res = await api.get('/demos');
+      if (res.success && Array.isArray(res.demos)) {
+        setDemosList(res.demos);
+        localStorage.setItem('l2b_cached_demos', JSON.stringify(res.demos));
       }
-    };
+    } catch (err) {
+      console.warn('Error fetching demos from database:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchDemos();
   }, []);
+
+  // Dynamically extract distinct categories from database demos
+  const dynamicCategories = useMemo(() => {
+    const cats = new Set(['All']);
+    demosList.forEach((d) => {
+      if (d.category) cats.add(d.category);
+    });
+    return Array.from(cats);
+  }, [demosList]);
 
   const filteredDemos = useMemo(() => {
     return demosList.filter((demo) => {
@@ -42,8 +57,8 @@ export default function Demos() {
       const matchesSearch =
         demo.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         demo.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        demo.shortDescription?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (demo.idealFor && demo.idealFor.toLowerCase().includes(searchQuery.toLowerCase()));
+        demo.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (demo.features && demo.features.some((f) => f.toLowerCase().includes(searchQuery.toLowerCase())));
 
       return matchesCategory && matchesSearch;
     });
@@ -111,7 +126,7 @@ export default function Demos() {
 
             {/* Horizontal Filter Bar */}
             <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar justify-start sm:justify-center">
-              {demoCategories.map((cat) => {
+              {dynamicCategories.map((cat) => {
                 const isActive = activeCategory === cat;
                 return (
                   <button
@@ -134,10 +149,14 @@ export default function Demos() {
 
         {/* Templates Grid Container */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 sm:mt-12">
-          {filteredDemos.length > 0 ? (
+          {loading ? (
+            <div className="py-20">
+              <DashboardLoader title="Loading Live Websites..." />
+            </div>
+          ) : filteredDemos.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {filteredDemos.map((demo) => (
-                <DemoCard key={demo.id} demo={demo} />
+                <DemoCard key={demo._id || demo.slug || demo.id} demo={demo} />
               ))}
             </div>
           ) : (
