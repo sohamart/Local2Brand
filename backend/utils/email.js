@@ -107,7 +107,10 @@ export const sendLeadConfirmationEmail = async (lead) => {
 
 // 3. Admin Notification on New Lead
 export const sendAdminNewLeadAlert = async (lead) => {
-  const adminEmail = process.env.SUPPORT_EMAIL || 'admin@local2brand.com';
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
+
   const subject = `🚨 [NEW LEAD] ${lead.name} submitted ${lead.websiteType} (${lead.budget})`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #1e1e2e; color: #ffffff; padding: 24px; border-radius: 10px;">
@@ -126,24 +129,66 @@ export const sendAdminNewLeadAlert = async (lead) => {
       <p><a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/admin/leads" style="background: #6366f1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">Open Admin Panel</a></p>
     </div>
   `;
-  return await sendEmail({ to: adminEmail, subject, html, text: `New lead from ${lead.name}: ${lead.phone}` });
+  return await sendEmail({ to: recipients, subject, html, text: `New lead from ${lead.name}: ${lead.phone}` });
 };
 
-// 4. Callback Scheduled Email (to Client and Admin)
+// 4. Callback Scheduled Email (to Client)
 export const sendCallbackConfirmationEmail = async (callback) => {
   if (!callback.email) return;
   const subject = `Callback Request Confirmed — LOCAL2BRAND`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 30px; border-radius: 12px;">
-      <h2 style="color: #34d399; margin-top: 0;">Callback Scheduled! 📞</h2>
-      <p style="color: #cbd5e1;">Hi <strong>${callback.name}</strong>, we have received your callback request. Our senior consultant will call you at <strong>${callback.phone}</strong> around <strong>${callback.preferredTime}</strong>.</p>
-      <p style="color: #94a3b8; font-size: 13px;">Topic: ${callback.topic}</p>
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: #38bdf8; margin: 0;">LOCAL<span style="color: #ec4899;">2</span>BRAND</h2>
+        <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Executive Tech Consultation</p>
+      </div>
+      <div style="background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
+        <h3 style="color: #34d399; margin-top: 0;">Callback Scheduled! 📞</h3>
+        <p style="color: #cbd5e1; line-height: 1.6;">Hi <strong>${callback.name}</strong>, we have received your callback request. Our senior consultant will call you at <strong style="color: #38bdf8;">${callback.phone}</strong> around <strong>${callback.preferredTime}</strong>.</p>
+        <p style="color: #94a3b8; font-size: 13px;"><strong>Topic:</strong> ${callback.topic}</p>
+        ${callback.notes ? `<p style="color: #94a3b8; font-size: 13px;"><strong>Notes:</strong> ${callback.notes}</p>` : ''}
+      </div>
+      <p style="text-align: center; color: #64748b; font-size: 12px; margin-top: 24px;">© ${new Date().getFullYear()} LOCAL2BRAND. All rights reserved.</p>
     </div>
   `;
   return await sendEmail({ to: callback.email, subject, html, text: `Callback request received for ${callback.phone}` });
 };
 
-// 5. Lead Status Update Email
+// 5. Admin & Brand Instant Alert on Callback Request
+export const sendAdminCallbackAlert = async (callback) => {
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
+
+  const subject = `🚨 [INSTANT CALLBACK REQUEST] ${callback.name} — ${callback.phone}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #334155;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: #a855f7; margin: 0;">LOCAL<span style="color: #ec4899;">2</span>BRAND</h2>
+        <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Instant Callback Notification</p>
+      </div>
+      <div style="background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
+        <h3 style="color: #38bdf8; margin-top: 0;">📞 New Instant Callback Request!</h3>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; color: #cbd5e1;">
+          <tr style="border-bottom: 1px solid #334155;"><td style="padding: 8px 0; color: #94a3b8; width: 35%;">Client Name:</td><td style="padding: 8px 0; font-weight: bold; color: #f8fafc;">${callback.name}</td></tr>
+          <tr style="border-bottom: 1px solid #334155;"><td style="padding: 8px 0; color: #94a3b8;">Phone Number:</td><td style="padding: 8px 0; font-weight: bold; color: #34d399; font-size: 15px;">${callback.phone}</td></tr>
+          <tr style="border-bottom: 1px solid #334155;"><td style="padding: 8px 0; color: #94a3b8;">Email Address:</td><td style="padding: 8px 0; color: #f8fafc;">${callback.email || 'Not provided'}</td></tr>
+          <tr style="border-bottom: 1px solid #334155;"><td style="padding: 8px 0; color: #94a3b8;">Preferred Slot:</td><td style="padding: 8px 0; font-weight: bold; color: #f59e0b;">${callback.preferredTime}</td></tr>
+          <tr style="border-bottom: 1px solid #334155;"><td style="padding: 8px 0; color: #94a3b8;">Discussion Topic:</td><td style="padding: 8px 0; color: #f8fafc;">${callback.topic}</td></tr>
+          ${callback.notes ? `<tr><td style="padding: 8px 0; color: #94a3b8;">Notes / Inquiry:</td><td style="padding: 8px 0; color: #cbd5e1;">${callback.notes}</td></tr>` : ''}
+        </table>
+        <div style="margin-top: 20px; text-align: center;">
+          <a href="${process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app'}/admin/callbacks" style="background: linear-gradient(135deg, #9333ea, #db2777); color: white; padding: 10px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 13px;">Manage in Admin Panel</a>
+        </div>
+      </div>
+      <p style="text-align: center; color: #64748b; font-size: 11px; margin-top: 18px;">Automated Notification from LOCAL2BRAND AI Chatbot & Lead System</p>
+    </div>
+  `;
+
+  return await sendEmail({ to: recipients, subject, html, text: `Instant callback request from ${callback.name} (${callback.phone}) for ${callback.topic}` });
+};
+
+// 6. Lead Status Update Email
 export const sendLeadStatusUpdateEmail = async (lead) => {
   const subject = `Update on your project proposal status: ${lead.status.toUpperCase()}`;
   const html = `

@@ -1,5 +1,5 @@
 import { dataStore } from '../config/dataAdapter.js';
-import { sendCallbackConfirmationEmail } from '../utils/email.js';
+import { sendCallbackConfirmationEmail, sendAdminCallbackAlert } from '../utils/email.js';
 
 export const createCallback = async (req, res) => {
   try {
@@ -28,6 +28,9 @@ export const createCallback = async (req, res) => {
       type: 'callback',
       link: `/admin/callbacks`,
     }).catch((err) => console.warn('Admin notification error:', err.message));
+
+    // Instant alert to Admin (sohamduttabwn@gmail.com) and Brand (stackaddacontact@gmail.com)
+    sendAdminCallbackAlert(callback).catch((err) => console.warn('Admin callback alert error:', err.message));
 
     if (callback.email) {
       sendCallbackConfirmationEmail(callback).catch((err) => console.warn('Callback email error:', err.message));

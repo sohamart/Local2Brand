@@ -26,17 +26,32 @@ export default function CallbackModal() {
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
-    name: user?.name || '',
-    phone: user?.phone || '',
-    email: user?.email || '',
-    preferredTime: callbackData?.preferredTime || '⚡ ASAP (Within 30 mins during business hours)',
-    topic: callbackData?.topic || 'General Website Discussion',
+    name: '',
+    phone: '',
+    email: '',
+    preferredTime: '⚡ ASAP (Within 30 mins during business hours)',
+    topic: 'General Website Discussion',
     notes: ''
   });
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  React.useEffect(() => {
+    if (isCallbackOpen) {
+      setFormData({
+        name: user?.name || '',
+        phone: user?.phone || '',
+        email: user?.email || '',
+        preferredTime: callbackData?.preferredTime || '⚡ ASAP (Within 30 mins during business hours)',
+        topic: callbackData?.topic || 'General Website Discussion',
+        notes: ''
+      });
+      setSubmitted(false);
+      setErrorMessage('');
+    }
+  }, [isCallbackOpen, user, callbackData]);
 
   if (!isCallbackOpen) return null;
 

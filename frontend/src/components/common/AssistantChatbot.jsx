@@ -154,6 +154,88 @@ export default function AssistantChatbot() {
   const [errorMessage, setErrorMessage] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
+  // Inline Instant Callback Request Drawer State
+  const [showCallbackDrawer, setShowCallbackDrawer] = useState(false);
+  const [callbackFormData, setCallbackFormData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    preferredTime: '⚡ ASAP (Within 15-30 mins)',
+    topic: 'L2B AI Instant Callback Request',
+    notes: '',
+  });
+  const [isSubmittingCallback, setIsSubmittingCallback] = useState(false);
+  const [callbackSuccessMessage, setCallbackSuccessMessage] = useState('');
+
+  // Update callbackFormData when user changes
+  useEffect(() => {
+    if (user) {
+      setCallbackFormData((prev) => ({
+        ...prev,
+        name: prev.name || user.name || '',
+        phone: prev.phone || user.phone || '',
+        email: prev.email || user.email || '',
+      }));
+    }
+  }, [user]);
+
+  const handleOpenCallbackDrawer = (customTopic) => {
+    setCallbackFormData({
+      name: user?.name || '',
+      phone: user?.phone || '',
+      email: user?.email || '',
+      preferredTime: '⚡ ASAP (Within 15-30 mins)',
+      topic: customTopic || 'L2B AI Instant Callback Request',
+      notes: '',
+    });
+    setCallbackSuccessMessage('');
+    setShowCallbackDrawer(true);
+  };
+
+  const handleSubmitInlineCallback = async (e) => {
+    e.preventDefault();
+    if (!callbackFormData.name.trim() || !callbackFormData.phone.trim()) {
+      setErrorMessage('Please provide your name and phone number for callback.');
+      return;
+    }
+
+    setIsSubmittingCallback(true);
+    setErrorMessage('');
+
+    try {
+      const res = await api.post('/callbacks', {
+        name: callbackFormData.name.trim(),
+        phone: callbackFormData.phone.trim(),
+        email: callbackFormData.email.trim(),
+        preferredTime: callbackFormData.preferredTime,
+        topic: callbackFormData.topic,
+        notes: callbackFormData.notes,
+      });
+
+      if (res?.success) {
+        setShowCallbackDrawer(false);
+        const confirmMsg = {
+          role: 'assistant',
+          content: `### 📞 Instant Callback Request Confirmed!\n\nThank you, **${callbackFormData.name}**! Our senior executive team has received your priority call request.\n\n* **Phone:** \`${callbackFormData.phone}\`\n* **Preferred Slot:** ${callbackFormData.preferredTime}\n* **Email Alert:** Dispatched to Executive Desk & Admin (\`sohamduttabwn@gmail.com\` & \`stackaddacontact@gmail.com\`).\n\nWe will connect with you shortly!`,
+          timestamp: new Date().toISOString(),
+          isStreaming: true,
+          provider: 'L2B Live Alert Engine',
+        };
+        const updated = [...messages, confirmMsg];
+        setMessages(updated);
+        localStorage.setItem('l2b_chat_messages', JSON.stringify(updated));
+        localStorage.setItem('l2b_chat_session_time', Date.now().toString());
+      } else {
+        throw new Error(res?.message || 'Failed to register callback request');
+      }
+    } catch (err) {
+      console.error('Callback submit error:', err);
+      setErrorMessage(err.data?.message || err.message || 'Error submitting callback request');
+    } finally {
+      setIsSubmittingCallback(false);
+    }
+  };
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -247,6 +329,7 @@ export default function AssistantChatbot() {
           provider: res.provider,
           model: res.model,
           timestamp: res.timestamp || new Date().toISOString(),
+          isStreaming: true,
         };
         const finalThread = [...updatedWithUser, assistantReply];
         setMessages(finalThread);
@@ -264,6 +347,7 @@ export default function AssistantChatbot() {
         content: `⚠️ *Notice*: We encountered a temporary connection issue. You can retry your message or request an instant callback from our founders.`,
         timestamp: new Date().toISOString(),
         isError: true,
+        isStreaming: true,
       };
       const threadWithError = [...updatedWithUser, errorReply];
       setMessages(threadWithError);
@@ -408,6 +492,47 @@ export default function AssistantChatbot() {
     return <div className="space-y-1">{elements}</div>;
   };
 
+  // Typewriter animated stream for assistant responses
+  const TypewriterContent = ({ text, isStreaming, onComplete }) => {
+    const [displayedLength, setDisplayedLength] = useState(isStreaming ? 0 : text.length);
+
+    useEffect(() => {
+      if (!isStreaming) {
+        setDisplayedLength(text.length);
+        return;
+      }
+
+      setDisplayedLength(0);
+      let current = 0;
+      const step = Math.max(3, Math.floor(text.length / 35));
+      const interval = setInterval(() => {
+        current += step;
+        if (current >= text.length) {
+          current = text.length;
+          setDisplayedLength(text.length);
+          clearInterval(interval);
+          if (onComplete) onComplete();
+        } else {
+          setDisplayedLength(current);
+        }
+      }, 15);
+
+      return () => clearInterval(interval);
+    }, [text, isStreaming]);
+
+    const visibleText = isStreaming ? text.slice(0, displayedLength) : text;
+    const isTypingActive = isStreaming && displayedLength < text.length;
+
+    return (
+      <div className="relative">
+        {renderMessageContent(visibleText, false)}
+        {isTypingActive && (
+          <span className="inline-block w-2 h-3.5 bg-purple-600 dark:bg-purple-400 ml-1 rounded-xs animate-pulse align-middle" />
+        )}
+      </div>
+    );
+  };
+
   const filteredQuestions = activeCategory === 'all'
     ? PREMIUM_QUESTIONS
     : PREMIUM_QUESTIONS.filter((q) => q.category === activeCategory);
@@ -521,17 +646,16 @@ export default function AssistantChatbot() {
             {/* Quick Action Shortcuts */}
             <div className="px-3 py-2 bg-slate-50/80 dark:bg-slate-950/40 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 text-[11px]">
               <button
-                onClick={() => {
-                  setIsOpen(false);
-                  openCallbackModal({ topic: 'L2B AI Callback Inquiry' });
-                }}
-                className="px-2.5 py-1 rounded-xl bg-purple-100/80 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/60 text-purple-900 dark:text-purple-200 font-bold flex items-center gap-1 shrink-0 hover:bg-purple-200/80 transition-colors cursor-pointer"
+                type="button"
+                onClick={() => handleOpenCallbackDrawer('Direct Founder 15-Minute Callback')}
+                className="px-2.5 py-1 rounded-xl bg-purple-100/90 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-800 text-purple-950 dark:text-purple-200 font-black flex items-center gap-1 shrink-0 hover:bg-purple-200/90 transition-colors cursor-pointer shadow-xs"
               >
                 <PhoneCall className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                <span>Call Request</span>
+                <span>📞 Instant Callback</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => {
                   setIsOpen(false);
                   openOrderModal();
@@ -539,20 +663,133 @@ export default function AssistantChatbot() {
                 className="px-2.5 py-1 rounded-xl bg-amber-100/80 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 font-bold flex items-center gap-1 shrink-0 hover:bg-amber-200/80 transition-colors cursor-pointer"
               >
                 <Zap className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                <span>Get Proposal</span>
+                <span>⚡ Get Proposal</span>
               </button>
 
               <button
-                onClick={() => {
-                  openWhatsAppChat(generateWhatsAppGeneralUrl());
-                  setIsOpen(false);
-                }}
-                className="px-2.5 py-1 rounded-xl bg-emerald-100/80 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200 font-bold flex items-center gap-1 shrink-0 hover:bg-emerald-200/80 transition-colors cursor-pointer"
+                type="button"
+                onClick={() => handleSendMessage('How can I claim 20% discount with promo code INDIA2025?')}
+                className="px-2.5 py-1 rounded-xl bg-pink-100/80 dark:bg-pink-950/60 border border-pink-200 dark:border-pink-800/60 text-pink-900 dark:text-pink-200 font-bold flex items-center gap-1 shrink-0 hover:bg-pink-200/80 transition-colors cursor-pointer"
               >
-                <MessageCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                <span>WhatsApp</span>
+                <Tag className="w-3 h-3 text-pink-600 dark:text-pink-400" />
+                <span>🎁 20% Discount</span>
               </button>
             </div>
+
+            {/* IN-CHAT INSTANT CALLBACK REQUEST DRAWER */}
+            {showCallbackDrawer && (
+              <div className="p-3.5 bg-gradient-to-b from-purple-50/95 via-white to-slate-50 dark:from-purple-950/70 dark:via-slate-900 dark:to-slate-950 border-b border-purple-200/80 dark:border-purple-800/80 shadow-lg animate-in slide-in-from-top-2 duration-200 shrink-0 select-text">
+                <div className="flex items-center justify-between pb-2 border-b border-purple-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center shadow-xs">
+                      <PhoneCall className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1">
+                        <span>Instant Founder Callback</span>
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black">⚡ 15-Min</span>
+                      </h4>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                        Dispatched in real-time to executive email desk
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCallbackDrawer(false)}
+                    className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {user && (
+                  <div className="mt-2 px-2 py-1 rounded-lg bg-purple-100/70 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/60 text-[10px] text-purple-900 dark:text-purple-300 font-bold flex items-center justify-between">
+                    <span>👤 Detected from Account Profile</span>
+                    <span className="font-mono text-purple-700 dark:text-purple-400">{user.email}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmitInlineCallback} className="mt-2.5 space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 block mb-0.5">
+                        Your Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={callbackFormData.name}
+                        onChange={(e) => setCallbackFormData({ ...callbackFormData, name: e.target.value })}
+                        placeholder="e.g. Rahul Sen"
+                        className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500 font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 block mb-0.5">
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        value={callbackFormData.phone}
+                        onChange={(e) => setCallbackFormData({ ...callbackFormData, phone: e.target.value })}
+                        placeholder="e.g. 9876543210"
+                        className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 block mb-0.5">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={callbackFormData.email}
+                        onChange={(e) => setCallbackFormData({ ...callbackFormData, email: e.target.value })}
+                        placeholder="e.g. rahul@brand.com"
+                        className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500 font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 block mb-0.5">
+                        Preferred Time Slot
+                      </label>
+                      <select
+                        value={callbackFormData.preferredTime}
+                        onChange={(e) => setCallbackFormData({ ...callbackFormData, preferredTime: e.target.value })}
+                        className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-900 dark:text-white focus:outline-none font-bold"
+                      >
+                        <option value="⚡ ASAP (Within 15-30 mins)">⚡ ASAP (Within 15-30 mins)</option>
+                        <option value="🌅 Morning (10:00 AM – 1:00 PM IST)">🌅 Morning (10 AM – 1 PM)</option>
+                        <option value="☀️ Afternoon (2:00 PM – 5:00 PM IST)">☀️ Afternoon (2 PM – 5 PM)</option>
+                        <option value="🌆 Evening (6:00 PM – 9:00 PM IST)">🌆 Evening (6 PM – 9 PM)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="pt-1 flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowCallbackDrawer(false)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-slate-800 cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingCallback}
+                      className="px-4 py-1.5 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-sm hover:opacity-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      <PhoneCall className="w-3.5 h-3.5" />
+                      <span>{isSubmittingCallback ? 'Dispatching Alert...' : 'Request Instant Callback'}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
 
             {/* Conversation Feed */}
             <div
@@ -586,7 +823,13 @@ export default function AssistantChatbot() {
                             : 'bg-slate-100/95 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100'
                         }`}
                       >
-                        {renderMessageContent(msg.content, false)}
+                        <TypewriterContent
+                          text={msg.content}
+                          isStreaming={Boolean(msg.isStreaming)}
+                          onComplete={() => {
+                            msg.isStreaming = false;
+                          }}
+                        />
 
                         {/* AI Provider attribution tag */}
                         {msg.provider && msg.provider !== 'unknown' && (
@@ -629,8 +872,6 @@ export default function AssistantChatbot() {
                 </div>
               )}
 
-
-
             {/* PREMIUM SUGGESTED QUESTIONS SYSTEM */}
             {messages.length <= 2 && !isTyping && (
               <div className="pt-2 space-y-2.5">
@@ -666,7 +907,13 @@ export default function AssistantChatbot() {
                   {filteredQuestions.map((q, idx) => (
                     <div
                       key={idx}
-                      onClick={() => handleSendMessage(q.prompt)}
+                      onClick={() => {
+                        if (q.badge === 'INSTANT CALL') {
+                          handleOpenCallbackDrawer('15-Minute Consultation Callback');
+                        } else {
+                          handleSendMessage(q.prompt);
+                        }
+                      }}
                       className="p-3 rounded-2xl bg-white/95 dark:bg-slate-800/80 hover:bg-purple-50/80 dark:hover:bg-purple-950/40 border border-slate-200/90 dark:border-slate-700/80 hover:border-purple-400/80 dark:hover:border-purple-600/80 shadow-xs hover:shadow-md transition-all cursor-pointer group flex items-start justify-between gap-2.5 transform active:scale-[0.99]"
                     >
                       <div className="flex items-start gap-2.5">
@@ -703,7 +950,13 @@ export default function AssistantChatbot() {
                   {FOLLOWUP_QUICK_CHIPS.map((chip, idx) => (
                     <button
                       key={idx}
-                      onClick={() => handleSendMessage(chip)}
+                      onClick={() => {
+                        if (chip.includes('call request')) {
+                          handleOpenCallbackDrawer('Follow-up 15-Minute Call Request');
+                        } else {
+                          handleSendMessage(chip);
+                        }
+                      }}
                       className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs hover:scale-102 flex items-center gap-1"
                     >
                       <span>{chip}</span>

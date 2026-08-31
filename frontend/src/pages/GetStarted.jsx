@@ -41,7 +41,12 @@ import {
   RefreshCw,
   FileText,
   Languages,
-  CheckCheck
+  CheckCheck,
+  HelpCircle,
+  Lightbulb,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -49,6 +54,11 @@ import { useSiteSettings } from '../context/SiteSettingsContext';
 import ThemeToggle from '../components/common/ThemeToggle';
 import AshokaChakra from '../components/common/AshokaChakra';
 import api from '../services/api';
+import {
+  STEP_AI_GUIDES,
+  getCurrentStepSelectionText,
+  formatStepSummaryPlainText
+} from '../data/stepAiData';
 
 // Multilingual Translations Dictionary
 const TRANSLATIONS = {
@@ -342,6 +352,197 @@ const MULTI_PAYMENTS = [
   { id: 'inquiry_only', en: 'No Online Payments (Inquiry Only)', bn: 'অনলাইন পেমেন্ট ছাড়া (শুধুমাত্র ইনকোয়ারি)', hi: 'ऑनलाइन भुगतान नहीं (केवल पूछताछ)' }
 ];
 
+// Reusable Step Header with AI Summary Trigger
+function StepHeader({ stepIdx, title, subtitle, t, lang, onOpenAiSummary }) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3 mb-2">
+      <div className="space-y-1">
+        <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800 inline-block shadow-2xs">
+          {t.stepLabel} {stepIdx + 1} • {t.steps[stepIdx]?.title}
+        </span>
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-1 tracking-tight">
+          {title}
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          {subtitle || t.steps[stepIdx]?.subtitle}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onOpenAiSummary(stepIdx)}
+        className="self-start sm:self-auto px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50 to-pink-50 dark:from-purple-950/70 dark:via-indigo-950/60 dark:to-pink-950/50 hover:from-purple-100 hover:to-indigo-100 dark:hover:from-purple-900/60 dark:hover:to-indigo-900/50 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800/80 text-xs font-black flex items-center gap-2 cursor-pointer shadow-2xs hover:shadow-md transition-all active:scale-95 group shrink-0"
+        title={lang === 'bn' ? 'এই ধাপের প্রশ্ন ও অপশনের এআই সারসংক্ষেপ দেখুন' : 'View AI Summary & Guide for this step'}
+      >
+        <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-pulse group-hover:rotate-12 transition-transform" />
+        <span>{lang === 'bn' ? '✨ এই ধাপের AI সারসংক্ষেপ' : lang === 'hi' ? '✨ इस चरण का AI सारांश' : '✨ Step AI Summary'}</span>
+      </button>
+    </div>
+  );
+}
+
+// Step AI Typewriter View with Dynamic Streaming & Filtered Unlocked Steps
+function StepAiTypewriterView({ guideData, lang, selection, stepIdx, maxReachedStep, currentStepIndex, onSelectStep, onSwitchLang, t }) {
+  const [typedQuestion, setTypedQuestion] = useState(guideData?.question || '');
+  const [typedTip, setTypedTip] = useState(guideData?.tip || '');
+  const [isTyping, setIsTyping] = useState(true);
+
+  // Typewriter streaming when step or language changes
+  useEffect(() => {
+    setIsTyping(true);
+    setTypedQuestion('');
+    setTypedTip('');
+
+    const qText = guideData?.question || '';
+    const tipText = guideData?.tip || '';
+
+    let qIdx = 0;
+    const qStep = Math.max(3, Math.floor(qText.length / 25));
+    const interval = setInterval(() => {
+      qIdx += qStep;
+      if (qIdx >= qText.length) {
+        setTypedQuestion(qText);
+        setTypedTip(tipText);
+        setIsTyping(false);
+        clearInterval(interval);
+      } else {
+        setTypedQuestion(qText.slice(0, qIdx));
+      }
+    }, 15);
+
+    return () => clearInterval(interval);
+  }, [guideData?.question, guideData?.tip, stepIdx, lang]);
+
+  return (
+    <div className="space-y-4 animate-in fade-in">
+      {/* Step Navigation Ribbon: ONLY show unlocked steps! */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
+        {t.steps.map((s, idx) => {
+          const isUnlocked = idx <= maxReachedStep;
+          const isSelected = idx === stepIdx;
+          const isFormCurrent = idx === currentStepIndex;
+
+          if (!isUnlocked) return null; // Hide locked steps
+
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => onSelectStep(idx)}
+              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap flex items-center gap-1 transition-all cursor-pointer shrink-0 snap-center ${
+                isSelected
+                  ? 'bg-purple-600 text-white shadow-xs font-black ring-2 ring-purple-400/30 scale-102'
+                  : isFormCurrent
+                  ? 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/70 dark:border-slate-700 hover:text-purple-600'
+              }`}
+            >
+              <span>#{idx + 1}</span>
+              <span>{s.short}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Step Header Banner */}
+      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-50/90 to-indigo-50/90 dark:from-purple-950/40 dark:to-indigo-950/30 border border-purple-200/90 dark:border-purple-800/80 flex items-center justify-between gap-3 shadow-2xs">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
+            #{stepIdx + 1}
+          </div>
+          <div>
+            <h4 className="font-black text-sm text-slate-900 dark:text-white">
+              {guideData.title}
+            </h4>
+            <p className="text-[11px] text-purple-700 dark:text-purple-300 font-medium">
+              {guideData.purpose}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onSwitchLang(lang === 'bn' ? 'en' : 'bn')}
+          className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs hover:scale-102 transition-all shrink-0"
+        >
+          <Languages className="w-3.5 h-3.5 text-purple-600" />
+          <span>{lang === 'bn' ? '🌐 View English' : '🇧🇩 বাংলায় দেখুন'}</span>
+        </button>
+      </div>
+
+      {/* 1. Core Question Card (with Typewriter) */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5 shadow-2xs">
+        <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300 font-black text-xs uppercase tracking-wider">
+          <HelpCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+          <span>{lang === 'bn' ? '🎯 এই ধাপে যা জানতে চাওয়া হয়েছে (Question & Objective)' : lang === 'hi' ? '🎯 इस चरण का मुख्य प्रश्न' : '🎯 Step Question & Objective'}</span>
+        </div>
+        <p className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white leading-relaxed">
+          {typedQuestion}
+          {isTyping && <span className="inline-block w-2 h-3.5 bg-purple-600 ml-1 rounded-xs animate-pulse" />}
+        </p>
+      </div>
+
+      {/* 2. Options Breakdown Card */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 shadow-2xs">
+        <div className="flex items-center justify-between gap-2 text-indigo-700 dark:text-indigo-300 font-black text-xs uppercase tracking-wider">
+          <div className="flex items-center gap-1.5">
+            <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <span>{lang === 'bn' ? '📋 এই ধাপের অপশনসমূহ ও সহজ ব্যাখ্যা' : lang === 'hi' ? '📋 विकल्पों का विवरण' : '📋 Available Options & Meanings'}</span>
+          </div>
+          <span className="text-[10px] font-mono text-slate-400 font-bold">
+            {guideData.options?.length || 0} {lang === 'bn' ? 'টি অপশন' : 'Options'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {guideData.options?.map((opt, i) => (
+            <div
+              key={i}
+              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-start gap-2 shadow-2xs"
+            >
+              <span className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0" />
+              <div className="space-y-0.5 min-w-0">
+                <strong className="text-xs font-bold text-slate-900 dark:text-white block truncate">
+                  {opt.name}
+                </strong>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                  {opt.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. AI Pro Recommendation Tip */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/70 space-y-1.5 shadow-2xs">
+        <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 font-black text-xs uppercase tracking-wider">
+          <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          <span>{lang === 'bn' ? '💡 এআই স্মার্ট পরামর্শ (AI Recommendation)' : lang === 'hi' ? '💡 एआई स्मार्ट सलाह' : '💡 AI Pro Recommendation'}</span>
+        </div>
+        <p className="text-xs text-amber-950 dark:text-amber-200 leading-relaxed font-medium">
+          {typedTip || guideData.tip}
+        </p>
+      </div>
+
+      {/* 4. Real-time User Selection Preview */}
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/60 flex items-center justify-between gap-3 shadow-2xs">
+        <div className="space-y-0.5 min-w-0">
+          <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 block">
+            {lang === 'bn' ? '✅ ফর্মে আপনার বর্তমান নির্বাচন:' : lang === 'hi' ? '✅ आपका वर्तमान चयन:' : '✅ Your Current Selection in Form:'}
+          </span>
+          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
+            {selection}
+          </p>
+        </div>
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 shrink-0">
+          Live
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function GetStarted() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -373,6 +574,11 @@ export default function GetStarted() {
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [copiedAi, setCopiedAi] = useState(false);
+
+  // AI Modal Tab & Language Selection ('step' | 'full', 'bn' | 'en' | 'hi')
+  const [aiModalTab, setAiModalTab] = useState('step');
+  const [aiModalStepIndex, setAiModalStepIndex] = useState(0);
+  const [aiModalLang, setAiModalLang] = useState(lang || 'bn');
 
   const stepScrollContainerRef = useRef(null);
 
@@ -591,23 +797,75 @@ export default function GetStarted() {
     }));
   };
 
+  // Open AI Step Summary & Guide Modal
+  const handleOpenStepAiSummary = (stepIdx = currentStepIndex) => {
+    setAiModalStepIndex(stepIdx);
+    setAiModalTab('step');
+    setAiModalLang(lang || 'bn');
+    setIsAiModalOpen(true);
+  };
+
+  // Switch Active Language inside the AI Modal
+  const handleSwitchAiModalLang = (targetLang) => {
+    setAiModalLang(targetLang);
+    toast.info(
+      targetLang === 'bn'
+        ? '🇧🇩 বাংলা অনুবাদ সক্রিয় করা হয়েছে'
+        : targetLang === 'hi'
+        ? '🇮🇳 हिंदी अनुवाद सक्रिय किया गया'
+        : '🌐 English Translation Active'
+    );
+  };
+
+  // Copy AI Summary from Modal (supports both Step Guide & Full Scope)
+  const handleCopyModalSummary = () => {
+    if (aiModalTab === 'step') {
+      const currentGuide = STEP_AI_GUIDES[aiModalStepIndex] || STEP_AI_GUIDES[0];
+      const selection = getCurrentStepSelectionText(aiModalStepIndex, formData, aiModalLang);
+      const plainText = formatStepSummaryPlainText(currentGuide, selection, aiModalLang, aiModalStepIndex + 1);
+      navigator.clipboard.writeText(plainText);
+      setCopiedAi(true);
+      toast.success(
+        aiModalLang === 'bn'
+          ? `ধাপ ${aiModalStepIndex + 1} এর AI সারসংক্ষেপ কপি হয়েছে!`
+          : aiModalLang === 'hi'
+          ? `चरण ${aiModalStepIndex + 1} का AI सारांश कॉपी हुआ!`
+          : `Step ${aiModalStepIndex + 1} AI summary copied to clipboard!`
+      );
+      setTimeout(() => setCopiedAi(false), 3000);
+    } else {
+      navigator.clipboard.writeText(aiSummary || displayedAiSummary);
+      setCopiedAi(true);
+      toast.success(
+        aiModalLang === 'bn'
+          ? 'সম্পূর্ণ প্রজেক্ট AI সামারি ক্লিপবোর্ডে কপি হয়েছে!'
+          : aiModalLang === 'hi'
+          ? 'AI सारांश कॉपी हुआ!'
+          : 'AI Summary copied to clipboard!'
+      );
+      setTimeout(() => setCopiedAi(false), 3000);
+    }
+  };
+
   // AI Executive Summary Generator with Progressive Delay & Typewriter Stream
   const handleGenerateAiSummary = async () => {
     setIsGeneratingAi(true);
     setIsAiModalOpen(true);
+    setAiModalTab('full');
     setDisplayedAiSummary('');
     setAiAnalysisStage(1);
 
     // Realistic progressive analysis stage delay
-    await new Promise((r) => setTimeout(r, 700));
-    setAiAnalysisStage(2);
-    await new Promise((r) => setTimeout(r, 700));
-    setAiAnalysisStage(3);
     await new Promise((r) => setTimeout(r, 600));
+    setAiAnalysisStage(2);
+    await new Promise((r) => setTimeout(r, 600));
+    setAiAnalysisStage(3);
+    await new Promise((r) => setTimeout(r, 500));
 
     let finalAiText = '';
+    const activeLang = aiModalLang || lang;
 
-    if (lang === 'bn') {
+    if (activeLang === 'bn') {
       finalAiText = `### 🎯 AI এক্সিকিউটিভ প্রজেক্ট স্কোপ ও রূপরেখা
 **ব্র্যান্ডের নাম:** ${formData.clientInfo.businessName || 'নূতন কমার্শিয়াল এন্টারপ্রাইজ'}
 **ইন্ডাস্ট্রি টাইপ:** ${formData.websiteTypeName}
@@ -628,7 +886,7 @@ export default function GetStarted() {
 - **ফেজ ১ (দিন ১-২):** ভিজ্যুয়াল UI/UX ওয়্যারফ্রেম ও ইন্টারেক্টিভ প্রোটোটাইপ ডিজাইন।
 - **ফেজ ২ (দিন ৩-৪):** ফুল-স্ট্যাক কোড ইমপ্লিমেন্টেশন, পেমেন্ট গেটওয়ে স্যান্ডবক্স ও CMS কনফিগারেশন।
 - **ফেজ ৩ (ফাইনাল ডেলিভারি):** টেকনিক্যাল এসইও অডিট, স্পিড অপ্টিমাইজেশন এবং লাইভ DNS লঞ্চ।`;
-    } else if (lang === 'hi') {
+    } else if (activeLang === 'hi') {
       finalAiText = `### 🎯 AI कार्यकारी प्रोजेक्ट स्कोप और रोडमैप
 **ब्रांड का नाम:** ${formData.clientInfo.businessName || 'व्यावसायिक उद्यम'}
 **उद्योग प्रकार:** ${formData.websiteTypeName}
@@ -838,17 +1096,6 @@ export default function GetStarted() {
             </button>
           </div>
 
-          {/* AI Executive Summary Pill Trigger */}
-          <button
-            type="button"
-            onClick={handleGenerateAiSummary}
-            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-95 shrink-0"
-            title="Generate AI Executive Summary of your project"
-          >
-            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-            <span className="hidden md:inline">AI Summary</span>
-          </button>
-
           {/* Share Link Button */}
           <button
             type="button"
@@ -1007,17 +1254,13 @@ export default function GetStarted() {
               {/* STEP 1: CATEGORY SELECTION */}
               {currentStepIndex === 0 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 1 • {t.steps[0].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'আপনি কোন ধরণের ওয়েবসাইট তৈরি করতে চান?' : lang === 'hi' ? 'आप किस प्रकार की वेबसाइट बनाना चाहते हैं?' : 'What Type of Website or Business are We Building?'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[0].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={0}
+                    title={lang === 'bn' ? 'আপনি কোন ধরণের ওয়েবসাইট তৈরি করতে চান?' : lang === 'hi' ? 'आप किस प्रकार की वेबसाइट बनाना चाहते हैं?' : 'What Type of Website or Business are We Building?'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                     {INDUSTRY_CATEGORIES.map((cat) => {
@@ -1067,17 +1310,13 @@ export default function GetStarted() {
               {/* STEP 2: BUSINESS & CONTACT CREDENTIALS */}
               {currentStepIndex === 1 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 2 • {t.steps[1].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'আপনার ব্র্যান্ড ও যোগাযোগের বিবরণ দিন' : lang === 'hi' ? 'अपने ब्रांड और संपर्क विवरण भरें' : 'Tell Us About Your Brand & Contact Details'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[1].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={1}
+                    title={lang === 'bn' ? 'আপনার ব্র্যান্ড ও যোগাযোগের বিবরণ দিন' : lang === 'hi' ? 'अपने ब्रांड और संपर्क विवरण भरें' : 'Tell Us About Your Brand & Contact Details'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     
@@ -1210,17 +1449,13 @@ export default function GetStarted() {
               {/* STEP 3: INDUSTRY SPECIFIC DYNAMIC QUESTIONS */}
               {currentStepIndex === 2 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 3 • {t.steps[2].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'ইন্ডাস্ট্রি স্পেসিফিকেশন ও অপশন' : lang === 'hi' ? 'उद्योग विशिष्ट विकल्प' : 'Industry Specifications & Custom Parameters'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[2].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={2}
+                    title={lang === 'bn' ? 'ইন্ডাস্ট্রি স্পেসিফিকেশন ও অপশন' : lang === 'hi' ? 'उद्योग विशिष्ट विकल्प' : 'Industry Specifications & Custom Parameters'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="space-y-4">
                     {/* Common Industry Field: Specialties */}
@@ -1273,17 +1508,13 @@ export default function GetStarted() {
               {/* STEP 4: PAGES & SITEMAP */}
               {currentStepIndex === 3 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 4 • {t.steps[3].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'প্রয়োজনীয় পেজ ও নেভিগেশন স্ট্রাকচার বেছে নিন' : lang === 'hi' ? 'आवश्यक पेज और वेबसाइट संरचना चुनें' : 'Select Required Pages & Navigation Structure'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[3].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={3}
+                    title={lang === 'bn' ? 'প্রয়োজনীয় পেজ ও নেভিগেশন স্ট্রাকচার বেছে নিন' : lang === 'hi' ? 'आवश्यक पेज और वेबसाइट संरचना चुनें' : 'Select Required Pages & Navigation Structure'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {MULTI_PAGES.map((pageObj) => {
@@ -1324,17 +1555,13 @@ export default function GetStarted() {
               {/* STEP 5: CORE FEATURES */}
               {currentStepIndex === 4 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 5 • {t.steps[4].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'এডভান্সড ফিচার ও কনভার্সন মডিউল' : lang === 'hi' ? 'उन्नत फीचर्स और रूपांतरण मॉड्यूल' : 'Advanced Business & Conversion Features'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[4].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={4}
+                    title={lang === 'bn' ? 'এডভান্সড ফিচার ও কনভার্সন মডিউল' : lang === 'hi' ? 'उन्नत फीचर्स और रूपांतरण मॉड्यूल' : 'Advanced Business & Conversion Features'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {MULTI_FEATURES.map((featObj) => {
@@ -1375,17 +1602,13 @@ export default function GetStarted() {
               {/* STEP 6: PAYMENT GATEWAYS */}
               {currentStepIndex === 5 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 6 • {t.steps[5].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'পেমেন্ট গেটওয়ে ও বিলিং পদ্ধতি' : lang === 'hi' ? 'पेमेंट गेटवे और बिलिंग विकल्प' : 'Payment Gateway & Billing Options'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[5].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={5}
+                    title={lang === 'bn' ? 'পেমেন্ট গেটওয়ে ও বিলিং পদ্ধতি' : lang === 'hi' ? 'पेमेंट गेटवे और बिलिंग विकल्प' : 'Payment Gateway & Billing Options'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {MULTI_PAYMENTS.map((methodObj) => {
@@ -1426,17 +1649,13 @@ export default function GetStarted() {
               {/* STEP 7: ADMIN PANEL */}
               {currentStepIndex === 6 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 7 • {t.steps[6].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'এডমিন প্যানেল ও কন্টেন্ট ম্যানেজমেন্ট (CMS)' : lang === 'hi' ? 'एडमिन पैनल और सामग्री प्रबंधन (CMS)' : 'Admin Panel & Content Management System (CMS)'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[6].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={6}
+                    title={lang === 'bn' ? 'এডমিন প্যানেল ও কন্টেন্ট ম্যানেজমেন্ট (CMS)' : lang === 'hi' ? 'एडमिन पैनल और सामग्री प्रबंधन (CMS)' : 'Admin Panel & Content Management System (CMS)'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="space-y-3">
                     {[
@@ -1489,17 +1708,13 @@ export default function GetStarted() {
               {/* STEP 8: WHATSAPP & LEAD ALERTS */}
               {currentStepIndex === 7 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 8 • {t.steps[7].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'হোয়াটসঅ্যাপ ও ইমেইল লিড নোটিফিকেশন' : lang === 'hi' ? 'व्हाट्सएप और ईमेल लीड सूचनाएं' : 'WhatsApp & Email Lead Notifications'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[7].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={7}
+                    title={lang === 'bn' ? 'হোয়াটসঅ্যাপ ও ইমেইল লিড নোটিফিকেশন' : lang === 'hi' ? 'व्हाट्सएप और ईमेल लीड सूचनाएं' : 'WhatsApp & Email Lead Notifications'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
@@ -1565,17 +1780,13 @@ export default function GetStarted() {
               {/* STEP 9: DESIGN & COLOR PREFERENCES */}
               {currentStepIndex === 8 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 9 • {t.steps[8].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'ডিজাইন ও ভিজ্যুয়াল স্টাইল প্রেফারেন্স' : lang === 'hi' ? 'डिजाइन और दृश्य शैली की प्राथमिकताएं' : 'Design Aesthetics & Visual Style'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[8].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={8}
+                    title={lang === 'bn' ? 'ডিজাইন ও ভিজ্যুয়াল স্টাইল প্রেফারেন্স' : lang === 'hi' ? 'डिजाइन और दृश्य शैली की प्राथमिकताएं' : 'Design Aesthetics & Visual Style'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="space-y-4">
                     <div>
@@ -1626,17 +1837,13 @@ export default function GetStarted() {
               {/* STEP 10: MEDIA & STORE PHOTOS */}
               {currentStepIndex === 9 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 10 • {t.steps[9].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'দোকান, শোরুম, প্রোডাক্ট বা লোগো ফটো (ঐচ্ছিক)' : lang === 'hi' ? 'दुकान, उत्पाद या लोगो की तस्वीरें (वैकल्पिक)' : 'Store Photos, Logo & Product Imagery (Optional)'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[9].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={9}
+                    title={lang === 'bn' ? 'দোকান, শোরুম, প্রোডাক্ট বা লোগো ফটো (ঐচ্ছিক)' : lang === 'hi' ? 'दुकान, उत्पाद या लोगो की तस्वीरें (वैकल्पिक)' : 'Store Photos, Logo & Product Imagery (Optional)'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="p-6 sm:p-8 rounded-3xl border-2 border-dashed border-purple-300 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/20 text-center space-y-3">
                     <UploadCloud className="w-10 h-10 text-purple-600 dark:text-purple-400 mx-auto animate-pulse" />
@@ -1677,17 +1884,13 @@ export default function GetStarted() {
               {/* STEP 11: DOMAIN & TIMELINE */}
               {currentStepIndex === 10 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 11 • {t.steps[10].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'ডোমেন, ক্লাউড হোস্টিং ও টার্গেট লঞ্চ টাইমলাইন' : lang === 'hi' ? 'डोमेन, क्लाउड होस्टिंग और टारगेट लॉन्च टाइमलाइन' : 'Domain, Cloud Hosting & Target Launch Timeline'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[10].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={10}
+                    title={lang === 'bn' ? 'ডোমেন, ক্লাউড হোস্টিং ও টার্গেট লঞ্চ টাইমলাইন' : lang === 'hi' ? 'डोमेन, क्लाउड होस्टिंग और टारगेट लॉन्च टाइमलाइन' : 'Domain, Cloud Hosting & Target Launch Timeline'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -1725,19 +1928,14 @@ export default function GetStarted() {
               {/* STEP 12: REVIEW & SUBMIT */}
               {currentStepIndex === 11 && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                      {t.stepLabel} 12 • {t.steps[11].title}
-                    </span>
-                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-2">
-                      {lang === 'bn' ? 'রিকোয়ারমেন্টস রিভিউ ও প্রস্তাব জমা' : lang === 'hi' ? 'विवरण की समीक्षा और सबमिट करें' : 'Review Specifications & Submit Proposal'}
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {t.steps[11].subtitle}
-                    </p>
-                  </div>
+                  <StepHeader
+                    stepIdx={11}
+                    title={lang === 'bn' ? 'রিকোয়ারমেন্টস রিভিউ ও প্রস্তাব জমা' : lang === 'hi' ? 'विवरण की समीक्षा और सबमिट करें' : 'Review Specifications & Submit Proposal'}
+                    t={t}
+                    lang={lang}
+                    onOpenAiSummary={handleOpenStepAiSummary}
+                  />
 
-                  {/* AI Summary Action Callout Banner */}
                   <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
                     <div className="flex items-center gap-3 text-center sm:text-left">
                       <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
@@ -1764,7 +1962,6 @@ export default function GetStarted() {
                     </button>
                   </div>
 
-                  {/* Summary Card */}
                   <div className="p-5 sm:p-6 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 space-y-4 text-xs">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-slate-200/70 dark:border-slate-800 pb-4">
                       <div>
@@ -1793,7 +1990,6 @@ export default function GetStarted() {
                       </div>
                     </div>
 
-                    {/* Promo Offer Applied Banner */}
                     {formData.couponCode && (
                       <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-700 flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -1808,7 +2004,6 @@ export default function GetStarted() {
                       </div>
                     )}
 
-                    {/* Client Portal Notice */}
                     <div className="p-3.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/80 text-[11px] text-purple-900 dark:text-purple-200 flex items-center gap-2">
                       <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0" />
                       <span>
@@ -1825,7 +2020,6 @@ export default function GetStarted() {
 
             </div>
 
-            {/* 4. BOTTOM CONTROLS BAR (Mobile Friendly Tactile Next/Back Buttons) */}
             <div className="pt-4 flex items-center justify-between gap-3">
               <button
                 type="button"
@@ -1869,125 +2063,303 @@ export default function GetStarted() {
       </main>
 
       {/* ========================================================================= */}
-      {/* 5. AI EXECUTIVE SUMMARY MODAL WITH REALISTIC ANALYSIS STAGES & STREAMING  */}
+      {/* 5. AI ASSISTANT MODAL (STEP SUMMARY & EXECUTIVE SCOPE ROADMAP)            */}
       {/* ========================================================================= */}
       {isAiModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-in fade-in overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in overflow-hidden"
           onClick={() => setIsAiModalOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto min-h-0"
+            className="relative bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full h-[88vh] max-h-[88vh] flex flex-col shadow-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden my-auto min-h-0 animate-in zoom-in-95"
           >
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white flex items-center justify-between shrink-0 shadow-sm">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
+            <div className="p-4 sm:p-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white flex items-center justify-between shrink-0 shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xs">
+                  <Bot className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-black text-sm sm:text-base">{t.aiSummaryTitle}</h3>
-                  <p className="text-[11px] text-white/80">{t.aiSummaryDesc}</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-sm sm:text-base">
+                      {aiModalLang === 'bn'
+                        ? '✨ LOCAL2BRAND এআই অ্যাসিস্ট্যান্ট ও গাইড'
+                        : aiModalLang === 'hi'
+                        ? '✨ LOCAL2BRAND एআই सहायक व सारांश'
+                        : '✨ LOCAL2BRAND AI Assistant & Guide'}
+                    </h3>
+                    <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-white/25 text-white">
+                      {aiModalTab === 'step' 
+                        ? (aiModalLang === 'bn' ? `ধাপ ${aiModalStepIndex + 1}` : `Step ${aiModalStepIndex + 1}`)
+                        : 'Executive'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-white/85">
+                    {aiModalTab === 'step'
+                      ? (aiModalLang === 'bn' 
+                          ? 'এই ধাপের প্রশ্ন ও সকল অপশনের সহজ সংক্ষিপ্ত সারসংক্ষেপ'
+                          : 'Clear, concise summary of questions, options & recommendations')
+                      : (aiModalLang === 'bn'
+                          ? 'আপনার নির্বাচিত টেক স্ট্যাক ও প্রজেক্টের সম্পূর্ণ রোডম্যাপ'
+                          : 'Intelligent synthesis of your tech stack & milestone plan')}
+                  </p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsAiModalOpen(false)}
-                className="p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-5 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-4 text-xs scrollbar-thin text-slate-800 dark:text-slate-200">
-              
-              {/* Progressive Thinking Steps */}
-              {isGeneratingAi && (
-                <div className="py-8 px-4 text-center space-y-5">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto shadow-md">
-                    <RefreshCw className="w-6 h-6 animate-spin" />
-                  </div>
-                  
-                  <div className="space-y-2 max-w-md mx-auto">
-                    <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
-                      aiAnalysisStage >= 1
-                        ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-300 text-purple-900 dark:text-purple-200'
-                        : 'bg-slate-100 text-slate-400 opacity-40'
-                    }`}>
-                      {aiAnalysisStage > 1 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
-                      <span>{lang === 'bn' ? '১. বিজনেস মডেল ও স্পেসিফিকেশন বিশ্লেষণ হচ্ছে...' : lang === 'hi' ? '1. बिजनेस मॉडल और आवश्यकताओं का विश्लेषण...' : '1. Analyzing business model & requirements...'}</span>
-                    </div>
-
-                    <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
-                      aiAnalysisStage >= 2
-                        ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-300 text-purple-900 dark:text-purple-200'
-                        : 'bg-slate-100 text-slate-400 opacity-40'
-                    }`}>
-                      {aiAnalysisStage > 2 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
-                      <span>{lang === 'bn' ? '২. ফুল-স্ট্যাক সফটওয়্যার আর্কিটেকচার তৈরি হচ্ছে...' : lang === 'hi' ? '2. सॉफ्टवेयर आर्किटेक्चर और डेटाबेस संरचना...' : '2. Synthesizing full-stack architecture & modules...'}</span>
-                    </div>
-
-                    <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
-                      aiAnalysisStage >= 3
-                        ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-300 text-purple-900 dark:text-purple-200'
-                        : 'bg-slate-100 text-slate-400 opacity-40'
-                    }`}>
-                      {aiAnalysisStage > 3 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
-                      <span>{lang === 'bn' ? '৩. মাইলস্টোন ডেলিভারি ও স্প্রিন্ট প্ল্যান তৈরি হচ্ছে...' : lang === 'hi' ? '3. टर्नअराउंड और स्प्रिंट डिलीवरी रोडमैप...' : '3. Finalizing sprint roadmap & milestone estimates...'}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Displayed Streamed Content */}
-              {!isGeneratingAi && displayedAiSummary && (
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700 whitespace-pre-wrap leading-relaxed font-sans text-xs">
-                  {displayedAiSummary}
-                  {displayedAiSummary !== aiSummary && (
-                    <span className="inline-block w-2 h-4 bg-purple-600 ml-1 animate-pulse" />
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/80 flex items-center justify-between gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleGenerateAiSummary}
-                disabled={isGeneratingAi}
-                className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-purple-50 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingAi ? 'animate-spin' : ''}`} />
-                <span>{t.refreshAiSummary}</span>
-              </button>
-
               <div className="flex items-center gap-2">
+                {/* In-Modal Direct Language Switcher Pills */}
+                <div className="p-0.5 rounded-xl bg-black/25 backdrop-blur-md flex items-center gap-0.5 border border-white/20 shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchAiModalLang('bn')}
+                    className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                      aiModalLang === 'bn'
+                        ? 'bg-white text-purple-900 shadow-sm scale-102'
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                    title="বাংলায় অনুবাদ করুন"
+                  >
+                    🇧🇩 বাংলা
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchAiModalLang('en')}
+                    className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                      aiModalLang === 'en'
+                        ? 'bg-white text-purple-900 shadow-sm scale-102'
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                    title="View in English"
+                  >
+                    🌐 EN
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchAiModalLang('hi')}
+                    className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                      aiModalLang === 'hi'
+                        ? 'bg-white text-purple-900 shadow-sm scale-102'
+                        : 'text-white/80 hover:text-white'
+                    }`}
+                    title="हिंदी में देखें"
+                  >
+                    🇮🇳 हिंदी
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsAiModalOpen(false)}
+                  className="p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white cursor-pointer transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Tab Switcher */}
+            <div className="px-4 sm:px-6 pt-3 pb-2 bg-slate-50 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
+              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/60 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setAiModalTab('step')}
+                  className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    aiModalTab === 'step'
+                      ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs scale-101'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-purple-600" />
+                  <span>
+                    {aiModalLang === 'bn' ? '📌 এই ধাপের সারসংক্ষেপ ও অপশন' : aiModalLang === 'hi' ? '📌 इस चरण का सारांश' : '📌 Step Guide & Options'}
+                  </span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => {
-                    navigator.clipboard.writeText(aiSummary || displayedAiSummary);
-                    setCopiedAi(true);
-                    toast.success(lang === 'bn' ? 'AI সামারি ক্লিপবোর্ডে কপি হয়েছে!' : lang === 'hi' ? 'AI सारांश कॉपी हुआ!' : 'AI Summary copied to clipboard!');
-                    setTimeout(() => setCopiedAi(false), 3000);
+                    setAiModalTab('full');
+                    if (!aiSummary && !isGeneratingAi) {
+                      handleGenerateAiSummary();
+                    }
                   }}
+                  className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    aiModalTab === 'full'
+                      ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs scale-101'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>
+                    {aiModalLang === 'bn' ? '🚀 সম্পূর্ণ প্রজেক্ট রোডম্যাপ' : aiModalLang === 'hi' ? '🚀 पूर्ण प्रोजेक्ट रोडमैप' : '🚀 Full Project Scope'}
+                  </span>
+                </button>
+              </div>
+
+              {/* Step Jump Pills (Quick Navigator - bounded by maxReachedStep) */}
+              {aiModalTab === 'step' && (
+                <div className="hidden md:flex items-center gap-1">
+                  <button
+                    type="button"
+                    disabled={aiModalStepIndex === 0}
+                    onClick={() => setAiModalStepIndex((prev) => Math.max(0, prev - 1))}
+                    className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 cursor-pointer hover:bg-slate-50"
+                    title="Previous Step"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2 font-mono">
+                    {aiModalStepIndex + 1} / {maxReachedStep + 1}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={aiModalStepIndex >= maxReachedStep}
+                    onClick={() => setAiModalStepIndex((prev) => Math.min(maxReachedStep, prev + 1))}
+                    className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 cursor-pointer hover:bg-slate-50"
+                    title="Next Unlocked Step"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Body - 100% Scrollable with Mousewheel, Touch, and custom scrollbar */}
+            <div
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
+              className="p-4 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-4 text-xs scrollbar-thin text-slate-800 dark:text-slate-200 select-text"
+              style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+            >
+              
+              {/* ========================================================= */}
+              {/* TAB 1: CURRENT STEP AI GUIDE & SUMMARY WITH TYPEWRITER     */}
+              {/* ========================================================= */}
+              {aiModalTab === 'step' && (
+                <StepAiTypewriterView
+                  guideData={
+                    STEP_AI_GUIDES[aiModalStepIndex]
+                      ? (STEP_AI_GUIDES[aiModalStepIndex][aiModalLang] || STEP_AI_GUIDES[aiModalStepIndex].en)
+                      : (STEP_AI_GUIDES[0][aiModalLang] || STEP_AI_GUIDES[0].en)
+                  }
+                  lang={aiModalLang}
+                  selection={getCurrentStepSelectionText(aiModalStepIndex, formData, aiModalLang)}
+                  stepIdx={aiModalStepIndex}
+                  maxReachedStep={maxReachedStep}
+                  currentStepIndex={currentStepIndex}
+                  onSelectStep={(idx) => setAiModalStepIndex(idx)}
+                  onSwitchLang={(newLang) => handleSwitchAiModalLang(newLang)}
+                  t={t}
+                />
+              )}
+
+              {/* ========================================================= */}
+              {/* TAB 2: EXECUTIVE FULL PROJECT SCOPE & ROADMAP              */}
+              {/* ========================================================= */}
+              {aiModalTab === 'full' && (
+                <div className="space-y-4 animate-in fade-in">
+                  {/* Progressive Thinking Steps */}
+                  {isGeneratingAi && (
+                    <div className="py-8 px-4 text-center space-y-5">
+                      <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto shadow-md">
+                        <RefreshCw className="w-6 h-6 animate-spin" />
+                      </div>
+                      
+                      <div className="space-y-2 max-w-md mx-auto">
+                        <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
+                          aiAnalysisStage >= 1
+                            ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-300 text-purple-900 dark:text-purple-200'
+                            : 'bg-slate-100 text-slate-400 opacity-40'
+                        }`}>
+                          {aiAnalysisStage > 1 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
+                          <span>{aiModalLang === 'bn' ? '১. বিজনেস মডেল ও স্পেসিফিকেশন বিশ্লেষণ হচ্ছে...' : aiModalLang === 'hi' ? '1. बिजनेस मॉडल और आवश्यकताओं का विश्लेषण...' : '1. Analyzing business model & requirements...'}</span>
+                        </div>
+
+                        <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
+                          aiAnalysisStage >= 2
+                            ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-300 text-purple-900 dark:text-purple-200'
+                            : 'bg-slate-100 text-slate-400 opacity-40'
+                        }`}>
+                          {aiAnalysisStage > 2 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
+                          <span>{aiModalLang === 'bn' ? '২. ফুল-স্ট্যাক সফটওয়্যার আর্কিটেকচার তৈরি হচ্ছে...' : aiModalLang === 'hi' ? '2. सॉफ्टवेयर आर्किटेक्चर और डेटाबेस संरचना...' : '2. Synthesizing full-stack architecture & modules...'}</span>
+                        </div>
+
+                        <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
+                          aiAnalysisStage >= 3
+                            ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-300 text-purple-900 dark:text-purple-200'
+                            : 'bg-slate-100 text-slate-400 opacity-40'
+                        }`}>
+                          {aiAnalysisStage > 3 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
+                          <span>{aiModalLang === 'bn' ? '৩. মাইলস্টোন ডেলিভারি ও স্প্রিন্ট প্ল্যান তৈরি হচ্ছে...' : aiModalLang === 'hi' ? '3. टर्नअराउंड और स्प्रिंट डिलीवरी रोडमैप...' : '3. Finalizing sprint roadmap & milestone estimates...'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Displayed Streamed Content */}
+                  {!isGeneratingAi && displayedAiSummary && (
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700 whitespace-pre-wrap leading-relaxed font-sans text-xs">
+                      {displayedAiSummary}
+                      {displayedAiSummary !== aiSummary && (
+                        <span className="inline-block w-2 h-4 bg-purple-600 ml-1 animate-pulse" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/80 flex flex-wrap items-center justify-between gap-2 shrink-0">
+              
+              {/* Left Action / Lang Toggle */}
+              <div className="flex items-center gap-2">
+                {aiModalTab === 'full' ? (
+                  <button
+                    type="button"
+                    onClick={handleGenerateAiSummary}
+                    disabled={isGeneratingAi}
+                    className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-purple-50 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingAi ? 'animate-spin' : ''}`} />
+                    <span>{t.refreshAiSummary}</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSwitchAiModalLang(aiModalLang === 'bn' ? 'en' : 'bn')}
+                    className="px-3 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-purple-200 dark:border-purple-800 transition-all"
+                  >
+                    <Languages className="w-3.5 h-3.5" />
+                    <span>
+                      {aiModalLang === 'bn' ? '🌐 Switch to English' : '🇧🇩 বাংলায় অনুবাদ করুন'}
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              {/* Right Action Buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCopyModalSummary}
                   className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95"
                 >
                   <Copy className="w-3.5 h-3.5" />
-                  <span>{copiedAi ? 'Copied!' : t.copySummary}</span>
+                  <span>{copiedAi ? (aiModalLang === 'bn' ? 'কপি হয়েছে!' : 'Copied!') : (aiModalLang === 'bn' ? 'সারসংক্ষেপ কপি করুন' : t.copySummary)}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setIsAiModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   {t.close}
                 </button>
               </div>
+
             </div>
           </div>
         </div>
