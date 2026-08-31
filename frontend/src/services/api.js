@@ -79,6 +79,13 @@ class ApiClient {
   delete(endpoint, options = {}) {
     return this.request(endpoint, { ...options, method: 'DELETE' });
   }
+
+  async uploadFile(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('file', file);
+    return this.post('/upload', formData);
+  }
 }
 
 export const api = new ApiClient(API_BASE_URL);

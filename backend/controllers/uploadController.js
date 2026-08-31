@@ -6,14 +6,16 @@ import fs from 'fs';
 // @access  Private (or Public for guest profile setup)
 export const uploadImage = async (req, res) => {
   try {
-    if (!req.file) {
+    const file = req.file || (req.files && Array.isArray(req.files) ? req.files[0] : (req.files?.image?.[0] || req.files?.file?.[0]));
+
+    if (!file) {
       return res.status(400).json({
         success: false,
         message: 'Please provide an image file to upload',
       });
     }
 
-    const filePath = req.file.path;
+    const filePath = file.path;
 
     if (isCloudinaryConfigured) {
       // Upload to Cloudinary
@@ -37,14 +39,16 @@ export const uploadImage = async (req, res) => {
       });
     } else {
       // Return hosted local server URL
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const localUrl = `${baseUrl}/uploads/${req.file.filename}`;
+      const host = req.get('host');
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+      const baseUrl = `${protocol}://${host}`;
+      const localUrl = `${baseUrl}/uploads/${file.filename}`;
 
       return res.status(200).json({
         success: true,
-        message: 'Image uploaded successfully (Local storage fallback)',
+        message: 'Image uploaded successfully',
         url: localUrl,
-        filename: req.file.filename,
+        filename: file.filename,
       });
     }
   } catch (error) {
