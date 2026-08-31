@@ -478,7 +478,11 @@ export const dataStore = {
   async getAllCallbacks(filter = {}) {
     if (isDbConnected()) {
       const { CallbackRequest } = await import('../models/CallbackRequest.js');
-      return await CallbackRequest.find(filter).sort({ createdAt: -1 });
+      const query = {};
+      if (filter.status && filter.status !== 'all') {
+        query.status = filter.status;
+      }
+      return await CallbackRequest.find(query).sort({ createdAt: -1 });
     }
     let cbs = readLocalStore('callbacks');
     if (filter.status && filter.status !== 'all') {

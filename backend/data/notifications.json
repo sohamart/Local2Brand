@@ -1,5 +1,14 @@
 [
   {
+    "_id": "notif_1788204251241",
+    "title": "New Instant Callback from Chat",
+    "message": "Soham Dutta requested a call via AI Chat (9876543210)",
+    "type": "callback",
+    "link": "/admin/callbacks",
+    "isRead": false,
+    "createdAt": "2026-08-31T19:24:11.241Z"
+  },
+  {
     "_id": "notif_1788160017007",
     "title": "New Callback Request",
     "message": "Soham Test Caller requested a call at +91 9064971842 (⚡ ASAP (Within 30 mins during business hours))",

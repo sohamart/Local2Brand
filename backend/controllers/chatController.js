@@ -1,5 +1,6 @@
 import { dataStore } from '../config/dataAdapter.js';
 import { generateChatResponseWithFallback, getProviderStatus } from '../utils/aiFallbackService.js';
+import { sendAdminCallbackAlert, sendCallbackConfirmationEmail } from '../utils/email.js';
 
 /**
  * Handle incoming conversational chat message with AI fallback
@@ -95,14 +96,64 @@ export const handleChatMessage = async (req, res) => {
       : null;
 
     // Invoke Multi-Provider Fallback (Gemini -> Groq -> Cerebras -> OpenRouter) with dynamic context
-    const aiResponse = await generateChatResponseWithFallback(aiInput, {
+    let aiResponse = await generateChatResponseWithFallback(aiInput, {
       settings,
       currentUser,
       activeServices: services,
       activeDemos: demos,
     });
 
+    // Smart auto-detection of Phone Number or Callback intent in message
+    const phoneMatch = message.match(/(?:\+?91[\s-]?)?[6-9]\d{9}/) || message.match(/\b\d{10,12}\b/);
+    const emailMatch = message.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
+    const callbackIntent = /call|phone|callback|contact|reach|যোগাযোগ|কল|ফোন|নম্বর|কথা/i.test(message);
 
+    let callbackCreated = false;
+    let detectedPhone = phoneMatch ? phoneMatch[0].replace(/[\s-]/g, '') : (currentUser?.phone || '');
+    let detectedEmail = emailMatch ? emailMatch[0].toLowerCase() : (currentUser?.email || '');
+    let detectedName = currentUser?.name || 'Valued Visitor';
+
+    // If user provided a phone number OR if logged-in user says "call me"
+    if (detectedPhone && (phoneMatch || callbackIntent)) {
+      try {
+        const callbackRecord = await dataStore.createCallback({
+          name: detectedName,
+          phone: detectedPhone,
+          email: detectedEmail,
+          preferredTime: '⚡ ASAP (Within 15-30 mins)',
+          topic: 'AI Chat Auto-Detected Callback Request',
+          notes: `User Message: "${message.trim()}"`,
+          user: userId || null,
+        });
+
+        // Instant email alert to sohamduttabwn@gmail.com and stackaddacontact@gmail.com
+        sendAdminCallbackAlert(callbackRecord).catch((err) => console.warn('Chat auto-callback alert error:', err.message));
+
+        if (detectedEmail) {
+          sendCallbackConfirmationEmail(callbackRecord).catch((err) => console.warn('Chat client confirmation email error:', err.message));
+        }
+
+        dataStore.createNotification({
+          title: 'New Instant Callback from Chat',
+          message: `${detectedName} requested a call via AI Chat (${detectedPhone})`,
+          type: 'callback',
+          link: '/admin/callbacks',
+        }).catch((err) => console.warn('Admin notification error:', err.message));
+
+        callbackCreated = true;
+
+        // If not already in text, append clear confirmation note
+        if (!aiResponse.text.includes(detectedPhone)) {
+          const isBengali = /[\u0980-\u09FF]/.test(message);
+          const confirmationBanner = isBengali
+            ? `\n\n---\n✅ **কল-ব্যাক রিকোয়েস্ট নিশ্চিত করা হয়েছে!**\nআমাদের ফাউন্ডার ও এডমিন ডেস্কে (\`sohamduttabwn@gmail.com\` ও \`stackaddacontact@gmail.com\`) তাত্ক্ষণিক ইমেইল অ্যালার্ট পাঠানো হয়েছে। আমরা খুব শীঘ্রই আপনার নম্বরে (**${detectedPhone}**) কল করছি! 📞`
+            : `\n\n---\n✅ **Instant Callback Request Registered!**\nReal-time email alerts have been dispatched to our founder & executive desk (\`sohamduttabwn@gmail.com\` & \`stackaddacontact@gmail.com\`). We will call you at **${detectedPhone}** shortly! 📞`;
+          aiResponse.text += confirmationBanner;
+        }
+      } catch (cbErr) {
+        console.warn('Chat auto-callback record notice:', cbErr.message);
+      }
+    }
 
     const userMessageDoc = {
       role: 'user',
@@ -127,6 +178,8 @@ export const handleChatMessage = async (req, res) => {
       provider: aiResponse.provider,
       model: aiResponse.model,
       sessionId,
+      callbackCreated,
+      callbackPhone: detectedPhone || null,
       timestamp: assistantMessageDoc.timestamp,
     });
   } catch (error) {

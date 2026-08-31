@@ -47,5 +47,30 @@
     "lastActiveAt": "2026-08-31T17:04:14.843Z",
     "createdAt": "2026-08-31T17:04:12.531Z",
     "updatedAt": "2026-08-31T17:04:12.531Z"
+  },
+  {
+    "_id": "chat_1788204243438_rhrot",
+    "sessionId": "test_sess_1788204243437",
+    "user": null,
+    "title": "New Conversation",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello, please call me back at 9876543210 regarding my custom e-commerce website. My email is demo@test.com",
+        "timestamp": "2026-08-31T19:24:11.241Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello **Soham Dutta**! \n\nThank you for reaching out to **LOCAL2BRAND**. We have logged your priority callback request regarding your **custom e-commerce website**. \n\nOur executive team has been immediately notified, and one of our Senior Solutions Architects will **call you back at 9876543210 within 15 minutes**.\n\n### **Request Details Confirmed:**\n* **Service:** Custom E-Commerce Website Development\n* **Phone:** +91 98765 43210\n* **Email:** demo@test.com\n* **Exclusive Offer:** Mention code **INDIA2025** during your call to claim **20% OFF** + Free SSL Certificate & Domain setup!\n\nWe look forward to speaking with you shortly!",
+        "provider": "Gemini",
+        "model": "gemini-3.6-flash",
+        "timestamp": "2026-08-31T19:24:11.241Z"
+      }
+    ],
+    "ip": "127.0.0.1",
+    "userAgent": "",
+    "lastActiveAt": "2026-08-31T19:24:11.243Z",
+    "createdAt": "2026-08-31T19:24:03.438Z",
+    "updatedAt": "2026-08-31T19:24:03.438Z"
   }
 ]

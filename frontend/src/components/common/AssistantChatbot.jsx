@@ -139,6 +139,182 @@ const getStoredMessages = (brandName) => {
   ];
 };
 
+// Interactive AI In-Chat Callback Card Component
+function InteractiveCallbackCard({ msg, user, onSubmitted }) {
+  const [name, setName] = useState(msg.initialName || user?.name || '');
+  const [phone, setPhone] = useState(msg.initialPhone || user?.phone || '');
+  const [email, setEmail] = useState(msg.initialEmail || user?.email || '');
+  const [timeSlot, setTimeSlot] = useState(msg.preferredTime || '⚡ ASAP (Within 15-30 mins)');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(msg.isSubmitted || false);
+  const [err, setErr] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name.trim() || !phone.trim()) {
+      setErr('Please enter your name and phone number.');
+      return;
+    }
+    setLoading(true);
+    setErr('');
+
+    try {
+      const res = await api.post('/callbacks', {
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        preferredTime: timeSlot,
+        topic: msg.topic || 'AI Chat Interactive Callback',
+        notes: 'Requested via AI Chat Interactive Message Card',
+      });
+
+      if (res?.success) {
+        setSubmitted(true);
+        if (onSubmitted) onSubmitted(name, phone, timeSlot);
+      } else {
+        throw new Error(res?.message || 'Failed to request callback');
+      }
+    } catch (error) {
+      setErr(error.data?.message || error.message || 'Error submitting callback request');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/80 dark:to-teal-950/60 border border-emerald-300 dark:border-emerald-700 space-y-2 text-xs shadow-xs animate-in zoom-in-95">
+        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-extrabold text-sm">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <span>Callback Request Confirmed! 📞</span>
+        </div>
+        <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+          Thank you <strong>{name}</strong>! We will call you at <strong className="font-mono text-emerald-600 dark:text-emerald-400">{phone}</strong> ({timeSlot}).
+        </p>
+        <div className="p-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-emerald-200 dark:border-emerald-800/80 text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
+          <div className="flex items-center gap-1.5 font-bold text-purple-700 dark:text-purple-300">
+            <span>⚡ Instant Priority Dispatch</span>
+          </div>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400">
+            Real-time alert emails dispatched to founder desk: <code className="font-mono">sohamduttabwn@gmail.com</code> &amp; <code className="font-mono">stackaddacontact@gmail.com</code>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-850 border border-purple-300/80 dark:border-purple-700 shadow-md space-y-2.5 text-xs text-slate-800 dark:text-slate-200 animate-in fade-in">
+      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-xs">
+            <PhoneCall className="w-3.5 h-3.5" />
+          </div>
+          <div>
+            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span>Instant Founder Callback</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-black">
+                ⚡ 15-Min
+              </span>
+            </h4>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              Direct connection with our Senior Solutions Architect
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {user && (
+        <div className="px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-[10px] text-purple-800 dark:text-purple-300 font-bold flex items-center justify-between">
+          <span>👤 Detected from Account Profile</span>
+          <span className="font-mono text-purple-700 dark:text-purple-400">{user.email}</span>
+        </div>
+      )}
+
+      {err && (
+        <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-600 dark:text-rose-300 font-bold">
+          {err}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-0.5">
+              Your Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Rahul Sen"
+              className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-0.5">
+              Phone Number *
+            </label>
+            <input
+              type="tel"
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="e.g. 9876543210"
+              className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-purple-300 dark:border-purple-700 text-xs font-mono font-black text-purple-700 dark:text-purple-300 focus:outline-none focus:ring-1 focus:ring-purple-500"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-0.5">
+              Email (For Confirmation)
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="e.g. rahul@brand.com"
+              className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-0.5">
+              Preferred Time Slot
+            </label>
+            <select
+              value={timeSlot}
+              onChange={(e) => setTimeSlot(e.target.value)}
+              className="w-full px-2 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-900 dark:text-white focus:outline-none"
+            >
+              <option value="⚡ ASAP (Within 15-30 mins)">⚡ ASAP (Within 15-30 mins)</option>
+              <option value="🌅 Morning (10:00 AM – 1:00 PM IST)">🌅 Morning (10 AM – 1 PM)</option>
+              <option value="☀️ Afternoon (2:00 PM – 5:00 PM IST)">☀️ Afternoon (2 PM – 5 PM)</option>
+              <option value="🌆 Evening (6:00 PM – 9:00 PM IST)">🌆 Evening (6 PM – 9 PM)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="pt-1 flex items-center justify-between gap-2">
+          <span className="text-[9px] text-slate-400 dark:text-slate-500">
+            ✉️ Real-time alert to Admin &amp; Founders
+          </span>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-sm hover:opacity-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50 active:scale-95 transition-all"
+          >
+            <PhoneCall className="w-3.5 h-3.5" />
+            <span>{loading ? 'Dispatching Alert...' : 'Confirm & Request Call 📞'}</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default function AssistantChatbot() {
   const { openOrderModal, openCallbackModal } = useOrderModal();
   const { settings } = useSiteSettings();
@@ -154,86 +330,24 @@ export default function AssistantChatbot() {
   const [errorMessage, setErrorMessage] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // Inline Instant Callback Request Drawer State
-  const [showCallbackDrawer, setShowCallbackDrawer] = useState(false);
-  const [callbackFormData, setCallbackFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    preferredTime: '⚡ ASAP (Within 15-30 mins)',
-    topic: 'L2B AI Instant Callback Request',
-    notes: '',
-  });
-  const [isSubmittingCallback, setIsSubmittingCallback] = useState(false);
-  const [callbackSuccessMessage, setCallbackSuccessMessage] = useState('');
-
-  // Update callbackFormData when user changes
-  useEffect(() => {
-    if (user) {
-      setCallbackFormData((prev) => ({
-        ...prev,
-        name: prev.name || user.name || '',
-        phone: prev.phone || user.phone || '',
-        email: prev.email || user.email || '',
-      }));
-    }
-  }, [user]);
-
-  const handleOpenCallbackDrawer = (customTopic) => {
-    setCallbackFormData({
-      name: user?.name || '',
-      phone: user?.phone || '',
-      email: user?.email || '',
+  const triggerInChatMessageCallback = (customTopic) => {
+    const callbackMessageCard = {
+      role: 'assistant',
+      isCallbackCard: true,
+      id: `cb_card_${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      initialName: user?.name || '',
+      initialPhone: user?.phone || '',
+      initialEmail: user?.email || '',
       preferredTime: '⚡ ASAP (Within 15-30 mins)',
-      topic: customTopic || 'L2B AI Instant Callback Request',
-      notes: '',
-    });
-    setCallbackSuccessMessage('');
-    setShowCallbackDrawer(true);
-  };
+      topic: customTopic || '15-Minute Consultation Callback',
+      isSubmitted: false,
+    };
 
-  const handleSubmitInlineCallback = async (e) => {
-    e.preventDefault();
-    if (!callbackFormData.name.trim() || !callbackFormData.phone.trim()) {
-      setErrorMessage('Please provide your name and phone number for callback.');
-      return;
-    }
-
-    setIsSubmittingCallback(true);
-    setErrorMessage('');
-
-    try {
-      const res = await api.post('/callbacks', {
-        name: callbackFormData.name.trim(),
-        phone: callbackFormData.phone.trim(),
-        email: callbackFormData.email.trim(),
-        preferredTime: callbackFormData.preferredTime,
-        topic: callbackFormData.topic,
-        notes: callbackFormData.notes,
-      });
-
-      if (res?.success) {
-        setShowCallbackDrawer(false);
-        const confirmMsg = {
-          role: 'assistant',
-          content: `### 📞 Instant Callback Request Confirmed!\n\nThank you, **${callbackFormData.name}**! Our senior executive team has received your priority call request.\n\n* **Phone:** \`${callbackFormData.phone}\`\n* **Preferred Slot:** ${callbackFormData.preferredTime}\n* **Email Alert:** Dispatched to Executive Desk & Admin (\`sohamduttabwn@gmail.com\` & \`stackaddacontact@gmail.com\`).\n\nWe will connect with you shortly!`,
-          timestamp: new Date().toISOString(),
-          isStreaming: true,
-          provider: 'L2B Live Alert Engine',
-        };
-        const updated = [...messages, confirmMsg];
-        setMessages(updated);
-        localStorage.setItem('l2b_chat_messages', JSON.stringify(updated));
-        localStorage.setItem('l2b_chat_session_time', Date.now().toString());
-      } else {
-        throw new Error(res?.message || 'Failed to register callback request');
-      }
-    } catch (err) {
-      console.error('Callback submit error:', err);
-      setErrorMessage(err.data?.message || err.message || 'Error submitting callback request');
-    } finally {
-      setIsSubmittingCallback(false);
-    }
+    const updated = [...messages, callbackMessageCard];
+    setMessages(updated);
+    localStorage.setItem('l2b_chat_messages', JSON.stringify(updated));
+    localStorage.setItem('l2b_chat_session_time', Date.now().toString());
   };
 
   const messagesEndRef = useRef(null);
@@ -647,7 +761,7 @@ export default function AssistantChatbot() {
             <div className="px-3 py-2 bg-slate-50/80 dark:bg-slate-950/40 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 text-[11px]">
               <button
                 type="button"
-                onClick={() => handleOpenCallbackDrawer('Direct Founder 15-Minute Callback')}
+                onClick={() => triggerInChatMessageCallback('15-Minute Instant Callback Request')}
                 className="px-2.5 py-1 rounded-xl bg-purple-100/90 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-800 text-purple-950 dark:text-purple-200 font-black flex items-center gap-1 shrink-0 hover:bg-purple-200/90 transition-colors cursor-pointer shadow-xs"
               >
                 <PhoneCall className="w-3 h-3 text-purple-600 dark:text-purple-400" />
@@ -676,121 +790,6 @@ export default function AssistantChatbot() {
               </button>
             </div>
 
-            {/* IN-CHAT INSTANT CALLBACK REQUEST DRAWER */}
-            {showCallbackDrawer && (
-              <div className="p-3.5 bg-gradient-to-b from-purple-50/95 via-white to-slate-50 dark:from-purple-950/70 dark:via-slate-900 dark:to-slate-950 border-b border-purple-200/80 dark:border-purple-800/80 shadow-lg animate-in slide-in-from-top-2 duration-200 shrink-0 select-text">
-                <div className="flex items-center justify-between pb-2 border-b border-purple-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center shadow-xs">
-                      <PhoneCall className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1">
-                        <span>Instant Founder Callback</span>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black">⚡ 15-Min</span>
-                      </h4>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                        Dispatched in real-time to executive email desk
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowCallbackDrawer(false)}
-                    className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {user && (
-                  <div className="mt-2 px-2 py-1 rounded-lg bg-purple-100/70 dark:bg-purple-950/60 border border-purple-200/80 dark:border-purple-800/60 text-[10px] text-purple-900 dark:text-purple-300 font-bold flex items-center justify-between">
-                    <span>👤 Detected from Account Profile</span>
-                    <span className="font-mono text-purple-700 dark:text-purple-400">{user.email}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmitInlineCallback} className="mt-2.5 space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 block mb-0.5">
-                        Your Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={callbackFormData.name}
-                        onChange={(e) => setCallbackFormData({ ...callbackFormData, name: e.target.value })}
-                        placeholder="e.g. Rahul Sen"
-                        className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500 font-medium"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 block mb-0.5">
-                        Phone Number *
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        value={callbackFormData.phone}
-                        onChange={(e) => setCallbackFormData({ ...callbackFormData, phone: e.target.value })}
-                        placeholder="e.g. 9876543210"
-                        className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500 font-mono font-bold"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 block mb-0.5">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        value={callbackFormData.email}
-                        onChange={(e) => setCallbackFormData({ ...callbackFormData, email: e.target.value })}
-                        placeholder="e.g. rahul@brand.com"
-                        className="w-full px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500 font-medium"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-black text-slate-700 dark:text-slate-300 block mb-0.5">
-                        Preferred Time Slot
-                      </label>
-                      <select
-                        value={callbackFormData.preferredTime}
-                        onChange={(e) => setCallbackFormData({ ...callbackFormData, preferredTime: e.target.value })}
-                        className="w-full px-2 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] text-slate-900 dark:text-white focus:outline-none font-bold"
-                      >
-                        <option value="⚡ ASAP (Within 15-30 mins)">⚡ ASAP (Within 15-30 mins)</option>
-                        <option value="🌅 Morning (10:00 AM – 1:00 PM IST)">🌅 Morning (10 AM – 1 PM)</option>
-                        <option value="☀️ Afternoon (2:00 PM – 5:00 PM IST)">☀️ Afternoon (2 PM – 5 PM)</option>
-                        <option value="🌆 Evening (6:00 PM – 9:00 PM IST)">🌆 Evening (6 PM – 9 PM)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="pt-1 flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowCallbackDrawer(false)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-200/80 dark:hover:bg-slate-800 cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmittingCallback}
-                      className="px-4 py-1.5 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-sm hover:opacity-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
-                    >
-                      <PhoneCall className="w-3.5 h-3.5" />
-                      <span>{isSubmittingCallback ? 'Dispatching Alert...' : 'Request Instant Callback'}</span>
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
             {/* Conversation Feed */}
             <div
               data-lenis-prevent="true"
@@ -800,6 +799,30 @@ export default function AssistantChatbot() {
             >
               {messages.map((msg, index) => {
                 const isUser = msg.role === 'user';
+
+                // Check for in-message interactive callback widget
+                if (msg.isCallbackCard) {
+                  return (
+                    <div key={msg.id || index} className="flex items-start gap-2.5 justify-start">
+                      <div className="w-7 h-7 rounded-xl l2b-gradient-bg text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="w-full max-w-[94%] sm:max-w-[88%]">
+                        <InteractiveCallbackCard
+                          msg={msg}
+                          user={user}
+                          onSubmitted={(cName, cPhone, cSlot) => {
+                            msg.isSubmitted = true;
+                            const updated = [...messages];
+                            setMessages(updated);
+                            localStorage.setItem('l2b_chat_messages', JSON.stringify(updated));
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
                   <div
                     key={index}
@@ -909,7 +932,7 @@ export default function AssistantChatbot() {
                       key={idx}
                       onClick={() => {
                         if (q.badge === 'INSTANT CALL') {
-                          handleOpenCallbackDrawer('15-Minute Consultation Callback');
+                          triggerInChatMessageCallback('15-Minute Consultation Callback');
                         } else {
                           handleSendMessage(q.prompt);
                         }
@@ -935,6 +958,33 @@ export default function AssistantChatbot() {
                         <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all mt-0.5" />
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Smart Follow-up Chips after conversation has started */}
+            {messages.length > 2 && !isTyping && (
+              <div className="pt-2">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5">
+                  Suggested Follow-ups
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {FOLLOWUP_QUICK_CHIPS.map((chip, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        if (chip.includes('call request')) {
+                          triggerInChatMessageCallback('Follow-up 15-Minute Call Request');
+                        } else {
+                          handleSendMessage(chip);
+                        }
+                      }}
+                      className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs hover:scale-102 flex items-center gap-1"
+                    >
+                      <span>{chip}</span>
+                      <ArrowRight className="w-3 h-3 opacity-60" />
+                    </button>
                   ))}
                 </div>
               </div>
