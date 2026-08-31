@@ -58,12 +58,6 @@ export default function AuthModal() {
     }
   };
 
-  const handleFillDemoAdmin = () => {
-    setEmail('admin@local2brand.com');
-    setPassword('Admin@12345');
-    setMode('login');
-  };
-
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-2xl animate-in fade-in duration-200">
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-white/80 dark:border-slate-800 overflow-hidden my-auto p-6 sm:p-8 animate-in zoom-in-95 duration-200">
@@ -211,19 +205,6 @@ export default function AuthModal() {
             <span>{loading ? 'Processing...' : mode === 'login' ? 'Sign In & Continue' : 'Create Free Account'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
-
-          {mode === 'login' && (
-            <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500">
-              <span>Admin Demo:</span>
-              <button
-                type="button"
-                onClick={handleFillDemoAdmin}
-                className="text-purple-600 dark:text-purple-400 font-bold hover:underline cursor-pointer"
-              >
-                Fill Master Admin
-              </button>
-            </div>
-          )}
         </form>
 
       </div>

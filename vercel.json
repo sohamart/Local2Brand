@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "buildCommand": "if [ -d \"frontend\" ]; then cd frontend && npm install && npm run build && cd .. && mkdir -p dist && cp -r frontend/dist/* dist/ 2>/dev/null || true; else npm install && npm run build; fi",
   "outputDirectory": "frontend/dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }

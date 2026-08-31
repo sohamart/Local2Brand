@@ -174,11 +174,6 @@ export default function ProjectInquiryModal() {
     }
   };
 
-  const handleQuickDemoAdmin = () => {
-    setAuthEmail('admin@local2brand.com');
-    setAuthPassword('Admin@12345');
-  };
-
   const handleFeatureToggle = (feature) => {
     setFormData((prev) => {
       const exists = prev.selectedFeatures.includes(feature);
@@ -387,19 +382,6 @@ export default function ProjectInquiryModal() {
                 >
                   {authLoading ? 'Signing in...' : authMode === 'login' ? 'Sign In & Open Proposal Form' : 'Register & Continue'}
                 </button>
-
-                {authMode === 'login' && (
-                  <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500">
-                    <span>Quick Admin Test:</span>
-                    <button
-                      type="button"
-                      onClick={handleQuickDemoAdmin}
-                      className="text-purple-600 dark:text-purple-400 font-bold hover:underline cursor-pointer"
-                    >
-                      Fill Admin Credentials
-                    </button>
-                  </div>
-                )}
               </form>
             </div>
           ) : submitted ? (

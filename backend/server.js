@@ -121,14 +121,18 @@ const startServer = async () => {
     await dataStore.seedDefaultAdmin();
     await dataStore.getSettings();
 
-    app.listen(PORT, () => {
-      console.log(`\n🚀 LOCAL2BRAND Backend running on http://localhost:${PORT}`);
-      console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 API Base: http://localhost:${PORT}/api\n`);
-    });
+    if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+      app.listen(PORT, () => {
+        console.log(`\n🚀 LOCAL2BRAND Backend running on http://localhost:${PORT}`);
+        console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`🔗 API Base: http://localhost:${PORT}/api\n`);
+      });
+    }
   } catch (err) {
     console.error('Error during server startup:', err.message);
   }
 };
 
 startServer();
+
+export default app;

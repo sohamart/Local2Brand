@@ -44,11 +44,6 @@ export default function Login() {
     }
   };
 
-  const handleQuickDemoAdmin = () => {
-    setEmail('admin@local2brand.com');
-    setPassword('Admin@12345');
-  };
-
   return (
     <>
       <SEO title="Log In — LOCAL2BRAND" description="Access your project dashboard, review website proposals, and manage custom features." />
@@ -73,50 +68,51 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Error message */}
             {error && (
-              <div className="mb-5 p-3 rounded-2xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+              <div className="mb-4 p-3 rounded-2xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs font-semibold flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
                 <span>{error}</span>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm focus:outline-purple-500 text-slate-900 dark:text-white"
+                    placeholder="you@business.com"
+                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
-                  Password
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Password
+                  </label>
+                </div>
                 <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm focus:outline-purple-500 text-slate-900 dark:text-white"
+                    placeholder="••••••••••••"
+                    className="w-full pl-10 pr-10 py-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -132,21 +128,6 @@ export default function Login() {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
-
-            {/* Quick Demo Fill Box for testing */}
-            <div className="mt-5 p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-500/40 flex items-center justify-between">
-              <div className="text-[11px] text-amber-900 dark:text-amber-300">
-                <span className="font-bold">Master Admin Account:</span><br />
-                admin@local2brand.com
-              </div>
-              <button
-                type="button"
-                onClick={handleQuickDemoAdmin}
-                className="px-3 py-1 rounded-xl bg-amber-500 text-slate-950 text-xs font-bold hover:bg-amber-400 transition-colors cursor-pointer"
-              >
-                Fill Admin
-              </button>
-            </div>
 
             {/* Footer */}
             <div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">

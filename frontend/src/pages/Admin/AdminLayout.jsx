@@ -37,22 +37,10 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminLayout() {
-  const { user, logout, isAdmin, loading, login, openAuthModal } = useAuth();
+  const { user, logout, isAdmin, loading, openAuthModal } = useAuth();
   const { settings } = useSiteSettings();
   const navigate = useNavigate();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [quickLoggingIn, setQuickLoggingIn] = useState(false);
-
-  const handleQuickAdminLogin = async () => {
-    setQuickLoggingIn(true);
-    try {
-      await login('admin@local2brand.com', 'Admin@12345');
-    } catch (err) {
-      openAuthModal();
-    } finally {
-      setQuickLoggingIn(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -78,21 +66,13 @@ export default function AdminLayout() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <button
-            onClick={handleQuickAdminLogin}
-            disabled={quickLoggingIn}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-full text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-50"
+          <Link
+            to="/login"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-full text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center justify-center gap-2 cursor-pointer transition-all"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{quickLoggingIn ? 'Authenticating...' : '⚡ 1-Click Master Admin Login'}</span>
-          </button>
-
-          <button
-            onClick={() => openAuthModal()}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
-          >
-            Sign In with Email
-          </button>
+            <Lock className="w-3.5 h-3.5" />
+            <span>Sign In with Admin Credentials</span>
+          </Link>
         </div>
       </div>
     );

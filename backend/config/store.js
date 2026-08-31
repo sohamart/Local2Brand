@@ -2,9 +2,16 @@ import fs from 'fs';
 import path from 'path';
 import mongoose from 'mongoose';
 
-const dataDir = path.join(process.cwd(), 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+const dataDir = process.env.VERCEL
+  ? path.join('/tmp', 'data')
+  : path.join(process.cwd(), 'data');
+
+try {
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+} catch (e) {
+  // Ignored in read-only environments
 }
 
 const getFilePath = (collection) => path.join(dataDir, `${collection}.json`);
