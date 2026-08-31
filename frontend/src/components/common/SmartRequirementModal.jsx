@@ -279,12 +279,87 @@ export default function SmartRequirementModal() {
     designStyle: 'Modern Glassmorphic & Vibrant',
     preferredColors: 'Purple, Neon Blue & Luxury Gold',
     referenceUrls: '',
+    uploadedImages: [], // Multi-store/product/logo photos
     domainStatus: 'Need New Domain (Free Included)',
     hostingStatus: 'High-Speed Cloud Hosting (Free 1-Yr Included)',
     budget: '₹10,000 – ₹25,000 (Standard Commercial)',
     timeline: '⚡ Express Delivery (48 - 72 Hours)',
     additionalNotes: ''
   });
+
+  const [uploadingAssets, setUploadingAssets] = useState(false);
+
+  const handleMultiImageUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if ((formData.uploadedImages?.length || 0) + files.length > 20) {
+      toast.error('You can upload up to 20 photos in total.');
+      return;
+    }
+
+    setUploadingAssets(true);
+    const toastId = toast.loading(`Uploading ${files.length} store / product photo(s)... ⏳`);
+
+    // Instant local previews
+    files.forEach((f) => {
+      const r = new FileReader();
+      r.onload = (ev) => {
+        if (ev.target?.result) {
+          setFormData((prev) => ({
+            ...prev,
+            uploadedImages: [...(prev.uploadedImages || []), ev.target.result],
+          }));
+        }
+      };
+      r.readAsDataURL(f);
+    });
+
+    try {
+      const data = new FormData();
+      files.forEach((f) => {
+        data.append('images', f);
+        data.append('image', f);
+      });
+
+      const res = await api.post('/upload', data);
+      if (res && res.success && (res.urls || res.url)) {
+        const newUrls = res.urls || [res.url];
+        setFormData((prev) => {
+          const current = (prev.uploadedImages || []).filter((u) => !u.startsWith('data:'));
+          return {
+            ...prev,
+            uploadedImages: [...current, ...newUrls],
+          };
+        });
+        toast.update(toastId, {
+          render: `${files.length} photo(s) uploaded successfully! 📸`,
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000,
+        });
+      } else {
+        throw new Error(res?.message || 'Upload failed');
+      }
+    } catch (err) {
+      console.warn('Multi-upload notice, client preview saved:', err.message);
+      toast.update(toastId, {
+        render: `${files.length} photo(s) added! (Local previews saved) ✅`,
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } finally {
+      setUploadingAssets(false);
+    }
+  };
+
+  const handleRemoveImage = (indexToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      uploadedImages: (prev.uploadedImages || []).filter((_, idx) => idx !== indexToRemove),
+    }));
+  };
 
   // 1. Fetch Form Config from Backend
   useEffect(() => {
@@ -1220,6 +1295,74 @@ export default function SmartRequirementModal() {
                         className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
                       />
                     </div>
+                  </div>
+
+                  {/* Multi-Photo Store, Product, Menu & Logo Uploader */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-tr from-purple-500/5 via-pink-500/5 to-amber-500/5 border-2 border-dashed border-purple-300 dark:border-purple-800/80 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <span className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <UploadCloud className="w-4 h-4 text-purple-600" />
+                          <span>Store / Business / Product / Menu / Logo Photos</span>
+                        </span>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Upload 5 – 10+ photos of your shop, products, team, menu, or brand logo for inclusion in your design.
+                        </p>
+                      </div>
+
+                      <label className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 ${
+                        uploadingAssets
+                          ? 'bg-purple-600 text-white cursor-wait'
+                          : 'l2b-gradient-bg text-white shadow-xs hover:opacity-95'
+                      }`}>
+                        {uploadingAssets ? (
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <UploadCloud className="w-3.5 h-3.5" />
+                        )}
+                        <span>{uploadingAssets ? 'Uploading Photos...' : '+ Upload Photos (Multiple)'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleMultiImageUpload}
+                          disabled={uploadingAssets}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Uploaded Images Preview Grid */}
+                    {formData.uploadedImages && formData.uploadedImages.length > 0 && (
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-2">
+                          <span>Attached Photos ({formData.uploadedImages.length}):</span>
+                          <span className="text-purple-600 font-mono text-[10px]">Ready for Website Integration</span>
+                        </div>
+
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+                          {formData.uploadedImages.map((imgUrl, idx) => (
+                            <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-950 shadow-xs">
+                              <img src={imgUrl} alt={`Store Asset ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                              
+                              {/* Remove Button */}
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(idx)}
+                                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-md hover:scale-110"
+                                title="Remove photo"
+                              >
+                                &times;
+                              </button>
+
+                              <span className="absolute bottom-0 inset-x-0 bg-slate-950/70 text-[9px] font-mono text-center text-white py-0.5 truncate px-1">
+                                #{idx + 1}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

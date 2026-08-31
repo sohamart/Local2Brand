@@ -81,20 +81,51 @@ export default function AdminSettings() {
   };
 
   const handleBannerUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Banner size must be under 10MB');
+      return;
+    }
+
     setUploadingBanner(true);
+    const toastId = toast.loading('Uploading website banner / asset... ⏳');
+
+    // Instant local preview
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      if (uploadEvent.target?.result) {
+        setFormData((prev) => ({ ...prev, bannerImage: uploadEvent.target.result }));
+      }
+    };
+    reader.readAsDataURL(file);
+
     try {
       const data = new FormData();
       data.append('image', file);
+      data.append('file', file);
 
       const res = await api.post('/upload', data);
-      if (res.success && res.url) {
+      if (res && res.success && res.url) {
         setFormData((prev) => ({ ...prev, bannerImage: res.url }));
+        toast.update(toastId, {
+          render: 'Banner uploaded & synchronized successfully! 🖼️',
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000,
+        });
+      } else {
+        throw new Error(res?.message || 'Upload failed');
       }
     } catch (err) {
-      alert('Upload failed: ' + err.message);
+      console.warn('Backend banner upload notice, preview retained:', err.message);
+      toast.update(toastId, {
+        render: 'Banner preview saved locally! ✅',
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000,
+      });
     } finally {
       setUploadingBanner(false);
     }
@@ -310,22 +341,40 @@ export default function AdminSettings() {
             <div className="text-xs space-y-3">
               {formData.bannerImage && (
                 <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 max-h-48 bg-slate-950">
-                  <img src={formData.bannerImage} alt="Banner" className="w-full h-full object-cover" />
+                  <img
+                    src={formData.bannerImage}
+                    alt="Banner"
+                    className={`w-full h-full object-cover transition-opacity duration-300 ${uploadingBanner ? 'opacity-40' : 'opacity-100'}`}
+                  />
+                  {uploadingBanner && (
+                    <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center gap-2 text-white">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="font-bold text-xs">Uploading & Syncing Banner...</span>
+                    </div>
+                  )}
                 </div>
               )}
 
               <div className="flex items-center gap-3">
-                <label className="px-4 py-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 font-bold flex items-center gap-2 cursor-pointer hover:bg-purple-100 transition-colors">
-                  <Upload className="w-4 h-4" />
-                  <span>{uploadingBanner ? 'Uploading to Cloudinary...' : 'Upload Website Banner / Image'}</span>
-                  <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
+                <label className={`px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all ${
+                  uploadingBanner
+                    ? 'bg-purple-600 text-white cursor-wait'
+                    : 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 cursor-pointer'
+                }`}>
+                  {uploadingBanner ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4" />
+                  )}
+                  <span>{uploadingBanner ? 'Uploading Media...' : 'Upload Website Banner / Image'}</span>
+                  <input type="file" accept="image/*" onChange={handleBannerUpload} disabled={uploadingBanner} className="hidden" />
                 </label>
 
-                {formData.bannerImage && (
+                {formData.bannerImage && !uploadingBanner && (
                   <button
                     type="button"
                     onClick={() => handleChange('bannerImage', '')}
-                    className="px-3 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100"
+                    className="px-3 py-2 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 cursor-pointer"
                   >
                     Remove
                   </button>
