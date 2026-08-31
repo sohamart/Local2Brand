@@ -285,7 +285,93 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          {/* Section 3: Maintenance & Coming Soon Gates */}
+          {/* Section 3: Top Announcement Bar Customizer */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                <span>Top Announcement Bar & Flash Offer</span>
+              </h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Show Bar</span>
+                <input
+                  type="checkbox"
+                  checked={formData.announcementBar?.enabled ?? true}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        enabled: e.target.checked
+                      }
+                    }))
+                  }
+                  className="w-5 h-5 accent-purple-600 cursor-pointer"
+                />
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div className="sm:col-span-2">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Announcement Headline Message</label>
+                <input
+                  type="text"
+                  value={formData.announcementBar?.text || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        text: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. 🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Highlight Badge Tag</label>
+                <input
+                  type="text"
+                  value={formData.announcementBar?.badge || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        badge: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. FLASH OFFER / PROMO"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+              <div className="sm:col-span-3">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Target Action Link / Page URL</label>
+                <input
+                  type="text"
+                  value={formData.announcementBar?.link || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        link: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. /pricing or /demos"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 4: Maintenance & Coming Soon Gates */}
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
               <Shield className="w-4 h-4" />

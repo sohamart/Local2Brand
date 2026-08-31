@@ -132,7 +132,8 @@ export const getDemos = async (req, res) => {
     if (mongoose.connection.readyState === 1) {
       const count = await PortfolioDemo.countDocuments();
       if (count === 0) {
-        await PortfolioDemo.insertMany(DEFAULT_DEMOS);
+        const cleanDemos = DEFAULT_DEMOS.map(({ _id, ...d }) => d);
+        await PortfolioDemo.insertMany(cleanDemos);
       }
       const filter = {};
       if (category && category !== 'all') filter.category = category;
@@ -151,6 +152,7 @@ export const getDemos = async (req, res) => {
       return res.status(200).json({ success: true, count: demos.length, demos });
     }
   } catch (error) {
+    console.error('getDemos error:', error);
     return res.status(500).json({ success: false, message: error.message || 'Error fetching demos' });
   }
 };
@@ -161,7 +163,7 @@ export const createDemo = async (req, res) => {
       const demo = await PortfolioDemo.create(req.body);
       return res.status(201).json({ success: true, demo });
     } else {
-      const demos = readLocalStore('demos');
+      const demos = readLocalStore('demos') || [];
       const newDemo = {
         _id: 'demo_' + Date.now(),
         ...req.body,
@@ -181,11 +183,17 @@ export const createDemo = async (req, res) => {
 export const updateDemo = async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
-      const demo = await PortfolioDemo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      let demo = null;
+      if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+        demo = await PortfolioDemo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      }
+      if (!demo) {
+        demo = await PortfolioDemo.findOneAndUpdate({ slug: req.params.id }, req.body, { new: true });
+      }
       if (!demo) return res.status(404).json({ success: false, message: 'Demo template not found' });
       return res.status(200).json({ success: true, demo });
     } else {
-      const demos = readLocalStore('demos');
+      const demos = readLocalStore('demos') || [];
       const idx = demos.findIndex((d) => d._id?.toString() === req.params.id || d.slug === req.params.id);
       if (idx === -1) return res.status(404).json({ success: false, message: 'Demo template not found' });
       demos[idx] = { ...demos[idx], ...req.body, updatedAt: new Date().toISOString() };
@@ -200,13 +208,17 @@ export const updateDemo = async (req, res) => {
 export const deleteDemo = async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
-      await PortfolioDemo.findByIdAndDelete(req.params.id);
-      return res.status(200).json({ success: true, message: 'Demo template deleted' });
+      if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+        await PortfolioDemo.findByIdAndDelete(req.params.id);
+      } else {
+        await PortfolioDemo.findOneAndDelete({ slug: req.params.id });
+      }
+      return res.status(200).json({ success: true, message: 'Demo template deleted successfully' });
     } else {
-      let demos = readLocalStore('demos');
+      let demos = readLocalStore('demos') || [];
       demos = demos.filter((d) => d._id?.toString() !== req.params.id && d.slug !== req.params.id);
       writeLocalStore('demos', demos);
-      return res.status(200).json({ success: true, message: 'Demo template deleted' });
+      return res.status(200).json({ success: true, message: 'Demo template deleted successfully' });
     }
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
