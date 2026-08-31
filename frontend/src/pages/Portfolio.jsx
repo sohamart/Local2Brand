@@ -23,7 +23,7 @@ export default function Portfolio() {
         description="Explore our portfolio of high-converting websites, digital rebrands, and bespoke web platforms engineered for ambitious businesses."
       />
 
-      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20">
+      <div className="page-header-offset pb-20">
 
         {/* Page Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

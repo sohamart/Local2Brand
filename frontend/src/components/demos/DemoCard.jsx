@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ExternalLink, ShoppingBag, Sparkles, Clock, Star, ArrowRight, Share2, Rocket, X, CheckCircle2 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import ShareDemoModal from './ShareDemoModal';
 
-export default function DemoCard({ demo }) {
+function DemoCardComponent({ demo, onShare }) {
   const { openOrderModal } = useOrderModal();
   const navigate = useNavigate();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -43,14 +43,14 @@ export default function DemoCard({ demo }) {
   return (
     <div
       onClick={handleCardClick}
-      className="group rounded-3xl glass-card overflow-hidden border border-slate-200/90 dark:border-slate-800 shadow-glass hover:shadow-glass-highlight transition-all duration-300 flex flex-col justify-between relative bg-white/90 dark:bg-slate-900/90 min-w-0 cursor-pointer"
+      className="group rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-xl hover:border-purple-400/60 dark:hover:border-purple-600/60 transition-all duration-200 flex flex-col justify-between relative bg-white dark:bg-slate-900 min-w-0 cursor-pointer transform-gpu"
     >
       {/* Top Image Preview Container */}
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-950">
         <img
           src={demo.thumbnail || demo.heroImage || demo.coverImage || 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&w=1000&auto=format&fit=crop'}
           alt={demo.title}
-          className="w-full h-full object-cover group-hover:scale-106 transition-transform duration-500 ease-out"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out will-change-transform"
           loading="lazy"
         />
 
@@ -83,7 +83,11 @@ export default function DemoCard({ demo }) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setIsShareModalOpen(true);
+                if (onShare) {
+                  onShare(demo);
+                } else {
+                  setIsShareModalOpen(true);
+                }
               }}
               className="w-7 h-7 rounded-full bg-white/95 dark:bg-slate-900/95 hover:bg-white text-slate-700 dark:text-slate-200 shadow-md flex items-center justify-center transition-all cursor-pointer hover:scale-110"
               title="Share Demo"
@@ -94,7 +98,7 @@ export default function DemoCard({ demo }) {
         </div>
 
         {/* Hover Quick Overlay (Desktop) */}
-        <div className="hidden sm:flex absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center gap-2 p-4 z-10">
+        <div className="hidden sm:flex absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 items-center justify-center gap-2 p-4 z-10 pointer-events-none group-hover:pointer-events-auto">
           {isLive ? (
             <Link
               to={`/details/${demo.slug || demo._id}`}
@@ -149,7 +153,7 @@ export default function DemoCard({ demo }) {
                 }}
                 className="w-5 h-5 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -162,7 +166,7 @@ export default function DemoCard({ demo }) {
               className="w-full py-1.5 rounded-xl text-[11px] font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:opacity-95 text-center shadow-xs cursor-pointer flex items-center justify-center gap-1"
             >
               <span>Pre-Order Template ({demo.priceInr || '₹4,999'})</span>
-              <ArrowRight className="w-3 h-3" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
@@ -262,15 +266,20 @@ export default function DemoCard({ demo }) {
         </div>
       </div>
 
-      {/* Share Modal */}
-      <ShareDemoModal
-        isOpen={isShareModalOpen}
-        onClose={() => setIsShareModalOpen(false)}
-        demo={demo}
-      />
+      {/* Lazy Share Modal */}
+      {isShareModalOpen && (
+        <ShareDemoModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          demo={demo}
+        />
+      )}
 
       {/* Subtle bottom tricolor accent */}
       <div className="absolute bottom-0 left-4 right-4 h-[1.5px] bg-gradient-to-r from-amber-400/40 via-blue-400/30 to-emerald-400/40 opacity-0 group-hover:opacity-100 transition-opacity" />
     </div>
   );
 }
+
+const DemoCard = memo(DemoCardComponent);
+export default DemoCard;

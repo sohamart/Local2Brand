@@ -236,7 +236,7 @@ export default function UserDashboard() {
     <>
       <SEO title="Client Portal & Projects — LOCAL2BRAND" description="Manage your website specifications, track quotes, and view development status." />
 
-      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 overflow-x-hidden">
+      <div className="page-header-offset pb-20 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 overflow-x-hidden">
         
         {/* Admin Switcher Notice Bar (When Admin is in User Panel) */}
         {(isAdmin || user?.role === 'admin') && (

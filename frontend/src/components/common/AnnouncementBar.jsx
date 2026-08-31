@@ -1,20 +1,72 @@
 import React, { useState } from 'react';
-import { ArrowRight, X, Flame } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowRight, X, Flame, Check, Copy } from 'lucide-react';
+import { toast } from 'react-toastify';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { useOrderModal } from '../../context/OrderModalContext';
 
-export default function AnnouncementBar({ isScrolled = false }) {
+export default function AnnouncementBar({ isScrolled = false, onDismiss }) {
   const { settings } = useSiteSettings();
+  const { openOrderModal } = useOrderModal();
   const [dismissed, setDismissed] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    if (typeof onDismiss === 'function') {
+      onDismiss();
+    }
+  };
 
   const announcement = settings?.announcementBar || {
     enabled: true,
-    text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2026',
+    text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
     link: '/pricing',
-    badge: 'FLASH OFFER'
+    badge: 'FLASH OFFER',
+    promoCode: 'INDIA2025',
+    discountPercent: 20,
+    btnText: 'Claim Offer',
   };
 
   if (!announcement.enabled || dismissed) return null;
+
+  const promoCode = (announcement.promoCode || 'INDIA2025').trim().toUpperCase();
+  const discountPercent = announcement.discountPercent || 20;
+  const buttonText = announcement.btnText || 'Claim Offer';
+
+  const handleClaimOffer = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // 1. Copy coupon code to clipboard
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(promoCode);
+      }
+    } catch (err) {
+      console.warn('Clipboard write notice:', err);
+    }
+
+    // 2. Set visual copied state
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+
+    // 3. Show notification toast
+    toast.success(`🎉 Coupon "${promoCode}" copied & applied for ${discountPercent}% OFF!`, {
+      icon: '🎁',
+      autoClose: 3200,
+    });
+
+    // 4. Open Order Modal with coupon auto-applied
+    openOrderModal({
+      promoCode,
+      discountPercent,
+      autoApplyOffer: true,
+      websiteType: `Special Launch Promo (${discountPercent}% OFF - Code: ${promoCode})`,
+      initialRequirements: `I want to build a website and claim the special launch offer with coupon code "${promoCode}" (${discountPercent}% OFF discount applied).`,
+    });
+  };
 
   return (
     <div
@@ -50,22 +102,36 @@ export default function AnnouncementBar({ isScrolled = false }) {
               {announcement.text}
             </span>
 
-            {/* Interactive Call to Action */}
-            {announcement.link && (
-              <Link
-                to={announcement.link}
-                className="inline-flex items-center gap-1.5 font-black text-purple-700 dark:text-amber-300 hover:text-purple-900 dark:hover:text-amber-200 bg-white/70 dark:bg-purple-950/60 hover:bg-white dark:hover:bg-purple-900/80 px-2.5 py-1 rounded-full border border-purple-200 dark:border-purple-700/60 shadow-xs hover:shadow-md shrink-0 transition-all duration-200"
-              >
-                <span>Claim Offer</span>
-                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            )}
+            {/* Interactive Call to Action - Copy Coupon & Open Order Modal */}
+            <button
+              type="button"
+              onClick={handleClaimOffer}
+              className={`inline-flex items-center gap-1.5 font-black text-[11px] sm:text-xs px-3 py-1 rounded-full border shadow-xs hover:shadow-md shrink-0 transition-all duration-200 cursor-pointer transform active:scale-95 ${
+                copied
+                  ? 'bg-emerald-500 text-white border-emerald-400'
+                  : 'text-purple-700 dark:text-amber-300 hover:text-purple-900 dark:hover:text-amber-200 bg-white/85 dark:bg-purple-950/70 hover:bg-white dark:hover:bg-purple-900 border-purple-200 dark:border-purple-700/60'
+              }`}
+              title={`Copy coupon ${promoCode} & apply discount in website order form`}
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3 h-3 text-white" />
+                  <span>Applied! ✅</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3 text-purple-600 dark:text-amber-400 group-hover:scale-110 transition-transform" />
+                  <span>{buttonText}</span>
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </>
+              )}
+            </button>
 
           </div>
 
           {/* Dismiss Close Button */}
           <button
-            onClick={() => setDismissed(true)}
+            onClick={handleDismiss}
             className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800/80 transition-all shrink-0 cursor-pointer hover:rotate-90 duration-300"
             title="Dismiss announcement"
           >
@@ -77,3 +143,4 @@ export default function AnnouncementBar({ isScrolled = false }) {
     </div>
   );
 }
+

@@ -10,12 +10,16 @@ import {
   Sparkles,
   Save,
   CheckCircle,
-  Search
+  Search,
+  Tag,
+  FolderPlus,
+  Check,
+  Layers
 } from 'lucide-react';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   'LMS & Courses',
   'Restaurant',
   'Cafe',
@@ -29,6 +33,7 @@ const CATEGORIES = [
   'Dental',
   'Jewellery',
   'Automotive',
+  'Healthcare',
   'Custom'
 ];
 
@@ -55,6 +60,31 @@ export default function AdminDemos() {
   const [notification, setNotification] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+
+  // Category Manager State
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [editingCatOldName, setEditingCatOldName] = useState('');
+  const [editingCatNewName, setEditingCatNewName] = useState('');
+  const [showInlineNewCat, setShowInlineNewCat] = useState(false);
+  const [inlineNewCatValue, setInlineNewCatValue] = useState('');
+
+  const [categoriesList, setCategoriesList] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('l2b_admin_demo_categories');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {}
+      }
+    }
+    return DEFAULT_CATEGORIES;
+  });
+
+  const saveCategories = (cats) => {
+    setCategoriesList(cats);
+    localStorage.setItem('l2b_admin_demo_categories', JSON.stringify(cats));
+  };
 
   const [formData, setFormData] = useState({
     title: '',
@@ -90,6 +120,13 @@ export default function AdminDemos() {
         setDemos(res.demos || []);
         setHeroOrderChanged(false);
         setCatalogOrderChanged(false);
+
+        // Merge any new categories found in database
+        const dbCats = new Set(categoriesList);
+        (res.demos || []).forEach((d) => {
+          if (d.category) dbCats.add(d.category);
+        });
+        saveCategories(Array.from(dbCats));
       }
     } catch (err) {
       console.warn('Error fetching demos:', err);
@@ -333,6 +370,60 @@ export default function AdminDemos() {
     }
   };
 
+  // Add new category
+  const handleAddCategory = (name) => {
+    const trimmed = name?.trim();
+    if (!trimmed) return;
+    if (categoriesList.includes(trimmed)) {
+      showNotification('Category already exists!');
+      return;
+    }
+    const updated = [...categoriesList, trimmed];
+    saveCategories(updated);
+    showNotification(`Category "${trimmed}" added! ✅`);
+    setNewCategoryInput('');
+  };
+
+  // Rename an existing category and batch-update all matching demos in DB
+  const handleRenameCategory = async (oldName, newName) => {
+    const trimmedNew = newName?.trim();
+    if (!trimmedNew || trimmedNew === oldName) {
+      setEditingCatOldName('');
+      return;
+    }
+
+    try {
+      // 1. Update categories list
+      const updatedCats = categoriesList.map((c) => (c === oldName ? trimmedNew : c));
+      saveCategories(updatedCats);
+
+      // 2. Batch update any demo in MongoDB that had oldName
+      const matchingDemos = demos.filter((d) => d.category === oldName);
+      for (const demo of matchingDemos) {
+        await api.put(`/demos/${demo._id}`, { ...demo, category: trimmedNew });
+      }
+
+      showNotification(`Category renamed to "${trimmedNew}" & ${matchingDemos.length} demo(s) updated! ✅`);
+      setEditingCatOldName('');
+      fetchDemos();
+    } catch (err) {
+      alert('Error updating category: ' + err.message);
+    }
+  };
+
+  // Delete category
+  const handleDeleteCategory = (catName) => {
+    const demosUsingCat = demos.filter((d) => d.category === catName).length;
+    if (demosUsingCat > 0) {
+      if (!confirm(`Warning: ${demosUsingCat} demo(s) currently use "${catName}". Deleting this category will remove it from the filter list. Proceed?`)) {
+        return;
+      }
+    }
+    const updated = categoriesList.filter((c) => c !== catName);
+    saveCategories(updated);
+    showNotification(`Category "${catName}" removed.`);
+  };
+
   return (
     <div className="space-y-8">
       {/* Top Header */}
@@ -346,11 +437,20 @@ export default function AdminDemos() {
             Hero Slider & Demo Websites Manager
           </h1>
           <p className="text-xs text-slate-500 max-w-2xl mt-1">
-            Control exactly which demo showcases appear in the <strong>Home Page Hero 3D Slider</strong> and set their display order (1st, 2nd, 3rd, etc.).
+            Control categories, demo showcases, and exact display orders (1st, 2nd, 3rd) on the Homepage and Demos Catalog.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5 cursor-pointer transition-all"
+          >
+            <Tag className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            <span>Manage Categories ({categoriesList.length})</span>
+          </button>
+
           <button
             onClick={() => handleOpenModal()}
             className="px-4 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center gap-1.5 cursor-pointer"
@@ -763,16 +863,62 @@ export default function AdminDemos() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold"
-                  >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-bold text-slate-700 dark:text-slate-300 block">Category *</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowInlineNewCat(!showInlineNewCat)}
+                      className="text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <Plus className="w-2.5 h-2.5" />
+                      <span>{showInlineNewCat ? 'Choose Existing' : '+ New Category'}</span>
+                    </button>
+                  </div>
+
+                  {showInlineNewCat ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        autoFocus
+                        value={inlineNewCatValue}
+                        onChange={(e) => setInlineNewCatValue(e.target.value)}
+                        placeholder="e.g. Healthcare, Fashion..."
+                        className="w-full p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-300 dark:border-purple-700 text-xs font-bold text-purple-900 dark:text-purple-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (inlineNewCatValue.trim()) {
+                            handleAddCategory(inlineNewCatValue.trim());
+                            setFormData({ ...formData, category: inlineNewCatValue.trim() });
+                            setShowInlineNewCat(false);
+                            setInlineNewCatValue('');
+                          }
+                        }}
+                        className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white cursor-pointer shrink-0"
+                        title="Add and Select"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.category}
+                      onChange={(e) => {
+                        if (e.target.value === '__add_new__') {
+                          setShowInlineNewCat(true);
+                        } else {
+                          setFormData({ ...formData, category: e.target.value });
+                        }
+                      }}
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold"
+                    >
+                      {categoriesList.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      <option value="__add_new__">+ Add New Category...</option>
+                    </select>
+                  )}
                 </div>
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Status</label>
@@ -961,6 +1107,174 @@ export default function AdminDemos() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* CATEGORY MANAGER MODAL                                                    */}
+      {/* ========================================================================= */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="p-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Tag className="w-5 h-5" />
+                <h3 className="font-black text-base sm:text-lg">
+                  Manage Demo Categories & Search Labels
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-5 overflow-y-auto space-y-4 flex-1 text-xs">
+              {/* Add New Category Form */}
+              <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800 space-y-2">
+                <label className="font-extrabold text-purple-950 dark:text-purple-200 block">
+                  Add Brand New Category
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newCategoryInput}
+                    onChange={(e) => setNewCategoryInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCategory(newCategoryInput);
+                      }
+                    }}
+                    placeholder="e.g. Healthcare, Fashion, Law Firm, Event..."
+                    className="flex-1 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 text-xs font-bold"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddCategory(newCategoryInput)}
+                    className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-sm cursor-pointer shrink-0 flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Categories List */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-slate-400 font-extrabold uppercase tracking-wider text-[10px] px-1">
+                  <span>Category Name ({categoriesList.length})</span>
+                  <span>Active Demos / Actions</span>
+                </div>
+
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/40">
+                  {categoriesList.map((cat, idx) => {
+                    const demoCount = demos.filter((d) => d.category === cat).length;
+                    const isEditing = editingCatOldName === cat;
+
+                    return (
+                      <div
+                        key={cat}
+                        className="p-3 flex items-center justify-between gap-2 hover:bg-white dark:hover:bg-slate-900 transition-colors"
+                      >
+                        {isEditing ? (
+                          <div className="flex items-center gap-1.5 flex-1">
+                            <input
+                              type="text"
+                              autoFocus
+                              value={editingCatNewName}
+                              onChange={(e) => setEditingCatNewName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleRenameCategory(cat, editingCatNewName);
+                                }
+                              }}
+                              className="p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-purple-400 text-xs font-bold flex-1"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleRenameCategory(cat, editingCatNewName)}
+                              className="p-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 cursor-pointer"
+                              title="Save Changes"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingCatOldName('')}
+                              className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 cursor-pointer"
+                              title="Cancel"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-slate-400 text-[10px]">#{idx + 1}</span>
+                            <span className="font-bold text-slate-900 dark:text-white text-xs">{cat}</span>
+                          </div>
+                        )}
+
+                        {!isEditing && (
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                              demoCount > 0
+                                ? 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
+                                : 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                            }`}>
+                              {demoCount} demo{demoCount === 1 ? '' : 's'}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingCatOldName(cat);
+                                setEditingCatNewName(cat);
+                              }}
+                              className="p-1.5 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950 cursor-pointer transition-colors"
+                              title="Edit / Rename Category"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteCategory(cat)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 cursor-pointer transition-colors"
+                              title="Delete Category"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/80 flex items-center justify-between">
+              <span className="text-[11px] text-slate-500">
+                Categories are synced with public demo filters automatically.
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="px-5 py-2 rounded-xl text-xs font-bold bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 cursor-pointer shadow-sm"
+              >
+                Done
+              </button>
+            </div>
+
           </div>
         </div>
       )}

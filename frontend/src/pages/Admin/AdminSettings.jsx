@@ -421,7 +421,7 @@ export default function AdminSettings() {
                       }
                     }))
                   }
-                  placeholder="e.g. 🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain"
+                  placeholder="e.g. 🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025"
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                 />
               </div>
@@ -445,23 +445,88 @@ export default function AdminSettings() {
                 />
               </div>
 
-              <div className="sm:col-span-3">
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Target Action Link / Page URL</label>
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">🎁 Promo Coupon Code</label>
                 <input
                   type="text"
-                  value={formData.announcementBar?.link || ''}
+                  value={formData.announcementBar?.promoCode || ''}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       announcementBar: {
                         ...(prev.announcementBar || {}),
-                        link: e.target.value
+                        promoCode: e.target.value.toUpperCase()
                       }
                     }))
                   }
-                  placeholder="e.g. /pricing or /demos"
+                  placeholder="e.g. INDIA2025"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono font-bold text-purple-600 dark:text-purple-400"
+                />
+                <span className="text-[10px] text-slate-400 block mt-0.5">
+                  Copied to user's clipboard & applied in the order form on click.
+                </span>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Discount Percentage (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.announcementBar?.discountPercent ?? 20}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        discountPercent: parseInt(e.target.value, 10) || 0
+                      }
+                    }))
+                  }
+                  placeholder="20"
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                 />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Action Button Text</label>
+                <input
+                  type="text"
+                  value={formData.announcementBar?.btnText || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        btnText: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. Claim Offer / Claim 20% OFF"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+              {/* Live Preview Box */}
+              <div className="sm:col-span-3 pt-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1.5">
+                  Live Bar Preview
+                </span>
+                <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-100/90 via-pink-50/90 to-sky-100/90 dark:from-[#0a0518] dark:via-[#19082d] dark:to-[#070d1e] border border-purple-300/60 dark:border-purple-500/30 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2 truncate">
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs">
+                      {formData.announcementBar?.badge || 'FLASH OFFER'}
+                    </span>
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] truncate">
+                      {formData.announcementBar?.text || '🔥 Special Launch Offer: Get 20% OFF with code INDIA2025'}
+                    </span>
+                  </div>
+
+                  <div className="px-3 py-1 rounded-full bg-white/85 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-700/60 text-purple-700 dark:text-amber-300 font-black text-[10px] flex items-center gap-1">
+                    <span>{formData.announcementBar?.btnText || 'Claim Offer'}</span>
+                    <span className="opacity-75">({formData.announcementBar?.promoCode || 'INDIA2025'})</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

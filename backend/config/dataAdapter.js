@@ -44,7 +44,11 @@ const DEFAULT_SETTINGS = {
   announcementBar: {
     enabled: true,
     text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
+    badge: 'FLASH OFFER',
     link: '/pricing',
+    promoCode: 'INDIA2025',
+    discountPercent: 20,
+    btnText: 'Claim Offer',
   },
   bannerImage: '',
   aiSettings: {

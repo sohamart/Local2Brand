@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, Sparkles, Filter, CheckCircle2, ArrowRight } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
 import DemoCard from '../components/demos/DemoCard';
+import ShareDemoModal from '../components/demos/ShareDemoModal';
 import FinalCTA from '../components/home/FinalCTA';
 import AshokaChakra from '../components/common/AshokaChakra';
 import DashboardLoader from '../components/common/DashboardLoader';
@@ -23,6 +24,11 @@ export default function Demos() {
   const [loading, setLoading] = useState(demosList.length === 0);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeShareDemo, setActiveShareDemo] = useState(null);
+
+  const handleShare = useCallback((demo) => {
+    setActiveShareDemo(demo);
+  }, []);
 
   const fetchDemos = async () => {
     try {
@@ -42,11 +48,24 @@ export default function Demos() {
     fetchDemos();
   }, []);
 
-  // Dynamically extract distinct categories from database demos
+  // Dynamically extract distinct categories from database demos and admin saved categories
   const dynamicCategories = useMemo(() => {
     const cats = new Set(['All']);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('l2b_admin_demo_categories');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((c) => {
+              if (c && typeof c === 'string') cats.add(c.trim());
+            });
+          }
+        } catch (e) {}
+      }
+    }
     demosList.forEach((d) => {
-      if (d.category) cats.add(d.category);
+      if (d.category) cats.add(d.category.trim());
     });
     return Array.from(cats);
   }, [demosList]);
@@ -71,7 +90,7 @@ export default function Demos() {
         description="Experience 100% live working websites for restaurants, salons, real estate, jewellery, boutiques, and gyms. Real-time menus, WhatsApp orders, and instant customization."
       />
 
-      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20">
+      <div className="page-header-offset pb-20">
 
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -156,7 +175,11 @@ export default function Demos() {
           ) : filteredDemos.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {filteredDemos.map((demo) => (
-                <DemoCard key={demo._id || demo.slug || demo.id} demo={demo} />
+                <DemoCard
+                  key={demo._id || demo.slug || demo.id}
+                  demo={demo}
+                  onShare={handleShare}
+                />
               ))}
             </div>
           ) : (
@@ -178,6 +201,15 @@ export default function Demos() {
             </div>
           )}
         </div>
+
+        {/* Root Shared Modal for ultra-low DOM memory footprint */}
+        {activeShareDemo && (
+          <ShareDemoModal
+            isOpen={Boolean(activeShareDemo)}
+            onClose={() => setActiveShareDemo(null)}
+            demo={activeShareDemo}
+          />
+        )}
 
         {/* Global CTA */}
         <div className="mt-20">

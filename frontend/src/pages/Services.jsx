@@ -79,11 +79,11 @@ export default function Services() {
   return (
     <>
       <SEO
-        title="Services — Bespoke Web Design & Digital Engineering"
-        description="Comprehensive web development services: Business Websites, High-Converting Landing Pages, Portfolios, E-commerce & Custom Web Applications."
+        title="Web Development & Digital Growth Services — LOCAL2BRAND"
+        description="Explore our high-performance website development services. 48-hour delivery, custom WhatsApp pipelines, SEO dominance, and bespoke SaaS builds."
       />
 
-      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20">
+      <div className="page-header-offset pb-20">
 
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

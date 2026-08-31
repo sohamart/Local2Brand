@@ -38,12 +38,16 @@ import {
   ExternalLink,
   UploadCloud,
   FileText,
-  Bookmark
+  Bookmark,
+  Copy,
+  MessageCircle
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { openWhatsAppChat, generateWhatsAppGeneralUrl } from '../../utils/whatsapp';
 import api from '../../services/api';
 import AshokaChakra from './AshokaChakra';
 
@@ -201,6 +205,7 @@ const CATEGORY_SPECS = {
 };
 
 export default function SmartRequirementModal() {
+  const navigate = useNavigate();
   const { isInquiryOpen, closeOrderModal, inquiryData } = useOrderModal();
   const { user, openAuthModal } = useAuth();
   const { settings } = useSiteSettings();
@@ -212,6 +217,7 @@ export default function SmartRequirementModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [copiedId, setCopiedId] = useState(false);
 
   // Comprehensive Form State
   const [formData, setFormData] = useState({
@@ -293,6 +299,8 @@ export default function SmartRequirementModal() {
     hostingStatus: 'High-Speed Cloud Hosting (Free 1-Yr Included)',
     budget: '₹10,000 – ₹25,000 (Standard Commercial)',
     timeline: '⚡ Express Delivery (48 - 72 Hours)',
+    couponCode: '',
+    discountPercent: 0,
     additionalNotes: ''
   });
 
@@ -378,8 +386,11 @@ export default function SmartRequirementModal() {
       setSubmittedData(null);
       setErrorMessage('');
 
-      if (inquiryData && (inquiryData.websiteType || inquiryData.selectedDemo || inquiryData.templateId)) {
-        // Priority 1: User explicitly clicked "Get Website" or "Pre-Order" on a Demo
+      const autoCoupon = inquiryData?.promoCode || (inquiryData?.autoApplyOffer ? 'INDIA2025' : '');
+      const autoDiscount = inquiryData?.discountPercent || (autoCoupon ? 20 : 0);
+
+      if (inquiryData && (inquiryData.websiteType || inquiryData.selectedDemo || inquiryData.templateId || autoCoupon)) {
+        // Priority 1: User explicitly clicked "Get Website" or "Pre-Order" on a Demo or Promo Offer
         const matched = dbDemos.find(
           (d) =>
             d.slug === inquiryData.templateId ||
@@ -400,11 +411,13 @@ export default function SmartRequirementModal() {
           budget: matched ? (matched.priceInr || matched.price || prev.budget) : prev.budget,
           timeline: matched ? (matched.turnaround || '⚡ Express Delivery (48 - 72 Hours)') : prev.timeline,
           referenceUrls: matched?.liveUrl || prev.referenceUrls,
+          couponCode: autoCoupon || prev.couponCode,
+          discountPercent: autoDiscount || prev.discountPercent,
           businessDetails: {
             ...prev.businessDetails,
             specialties: chosenFeatures || prev.businessDetails?.specialties || ''
           },
-          additionalNotes: inquiryData.initialRequirements || (matched ? `Pre-order specifications for "${matched.title}".` : ''),
+          additionalNotes: inquiryData.initialRequirements || (matched ? `Pre-order specifications for "${matched.title}".` : (autoCoupon ? `Applied promo offer ${autoCoupon} (${autoDiscount}% OFF).` : '')),
           clientInfo: {
             ...prev.clientInfo,
             ownerName: user?.name || prev.clientInfo?.ownerName || '',
@@ -421,6 +434,8 @@ export default function SmartRequirementModal() {
             setFormData((prev) => ({
               ...prev,
               ...parsed,
+              couponCode: autoCoupon || parsed.couponCode || '',
+              discountPercent: autoDiscount || parsed.discountPercent || 0,
               clientInfo: {
                 ...prev.clientInfo,
                 ...parsed.clientInfo,
@@ -435,6 +450,8 @@ export default function SmartRequirementModal() {
         } else if (user) {
           setFormData((prev) => ({
             ...prev,
+            couponCode: autoCoupon || '',
+            discountPercent: autoDiscount || 0,
             clientInfo: {
               ...prev.clientInfo,
               ownerName: user.name || '',
@@ -591,12 +608,18 @@ export default function SmartRequirementModal() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] font-extrabold uppercase tracking-widest bg-amber-50 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <AshokaChakra size={9} />
                   <span>Smart Requirement Builder v{formSchema?.version || '1.0'}</span>
                 </span>
-                {autoSavedTime && (
+                {formData.couponCode && (
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>🎁 Coupon {formData.couponCode} ({formData.discountPercent || 20}% OFF)</span>
+                  </span>
+                )}
+                {autoSavedTime && !formData.couponCode && (
                   <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hidden sm:inline">
                     ● Autosaved at {autoSavedTime}
                   </span>
@@ -659,29 +682,104 @@ export default function SmartRequirementModal() {
         <div className="p-5 sm:p-8 overflow-y-auto flex-1 text-slate-800 dark:text-slate-200">
           
           {submittedData ? (
-            /* FINAL SUCCESS STATE */
-            <div className="text-center py-8 space-y-5">
-              <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/20 animate-bounce">
+            /* FINAL SUCCESS STATE / POPUP */
+            <div className="text-center py-6 sm:py-8 space-y-6 max-w-xl mx-auto">
+              <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/25 animate-bounce">
                 <CheckCircle2 className="w-12 h-12" />
               </div>
+
               <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 dark:bg-emerald-950/70 px-3 py-1 rounded-full">
-                  Requirement Session Confirmed
+                <span className="text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 px-3.5 py-1 rounded-full border border-emerald-300 dark:border-emerald-700/60 shadow-xs inline-flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span>Project Order Confirmed & Logged</span>
                 </span>
-                <h3 className="text-2xl font-black text-slate-900 dark:text-white">
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
                   Thank You, {submittedData.clientInfo?.ownerName || 'Valued Client'}!
                 </h3>
-                <p className="text-sm text-slate-500 max-w-md mx-auto">
-                  Your project specifications for <strong>{submittedData.clientInfo?.businessName}</strong> have been received and assigned unique tracking ID:
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Your specifications for <strong>{submittedData.clientInfo?.businessName || 'your business website'}</strong> have been securely registered.
                 </p>
-                <div className="font-mono text-xl font-black text-purple-600 bg-purple-50 dark:bg-purple-950/60 p-3 rounded-2xl border border-purple-200 dark:border-purple-800 inline-block">
-                  {submittedData.requirementId}
+              </div>
+
+              {/* Requirement Tracking ID Box with 1-Click Copy */}
+              <div className="p-4 rounded-2xl bg-purple-50/80 dark:bg-purple-950/50 border-2 border-purple-300 dark:border-purple-800 shadow-sm space-y-1.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-700 dark:text-purple-300">
+                  Your Requirement Tracking ID
+                </span>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="font-mono text-xl sm:text-2xl font-black text-purple-900 dark:text-purple-200 tracking-wider">
+                    {submittedData.requirementId}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(submittedData.requirementId);
+                      setCopiedId(true);
+                      toast.success('Tracking ID copied to clipboard! 📋');
+                      setTimeout(() => setCopiedId(false), 2500);
+                    }}
+                    className="p-1.5 rounded-lg bg-white dark:bg-purple-900/80 border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-200 hover:bg-purple-100 transition-all cursor-pointer"
+                    title="Copy Tracking ID"
+                  >
+                    {copiedId ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
-              <div className="pt-4 flex items-center justify-center gap-3">
+
+              {/* 📞 DEVELOPER & PAYMENT CONTACT NOTICE CARD */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-amber-400 dark:border-amber-500/40 text-left space-y-2 shadow-sm">
+                <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300 font-black text-xs sm:text-sm">
+                  <Phone className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>Developer & Payment Milestone Follow-up</span>
+                </div>
+                <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
+                  Our senior development team & engineering lead will contact you shortly via <strong>Phone / WhatsApp ({submittedData.clientInfo?.mobile})</strong> or <strong>Email ({submittedData.clientInfo?.email})</strong> to discuss milestone payments, custom domain integration, and project kickoff details.
+                </p>
+              </div>
+
+              {/* 📊 USER PORTAL LIVE TRACKING NOTICE */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-left text-xs text-slate-600 dark:text-slate-300 flex items-start gap-2.5">
+                <span className="text-base select-none mt-0.5">📊</span>
+                <div className="space-y-0.5">
+                  <strong className="text-slate-900 dark:text-white block font-bold">
+                    Track Total Price & Order Milestones in User Portal
+                  </strong>
+                  <span className="text-[11px] leading-snug">
+                    You can view itemized price breakdowns, invoices, and live development status anytime inside your <strong>User Dashboard</strong>.
+                  </span>
+                </div>
+              </div>
+
+              {/* ACTION BUTTONS */}
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                 <button
+                  type="button"
+                  onClick={() => {
+                    closeOrderModal();
+                    navigate('/dashboard');
+                  }}
+                  className="px-6 py-3 rounded-2xl text-xs font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center gap-2 cursor-pointer transition-all hover:scale-102"
+                >
+                  <span>📊 Go to User Dashboard</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const prompt = `Hi LOCAL2BRAND! I have submitted my website project (Tracking ID: ${submittedData.requirementId}). I would like to discuss payment milestones and development start.`;
+                    openWhatsAppChat(generateWhatsAppGeneralUrl(prompt));
+                  }}
+                  className="px-5 py-3 rounded-2xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md flex items-center gap-2 cursor-pointer transition-all hover:scale-102"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>WhatsApp Lead Engineer</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={closeOrderModal}
-                  className="px-6 py-2.5 rounded-full text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-50 cursor-pointer"
+                  className="px-4 py-3 rounded-2xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer transition-all"
                 >
                   Close Window
                 </button>
@@ -1622,6 +1720,17 @@ export default function SmartRequirementModal() {
                         </span>
                       ))}
                     </div>
+                  </div>
+
+                  {/* Transparent Pricing & User Portal Live Tracking Banner */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 border border-purple-200 dark:border-purple-800 text-xs space-y-1.5 shadow-xs">
+                    <div className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <span className="text-sm">📊</span>
+                      <span>Total Price Breakdown & Live Order Tracking in User Portal</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                      Once submitted, your complete project details, total price breakdown, payment milestones, and real-time development status can be tracked anytime inside your <strong>User Dashboard (/dashboard)</strong>.
+                    </p>
                   </div>
 
                   <div>

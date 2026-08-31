@@ -68,6 +68,9 @@ const siteSettingsSchema = new mongoose.Schema(
       text: { type: String, default: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025' },
       badge: { type: String, default: 'FLASH OFFER' },
       link: { type: String, default: '/pricing' },
+      promoCode: { type: String, default: 'INDIA2025' },
+      discountPercent: { type: Number, default: 20 },
+      btnText: { type: String, default: 'Claim Offer' },
     },
     bannerImage: {
       type: String,

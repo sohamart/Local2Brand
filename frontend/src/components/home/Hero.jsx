@@ -319,7 +319,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative pt-36 sm:pt-44 lg:pt-48 pb-16 sm:pb-20 overflow-hidden">
+    <section className="relative page-header-offset pb-16 sm:pb-20 overflow-hidden">
       {/* Dynamic Ambient Hero Glow that shifts subtly with active tab */}
       <div
         className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[950px] h-[500px] rounded-full blur-[100px] pointer-events-none transition-all duration-1000 -z-10 opacity-60 dark:opacity-40"
@@ -529,10 +529,24 @@ export default function Hero() {
                   <span className="truncate max-w-[180px] sm:max-w-xs font-semibold">
                     local2brand.com/demos/{current.slug}
                   </span>
-                  <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold border border-emerald-200/70 dark:border-emerald-700/50">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                    LIVE
-                  </span>
+                  {(() => {
+                    const currentDemoMeta = getDemoBySlug(current.slug) || getDemoBySlug(current.id);
+                    const isLive = Boolean(
+                      (current.isPublished || current.status === 'published') &&
+                      (current.liveUrl || currentDemoMeta?.liveUrl)
+                    );
+                    return isLive ? (
+                      <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold border border-emerald-200/70 dark:border-emerald-700/50">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                        LIVE
+                      </span>
+                    ) : (
+                      <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 text-[9px] font-bold border border-amber-200/70 dark:border-amber-700/50">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        COMING SOON
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {/* Right Status Badge */}
@@ -562,7 +576,10 @@ export default function Hero() {
                 {/* Dynamic Showcase Visual Display */}
                 {(() => {
                   const currentDemoMeta = getDemoBySlug(current.slug) || getDemoBySlug(current.id);
-                  const isLiveReady = current.isPublished || (currentDemoMeta?.isPublished && Boolean(currentDemoMeta?.liveUrl));
+                  const isLiveReady = Boolean(
+                    (current.isPublished || current.status === 'published') &&
+                    (current.liveUrl || currentDemoMeta?.liveUrl)
+                  );
 
                   return (
                     <div className="w-full h-full relative overflow-hidden select-none bg-slate-950">
@@ -643,14 +660,41 @@ export default function Hero() {
                     </div>
 
                     <div className="flex items-center gap-2.5 shrink-0 pointer-events-auto">
-                      <Link
-                        to={`/demos/${current.slug}`}
-                        className="px-4 py-2 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-2 group/btn hover:scale-102 cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-purple-600" />
-                        <span>View Live Demo</span>
-                        <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover/btn:translate-x-0.5 transition-transform" />
-                      </Link>
+                      {(() => {
+                        const currentDemoMeta = getDemoBySlug(current.slug) || getDemoBySlug(current.id);
+                        const isLiveReady = Boolean(
+                          (current.isPublished || current.status === 'published') &&
+                          (current.liveUrl || currentDemoMeta?.liveUrl)
+                        );
+
+                        return isLiveReady ? (
+                          <Link
+                            to={`/demos/${current.slug}`}
+                            className="px-4 py-2 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-2 group/btn hover:scale-102 cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-purple-600" />
+                            <span>View Live Demo</span>
+                            <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover/btn:translate-x-0.5 transition-transform" />
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openOrderModal({
+                                selectedDemo: current.title,
+                                websiteType: `Pre-Order Template: ${current.title}`,
+                                category: current.category,
+                                initialRequirements: `I want to pre-order and launch the "${current.title}" (${current.category}) website.`
+                              })
+                            }
+                            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-2 group/btn hover:scale-102 cursor-pointer"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+                            <span>Pre-Order (Coming Soon)</span>
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-950 group-hover/btn:translate-x-0.5 transition-transform" />
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

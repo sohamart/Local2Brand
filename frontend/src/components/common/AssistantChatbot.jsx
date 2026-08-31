@@ -436,19 +436,19 @@ export default function AssistantChatbot() {
           </div>
         )}
 
-        {/* L2B AI Modern Frosted Glass Launcher with Animated Neon Border */}
+        {/* L2B AI Modern Frosted Glass Launcher with Adaptive Laser Border */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] overflow-hidden flex items-center justify-center transition-all duration-300 transform active:scale-95 cursor-pointer relative group ${
+          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2.5px] overflow-hidden flex items-center justify-center transition-all duration-300 transform active:scale-95 cursor-pointer relative group ${
             isOpen
               ? 'bg-slate-900 text-white shadow-xl'
-              : 'shadow-xl shadow-emerald-500/20 dark:shadow-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-105'
+              : 'shadow-xl shadow-emerald-500/30 dark:shadow-white/20 hover:shadow-2xl hover:shadow-emerald-500/50 dark:hover:shadow-white/40 hover:scale-105'
           }`}
           aria-label="Toggle L2B AI Assistant"
         >
-          {/* Rotating Laser Conic Neon Green Border */}
+          {/* Rotating Laser Conic Border: Green in Light Mode, White in Dark Mode */}
           {!isOpen && (
-            <span className="absolute -inset-[150%] rounded-full bg-[conic-gradient(from_0deg,transparent_0_260deg,#059669_300deg,#10b981_330deg,#34d399_360deg)] animate-spin-conic pointer-events-none" />
+            <span className="absolute -inset-[150%] rounded-full chatbot-laser-border pointer-events-none" />
           )}
 
           {/* Frosted Glass High-Contrast Core */}
@@ -461,10 +461,10 @@ export default function AssistantChatbot() {
                 <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse" />
 
                 {/* Direct Clean AI Sparkles Logo - Crisp in both light and dark */}
-                <Sparkles className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-emerald-600 dark:text-emerald-400 drop-shadow-xs group-hover:scale-110 transition-transform" />
+                <Sparkles className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-emerald-600 dark:text-purple-400 drop-shadow-xs group-hover:scale-110 transition-transform" />
 
                 {/* Crisp Modern L2B AI Text */}
-                <span className="font-black text-[9px] sm:text-[10px] tracking-widest uppercase text-slate-900 dark:text-emerald-300 leading-none mt-1 drop-shadow-2xs">
+                <span className="font-black text-[9px] sm:text-[10px] tracking-widest uppercase text-slate-900 dark:text-purple-300 leading-none mt-1 drop-shadow-2xs">
                   L2B AI
                 </span>
               </>
@@ -478,7 +478,7 @@ export default function AssistantChatbot() {
         <div
           data-lenis-prevent="true"
           onWheel={(e) => e.stopPropagation()}
-          className="absolute bottom-16 sm:bottom-18 right-0 w-[92vw] sm:w-[420px] h-[600px] max-h-[85vh] p-[1.5px] rounded-3xl moving-emerald-border shadow-2xl shadow-emerald-500/25 dark:shadow-emerald-500/35 animate-in slide-in-from-bottom-5 duration-200 z-[99999] pointer-events-auto"
+          className="absolute bottom-16 sm:bottom-18 right-0 w-[92vw] sm:w-[420px] h-[600px] max-h-[85vh] p-[1.5px] rounded-3xl chatbot-drawer-border shadow-2xl shadow-emerald-500/25 dark:shadow-purple-500/35 animate-in slide-in-from-bottom-5 duration-200 z-[99999] pointer-events-auto"
         >
           <div className="w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[22.5px] overflow-hidden flex flex-col">
             {/* Header */}

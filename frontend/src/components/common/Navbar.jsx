@@ -25,6 +25,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [isAnnouncementDismissed, setIsAnnouncementDismissed] = useState(false);
   const dropdownTimerRef = useRef(null);
 
   const { settings } = useSiteSettings();
@@ -33,8 +34,11 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const hasAnnouncement = Boolean(settings?.announcementBar?.enabled && !isAnnouncementDismissed);
+
   const navContainerRef = useRef(null);
   const dropdownRef = useRef(null);
+  const headerRef = useRef(null);
   const linkRefs = useRef({});
   const [hoveredPath, setHoveredPath] = useState(null);
   const [pillStyle, setPillStyle] = useState({
@@ -45,9 +49,26 @@ export default function Navbar() {
     opacity: 0,
   });
 
-  // Track scroll position
+  // Sync body class for zero-overhead, pure hardware-accelerated CSS page offset
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('has-announcement-bar', hasAnnouncement);
+    }
+  }, [hasAnnouncement]);
+
+  // Ultra-smooth throttled scroll position tracker (120 FPS)
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrolled = window.scrollY > 20;
+          setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev));
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -140,21 +161,29 @@ export default function Navbar() {
   return (
     <>
       <header
+        ref={headerRef}
         className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col ${
-          isScrolled ? 'gap-0' : 'gap-2 sm:gap-2.5'
+          isScrolled ? 'gap-0' : hasAnnouncement ? 'gap-1.5 sm:gap-2' : 'gap-0'
         }`}
       >
         {/* Animated Top Announcement Bar */}
-        <AnnouncementBar isScrolled={isScrolled} />
+        <AnnouncementBar
+          isScrolled={isScrolled}
+          onDismiss={() => setIsAnnouncementDismissed(true)}
+        />
 
         <div className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full transition-all duration-300 ${
-          isScrolled ? 'pt-1 sm:pt-1.5' : 'pt-0'
+          isScrolled
+            ? 'pt-1 sm:pt-1.5'
+            : hasAnnouncement
+            ? 'pt-0'
+            : 'pt-2.5 sm:pt-3.5'
         }`}>
           <nav
             className={`flex items-center justify-between glass-waterdrop rounded-full transition-all duration-300 relative border border-white/95 dark:border-slate-800/90 ${
               isScrolled
-                ? 'h-[60px] sm:h-[64px] px-3.5 sm:px-6 shadow-glass-lg'
-                : 'h-[64px] sm:h-[68px] px-4 sm:px-7 shadow-glass'
+                ? 'h-[58px] sm:h-[62px] px-3.5 sm:px-6 shadow-glass-lg'
+                : 'h-[62px] sm:h-[66px] px-4 sm:px-7 shadow-glass'
             }`}
             aria-label="Global Navigation"
           >

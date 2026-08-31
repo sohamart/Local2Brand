@@ -13,6 +13,8 @@ export function OrderModalProvider({ children }) {
     price: '',
     industry: '',
     autoApplyOffer: false,
+    promoCode: '',
+    discountPercent: 0,
   });
 
   const [callbackData, setCallbackData] = useState({
@@ -23,10 +25,14 @@ export function OrderModalProvider({ children }) {
   const openOrderModal = (data = {}) => {
     const isOfferTrigger =
       data.autoApplyOffer === true ||
+      Boolean(data.promoCode) ||
       data.websiteType?.toLowerCase().includes('offer') ||
       data.websiteType?.toLowerCase().includes('20%') ||
       data.websiteType?.toLowerCase().includes('india2025') ||
       false;
+
+    const promoCode = data.promoCode || (isOfferTrigger ? 'INDIA2025' : '');
+    const discountPercent = data.discountPercent || (isOfferTrigger ? 20 : 0);
 
     setInquiryData({
       selectedDemo: data.selectedDemo || '',
@@ -37,6 +43,8 @@ export function OrderModalProvider({ children }) {
       price: data.price || '',
       industry: data.industry || '',
       autoApplyOffer: isOfferTrigger,
+      promoCode,
+      discountPercent,
     });
     setIsInquiryOpen(true);
     if (typeof document !== 'undefined') {

@@ -50,7 +50,7 @@ export default function DemoDetails() {
         description={`Interactive preview of ${demo.title}. Features ${demo.features.slice(0, 2).join(', ')}. Order via WhatsApp with 3 - 7 days turnaround.`}
       />
 
-      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20">
+      <div className="page-header-offset pb-20">
 
         {/* Navigation Breadcrumb */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
@@ -104,15 +104,21 @@ export default function DemoDetails() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                  <a
-                    href={`/preview/${demo.templateId || demo.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>Launch Live Demo</span>
-                    <ExternalLink className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  </a>
+                  {demo.status === 'published' && (demo.liveUrl || demo.isPublished) ? (
+                    <a
+                      href={`/preview/${demo.templateId || demo.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>Launch Live Demo</span>
+                      <ExternalLink className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    </a>
+                  ) : (
+                    <span className="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/60 flex items-center justify-center gap-2">
+                      <span>⏳ Live Demo Coming Soon</span>
+                    </span>
+                  )}
 
                   <button
                     onClick={handleOrder}

@@ -855,7 +855,17 @@ html[data-theme="dark"] body {
 }
 
 .animate-spin-conic {
-  animation: spinConic 3.5s linear infinite;
+  animation: spinConic 3s linear infinite;
+}
+
+/* Animated Rotating Laser Conic Border: Green in Light Mode, Glowing White in Dark Mode */
+.chatbot-laser-border {
+  animation: spinConic 3s linear infinite;
+  background: conic-gradient(from 0deg, transparent 0 240deg, #059669 280deg, #10b981 320deg, #34d399 360deg);
+}
+
+.dark .chatbot-laser-border {
+  background: conic-gradient(from 0deg, transparent 0 240deg, rgba(255, 255, 255, 0.3) 275deg, rgba(255, 255, 255, 0.95) 325deg, #ffffff 360deg);
 }
 
 /* Animated Moving Thin Border */
@@ -871,8 +881,63 @@ html[data-theme="dark"] body {
   }
 }
 
+.chatbot-drawer-border {
+  background: linear-gradient(135deg, #059669, #10b981, #34d399, #6ee7b7, #10b981, #059669);
+  background-size: 300% 300%;
+  animation: movingBorderGradient 3.5s ease infinite;
+}
+
+.dark .chatbot-drawer-border {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), #a855f7, #ec4899, #3b82f6, rgba(255, 255, 255, 0.9));
+  background-size: 300% 300%;
+  animation: movingBorderGradient 3.5s ease infinite;
+}
+
 .moving-emerald-border {
   background: linear-gradient(135deg, #059669, #10b981, #34d399, #6ee7b7, #10b981, #059669);
   background-size: 350% 350%;
   animation: movingBorderGradient 3.5s ease infinite;
+}
+
+.moving-purple-border {
+  background: linear-gradient(135deg, #9333ea, #c084fc, #ec4899, #f43f5e, #9333ea);
+  background-size: 350% 350%;
+  animation: movingBorderGradient 3.5s ease infinite;
+}
+
+/* Super-Smooth Hardware-Accelerated Page Header Offsets (Zero Reflow / 120 FPS) */
+.page-header-offset {
+  padding-top: 5.25rem; /* ~84px when announcement bar is off */
+}
+
+@media (min-width: 640px) {
+  .page-header-offset {
+    padding-top: 5.75rem; /* ~92px */
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-header-offset {
+    padding-top: 6.25rem; /* ~100px */
+  }
+}
+
+/* When Announcement Bar is active */
+body.has-announcement-bar .page-header-offset,
+.has-announcement-bar .page-header-offset {
+  padding-top: 7.25rem; /* ~116px */
+}
+
+@media (min-width: 640px) {
+  body.has-announcement-bar .page-header-offset,
+  .has-announcement-bar .page-header-offset {
+    padding-top: 8rem; /* ~128px */
+  }
+}
+
+@media (min-width: 1024px) {
+  body.has-announcement-bar .page-header-offset,
+  .has-announcement-bar .page-header-offset {
+    padding-top: 8.5rem; /* ~136px */
+  }
 }

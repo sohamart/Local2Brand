@@ -19,7 +19,7 @@ export default function About() {
         description="Learn about LOCAL2BRAND. We bridge the gap between world-class engineering and local business growth."
       />
 
-      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20">
+      <div className="page-header-offset pb-20">
 
         {/* About Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
