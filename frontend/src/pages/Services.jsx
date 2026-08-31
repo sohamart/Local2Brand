@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Globe,
@@ -8,9 +8,7 @@ import {
   Code2,
   Check,
   ArrowRight,
-  Clock,
-  Sparkles,
-  Zap
+  Clock
 } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
@@ -18,6 +16,7 @@ import { agencyServices } from '../data/services';
 import { useOrderModal } from '../context/OrderModalContext';
 import FinalCTA from '../components/home/FinalCTA';
 import AshokaChakra from '../components/common/AshokaChakra';
+import api from '../services/api';
 
 const serviceImages = {
   'business-websites': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop',
@@ -62,7 +61,7 @@ export default function Services() {
               tagline: s.tagline || staticMatch?.tagline || 'High Performance Web Architecture',
               description: s.description || s.shortDesc || staticMatch?.description || '',
               features: Array.isArray(s.features) ? s.features : (s.features ? s.features.split(',') : (staticMatch?.features || [])),
-              startingPriceInr: s.startingPrice || staticMatch?.startingPriceInr || '₹9,999',
+              startingPriceInr: s.startingPriceInr || s.startingPrice || staticMatch?.startingPriceInr || staticMatch?.startingPrice || '₹9,999',
               turnaroundTime: s.turnaroundTime || staticMatch?.turnaroundTime || '48 Hours',
               idealFor: s.idealFor || staticMatch?.idealFor || 'Businesses & Entrepreneurs'
             };
@@ -200,7 +199,7 @@ export default function Services() {
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent flex items-end p-6">
                         <div className="text-white">
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md">
-                            Starting from {service.startingPriceInr || '₹9,999'} / {service.startingPrice}
+                            Starting from {service.startingPrice || service.startingPriceInr || '₹9,999'}
                           </span>
                         </div>
                       </div>
