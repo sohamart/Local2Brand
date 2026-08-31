@@ -4,16 +4,11 @@
  * Accessible Pricing: Starter Demos @ ₹4,999 | Grand Niche Demos @ ₹14,999
  */
 
-const env = import.meta.env || {};
-
 const getEnvDemoConfig = (prefix) => {
-  const url = env[`VITE_DEMO_${prefix}_URL`] || '';
-  const statusEnv = env[`VITE_DEMO_${prefix}_STATUS`];
-  // If status is specified in env, use it (published | coming_soon).
-  // Defaults to coming_soon if empty or not published.
-  const status = statusEnv ? statusEnv.toLowerCase() : (url ? 'published' : 'coming_soon');
-  const isPublished = status === 'published' && Boolean(url);
-  return { liveUrl: url, status, isPublished };
+  if (prefix === 'LMS') {
+    return { liveUrl: 'https://stackadda.me', status: 'published', isPublished: true };
+  }
+  return { liveUrl: '', status: 'coming_soon', isPublished: false };
 };
 
 export const demoCategories = [

@@ -52,14 +52,42 @@ app.use(
   })
 );
 
-app.use(
-  cors({
-    origin: '*',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+// Dynamic Allowed Origins for CORS
+const allowedOrigins = [
+  'https://local2brand.vercel.app',
+  'https://www.local2brand.com',
+  'https://local2brand.com',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:5000',
+  'http://127.0.0.1:5173',
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow non-browser requests or same-origin requests (curl, server-to-server)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin matches allowed list or any Vercel preview domain (*.vercel.app)
+    if (
+      allowedOrigins.includes(origin) ||
+      /\.vercel\.app$/.test(origin) ||
+      process.env.NODE_ENV !== 'production'
+    ) {
+      return callback(null, origin);
+    }
+    
+    return callback(null, origin);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));

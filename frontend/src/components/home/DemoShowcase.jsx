@@ -1,17 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, ArrowRight, Grid, Search } from 'lucide-react';
 import SectionHeading from '../common/SectionHeading';
 import ScrollReveal from '../common/ScrollReveal';
 import DemoCard from '../demos/DemoCard';
 import { demoCategories, demoWebsites } from '../../data/demos';
+import api from '../../services/api';
 
 export default function DemoShowcase() {
+  const [demosList, setDemosList] = useState(demoWebsites);
   const [activeCategory, setActiveCategory] = useState('All');
 
+  useEffect(() => {
+    const fetchDemos = async () => {
+      try {
+        const res = await api.get('/demos');
+        if (res.success && Array.isArray(res.demos) && res.demos.length > 0) {
+          const merged = res.demos.map((apiDemo) => {
+            const staticMatch = demoWebsites.find((d) => d.slug === apiDemo.slug || d.templateId === apiDemo.templateId);
+            return {
+              ...(staticMatch || {}),
+              ...apiDemo,
+              isPublished: apiDemo.status === 'published' || (apiDemo.status !== 'coming_soon' && apiDemo.isPublished !== false)
+            };
+          });
+          setDemosList(merged);
+        }
+      } catch (err) {
+        console.warn('Using default demo dataset fallback:', err);
+      }
+    };
+    fetchDemos();
+  }, []);
+
   const filteredDemos = activeCategory === 'All'
-    ? demoWebsites
-    : demoWebsites.filter((d) => d.category === activeCategory);
+    ? demosList
+    : demosList.filter((d) => d.category === activeCategory);
 
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden">

@@ -3,25 +3,24 @@ export const siteConfig = {
   domain: "local2brand.com",
   tagline: "Build Local. Think Global.",
   
-  // Dynamic Environment Integrations with Robust Fallbacks
-  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "919876543210",
-  displayWhatsApp: import.meta.env.VITE_DISPLAY_WHATSAPP || "+91 98765 43210",
-  phone: import.meta.env.VITE_CONTACT_PHONE || "+91 98765 43210",
-  email: import.meta.env.VITE_CONTACT_EMAIL || "hello@local2brand.com",
+  // Default Brand Details (Managed live via Database & Admin Customization)
+  whatsappNumber: "919876543210",
+  displayWhatsApp: "+91 98765 43210",
+  phone: "+91 98765 43210",
+  email: "hello@local2brand.com",
   
   turnaroundTime: "48 Hours",
   startingPrice: "$399",
   startingPriceInr: "₹9,999",
 
-  // Master Maintenance / Launch Gate (reads dynamically from .env)
-  isMaintenanceMode: String(import.meta.env.VITE_MAINTENANCE_MODE).toLowerCase() === 'true',
-  isComingSoonMode: String(import.meta.env.VITE_COMING_SOON_MODE).toLowerCase() === 'true',
+  isMaintenanceMode: false,
+  isComingSoonMode: false,
 
   // Social Links
   socialLinks: {
-    instagram: import.meta.env.VITE_INSTAGRAM_URL || "https://instagram.com/local2brand",
-    instagramHandle: import.meta.env.VITE_INSTAGRAM_HANDLE || "@local2brand",
-    whatsapp: `https://wa.me/${(import.meta.env.VITE_WHATSAPP_NUMBER || "919876543210").replace(/[^0-9]/g, '')}`,
+    instagram: "https://instagram.com/local2brand_official",
+    instagramHandle: "@local2brand_official",
+    whatsapp: "https://wa.me/919876543210",
     linkedin: "https://linkedin.com/company/local2brand",
     github: "https://github.com/local2brand",
     twitter: "https://twitter.com/local2brand"
