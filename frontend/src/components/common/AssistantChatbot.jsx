@@ -27,66 +27,13 @@ import api from '../../services/api';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import AshokaChakra from './AshokaChakra';
 
-const PREMIUM_SUGGESTION_CATEGORIES = [
-  { id: 'all', label: '🔥 All Questions' },
-  { id: 'pricing', label: '💰 Pricing & Deals' },
-  { id: 'delivery', label: '⚡ 48h Delivery' },
-  { id: 'custom', label: '💎 Custom Builds' },
-];
-
-const PREMIUM_QUESTIONS = [
-  {
-    category: 'delivery',
-    icon: '⚡',
-    title: 'Can you deliver my website in 48 hours?',
-    subtitle: 'How the rapid marketplace template launch works',
-    prompt: 'Can you really build and launch my website in 48 hours? What is the process?',
-    badge: '48H LAUNCH',
-    badgeColor: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-  },
-  {
-    category: 'pricing',
-    icon: '💰',
-    title: 'What are your website packages & pricing?',
-    subtitle: 'Showcase templates from ₹9,999 / $399 & bespoke builds',
-    prompt: 'What are your website packages, starting prices in India, and what is included?',
-    badge: '₹9,999 START',
-    badgeColor: 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-  },
-  {
-    category: 'pricing',
-    icon: '🎁',
-    title: 'How do I claim 20% discount with INDIA2025?',
-    subtitle: 'Instant 20% OFF + Free SSL & custom domain setup',
-    prompt: 'How can I claim the INDIA2025 (20% OFF) discount code + Free SSL and domain?',
-    badge: '20% OFF CODE',
-    badgeColor: 'bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800',
-  },
-  {
-    category: 'custom',
-    icon: '💎',
-    title: 'Custom E-Commerce & Web Application',
-    subtitle: 'Bespoke UI/UX, SaaS portals & WhatsApp lead capture',
-    prompt: 'Tell me about your custom bespoke web application and e-commerce development services.',
-    badge: 'ENTERPRISE',
-    badgeColor: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-  },
-  {
-    category: 'delivery',
-    icon: '📞',
-    title: 'Request an Instant 15-Minute Callback',
-    subtitle: 'Connect directly with senior engineers & founders',
-    prompt: 'I want to schedule a quick 15-minute consultation callback with your founders.',
-    badge: 'INSTANT CALL',
-    badgeColor: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-  },
-];
-
-const FOLLOWUP_QUICK_CHIPS = [
-  '⚡ 48h website timeline',
-  '🎁 Claim 20% discount',
-  '💰 Pricing & packages',
-  '📞 15-min call request',
+const QUICK_CHIPS = [
+  { icon: '📞', label: '15-Min Callback', isCallback: true, topic: '15-Minute Founder Callback' },
+  { icon: '⚡', label: '48h Launch', prompt: 'Can you deliver my website in 48 hours? What is the process?' },
+  { icon: '🎁', label: '20% OFF (INDIA2025)', prompt: 'How do I claim 20% discount with promo code INDIA2025?' },
+  { icon: '💰', label: 'Packages & Pricing', prompt: 'What are your packages, starting prices and what is included?' },
+  { icon: '🛍️', label: 'E-Commerce / WhatsApp', prompt: 'How do you integrate WhatsApp store and online ordering in websites?' },
+  { icon: '💎', label: 'Custom App & UI/UX', prompt: 'Tell me about bespoke custom UI/UX design and custom development.' },
 ];
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -108,46 +55,53 @@ const getStoredSessionId = () => {
     localStorage.setItem('l2b_chat_session_time', now.toString());
     localStorage.removeItem('l2b_chat_messages');
     return newId;
-  } catch (e) {
-    return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  } catch {
+    return `sess_${Date.now()}`;
   }
 };
 
-// Helper to get stored messages from 7-day cache
+// Initial welcome message
 const getStoredMessages = (brandName) => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const storedTime = localStorage.getItem('l2b_chat_session_time');
-    const now = Date.now();
-
-    if (storedTime && now - parseInt(storedTime, 10) < SEVEN_DAYS_MS) {
-      const raw = localStorage.getItem('l2b_chat_messages');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('l2b_chat_messages');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
+    } catch (e) {
+      console.warn('Could not restore chat messages:', e);
     }
-  } catch (e) {}
+  }
 
   return [
     {
       role: 'assistant',
-      content: `### 👋 Welcome to ${brandName || 'LOCAL2BRAND'} AI Assistant\n\nI am your dedicated digital solutions consultant. How can I help launch or grow your brand today?\n\n* **🚀 48-Hour Websites:** Ready templates starting from **₹9,999 / $399**\n* **🎁 20% Launch Discount:** Use promo code \`INDIA2025\`\n* **💎 Bespoke Builds:** Custom web apps, e-commerce & WhatsApp lead automation\n\nTap any suggested question below or type your inquiry!`,
+      content: `### 👋 Welcome to ${brandName || 'LOCAL2BRAND'} AI Assistant\n\nI am your dedicated digital solutions consultant. How can I help launch or grow your brand today?\n\n* **🚀 48-Hour Websites:** Ready templates starting from **₹9,999 / $399**\n* **🎁 20% Launch Discount:** Use promo code \`INDIA2025\`\n* **💎 Bespoke Builds:** Custom web apps, e-commerce & WhatsApp lead automation\n\nTap any quick topic below or type your inquiry!`,
       timestamp: new Date().toISOString(),
       provider: 'L2B AI Engine',
     },
   ];
 };
 
-// Interactive AI In-Chat Callback Card Component
+// Interactive AI In-Chat Callback Card Component (Ultra-clean & Modern)
 function InteractiveCallbackCard({ msg, user, onSubmitted }) {
   const [name, setName] = useState(msg.initialName || user?.name || '');
   const [phone, setPhone] = useState(msg.initialPhone || user?.phone || '');
   const [email, setEmail] = useState(msg.initialEmail || user?.email || '');
-  const [timeSlot, setTimeSlot] = useState(msg.preferredTime || '⚡ ASAP (Within 15-30 mins)');
+  const [timeSlot, setTimeSlot] = useState(msg.preferredTime || '⚡ ASAP (15-30m)');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(msg.isSubmitted || false);
   const [err, setErr] = useState('');
+
+  const TIME_SLOTS = [
+    { id: '⚡ ASAP (15-30m)', label: '⚡ ASAP (15m)' },
+    { id: '🌅 Morning (10am-1pm)', label: '🌅 Morning' },
+    { id: '☀️ Afternoon (2pm-5pm)', label: '☀️ Afternoon' },
+    { id: '🌆 Evening (6pm-9pm)', label: '🌆 Evening' },
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -183,132 +137,129 @@ function InteractiveCallbackCard({ msg, user, onSubmitted }) {
 
   if (submitted) {
     return (
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/80 dark:to-teal-950/60 border border-emerald-300 dark:border-emerald-700 space-y-2 text-xs shadow-xs animate-in zoom-in-95">
-        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-extrabold text-sm">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+      <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500/15 via-emerald-500/5 to-teal-500/10 border border-emerald-500/30 text-xs shadow-xs animate-in zoom-in-95 space-y-2">
+        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>Callback Request Confirmed! 📞</span>
         </div>
-        <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
-          Thank you <strong>{name}</strong>! We will call you at <strong className="font-mono text-emerald-600 dark:text-emerald-400">{phone}</strong> ({timeSlot}).
+        <p className="text-slate-700 dark:text-slate-200 text-xs leading-relaxed">
+          Thank you <strong>{name}</strong>! Our founding team will call you at <strong className="font-mono text-purple-600 dark:text-purple-400">{phone}</strong> ({timeSlot}).
         </p>
-        <div className="p-2 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-emerald-200 dark:border-emerald-800/80 text-[11px] text-slate-600 dark:text-slate-300 space-y-1">
-          <div className="flex items-center gap-1.5 font-bold text-purple-700 dark:text-purple-300">
-            <span>⚡ Instant Priority Dispatch</span>
-          </div>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400">
-            Real-time alert emails dispatched to founder desk: <code className="font-mono">sohamduttabwn@gmail.com</code> &amp; <code className="font-mono">stackaddacontact@gmail.com</code>
-          </p>
+        <div className="text-[10px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-emerald-500/20 flex items-center justify-between">
+          <span>⚡ Priority Email Dispatched</span>
+          <span className="font-mono text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">LIVE ALERT SENT</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-850 border border-purple-300/80 dark:border-purple-700 shadow-md space-y-2.5 text-xs text-slate-800 dark:text-slate-200 animate-in fade-in">
-      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 dark:border-slate-800">
+    <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-800/95 border border-purple-200 dark:border-purple-800/80 shadow-md space-y-3 text-xs text-slate-800 dark:text-slate-200 animate-in fade-in">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-700/60">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold shadow-xs">
+          <div className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
             <PhoneCall className="w-3.5 h-3.5" />
           </div>
           <div>
-            <h4 className="font-extrabold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-              <span>Instant Founder Callback</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-black">
-                ⚡ 15-Min
-              </span>
+            <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight">
+              Request 15-Min Founder Callback
             </h4>
             <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              Direct connection with our Senior Solutions Architect
+              Direct connection with our Senior Tech Consultants
             </p>
           </div>
         </div>
+        <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-300 font-black text-[9px] border border-emerald-200 dark:border-emerald-800 shrink-0">
+          ⚡ 15-MIN
+        </span>
       </div>
 
       {user && (
-        <div className="px-2 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-[10px] text-purple-800 dark:text-purple-300 font-bold flex items-center justify-between">
-          <span>👤 Detected from Account Profile</span>
-          <span className="font-mono text-purple-700 dark:text-purple-400">{user.email}</span>
+        <div className="px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-800/50 text-[10px] text-purple-800 dark:text-purple-300 flex items-center justify-between">
+          <span className="font-semibold">👤 Account Detected</span>
+          <span className="font-mono text-[10px] text-purple-600 dark:text-purple-400">{user.email}</span>
         </div>
       )}
 
       {err && (
-        <div className="p-2 rounded-lg bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-600 dark:text-rose-300 font-bold">
+        <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-600 dark:text-rose-300 font-bold">
           {err}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-2">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-0.5">
-              Your Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Rahul Sen"
-              className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
-            />
-          </div>
-          <div>
-            <label className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-0.5">
-              Phone Number *
-            </label>
+      <form onSubmit={handleSubmit} className="space-y-2.5">
+        {/* Name input (Always editable) */}
+        <div>
+          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+            Your Name *
+          </label>
+          <input
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Rahul Sen"
+            className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-purple-500"
+          />
+        </div>
+
+        {/* Phone number input */}
+        <div>
+          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+            Phone Number *
+          </label>
+          <div className="relative flex items-center">
+            <span className="absolute left-3 text-xs font-bold text-slate-400 select-none">
+              🇮🇳 +91
+            </span>
             <input
               type="tel"
               required
-              value={phone}
+              value={phone.replace(/^\+91/, '').trim()}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="e.g. 9876543210"
-              className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-purple-300 dark:border-purple-700 text-xs font-mono font-black text-purple-700 dark:text-purple-300 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              placeholder="98765 43210"
+              className="w-full pl-14 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-purple-300 dark:border-purple-700/80 text-xs font-mono font-bold text-purple-700 dark:text-purple-300 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-0.5">
-              Email (For Confirmation)
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. rahul@brand.com"
-              className="w-full px-2.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
-            />
-          </div>
-          <div>
-            <label className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block mb-0.5">
-              Preferred Time Slot
-            </label>
-            <select
-              value={timeSlot}
-              onChange={(e) => setTimeSlot(e.target.value)}
-              className="w-full px-2 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-900 dark:text-white focus:outline-none"
-            >
-              <option value="⚡ ASAP (Within 15-30 mins)">⚡ ASAP (Within 15-30 mins)</option>
-              <option value="🌅 Morning (10:00 AM – 1:00 PM IST)">🌅 Morning (10 AM – 1 PM)</option>
-              <option value="☀️ Afternoon (2:00 PM – 5:00 PM IST)">☀️ Afternoon (2 PM – 5 PM)</option>
-              <option value="🌆 Evening (6:00 PM – 9:00 PM IST)">🌆 Evening (6 PM – 9 PM)</option>
-            </select>
+        {/* Time slot chips */}
+        <div>
+          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+            Preferred Time:
+          </label>
+          <div className="grid grid-cols-2 gap-1.5">
+            {TIME_SLOTS.map((slot) => (
+              <button
+                key={slot.id}
+                type="button"
+                onClick={() => setTimeSlot(slot.id)}
+                className={`px-2 py-1.5 rounded-xl text-[11px] font-bold text-center transition-all cursor-pointer border ${
+                  timeSlot === slot.id
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                    : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {slot.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="pt-1 flex items-center justify-between gap-2">
-          <span className="text-[9px] text-slate-400 dark:text-slate-500">
-            ✉️ Real-time alert to Admin &amp; Founders
-          </span>
+        {/* Submit button */}
+        <div className="pt-1 space-y-1.5">
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-sm hover:opacity-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50 active:scale-95 transition-all"
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-md shadow-purple-500/20 hover:opacity-95 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all"
           >
             <PhoneCall className="w-3.5 h-3.5" />
-            <span>{loading ? 'Dispatching Alert...' : 'Confirm & Request Call 📞'}</span>
+            <span>{loading ? 'Dispatching Live Alert...' : 'Confirm & Request Callback 📞'}</span>
           </button>
+          <p className="text-center text-[10px] text-slate-400 dark:text-slate-500">
+            ✉️ Real-time notification dispatched to executive desk
+          </p>
         </div>
       </form>
     </div>
@@ -328,7 +279,6 @@ export default function AssistantChatbot() {
   const [isTyping, setIsTyping] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [activeCategory, setActiveCategory] = useState('all');
 
   const triggerInChatMessageCallback = (customTopic) => {
     const callbackMessageCard = {
@@ -647,10 +597,6 @@ export default function AssistantChatbot() {
     );
   };
 
-  const filteredQuestions = activeCategory === 'all'
-    ? PREMIUM_QUESTIONS
-    : PREMIUM_QUESTIONS.filter((q) => q.category === activeCategory);
-
   return (
     <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-[99999]">
       {/* Floating Launcher Button */}
@@ -895,137 +841,43 @@ export default function AssistantChatbot() {
                 </div>
               )}
 
-            {/* PREMIUM SUGGESTED QUESTIONS SYSTEM */}
-            {messages.length <= 2 && !isTyping && (
-              <div className="pt-2 space-y-2.5">
-                <div className="flex items-center justify-between px-0.5">
-                  <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                    <span>Frequently Asked Questions</span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
-                    1-Tap Ask
-                  </span>
-                </div>
-
-                {/* Category Pills */}
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                  {PREMIUM_SUGGESTION_CATEGORIES.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => setActiveCategory(cat.id)}
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
-                        activeCategory === cat.id
-                          ? 'bg-purple-600 text-white shadow-xs'
-                          : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Question Cards Grid */}
-                <div className="space-y-2">
-                  {filteredQuestions.map((q, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => {
-                        if (q.badge === 'INSTANT CALL') {
-                          triggerInChatMessageCallback('15-Minute Consultation Callback');
-                        } else {
-                          handleSendMessage(q.prompt);
-                        }
-                      }}
-                      className="p-3 rounded-2xl bg-white/95 dark:bg-slate-800/80 hover:bg-purple-50/80 dark:hover:bg-purple-950/40 border border-slate-200/90 dark:border-slate-700/80 hover:border-purple-400/80 dark:hover:border-purple-600/80 shadow-xs hover:shadow-md transition-all cursor-pointer group flex items-start justify-between gap-2.5 transform active:scale-[0.99]"
-                    >
-                      <div className="flex items-start gap-2.5">
-                        <span className="text-base select-none mt-0.5">{q.icon}</span>
-                        <div className="space-y-0.5">
-                          <div className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors leading-tight">
-                            {q.title}
-                          </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
-                            {q.subtitle}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border tracking-wider uppercase ${q.badgeColor}`}>
-                          {q.badge}
-                        </span>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all mt-0.5" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Smart Follow-up Chips after conversation has started */}
-            {messages.length > 2 && !isTyping && (
-              <div className="pt-2">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5">
-                  Suggested Follow-ups
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {FOLLOWUP_QUICK_CHIPS.map((chip, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        if (chip.includes('call request')) {
-                          triggerInChatMessageCallback('Follow-up 15-Minute Call Request');
-                        } else {
-                          handleSendMessage(chip);
-                        }
-                      }}
-                      className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs hover:scale-102 flex items-center gap-1"
-                    >
-                      <span>{chip}</span>
-                      <ArrowRight className="w-3 h-3 opacity-60" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Smart Follow-up Chips after conversation has started */}
-            {messages.length > 2 && !isTyping && (
-              <div className="pt-2">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5">
-                  Suggested Follow-ups
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {FOLLOWUP_QUICK_CHIPS.map((chip, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        if (chip.includes('call request')) {
-                          handleOpenCallbackDrawer('Follow-up 15-Minute Call Request');
-                        } else {
-                          handleSendMessage(chip);
-                        }
-                      }}
-                      className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs hover:scale-102 flex items-center gap-1"
-                    >
-                      <span>{chip}</span>
-                      <ArrowRight className="w-3 h-3 opacity-60" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Chat Input Bar */}
-          <div className="p-3 bg-white/95 dark:bg-slate-900/95 border-t border-slate-100 dark:border-slate-800 shrink-0">
+          {/* Chat Input Bar & Horizontal Sliding Suggestions */}
+          <div className="p-3 bg-white/95 dark:bg-slate-900/95 border-t border-slate-100 dark:border-slate-800 shrink-0 space-y-2">
+            
+            {/* Horizontal Sliding Quick Suggestion Chips (Docked above input) */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 scroll-smooth overscroll-x-contain">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 dark:text-purple-400 shrink-0 flex items-center gap-1 pl-0.5 select-none">
+                <Sparkles className="w-3 h-3 text-purple-500" />
+                <span>Quick:</span>
+              </span>
+
+              {QUICK_CHIPS.map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    if (chip.isCallback) {
+                      triggerInChatMessageCallback(chip.topic || '15-Minute Instant Callback Request');
+                    } else {
+                      handleSendMessage(chip.prompt);
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded-full bg-slate-100/90 dark:bg-slate-800/90 hover:bg-purple-100 dark:hover:bg-purple-950/70 border border-slate-200/80 dark:border-slate-700/80 hover:border-purple-300 dark:hover:border-purple-700 text-slate-700 dark:text-slate-300 hover:text-purple-700 dark:hover:text-purple-300 font-semibold text-[11px] shrink-0 transition-all cursor-pointer shadow-2xs flex items-center gap-1 active:scale-95"
+                >
+                  <span>{chip.icon}</span>
+                  <span>{chip.label}</span>
+                </button>
+              ))}
+            </div>
+
             {errorMessage && (
-              <div className="mb-2 px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-600 dark:text-rose-300 flex items-center justify-between">
+              <div className="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-[11px] text-rose-600 dark:text-rose-300 flex items-center justify-between">
                 <span>{errorMessage}</span>
                 <button
+                  type="button"
                   onClick={() => setErrorMessage('')}
                   className="text-rose-400 hover:text-rose-600 font-bold ml-2 cursor-pointer"
                 >
@@ -1048,7 +900,7 @@ export default function AssistantChatbot() {
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask anything (e.g. pricing, 48h launch, custom)..."
+                  placeholder="Ask anything (e.g. 48h website, pricing, custom)..."
                   disabled={isTyping}
                   className="w-full pl-3.5 pr-8 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-60 font-medium"
                 />
@@ -1064,9 +916,9 @@ export default function AssistantChatbot() {
               </button>
             </form>
 
-            <div className="flex items-center justify-between mt-1.5 px-1 text-[10px] text-slate-400">
+            <div className="flex items-center justify-between px-1 text-[10px] text-slate-400">
               <span>Press Enter ↵ to send</span>
-              <span className="font-mono font-bold text-purple-600 dark:text-purple-400">L2B AI • Verified</span>
+              <span className="font-mono font-bold text-purple-600 dark:text-purple-400">L2B AI • Real-Time Desk</span>
             </div>
           </div>
         </div>

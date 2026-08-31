@@ -9,26 +9,67 @@ import {
   Eye,
   RefreshCw,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Smartphone,
+  Monitor,
+  Zap
 } from 'lucide-react';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import { toast } from 'react-toastify';
 
+const TEMPLATE_PRESETS = [
+  {
+    id: 'launch',
+    name: '🚀 New Demos & 48h Delivery',
+    subject: '🎉 Exciting Launch: New Website Templates & 48h Delivery on LOCAL2BRAND!',
+    heading: 'Supercharge Your Digital Brand Today!',
+    message: `We are thrilled to announce new premium website templates, lightning-fast 48-hour delivery, and enterprise-grade cloud hosting for all new client projects.\n\nExplore our latest high-converting live demos and request your customized quote in just 2 minutes.`,
+    actionText: 'Explore New Website Demos',
+    actionUrl: 'https://local2brand.vercel.app/demos',
+  },
+  {
+    id: 'discount',
+    name: '🎁 20% Festive Discount Promo',
+    subject: '🎁 Exclusive 20% OFF on Custom Website Development — Promo: INDIA2025',
+    heading: 'Claim 20% Savings on Your Next Website Project!',
+    message: `Upgrade your business with a brand-new website tailored to your domain. For a limited time, use promo code INDIA2025 at checkout to enjoy a flat 20% discount on any standard or pro package.\n\nOur team handles design, copywriting, domain connection, and launch within 48 hours.`,
+    actionText: 'Claim 20% Discount Now',
+    actionUrl: 'https://local2brand.vercel.app/get-started',
+  },
+  {
+    id: 'callback',
+    name: '📞 Free 15-Min Founder Consultation',
+    subject: '📞 Need advice on your business website? Talk directly with our founding architects',
+    heading: 'Book a Free 15-Minute Technical Strategy Call',
+    message: `Unsure which tech stack or architecture fits your online store, LMS, or service business? Connect with our senior tech leads for a personalized 1-on-1 consultation.\n\nNo obligations — just actionable insights to scale your brand.`,
+    actionText: 'Request Instant Callback',
+    actionUrl: 'https://local2brand.vercel.app/contact',
+  },
+];
+
 export default function AdminBroadcast() {
   const [targetAudience, setTargetAudience] = useState('all');
   const [customEmails, setCustomEmails] = useState('');
-  const [subject, setSubject] = useState('🎉 Special Launch Announcement from LOCAL2BRAND!');
-  const [heading, setHeading] = useState('Exciting Updates For Your Business!');
-  const [messageHtml, setMessageHtml] = useState(
-    `We are thrilled to announce new premium website templates, faster 48-hour delivery, and free SSL with every website order on LOCAL2BRAND.\n\nLog in to your portal now to explore our latest live demos and request a free quote for your next digital upgrade.`
-  );
-  const [actionText, setActionText] = useState('Explore New Website Demos');
-  const [actionUrl, setActionUrl] = useState('https://local2brand.com/demos');
+  const [subject, setSubject] = useState(TEMPLATE_PRESETS[0].subject);
+  const [heading, setHeading] = useState(TEMPLATE_PRESETS[0].heading);
+  const [messageHtml, setMessageHtml] = useState(TEMPLATE_PRESETS[0].message);
+  const [actionText, setActionText] = useState(TEMPLATE_PRESETS[0].actionText);
+  const [actionUrl, setActionUrl] = useState(TEMPLATE_PRESETS[0].actionUrl);
 
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
   const [previewTab, setPreviewTab] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState('desktop');
+
+  const applyPreset = (preset) => {
+    setSubject(preset.subject);
+    setHeading(preset.heading);
+    setMessageHtml(preset.message);
+    setActionText(preset.actionText);
+    setActionUrl(preset.actionUrl);
+    toast.info(`Applied preset: ${preset.name}`);
+  };
 
   const handleSendBroadcast = async (e) => {
     e.preventDefault();
@@ -60,7 +101,9 @@ export default function AdminBroadcast() {
         setResult({
           type: 'success',
           message: res.message || `Sent successfully to ${res.sentCount} recipients!`,
-          details: res.details,
+          sentCount: res.sentCount,
+          total: res.total,
+          failed: res.failed,
         });
       } else {
         toast.error(res.message || 'Failed to dispatch broadcast');
@@ -81,7 +124,7 @@ export default function AdminBroadcast() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-7xl">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -94,18 +137,38 @@ export default function AdminBroadcast() {
             Mass Email Broadcast
           </h1>
           <p className="text-xs text-slate-500">
-            Dispatch announcements, special offers, and platform updates directly to registered clients and users via live SMTP.
+            Dispatch announcements, promotional campaigns, and platform updates directly to registered clients via agency-grade HTML templates.
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => setPreviewTab(!previewTab)}
-          className="px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-800 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto"
+          className="lg:hidden px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-800 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto"
         >
           <Eye className="w-3.5 h-3.5 text-purple-600" />
-          <span>{previewTab ? 'Hide Email Preview' : 'Show Live Preview'}</span>
+          <span>{previewTab ? 'Edit Content' : 'View Live Email Preview'}</span>
         </button>
+      </div>
+
+      {/* Preset Quick Loader */}
+      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
+          <Zap className="w-3.5 h-3.5 text-amber-500" />
+          <span>Quick 1-Click Template Presets:</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {TEMPLATE_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => applyPreset(preset)}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition-all cursor-pointer"
+            >
+              {preset.name}
+            </button>
+          ))}
+        </div>
       </div>
 
       {result && (
@@ -129,15 +192,15 @@ export default function AdminBroadcast() {
       )}
 
       {/* Main Grid: Form & Preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left Form (7 cols) */}
-        <form onSubmit={handleSendBroadcast} className="lg:col-span-7 space-y-4">
+        {/* Left Form (6 cols) */}
+        <form onSubmit={handleSendBroadcast} className={`lg:col-span-6 space-y-4 ${previewTab ? 'hidden lg:block' : 'block'}`}>
           
           {/* 1. Target Audience */}
           <div className="glass-panel p-5 rounded-2xl border border-white dark:border-slate-800 space-y-3 shadow-xs">
             <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
-              1. Select Target Audience
+              1. Target Audience
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
               {[
@@ -147,32 +210,32 @@ export default function AdminBroadcast() {
                 { id: 'custom', label: 'Custom List', desc: 'Specific emails' },
               ].map((aud) => (
                 <button
-                  type="button"
                   key={aud.id}
+                  type="button"
                   onClick={() => setTargetAudience(aud.id)}
-                  className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                     targetAudience === aud.id
-                      ? 'border-purple-600 bg-purple-50/70 dark:bg-purple-950/60 text-purple-950 dark:text-purple-200 ring-2 ring-purple-500/20'
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                      ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-500 text-purple-900 dark:text-purple-200 shadow-xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
                   }`}
                 >
                   <div className="font-bold text-xs">{aud.label}</div>
-                  <div className="text-[10px] text-slate-400">{aud.desc}</div>
+                  <div className="text-[10px] opacity-75">{aud.desc}</div>
                 </button>
               ))}
             </div>
 
             {targetAudience === 'custom' && (
               <div className="pt-2 animate-in fade-in">
-                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                  Recipient Emails (Comma Separated)
+                <label className="text-[11px] font-bold text-slate-500 block mb-1">
+                  Comma-separated email addresses:
                 </label>
-                <input
-                  type="text"
+                <textarea
+                  rows={2}
                   value={customEmails}
                   onChange={(e) => setCustomEmails(e.target.value)}
-                  placeholder="client1@gmail.com, ceo@brand.in, founder@studio.com"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                  placeholder="client1@example.com, client2@example.com"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-purple-500"
                 />
               </div>
             )}
@@ -181,72 +244,88 @@ export default function AdminBroadcast() {
           {/* 2. Email Subject & Header */}
           <div className="glass-panel p-5 rounded-2xl border border-white dark:border-slate-800 space-y-3 shadow-xs">
             <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
-              2. Subject Line & Heading
+              2. Subject Line &amp; Headline
             </label>
-            <div>
-              <label className="text-[11px] font-bold text-slate-500 block mb-1">Email Subject *</label>
-              <input
-                type="text"
-                required
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="e.g. Special Launch Offer: 20% OFF on all website packages"
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white"
-              />
-            </div>
-            <div>
-              <label className="text-[11px] font-bold text-slate-500 block mb-1">Internal Heading / Title</label>
-              <input
-                type="text"
-                value={heading}
-                onChange={(e) => setHeading(e.target.value)}
-                placeholder="e.g. Exciting New Features For Your Business!"
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white"
-              />
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                  Email Subject *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="e.g. 🎉 Special Launch Announcement from LOCAL2BRAND!"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                  Main Headline (Hero Banner Title)
+                </label>
+                <input
+                  type="text"
+                  value={heading}
+                  onChange={(e) => setHeading(e.target.value)}
+                  placeholder="e.g. Exciting Updates For Your Business!"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-purple-500"
+                />
+              </div>
             </div>
           </div>
 
-          {/* 3. Message Body & Call to Action */}
+          {/* 3. Message Body */}
           <div className="glass-panel p-5 rounded-2xl border border-white dark:border-slate-800 space-y-3 shadow-xs">
             <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
-              3. Message Content & CTA
+              3. Message Content (Agency HTML Formatted)
             </label>
-            <div>
-              <label className="text-[11px] font-bold text-slate-500 block mb-1">Message Body *</label>
-              <textarea
-                rows={5}
-                required
-                value={messageHtml}
-                onChange={(e) => setMessageHtml(e.target.value)}
-                placeholder="Type your announcement or update message here..."
-                className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white leading-relaxed"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <textarea
+              rows={5}
+              required
+              value={messageHtml}
+              onChange={(e) => setMessageHtml(e.target.value)}
+              placeholder="Write your email body here..."
+              className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs leading-relaxed text-slate-900 dark:text-white focus:outline-purple-500"
+            />
+          </div>
+
+          {/* 4. Call-To-Action Button */}
+          <div className="glass-panel p-5 rounded-2xl border border-white dark:border-slate-800 space-y-3 shadow-xs">
+            <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
+              4. Call-To-Action Button (Optional)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-bold text-slate-500 block mb-1">Button Text (Optional)</label>
+                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                  Button Label
+                </label>
                 <input
                   type="text"
                   value={actionText}
                   onChange={(e) => setActionText(e.target.value)}
-                  placeholder="e.g. View New Demos"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white"
+                  placeholder="e.g. Explore Live Demos"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white focus:outline-purple-500"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-slate-500 block mb-1">Button URL</label>
+                <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
+                  Button Target URL
+                </label>
                 <input
-                  type="text"
+                  type="url"
                   value={actionUrl}
                   onChange={(e) => setActionUrl(e.target.value)}
-                  placeholder="e.g. https://local2brand.com/demos"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white font-mono"
+                  placeholder="https://local2brand.vercel.app/demos"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-medium text-slate-900 dark:text-white focus:outline-purple-500"
                 />
               </div>
             </div>
           </div>
 
-          {/* Submit Action */}
+          {/* Dispatch Button */}
           <button
             type="submit"
             disabled={sending}
@@ -255,7 +334,7 @@ export default function AdminBroadcast() {
             {sending ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Sending Broadcast Emails...</span>
+                <span>Dispatching Broadcast Emails...</span>
               </>
             ) : (
               <>
@@ -266,49 +345,127 @@ export default function AdminBroadcast() {
           </button>
         </form>
 
-        {/* Right Live Email Preview (5 cols) */}
-        <div className={`lg:col-span-5 space-y-3 ${previewTab ? 'block' : 'hidden lg:block'}`}>
-          <div className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-            <span>Recipient Inbox Emulation</span>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-600 font-bold">
-              Live Preview
-            </span>
+        {/* Right Live Email Preview (6 cols) */}
+        <div className={`lg:col-span-6 space-y-3 ${previewTab ? 'block' : 'hidden lg:block'}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Live Agency Email Preview
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-black border border-emerald-300 dark:border-emerald-800">
+                WYSIWYG
+              </span>
+            </div>
+
+            {/* View Switcher */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setPreviewDevice('desktop')}
+                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  previewDevice === 'desktop' ? 'bg-white dark:bg-slate-900 text-purple-600 shadow-xs' : 'text-slate-500'
+                }`}
+                title="Desktop View"
+              >
+                <Monitor className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreviewDevice('mobile')}
+                className={`p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  previewDevice === 'mobile' ? 'bg-white dark:bg-slate-900 text-purple-600 shadow-xs' : 'text-slate-500'
+                }`}
+                title="Mobile View"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
-          {/* Simulated Email Card */}
-          <div className="p-5 rounded-3xl bg-[#0f172a] text-slate-100 border border-slate-800 shadow-2xl space-y-4 text-xs">
-            
-            {/* Header */}
-            <div className="text-center border-b border-slate-800/80 pb-3">
-              <h2 className="text-lg font-black text-purple-400">
-                LOCAL<span className="text-pink-500">2</span>BRAND
-              </h2>
-              <p className="text-[11px] text-slate-400">Official Announcement</p>
-            </div>
-
-            {/* Email Body Container */}
-            <div className="p-4 rounded-2xl bg-[#1e293b] border border-slate-700/80 space-y-3">
-              <h3 className="text-sm font-bold text-sky-400">
-                {heading || 'Important Update from LOCAL2BRAND'}
-              </h3>
-              
-              <div className="text-slate-300 leading-relaxed text-[12px] whitespace-pre-line">
-                {messageHtml}
+          {/* Email Inbox Emulation Container */}
+          <div
+            className={`mx-auto rounded-3xl bg-[#f1f5f9] border border-slate-300 dark:border-slate-800 shadow-2xl overflow-hidden transition-all ${
+              previewDevice === 'mobile' ? 'max-w-sm' : 'w-full'
+            }`}
+          >
+            {/* Simulated Mail Client Header */}
+            <div className="p-3.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 space-y-1.5 text-[11px] text-slate-500">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-purple-700 dark:text-purple-400 font-bold">From: LOCAL2BRAND Agency &lt;hello@local2brand.com&gt;</span>
+                <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300 font-mono font-bold">TLS SSL</span>
               </div>
-
-              {actionText && actionUrl && (
-                <div className="pt-2 text-center">
-                  <span className="inline-block px-5 py-2.5 rounded-full font-bold text-xs text-white bg-gradient-to-r from-purple-600 to-pink-600 shadow-md">
-                    {actionText}
-                  </span>
-                </div>
-              )}
+              <div className="text-slate-700 dark:text-slate-300 font-semibold truncate">
+                <span className="text-slate-400">To: </span>
+                <span>{targetAudience === 'all' ? 'All Registered Users' : `${targetAudience.toUpperCase()} Audience`}</span>
+              </div>
+              <div className="text-slate-900 dark:text-white font-bold text-xs truncate">
+                <span className="text-slate-400 font-normal">Subject: </span>
+                <span>{subject || 'No Subject Specified'}</span>
+              </div>
             </div>
 
-            {/* Footer */}
-            <div className="text-center text-[10px] text-slate-500 pt-2">
-              © {new Date().getFullYear()} LOCAL2BRAND. All rights reserved.<br />
-              Delivered directly via verified SMTP.
+            {/* Email Body Canvas */}
+            <div className="p-3 sm:p-5 bg-[#f1f5f9]">
+              <div className="rounded-2xl bg-white border border-slate-200 overflow-hidden shadow-sm">
+                
+                {/* 5px Gradient Bar */}
+                <div className="h-1.5 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-600" />
+
+                {/* Email Header */}
+                <div className="p-6 text-center border-b border-slate-100 space-y-2 bg-white">
+                  <div className="inline-block px-3.5 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-[10px] font-extrabold tracking-wider uppercase">
+                    ⚡ OFFICIAL AGENCY BROADCAST
+                  </div>
+                  <h1 className="text-xl font-black text-slate-900 tracking-tight">
+                    LOCAL<span className="text-fuchsia-600">2</span>BRAND
+                  </h1>
+                  <p className="text-[11px] text-slate-500 font-semibold tracking-wide uppercase">
+                    HIGH-PERFORMANCE DIGITAL AGENCY &amp; ENGINEERING
+                  </p>
+                </div>
+
+                {/* Hero Title */}
+                {heading && (
+                  <div className="px-6 pt-5 pb-1 bg-white">
+                    <h2 className="text-base font-extrabold text-slate-900 leading-snug">
+                      {heading}
+                    </h2>
+                  </div>
+                )}
+
+                {/* Message Box */}
+                <div className="p-6 pt-2 space-y-4 text-xs bg-white">
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 leading-relaxed whitespace-pre-line text-slate-700 break-words">
+                    {messageHtml || 'Email body text will appear here...'}
+                  </div>
+
+                  {/* CTA Button */}
+                  {actionText && actionUrl && (
+                    <div className="pt-2 text-center">
+                      <a
+                        href={actionUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-block px-6 py-3 rounded-xl font-extrabold text-xs text-white bg-gradient-to-r from-purple-600 to-pink-600 shadow-md shadow-purple-500/20 hover:opacity-95 transition-all"
+                      >
+                        {actionText} &rarr;
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {/* Email Footer */}
+                <div className="p-4 bg-slate-50 border-t border-slate-200 text-center space-y-1.5 text-[10px] text-slate-500">
+                  <p>You received this official dispatch as a registered client on LOCAL2BRAND.</p>
+                  <p className="text-slate-600 font-medium">
+                    ✉️ stackaddacontact@gmail.com • sohamduttabwn@gmail.com
+                  </p>
+                  <p className="text-slate-400 font-semibold pt-0.5">
+                    © {new Date().getFullYear()} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved.
+                  </p>
+                </div>
+
+              </div>
             </div>
 
           </div>

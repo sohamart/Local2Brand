@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import AshokaChakra from './AshokaChakra';
 
@@ -37,15 +38,15 @@ export default function PageTransition({ children }) {
     }
   }, [location.pathname, displayLocation.pathname]);
 
-  return (
-    <PageTransitionContext.Provider value={{ displayLocation }}>
-      {/* 1. CINEMATIC DUAL DOORS OVERLAY */}
-      {isTransitioning && (
-        <div
-          key={transitionKey}
-          className="fixed inset-0 z-[999999] pointer-events-none overflow-hidden [perspective:1400px]"
-          aria-hidden="true"
-        >
+  const renderOverlay = () => {
+    if (!isTransitioning || typeof document === 'undefined') return null;
+
+    const overlayContent = (
+      <div
+        key={transitionKey}
+        className="fixed inset-0 z-[2147483647] pointer-events-none overflow-hidden [perspective:1400px]"
+        aria-hidden="true"
+      >
           {/* Left Shutter Door */}
           <div
             className="absolute top-0 bottom-0 left-0 w-1/2 animate-auto-door-left-3d"
@@ -137,7 +138,15 @@ export default function PageTransition({ children }) {
             </div>
           </div>
         </div>
-      )}
+    );
+
+    return createPortal(overlayContent, document.body);
+  };
+
+  return (
+    <PageTransitionContext.Provider value={{ displayLocation }}>
+      {/* 1. CINEMATIC DUAL DOORS PORTAL (Above Navbar & Footer at z-[2147483647]) */}
+      {renderOverlay()}
 
       {/* 2. PAGE CONTENT VIEWPORT */}
       <div className="flex-1 flex flex-col">

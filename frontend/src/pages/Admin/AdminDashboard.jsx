@@ -36,14 +36,19 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchDashboardData(false);
+    // Real-time live auto-poll every 4s
+    const timer = setInterval(() => {
+      fetchDashboardData(true);
+    }, 4000);
+    return () => clearInterval(timer);
   }, []);
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
+  const fetchDashboardData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await api.get('/admin/stats');
-      if (res.success) {
+      if (res?.success) {
         setStats(res.stats || {});
         setRecentLeads(res.recentLeads || []);
         setRecentCallbacks(res.recentCallbacks || []);
@@ -51,7 +56,7 @@ export default function AdminDashboard() {
     } catch (err) {
       console.warn('Error fetching admin dashboard stats:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 

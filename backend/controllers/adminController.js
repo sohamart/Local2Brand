@@ -99,31 +99,88 @@ export const sendBroadcastEmail = async (req, res) => {
     }
 
     const ctaButton = actionText && actionUrl
-      ? `<div style="text-align: center; margin: 28px 0;">
-           <a href="${actionUrl}" style="background: linear-gradient(135deg, #9333ea, #db2777); color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 9999px; font-weight: bold; display: inline-block;">
-             ${actionText}
+      ? `<div style="text-align: center; margin: 28px 0 10px 0;">
+           <a href="${actionUrl}" style="background: linear-gradient(135deg, #9333ea 0%, #db2777 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 14px; font-size: 14px; font-weight: 800; display: inline-block; box-shadow: 0 10px 25px rgba(147, 51, 234, 0.4); letter-spacing: 0.3px;">
+             ${actionText} &rarr;
            </a>
          </div>`
       : '';
 
     const formattedHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 30px; border-radius: 12px; border: 1px solid #1e293b;">
-        <div style="text-align: center; margin-bottom: 24px;">
-          <h1 style="color: #a855f7; margin: 0; font-size: 24px;">LOCAL<span style="color: #ec4899;">2</span>BRAND</h1>
-          <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Official Announcement</p>
-        </div>
-        <div style="background: #1e293b; padding: 24px; border-radius: 10px; border: 1px solid #334155;">
-          ${heading ? `<h2 style="color: #38bdf8; margin-top: 0; font-size: 18px;">${heading}</h2>` : ''}
-          <div style="color: #cbd5e1; line-height: 1.7; font-size: 14px;">
-            ${messageHtml.replace(/\n/g, '<br/>')}
-          </div>
-          ${ctaButton}
-        </div>
-        <p style="text-align: center; color: #64748b; font-size: 12px; margin-top: 24px;">
-          © ${new Date().getFullYear()} LOCAL2BRAND. All rights reserved.<br/>
-          You received this email because you have an account on LOCAL2BRAND.
-        </p>
-      </div>
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>${subject}</title>
+  <style>
+    :root { color-scheme: light dark; supported-color-schemes: light dark; }
+    body { margin: 0 !important; padding: 0 !important; width: 100% !important; -webkit-text-size-adjust: 100% !important; }
+    table, td { border-collapse: collapse !important; }
+  </style>
+</head>
+<body style="margin: 0; padding: 16px 8px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" align="center" style="margin: 0 auto; width: 100%;">
+    <tr>
+      <td align="center" style="padding: 0;">
+        <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; width: 100%; margin: 0 auto; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; border-top: 5px solid #9333ea; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+          
+          <tr>
+            <td style="padding: 28px 24px 16px 24px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+              <div style="display: inline-block; padding: 4px 12px; border-radius: 9999px; background-color: #f3e8ff; border: 1px solid #e9d5ff; color: #7e22ce; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;">
+                📢 OFFICIAL AGENCY BROADCAST
+              </div>
+              <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.2;">
+                LOCAL<span style="color: #c026d3;">2</span>BRAND
+              </h1>
+              <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">
+                HIGH-PERFORMANCE DIGITAL AGENCY &amp; ENGINEERING
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 24px 24px 10px 24px; background-color: #ffffff;">
+              ${heading ? `<h2 style="margin: 0 0 6px 0; font-size: 19px; font-weight: 800; color: #0f172a; line-height: 1.35;">${heading}</h2>` : ''}
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 6px 24px 24px 24px; font-size: 14px; line-height: 1.6; color: #334155; background-color: #ffffff;">
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px; margin-bottom: 12px;">
+                <div style="color: #334155; font-size: 14px; line-height: 1.7; word-break: break-word;">
+                  ${messageHtml.replace(/\n/g, '<br/>')}
+                </div>
+                ${ctaButton}
+              </div>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding: 20px 24px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;">
+              <p style="margin: 0 0 8px 0; font-size: 11px; color: #64748b; line-height: 1.5;">
+                You received this official dispatch as a registered client on LOCAL2BRAND.
+              </p>
+              <div style="font-size: 11px; color: #475569; margin-bottom: 8px;">
+                <span>✉️ Official Contact: <a href="mailto:stackaddacontact@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">stackaddacontact@gmail.com</a></span>
+                <span style="margin: 0 4px; color: #cbd5e1;">•</span>
+                <span>Admin: <a href="mailto:sohamduttabwn@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">sohamduttabwn@gmail.com</a></span>
+              </div>
+              <p style="margin: 0; font-size: 11px; color: #94a3b8; font-weight: 600;">
+                &copy; ${new Date().getFullYear()} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
     `;
 
     let sentCount = 0;

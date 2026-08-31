@@ -647,7 +647,7 @@ export default function AdminDemos() {
           </div>
 
           <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none">
-            {['All', ...CATEGORIES.slice(0, 7)].map((cat) => (
+            {['All', ...(categoriesList || DEFAULT_CATEGORIES).slice(0, 8)].map((cat) => (
               <button
                 key={cat}
                 type="button"

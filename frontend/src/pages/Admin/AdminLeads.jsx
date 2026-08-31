@@ -13,7 +13,9 @@ import {
   Mail,
   Building,
   Edit3,
-  X
+  X,
+  RefreshCw,
+  MessageSquare
 } from 'lucide-react';
 import api from '../../services/api';
 import { SEO } from '../../components/common/CommonUI';
@@ -25,22 +27,30 @@ export default function AdminLeads() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedLead, setSelectedLead] = useState(null);
   const [adminNoteText, setAdminNoteText] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchLeads();
-  }, [statusFilter]);
+    fetchLeads(false);
+    // Real-time live auto-refresh every 3s for new project proposals
+    const pollTimer = setInterval(() => {
+      fetchLeads(true);
+    }, 3000);
+    return () => clearInterval(pollTimer);
+  }, [statusFilter, search]);
 
-  const fetchLeads = async () => {
-    setLoading(true);
+  const fetchLeads = async (silent = false) => {
+    if (!silent) setLoading(true);
+    setIsRefreshing(true);
     try {
       const res = await api.get(`/queries?status=${statusFilter}&search=${search}`);
-      if (res.success) {
+      if (res?.success) {
         setLeads(res.leads || []);
       }
     } catch (err) {
       console.warn('Error fetching leads:', err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -101,21 +111,41 @@ export default function AdminLeads() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white">
-              Project Proposals & Inquiries ({leads.length})
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+                Project Proposals &amp; Inquiries ({leads.length})
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Desk
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
               Review custom specs, update statuses, add notes, and export to CSV.
             </p>
           </div>
 
-          <button
-            onClick={handleExportCsv}
-            className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 flex items-center gap-2 shadow-xs cursor-pointer"
-          >
-            <Download className="w-4 h-4 text-purple-600" />
-            <span>Export CSV</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fetchLeads(false)}
+              disabled={isRefreshing}
+              className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 flex items-center gap-1.5 shadow-xs cursor-pointer"
+              title="Refresh leads list"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-purple-600 dark:text-purple-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 flex items-center gap-2 shadow-xs cursor-pointer"
+            >
+              <Download className="w-4 h-4 text-purple-600" />
+              <span>Export CSV</span>
+            </button>
+          </div>
         </div>
 
         {/* Filter & Search Bar */}

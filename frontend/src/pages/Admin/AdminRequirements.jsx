@@ -18,7 +18,9 @@ import {
   Calendar,
   X,
   Sparkles,
-  Download
+  Download,
+  RefreshCw,
+  MessageSquare
 } from 'lucide-react';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
@@ -41,29 +43,37 @@ export default function AdminRequirements() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedReq, setSelectedReq] = useState(null);
   const [updating, setUpdating] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Edit State
   const [editStatus, setEditStatus] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editQuotedAmount, setEditQuotedAmount] = useState('');
 
-  const fetchRequirements = async () => {
+  const fetchRequirements = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
+      setIsRefreshing(true);
       const res = await api.get(`/requirements/admin/all?status=${statusFilter}&search=${search}`);
-      if (res.success && res.requirements) {
+      if (res?.success && res.requirements) {
         setRequirements(res.requirements);
       }
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
   useEffect(() => {
-    fetchRequirements();
-  }, [statusFilter]);
+    fetchRequirements(false);
+    // Real-time live auto-poll every 3s
+    const pollInterval = setInterval(() => {
+      fetchRequirements(true);
+    }, 3000);
+    return () => clearInterval(pollInterval);
+  }, [statusFilter, search]);
 
   const handleOpenDetail = (req) => {
     setSelectedReq(req);
@@ -83,7 +93,7 @@ export default function AdminRequirements() {
       });
       if (res.success) {
         setSelectedReq(res.requirement);
-        fetchRequirements();
+        fetchRequirements(true);
       }
     } catch (err) {
       alert(err.message || 'Failed to update');
@@ -102,19 +112,29 @@ export default function AdminRequirements() {
             <AshokaChakra size={11} />
             <span>Client Specifications Queue</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Requirement Submissions
-          </h1>
-          <p className="text-xs text-slate-500">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Requirement Submissions ({requirements.length})
+            </h1>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live Desk
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-0.5">
             Manage comprehensive multi-step client website specifications, quotas, and development handovers.
           </p>
         </div>
 
         <button
-          onClick={fetchRequirements}
-          className="px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-800 dark:text-slate-200 self-start sm:self-auto cursor-pointer"
+          type="button"
+          onClick={() => fetchRequirements(false)}
+          disabled={isRefreshing}
+          className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-800 dark:text-slate-200 flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
+          title="Refresh requirements queue"
         >
-          Refresh Queue
+          <RefreshCw className={`w-3.5 h-3.5 text-purple-600 dark:text-purple-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>Refresh Queue</span>
         </button>
       </div>
 
@@ -126,7 +146,7 @@ export default function AdminRequirements() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchRequirements()}
+            onKeyDown={(e) => e.key === 'Enter' && fetchRequirements(false)}
             placeholder="Search by ID, business, name, email..."
             className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
           />
@@ -167,13 +187,23 @@ export default function AdminRequirements() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {loading ? (
+              {loading && requirements.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400">Loading requirement submissions...</td>
+                  <td colSpan={8} className="p-12 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <RefreshCw className="w-6 h-6 animate-spin text-purple-600" />
+                      <span className="text-xs font-semibold">Loading requirement submissions...</span>
+                    </div>
+                  </td>
                 </tr>
               ) : requirements.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400">No client website requirements found in this filter.</td>
+                  <td colSpan={8} className="p-12 text-center text-slate-400">
+                    <div className="w-10 h-10 mx-auto rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center mb-2">
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs font-semibold block">No client website requirements found in this filter.</span>
+                  </td>
                 </tr>
               ) : (
                 requirements.map((req) => (

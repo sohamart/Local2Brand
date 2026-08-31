@@ -224,7 +224,7 @@ function MainAppContent() {
       {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <Navbar />}
 
       {/* Route Views with Synchronized Page Transition */}
-      <div className="flex-1 z-10 flex flex-col">
+      <div className="flex-1 flex flex-col">
         <PageTransition>
           <TransitionRoutes
             isLivePreview={isLivePreview}
