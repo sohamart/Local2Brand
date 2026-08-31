@@ -5,7 +5,7 @@ import {
   Zap,
   Search,
   Layout,
-  MessageCircle,
+  PhoneCall,
   Sliders,
   LifeBuoy
 } from 'lucide-react';
@@ -39,9 +39,9 @@ const whyFeatures = [
     description: "Seamlessly scales across all viewports from 320px smartphones to widescreen monitors."
   },
   {
-    icon: MessageCircle,
-    title: "Direct WhatsApp Ordering",
-    description: "Frictionless conversion flow that brings qualified customer leads directly into your WhatsApp inbox."
+    icon: PhoneCall,
+    title: "Instant Lead Capture & Callbacks",
+    description: "Frictionless conversion flow that captures qualified client inquiries and scheduled callbacks directly into your portal."
   },
   {
     icon: Sliders,

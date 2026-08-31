@@ -1,0 +1,35 @@
+[
+  {
+    "_id": "settings_default_id_001",
+    "brandName": "LOCAL2BRAND",
+    "domain": "local2brand.com",
+    "tagline": "Build Local. Scale Global. (Updated via Admin Panel)",
+    "supportEmail": "founders@local2brand.com",
+    "displayPhone": "",
+    "turnaroundTime": "48 Hours",
+    "startingPriceUsd": "$399",
+    "startingPriceInr": "₹9,999",
+    "isMaintenanceMode": false,
+    "isComingSoonMode": false,
+    "maintenanceMessage": "We are currently upgrading our platform. We will be back online shortly!",
+    "socialLinks": {
+      "instagram": "https://instagram.com/local2brand",
+      "instagramHandle": "@local2brand",
+      "linkedin": "https://linkedin.com/company/local2brand",
+      "github": "https://github.com/local2brand",
+      "twitter": "https://twitter.com/local2brand"
+    },
+    "heroConfig": {
+      "badge": "🇮🇳 India’s #1 Fast-Track Web Experience Engine",
+      "title": "Transform Your Local Business Into A Global Brand",
+      "subtitle": "World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale."
+    },
+    "announcementBar": {
+      "enabled": true,
+      "text": "🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025",
+      "link": "/pricing"
+    },
+    "bannerImage": "",
+    "updatedAt": "2026-08-31T07:07:35.953Z"
+  }
+]

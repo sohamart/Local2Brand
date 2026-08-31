@@ -1,226 +1,130 @@
-import React, { useState, useEffect } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { SettingsProvider, useSettings } from './context/SettingsContext';
-import { CartProvider, useCart } from './context/CartContext';
-import { api } from './services/api';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { TenantProvider } from './context/TenantContext';
+import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
+import { DemoControlBar } from './components/common/DemoControlBar';
+import { Navbar } from './components/common/Navbar';
+import { Footer } from './components/common/Footer';
+import { CartDrawer } from './components/common/CartDrawer';
 
-import Navbar from './components/Navbar';
-import Hero from './components/Hero';
-import MenuSection from './components/MenuSection';
-import DishModal from './components/DishModal';
-import CartDrawer from './components/CartDrawer';
-import CheckoutModal from './components/CheckoutModal';
-import OrderTrackerModal from './components/OrderTrackerModal';
-import ReservationSection from './components/ReservationSection';
-import ReviewsSection from './components/ReviewsSection';
-import LocationMapSection from './components/LocationMapSection';
-import Footer from './components/Footer';
-import AuthModal from './components/AuthModal';
-import CustomerProfileModal from './components/CustomerProfileModal';
-import AdminDashboard from './admin/AdminDashboard';
-import DeliveryDashboard from './rider/DeliveryDashboard';
+// Customer Pages
+import { HomePage } from './pages/customer/HomePage';
+import { MenuPage } from './pages/customer/MenuPage';
+import { SpecialsPage } from './pages/customer/SpecialsPage';
+import { StoryPage } from './pages/customer/StoryPage';
+import { OffersPage } from './pages/customer/OffersPage';
+import { ReviewsPage } from './pages/customer/ReviewsPage';
+import { ProductDetailPage } from './pages/customer/ProductDetailPage';
+import { FavoritesPage } from './pages/customer/FavoritesPage';
+import { ContactPage } from './pages/customer/ContactPage';
+import { TableReservationPage } from './pages/customer/TableReservationPage';
+import { CheckoutPage } from './pages/customer/CheckoutPage';
+import { OrderTrackingPage } from './pages/customer/OrderTrackingPage';
+import { CustomerAccountPage } from './pages/customer/CustomerAccountPage';
 
-import { MessageSquare, Phone, Bike, ShoppingBag } from 'lucide-react';
+// Auth Pages
+import { LoginPage } from './pages/auth/LoginPage';
+import { RegisterPage } from './pages/auth/RegisterPage';
 
-function RestaurantApp() {
-  const { user, isAdmin } = useAuth();
-  const { settings } = useSettings();
-  const { totalItemCount, openCart, total } = useCart();
+// Visual Customizer
+import { WebsiteCustomizer } from './pages/customizer/WebsiteCustomizer';
 
-  // Modals & Active View States
-  const [selectedDish, setSelectedDish] = useState(null);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [trackingOrderId, setTrackingOrderId] = useState(null);
-  const [isReservationOpen, setIsReservationOpen] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authAdminDefault, setAuthAdminDefault] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
-  const [isRiderOpen, setIsRiderOpen] = useState(false);
+// Owner Admin Pages
+import { OwnerDashboard } from './pages/owner/OwnerDashboard';
+import { AdminOrdersPage } from './pages/owner/AdminOrdersPage';
+import { AdminProductsPage } from './pages/owner/AdminProductsPage';
+import { AdminTablesPage } from './pages/owner/AdminTablesPage';
+import { AdminCouponsPage } from './pages/owner/AdminCouponsPage';
+import { AdminAnalyticsPage } from './pages/owner/AdminAnalyticsPage';
+import { AdminSettingsPage } from './pages/owner/AdminSettingsPage';
 
-  // Visitor Tracking Session
-  useEffect(() => {
-    let sessionId = localStorage.getItem('lamour_session_id');
-    if (!sessionId) {
-      sessionId = 'sess_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
-      localStorage.setItem('lamour_session_id', sessionId);
-    }
+// Staff & Delivery Portals
+import { KitchenDisplayPage } from './pages/staff/KitchenDisplayPage';
+import { DeliveryRiderPortal } from './pages/rider/DeliveryRiderPortal';
 
-    const sendPing = () => {
-      api.recordVisit({
-        path: window.location.pathname + window.location.hash,
-        sessionId,
-        referrer: document.referrer
-      }).catch(() => {});
-    };
+// Developer Super-Admin Portal
+import { DeveloperDashboard } from './pages/developer/DeveloperDashboard';
 
-    sendPing();
-    const interval = setInterval(sendPing, 30000); // 30s heartbeat
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleOrderPlaced = (orderId) => {
-    setIsCheckoutOpen(false);
-    setTrackingOrderId(orderId);
-  };
+const AppLayout = () => {
+  const location = useLocation();
+  const isCustomizer = location.pathname.startsWith('/customizer');
+  const isKDS = location.pathname.startsWith('/staff');
+  const isRider = location.pathname.startsWith('/rider');
+  const isAdmin = location.pathname.startsWith('/admin');
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
-      
-      {/* Navbar */}
-      <Navbar
-        onOpenAuth={() => { setAuthAdminDefault(false); setIsAuthOpen(true); }}
-        onOpenProfile={() => setIsProfileOpen(true)}
-        onOpenTracker={(id) => setTrackingOrderId(id)}
-        onOpenReservation={() => setIsReservationOpen(true)}
-        onOpenAdmin={() => setIsAdminOpen(true)}
-        onOpenRider={() => setIsRiderOpen(true)}
-      />
+    <div className="min-h-screen flex flex-col bg-[#07080c] text-slate-100 selection:bg-amber-500 selection:text-black">
+      {/* Top Demo & Role Control Bar */}
+      <DemoControlBar />
 
-      {/* Main Page Flow */}
+      {/* Customer Navbar (hidden in customizer, KDS, rider and admin dashboard) */}
+      {!isCustomizer && !isKDS && !isRider && !isAdmin && <Navbar />}
+
+      {/* Main Content Viewport */}
       <main className="flex-1">
-        {/* Hero Section */}
-        <Hero 
-          onOpenReservation={() => setIsReservationOpen(true)}
-        />
+        <Routes>
+          {/* Customer Storefront Routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/menu" element={<MenuPage />} />
+          <Route path="/specials" element={<SpecialsPage />} />
+          <Route path="/story" element={<StoryPage />} />
+          <Route path="/offers" element={<OffersPage />} />
+          <Route path="/reviews" element={<ReviewsPage />} />
+          <Route path="/product/:slug" element={<ProductDetailPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/reserve" element={<TableReservationPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/orders/:orderId" element={<OrderTrackingPage />} />
+          <Route path="/account" element={<CustomerAccountPage />} />
 
-        {/* Interactive Menu Section */}
-        <MenuSection 
-          onSelectDish={(dish) => setSelectedDish(dish)}
-        />
+          {/* Authentication Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-        {/* Table Reservation Section */}
-        <ReservationSection />
+          {/* Website Customizer */}
+          <Route path="/customizer" element={<WebsiteCustomizer />} />
 
-        {/* Customer Reviews & Feedback */}
-        <ReviewsSection />
+          {/* Restaurant Owner Dashboard & Management */}
+          <Route path="/admin" element={<OwnerDashboard />} />
+          <Route path="/admin/orders" element={<AdminOrdersPage />} />
+          <Route path="/admin/products" element={<AdminProductsPage />} />
+          <Route path="/admin/tables" element={<AdminTablesPage />} />
+          <Route path="/admin/coupons" element={<AdminCouponsPage />} />
+          <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
+          <Route path="/admin/settings" element={<AdminSettingsPage />} />
 
-        {/* Location & Directions Map */}
-        <LocationMapSection />
+          {/* Staff Kitchen KDS */}
+          <Route path="/staff" element={<KitchenDisplayPage />} />
+
+          {/* Delivery Rider / Valet App */}
+          <Route path="/rider" element={<DeliveryRiderPortal />} />
+
+          {/* SaaS Super-Admin Master Control */}
+          <Route path="/developer" element={<DeveloperDashboard />} />
+        </Routes>
       </main>
 
-      {/* Footer */}
-      <Footer
-        onOpenAdmin={() => {
-          if (isAdmin) {
-            setIsAdminOpen(true);
-          } else {
-            setAuthAdminDefault(true);
-            setIsAuthOpen(true);
-          }
-        }}
-        onOpenReservation={() => setIsReservationOpen(true)}
-        onOpenAuth={() => setIsAuthOpen(true)}
-      />
+      {/* Slide-Over Cart Drawer */}
+      <CartDrawer />
 
-      {/* Floating Bottom Action Buttons (WhatsApp, Phone, Floating Mobile Cart, Rider Hub) */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col gap-3">
-        {/* Quick Rider Hub Button for Delivery Partners */}
-        {user?.role === 'delivery' && (
-          <button
-            onClick={() => setIsRiderOpen(true)}
-            className="w-14 h-14 rounded-full bg-[#D8632C] hover:bg-[#e67540] text-slate-950 flex items-center justify-center shadow-2xl shadow-[#D8632C]/60 transition-transform hover:scale-110 active:scale-95 animate-pulse"
-            title="Open Rider Delivery Dashboard"
-          >
-            <Bike className="w-7 h-7 text-[#171310]" />
-          </button>
-        )}
-
-        {/* Direct WhatsApp Quick Chat */}
-        <a
-          href={`https://wa.me/${settings.whatsapp_number}?text=${encodeURIComponent("Hello L'Amour Gourmet, I'd like to place an order or ask a question!")}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center justify-center shadow-2xl shadow-emerald-500/40 transition-transform hover:scale-110 active:scale-95"
-          title="Chat on WhatsApp"
-        >
-          <MessageSquare className="w-7 h-7 fill-slate-950" />
-        </a>
-
-        {/* Floating Cart Button for Mobile */}
-        {totalItemCount > 0 && (
-          <button
-            onClick={openCart}
-            className="md:hidden flex items-center gap-2 px-4 py-3 rounded-full bg-amber-500 text-slate-950 font-bold text-xs shadow-2xl shadow-amber-500/50 animate-bounce"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            <span>{totalItemCount} Items (₹{total})</span>
-          </button>
-        )}
-      </div>
-
-      {/* Modals */}
-      <DishModal 
-        dish={selectedDish} 
-        onClose={() => setSelectedDish(null)} 
-      />
-
-      <CartDrawer 
-        onProceedCheckout={() => setIsCheckoutOpen(true)} 
-      />
-
-      <CheckoutModal 
-        isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        onOrderPlaced={handleOrderPlaced}
-      />
-
-      <OrderTrackerModal
-        orderId={trackingOrderId}
-        onClose={() => setTrackingOrderId(null)}
-      />
-
-      <ReservationSection
-        isOpenModal={isReservationOpen}
-        onCloseModal={() => setIsReservationOpen(false)}
-      />
-
-      <AuthModal
-        isOpen={isAuthOpen}
-        defaultAdminMode={authAdminDefault}
-        onClose={() => setIsAuthOpen(false)}
-        onLoginSuccess={(loggedInUser) => {
-          if (loggedInUser?.role === 'admin' || authAdminDefault) {
-            setIsAdminOpen(true);
-          } else if (loggedInUser?.role === 'delivery') {
-            setIsRiderOpen(true);
-          } else {
-            setIsProfileOpen(true);
-          }
-        }}
-      />
-
-      <CustomerProfileModal
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        onTrackOrder={(id) => setTrackingOrderId(id)}
-        onOpenRider={() => setIsRiderOpen(true)}
-      />
-
-      {isAdminOpen && (
-        <AdminDashboard
-          onClose={() => setIsAdminOpen(false)}
-        />
-      )}
-
-      {isRiderOpen && (
-        <DeliveryDashboard
-          onClose={() => setIsRiderOpen(false)}
-        />
-      )}
-
+      {/* Customer Footer (hidden in customizer, KDS, rider & admin) */}
+      {!isCustomizer && !isKDS && !isRider && !isAdmin && <Footer />}
     </div>
   );
-}
+};
 
 export default function App() {
   return (
-    <AuthProvider>
-      <SettingsProvider>
+    <TenantProvider>
+      <AuthProvider>
         <CartProvider>
-          <RestaurantApp />
+          <Router>
+            <AppLayout />
+          </Router>
         </CartProvider>
-      </SettingsProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </TenantProvider>
   );
 }

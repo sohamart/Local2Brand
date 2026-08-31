@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
-import { Plus, Minus, MessageCircle, HelpCircle } from 'lucide-react';
+import { Plus, Minus, PhoneCall, HelpCircle } from 'lucide-react';
 import SectionHeading from '../common/SectionHeading';
 import ScrollReveal from '../common/ScrollReveal';
 import { agencyFaqs } from '../../data/faqs';
-import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
+import { useOrderModal } from '../../context/OrderModalContext';
 
 export default function FAQSection() {
   const [openIndex, setOpenIndex] = useState(0);
+  const { openCallbackModal } = useOrderModal();
 
   const toggleFAQ = (index) => {
     setOpenIndex(openIndex === index ? null : index);
-  };
-
-  const handleWhatsAppHelp = () => {
-    openWhatsAppChat(generateWhatsAppGeneralUrl());
   };
 
   return (
@@ -23,7 +20,7 @@ export default function FAQSection() {
         <SectionHeading
           badge="Frequently Asked Questions"
           title="Got Questions? We Have Answers."
-          subtitle="Everything you need to know about our design process, turnaround times, WhatsApp order flow, and deliverables."
+          subtitle="Everything you need to know about our design process, turnaround times, and deliverables."
         />
 
         {/* FAQ Accordion List with Staggered Scroll Reveal */}
@@ -80,20 +77,20 @@ export default function FAQSection() {
         <ScrollReveal variant="fade-up" delay={200} duration={650} className="mt-12">
           <div className="p-6 rounded-2xl glass-card border border-white dark:border-slate-700/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
             <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/30 flex items-center justify-center shrink-0">
-                <MessageCircle className="w-5 h-5" />
+              <div className="w-11 h-11 rounded-xl bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 border border-purple-100 dark:border-purple-500/30 flex items-center justify-center shrink-0">
+                <HelpCircle className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Have a custom question?</h4>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Chat directly with our team on WhatsApp for an immediate response.</p>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Have a specific question?</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Request a callback and our senior designers will guide you.</p>
               </div>
             </div>
 
             <button
-              onClick={handleWhatsAppHelp}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 border border-emerald-200 dark:border-emerald-500/40 transition-all shrink-0 cursor-pointer shadow-sm"
+              onClick={() => openCallbackModal({ topic: 'FAQ Custom Question' })}
+              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg transition-all shrink-0 cursor-pointer shadow-sm"
             >
-              Ask Us on WhatsApp
+              Request a Callback
             </button>
           </div>
         </ScrollReveal>

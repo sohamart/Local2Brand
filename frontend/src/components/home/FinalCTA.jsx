@@ -1,17 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, MessageCircle, Sparkles, CheckCircle2, Zap } from 'lucide-react';
+import { ArrowRight, PhoneCall, Sparkles, CheckCircle2, Zap } from 'lucide-react';
 import ScrollReveal from '../common/ScrollReveal';
 import { useOrderModal } from '../../context/OrderModalContext';
-import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import AshokaChakra from '../common/AshokaChakra';
 
 export default function FinalCTA() {
-  const { openOrderModal } = useOrderModal();
-
-  const handleWhatsAppChat = () => {
-    openWhatsAppChat(generateWhatsAppGeneralUrl());
-  };
+  const { openOrderModal, openCallbackModal } = useOrderModal();
 
   return (
     <section className="py-20 sm:py-28 relative overflow-hidden">
@@ -25,7 +20,7 @@ export default function FinalCTA() {
             <div className="absolute top-0 right-0 w-80 h-80 bg-pink-400/10 dark:bg-pink-500/15 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-400/10 dark:bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Badge with Indian Pride and Spinning Ashoka Chakra */}
+            {/* Badge with Indian Pride */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 shadow-sm text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300 mb-6">
               <AshokaChakra size={14} />
               <span>Built in India. Ready for the World.</span>
@@ -37,7 +32,7 @@ export default function FinalCTA() {
             </h2>
 
             <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto mb-8 font-normal leading-relaxed">
-              Pick a high-performing demo from our showcase or let us craft a bespoke masterpiece tailored to your exact brand goals. Handed over in as little as 48 hours with full GST & WhatsApp support.
+              Pick a high-performing demo from our showcase or let us craft a bespoke masterpiece tailored to your exact brand goals. Handed over in as little as 48 hours with full GST & dedicated support.
             </p>
 
             {/* CTA Buttons */}
@@ -46,16 +41,16 @@ export default function FinalCTA() {
                 onClick={() => openOrderModal({ websiteType: 'Custom Project Inquiry' })}
                 className="w-full sm:w-auto px-8 py-4 rounded-btn text-base font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:shadow-xl transition-all flex items-center justify-center gap-2 group cursor-pointer hover:opacity-95"
               >
-                <span>Get Your Website on WhatsApp</span>
+                <span>Start Your Website Now</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
               <button
-                onClick={handleWhatsAppChat}
-                className="w-full sm:w-auto px-7 py-4 rounded-btn text-base font-semibold text-emerald-900 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 border border-emerald-200 dark:border-emerald-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                onClick={() => openCallbackModal()}
+                className="w-full sm:w-auto px-7 py-4 rounded-btn text-base font-semibold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
               >
-                <MessageCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Direct WhatsApp Consultation</span>
+                <PhoneCall className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <span>Request a Phone Consultation</span>
               </button>
             </div>
 

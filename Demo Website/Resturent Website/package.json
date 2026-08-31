@@ -1,16 +1,18 @@
 {
-  "name": "resturent-website",
+  "name": "gourmetos-platform",
   "version": "1.0.0",
-  "private": true,
-  "description": "L'Amour Gourmet Restaurant Platform",
+  "description": "Full-Stack Multi-Tenant White-Label Restaurant Platform & SaaS Engine",
+  "main": "backend/src/server.js",
   "scripts": {
-    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"node backend/index.js\" \"npm --prefix frontend run dev\"",
-    "backend": "node backend/index.js",
-    "frontend": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend run build",
-    "start": "node backend/index.js"
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "seed": "cd backend && npm run seed"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
-  }
+    "concurrently": "^8.2.2"
+  },
+  "author": "Local2Brand Agency",
+  "license": "MIT"
 }

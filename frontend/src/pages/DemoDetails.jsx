@@ -40,9 +40,7 @@ export default function DemoDetails() {
   };
 
   const handleAskQuestions = () => {
-    openWhatsAppChat(
-      generateWhatsAppGeneralUrl(`Hello LOCAL2BRAND, I have a few questions regarding the "${demo.title}" template.`)
-    );
+    openCallbackModal({ topic: `Questions regarding ${demo.title}` });
   };
 
   return (
@@ -211,7 +209,7 @@ export default function DemoDetails() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0" />
-                    <span><strong>Direct WhatsApp Funnel:</strong> Direct ordering system pre-configured with your WhatsApp business number.</span>
+                    <span><strong>Direct Lead Capture Funnel:</strong> Direct client inquiry & callback scheduling pipeline connected to your portal.</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0" />
@@ -263,7 +261,7 @@ export default function DemoDetails() {
                     <ArrowRight className="w-4 h-4" />
                   </button>
                   <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-2">
-                    Instant WhatsApp order confirmation with founders.
+                    Instant proposal calculation with 48h handover.
                   </p>
                 </div>
               </div>

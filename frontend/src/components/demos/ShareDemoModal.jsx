@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Share2,
@@ -8,11 +9,12 @@ import {
   ExternalLink,
   Sparkles
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export default function ShareDemoModal({ isOpen, onClose, demo }) {
   const [copied, setCopied] = useState(false);
 
-  if (!isOpen || !demo) return null;
+  if (!isOpen || !demo || typeof document === 'undefined') return null;
 
   const demoTitle = demo.title || 'Website Demo';
   const demoCategory = demo.category || 'Website Template';
@@ -25,6 +27,7 @@ export default function ShareDemoModal({ isOpen, onClose, demo }) {
   const handleCopyLink = () => {
     navigator.clipboard.writeText(demoUrl);
     setCopied(true);
+    toast.success('Demo link copied to clipboard! 📋');
     setTimeout(() => setCopied(false), 2500);
   };
 
@@ -66,8 +69,8 @@ export default function ShareDemoModal({ isOpen, onClose, demo }) {
     window.open(inUrl, '_blank');
   };
 
-  return (
-    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xl animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xl animate-fade-in">
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6 space-y-5 text-slate-900 dark:text-slate-100 animate-scale">
         
         {/* Header */}
@@ -164,6 +167,7 @@ export default function ShareDemoModal({ isOpen, onClose, demo }) {
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

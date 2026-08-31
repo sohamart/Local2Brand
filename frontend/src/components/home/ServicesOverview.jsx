@@ -82,9 +82,9 @@ export default function ServicesOverview() {
                   <div className="pt-2 flex items-center justify-between border-t border-slate-100/80 dark:border-slate-800">
                     <button
                       onClick={() => openOrderModal({ websiteType: service.title })}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 cursor-pointer group-hover:translate-x-1 transition-all"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 cursor-pointer group-hover:translate-x-1 transition-all"
                     >
-                      <span>Get Started on WhatsApp</span>
+                      <span>Get Instant Proposal</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
 

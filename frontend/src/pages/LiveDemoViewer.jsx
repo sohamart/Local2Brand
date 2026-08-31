@@ -48,14 +48,12 @@ export default function LiveDemoViewer() {
     });
   };
 
-  const handleDirectWhatsApp = () => {
-    const text = `⚡ *LIVE WEBSITE ORDER INQUIRY - LOCAL2BRAND*\n\n` +
-      `Live Website: *${activeDemo.title}*\n` +
-      `Category: ${activeDemo.category}\n` +
-      `Status: ${activeDemo.isPublished ? 'Live Ready' : 'Pre-Order / Launching Soon'}\n` +
-      `Package: *${activeDemo.priceInr || activeDemo.price}*\n\n` +
-      `Hi LOCAL2BRAND team, I want to build a complete custom full-stack website for my business in 48h to 7 days!`;
-    openWhatsAppChat(generateWhatsAppGeneralUrl(text));
+  const handleOrderClick = () => {
+    openOrderModal({
+      selectedDemo: activeDemo.title,
+      price: activeDemo.priceInr || activeDemo.price,
+      initialRequirements: `I want to customize the "${activeDemo.title}" (${activeDemo.category}) website template for my brand.`
+    });
   };
 
   const handleReload = () => {
@@ -181,12 +179,12 @@ export default function LiveDemoViewer() {
           </button>
 
           <button
-            onClick={handleDirectWhatsApp}
-            className="px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all flex items-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer"
+            onClick={handleOrderClick}
+            className="px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg transition-all flex items-center gap-1.5 shadow-md cursor-pointer hover:opacity-95"
           >
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">{activeDemo.isPublished ? 'Get This Live Website' : 'Pre-Order on WhatsApp'}</span>
-            <span className="xs:hidden">Order</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="hidden xs:inline">{activeDemo.isPublished ? 'Get This Website' : 'Pre-Order Proposal'}</span>
+            <span className="xs:hidden">Get It</span>
           </button>
         </div>
       </header>

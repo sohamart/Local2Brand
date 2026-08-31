@@ -22,8 +22,8 @@ const trustItems = [
   },
   {
     icon: MessageSquareQuote,
-    title: "Direct WhatsApp Order Flow",
-    description: "Instant order communication directly over WhatsApp with our founders in English, Hindi & regional languages."
+    title: "Direct Consultation Pipeline",
+    description: "Instant proposal calculations and scheduled callbacks with our founders in English, Hindi & regional languages."
   }
 ];
 
@@ -32,7 +32,7 @@ export default function TrustMetrics() {
     { value: "48h", label: "Delivery Speed", subtext: "For all showcase demo templates" },
     { value: "98+", label: "Google PageSpeed", subtext: "Mobile & desktop optimized" },
     { value: "100%", label: "Responsive & Fluid", subtext: "Perfect across iPhones to 4K" },
-    { value: "24/7", label: "WhatsApp Direct", subtext: "Instant founders communication" }
+    { value: "24/7", label: "Direct Support", subtext: "Instant founders communication" }
   ];
 
   return (

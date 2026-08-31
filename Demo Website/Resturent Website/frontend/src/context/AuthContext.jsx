@@ -1,72 +1,102 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { DEMO_USERS } from '../data/mockData';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('lamour_token'));
-  const [loading, setLoading] = useState(true);
+export const AuthProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('gourmetos_user');
+    return saved ? JSON.parse(saved) : DEMO_USERS.customer;
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('gourmetos_user');
+  });
+
+  const [notifications, setNotifications] = useState([
+    { id: 'notif-1', title: 'Order Confirmed', message: 'Your order #ORD-9842 has been accepted by the kitchen.', time: '10m ago', unread: true },
+    { id: 'notif-2', title: 'Imperial Privileges', message: 'You earned 48 Loyalty points from your recent banquet.', time: '1h ago', unread: false }
+  ]);
 
   useEffect(() => {
-    if (token) {
-      api.getMe()
-        .then(userData => {
-          setUser(userData);
-        })
-        .catch(() => {
-          logout();
-        })
-        .finally(() => setLoading(false));
+    if (currentUser) {
+      localStorage.setItem('gourmetos_user', JSON.stringify(currentUser));
+      setIsAuthenticated(true);
     } else {
-      setLoading(false);
+      localStorage.removeItem('gourmetos_user');
+      setIsAuthenticated(false);
     }
-  }, [token]);
+  }, [currentUser]);
 
-  const login = async (email, password) => {
-    const res = await api.login({ email, password });
-    localStorage.setItem('lamour_token', res.token);
-    setToken(res.token);
-    setUser(res.user);
-    return res.user;
+  const login = (roleKey = 'customer', customUser = null) => {
+    let userToSet = customUser;
+    if (!userToSet && DEMO_USERS[roleKey]) {
+      userToSet = DEMO_USERS[roleKey];
+    }
+    setCurrentUser(userToSet);
+    setIsAuthenticated(true);
+    return userToSet;
   };
 
-  const register = async (userData) => {
-    const res = await api.register(userData);
-    localStorage.setItem('lamour_token', res.token);
-    setToken(res.token);
-    setUser(res.user);
-    return res.user;
+  const register = (userData) => {
+    const newUser = {
+      id: `user-cust-${Date.now()}`,
+      name: userData.name,
+      email: userData.email,
+      phone: userData.phone || '+91 98300 00000',
+      role: 'customer',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=160&auto=format&fit=crop&q=80',
+      loyaltyPoints: 100, // 100 bonus welcome points
+      referralCode: userData.name.slice(0, 4).toUpperCase() + '20',
+      savedAddresses: [
+        { id: 'addr-1', title: 'Home', address: 'Flat 402, Royal Palms Residency', landmark: 'Near City Centre 1', city: 'Kolkata', pincode: '700064', isDefault: true }
+      ]
+    };
+
+    setCurrentUser(newUser);
+    setIsAuthenticated(true);
+    return newUser;
   };
 
   const logout = () => {
-    localStorage.removeItem('lamour_token');
-    setToken(null);
-    setUser(null);
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('gourmetos_user');
   };
 
-  const updateProfile = async (updatedData) => {
-    const res = await api.updateProfile(updatedData);
-    setUser(res.user);
-    return res.user;
+  const switchRole = (roleKey) => {
+    if (DEMO_USERS[roleKey]) {
+      setCurrentUser(DEMO_USERS[roleKey]);
+      setIsAuthenticated(true);
+    }
+  };
+
+  const markAllNotificationsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
   };
 
   return (
     <AuthContext.Provider value={{
-      user,
-      token,
-      loading,
-      isAdmin: user?.role === 'admin',
+      currentUser,
+      isAuthenticated,
       login,
       register,
       logout,
-      updateProfile
+      switchRole,
+      isDeveloper: currentUser?.role === 'developer',
+      isOwner: currentUser?.role === 'owner',
+      isStaff: currentUser?.role === 'staff',
+      isCustomer: currentUser?.role === 'customer',
+      notifications,
+      markAllNotificationsRead
     }}>
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  return context;
+};

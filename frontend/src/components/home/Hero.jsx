@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
   Sparkles,
@@ -22,6 +22,7 @@ import {
   GraduationCap
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
+import { useAuth } from '../../context/AuthContext';
 import AshokaChakra from '../common/AshokaChakra';
 import { getDemoBySlug } from '../../data/demos';
 
@@ -88,7 +89,19 @@ const AUTO_SLIDE_INTERVAL = 6500; // 6.5 seconds for relaxed showcase viewing
 
 export default function Hero() {
   const { openOrderModal } = useOrderModal();
+  const { user, isAdmin, openAuthModal } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
+
+  const handleStartWebsite = () => {
+    if (!user) {
+      openAuthModal(() => openOrderModal());
+    } else if (isAdmin || user?.role === 'admin') {
+      navigate('/admin');
+    } else {
+      openOrderModal();
+    }
+  };
   const [isPaused, setIsPaused] = useState(false);
   const [isLiveLoading, setIsLiveLoading] = useState(true);
 
@@ -231,13 +244,13 @@ export default function Hero() {
           </h1>
 
           <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto font-normal leading-relaxed relative z-10">
-            World-class UI/UX design, sub-second performance, and instant WhatsApp ordering for ambitious Indian businesses ready to scale globally.
+            World-class UI/UX design, sub-second performance, and instant lead capture for ambitious Indian businesses ready to scale globally.
           </p>
 
           {/* Minimal CTA Pair */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-sm sm:max-w-none mx-auto">
             <button
-              onClick={() => openOrderModal()}
+              onClick={handleStartWebsite}
               className="w-full sm:w-auto px-8 py-3.5 rounded-btn text-sm sm:text-base font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer hover:opacity-95"
             >
               <span>Start Your Website</span>
@@ -257,7 +270,7 @@ export default function Hero() {
           <div className="pt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/90 px-3 py-1 rounded-full border border-slate-200/70 dark:border-slate-700/80 shadow-sm">
               <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              Direct WhatsApp Support
+              Instant Callback & Proposal
             </span>
             <span className="flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/90 px-3 py-1 rounded-full border border-slate-200/70 dark:border-slate-700/80 shadow-sm">
               <CheckCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />

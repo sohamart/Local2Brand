@@ -1,69 +1,83 @@
 import React, { useState } from 'react';
 import {
-  MessageCircle,
-  Phone,
+  PhoneCall,
   Mail,
-  MapPin,
   Clock,
   Sparkles,
   Send,
-  Globe2,
   CheckCircle2,
-  ArrowRight
+  AlertCircle,
+  ArrowRight,
+  User,
+  Building
 } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
-import { siteConfig } from '../config/siteConfig';
-import { generateWhatsAppOrderUrl, generateWhatsAppGeneralUrl, openWhatsAppChat } from '../utils/whatsapp';
+import { useSiteSettings } from '../context/SiteSettingsContext';
+import { useOrderModal } from '../context/OrderModalContext';
+import api from '../services/api';
 import AshokaChakra from '../components/common/AshokaChakra';
 
-const InstagramIcon = ({ className = "w-5 h-5" }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
-  </svg>
-);
-
 export default function Contact() {
+  const { settings } = useSiteSettings();
+  const { openCallbackModal } = useOrderModal();
+
   const [formData, setFormData] = useState({
     name: '',
     businessName: '',
-    whatsapp: '',
+    phone: '',
     email: '',
     websiteType: 'Custom Business Website (from ₹9,999)',
-    requirements: ''
+    requirements: '',
   });
+
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    const url = generateWhatsAppOrderUrl(formData);
-    openWhatsAppChat(url);
-  };
+    if (!formData.name || !formData.phone || !formData.email) {
+      setError('Please provide your name, phone, and email address.');
+      return;
+    }
 
-  const handleDirectWhatsApp = () => {
-    openWhatsAppChat(generateWhatsAppGeneralUrl("Hello LOCAL2BRAND, I want to discuss a project."));
-  };
+    setLoading(true);
+    setError('');
 
-  const getInstagramUsername = () => {
-    const handle = siteConfig.socialLinks.instagramHandle || siteConfig.socialLinks.instagram || '@local2brand';
-    return handle.replace(/https?:\/\/(www\.)?instagram\.com\//, '').replace(/@/, '').replace(/\/$/, '');
+    try {
+      await api.post('/queries', {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        businessName: formData.businessName,
+        websiteType: formData.websiteType,
+        requirements: formData.requirements,
+        industry: 'Direct Contact Form',
+        budget: 'Custom Quotation',
+      });
+      setSubmitted(true);
+    } catch (err) {
+      setError(err.message || 'Failed to submit inquiry. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <>
       <SEO
-        title="Contact Us — WhatsApp Direct Consultation"
-        description="Get in touch with LOCAL2BRAND. Connect directly on WhatsApp, email, or phone for rapid quotes and custom website design consultations."
+        title="Contact Us — Direct Project Inquiry & Consultation"
+        description="Get in touch with LOCAL2BRAND. Submit your project requirements or request an instant callback from our founders."
       />
 
       <div className="pt-28 xs:pt-32 sm:pt-40 pb-20">
-
+        
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
@@ -73,252 +87,209 @@ export default function Contact() {
           <SectionHeading
             badge="Direct Communication"
             title="Let's Build Something Great."
-            subtitle="Ready to transform your digital presence? Send us your project details or message us directly on WhatsApp."
+            subtitle="Ready to transform your digital presence? Send us your project details or schedule a direct consultation call."
           />
         </div>
 
         {/* Contact Layout Grid */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-
-            {/* Left Column: Direct Info & WhatsApp VIP Box */}
+            
+            {/* Left Column: Direct Info & Callback Box */}
             <div className="lg:col-span-5 space-y-6">
-
-              {/* WhatsApp VIP Card */}
-              <div className="glass-panel p-6 sm:p-8 rounded-card border-2 border-emerald-500/40 shadow-glass-lg relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-white to-white dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900">
+              
+              {/* Callback Box */}
+              <div className="glass-panel p-6 sm:p-8 rounded-card border-2 border-purple-500/40 shadow-glass-lg relative overflow-hidden bg-gradient-to-br from-purple-500/10 via-white to-white dark:from-purple-950/30 dark:via-slate-900 dark:to-slate-900">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md">
-                    <MessageCircle className="w-6 h-6" />
+                  <div className="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center shadow-md">
+                    <PhoneCall className="w-6 h-6" />
                   </div>
                   <div>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/80 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 bg-purple-100/80 dark:bg-purple-950/80 px-2.5 py-0.5 rounded-full">
                       Fastest Response
                     </span>
                     <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">
-                      Direct WhatsApp Chat
+                      Request a Phone Call
                     </h3>
                   </div>
                 </div>
 
-                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed mb-6">
-                  Skip the back-and-forth emails. Message our senior team directly on WhatsApp to get an immediate project estimate, discuss feature requirements, or request a custom demo showcase.
+                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mb-6 leading-relaxed">
+                  Discuss requirements, pricing estimates, and design specs directly with our founding team.
                 </p>
 
                 <button
-                  onClick={handleDirectWhatsApp}
-                  className="w-full py-3.5 px-6 rounded-btn font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  onClick={() => openCallbackModal()}
+                  className="w-full py-3.5 px-6 rounded-2xl text-xs sm:text-sm font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Start WhatsApp Consultation</span>
+                  <PhoneCall className="w-4 h-4" />
+                  <span>Schedule Consultation Call</span>
                 </button>
-                <p className="text-center text-[10px] sm:text-xs text-slate-400 mt-2">
-                  Average response time: Under 15 minutes (IST).
-                </p>
-
-                {/* Subtle bottom tricolor accent */}
-                <div className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full bg-gradient-to-r from-amber-500/60 via-blue-500/40 to-emerald-500/60" />
               </div>
 
-              {/* Direct Info List Card */}
-              <div className="glass-card p-6 sm:p-8 rounded-card border border-white/95 dark:border-slate-700/80 space-y-6">
-                <h4 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center gap-1.5">
-                  <AshokaChakra size={12} />
-                  <span>Studio Coordinates</span>
-                </h4>
-
-                <div className="space-y-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                  <div className="flex items-start gap-3">
-                    <MessageCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white">Direct WhatsApp</div>
-                      <a
-                        href={`https://wa.me/${getSanitizedWhatsAppNumber()}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-emerald-600 dark:text-emerald-400 hover:underline"
-                      >
-                        {siteConfig.displayWhatsApp || '+91 98765 43210'}
-                      </a>
-                    </div>
+              {/* Email Support Card */}
+              <div className="glass-panel p-6 rounded-card border border-white dark:border-slate-800 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-purple-600 flex items-center justify-center">
+                    <Mail className="w-5 h-5" />
                   </div>
-
-                  <div className="flex items-start gap-3">
-                    <InstagramIcon className="w-5 h-5 text-pink-600 dark:text-pink-400 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white">Official Instagram</div>
-                      <a
-                        href={siteConfig.socialLinks.instagram}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-pink-600 dark:text-pink-400 hover:underline"
-                      >
-                        @{getInstagramUsername()}
-                      </a>
-                    </div>
+                  <div>
+                    <span className="text-xs text-slate-400 font-bold block">Support Email</span>
+                    <span className="text-sm font-extrabold text-slate-900 dark:text-white">{settings.supportEmail}</span>
                   </div>
-
-                  <div className="flex items-start gap-3">
-                    <Phone className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white">Direct Phone</div>
-                      <a href={`tel:${siteConfig.phone.replace(/\s+/g, '')}`} className="hover:text-purple-600 dark:hover:text-purple-400">
-                        {siteConfig.phone}
-                      </a>
-                    </div>
+                </div>
+                <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-amber-600 flex items-center justify-center">
+                    <Clock className="w-5 h-5" />
                   </div>
-
-                  <div className="flex items-start gap-3">
-                    <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white">Email Inquiries</div>
-                      <a href={`mailto:${siteConfig.email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
-                        {siteConfig.email}
-                      </a>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-white">Studio Location</div>
-                      <div>Pan-India Hub & Global Edge Infrastructure</div>
-                    </div>
+                  <div>
+                    <span className="text-xs text-slate-400 font-bold block">Working Hours</span>
+                    <span className="text-sm font-extrabold text-slate-900 dark:text-white">Monday – Saturday: 9 AM to 9 PM IST</span>
                   </div>
                 </div>
               </div>
 
             </div>
 
-            {/* Right Column: Inquiry Form Card */}
+            {/* Right Column: Direct Proposal Form */}
             <div className="lg:col-span-7">
-              <div className="glass-panel p-6 sm:p-10 rounded-hero border border-white dark:border-slate-700/80 shadow-floating relative overflow-hidden">
-                <div className="mb-6">
-                  <span className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-300 flex items-center gap-1.5 mb-1">
-                    <AshokaChakra size={12} />
-                    <span>Project Inquiry Form</span>
-                  </span>
-                  <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                    Tell us about your website vision.
-                  </h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
-                    Submitting this form connects you directly to WhatsApp with your pre-formatted order summary.
-                  </p>
-                </div>
-
-                <form onSubmit={handleFormSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                        Your Name <span className="text-pink-600 dark:text-pink-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        required
-                        placeholder="e.g. Vikram Malhotra"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all"
-                      />
+              <div className="glass-panel p-6 sm:p-10 rounded-card border border-white dark:border-slate-800 shadow-glass-lg relative bg-white/80 dark:bg-slate-900/80">
+                
+                {submitted ? (
+                  <div className="text-center py-10 space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 flex items-center justify-center mx-auto shadow-md">
+                      <CheckCircle2 className="w-9 h-9" />
                     </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                        Business / Brand Name <span className="text-pink-600 dark:text-pink-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="businessName"
-                        required
-                        placeholder="e.g. Royal Organics"
-                        value={formData.businessName}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                        WhatsApp Number <span className="text-pink-600 dark:text-pink-400">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        name="whatsapp"
-                        required
-                        placeholder="e.g. +91 98765 43210"
-                        value={formData.whatsapp}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        placeholder="vikram@royalorganics.in"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                      Project Type
-                    </label>
-                    <select
-                      name="websiteType"
-                      value={formData.websiteType}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white text-base sm:text-sm transition-all"
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white">Inquiry Received! 🎉</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-300 max-w-md mx-auto">
+                      Thank you <strong>{formData.name}</strong>. Your project inquiry has been saved directly to our system. We will contact you at <strong>{formData.phone}</strong>.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setSubmitted(false);
+                        setFormData({
+                          name: '',
+                          businessName: '',
+                          phone: '',
+                          email: '',
+                          websiteType: 'Custom Business Website (from ₹9,999)',
+                          requirements: '',
+                        });
+                      }}
+                      className="px-6 py-2.5 rounded-full text-xs font-bold text-white l2b-gradient-bg shadow-sm"
                     >
-                      <option value="Custom Business Website (from ₹9,999)">Custom Business Website (from ₹9,999 / $399)</option>
-                      <option value="High-Converting Landing Page">High-Converting Landing Page</option>
-                      <option value="Creative Portfolio Website">Creative Portfolio Website</option>
-                      <option value="E-commerce Store">D2C & E-commerce Store</option>
-                      <option value="Ready-Made Demo Customization">Ready-Made Demo Customization (3 - 7 Days)</option>
-                      <option value="Custom Web Application">Custom Web Application</option>
-                    </select>
+                      Submit Another Inquiry
+                    </button>
                   </div>
+                ) : (
+                  <form onSubmit={handleFormSubmit} className="space-y-4">
+                    <div>
+                      <span className="text-xs font-bold text-purple-600 uppercase tracking-wider block mb-1">
+                        Fast-Track Web Inquiry
+                      </span>
+                      <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
+                        Tell Us About Your Project
+                      </h3>
+                    </div>
 
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">
-                      Tell Us About Your Project & Features Needed
-                    </label>
-                    <textarea
-                      name="requirements"
-                      rows="4"
-                      placeholder="Describe your target audience, preferred styles, timeline, GST requirements, or any specific demo you liked..."
-                      value={formData.requirements}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:border-amber-600 focus:ring-2 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-base sm:text-sm transition-all resize-none"
-                    ></textarea>
-                  </div>
+                    {error && (
+                      <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/50 text-red-700 dark:text-red-300 text-xs flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>{error}</span>
+                      </div>
+                    )}
 
-                  <div className="pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Your Name *</label>
+                        <input
+                          type="text"
+                          required
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          placeholder="e.g. Ananya Sen"
+                          className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Business Name</label>
+                        <input
+                          type="text"
+                          name="businessName"
+                          value={formData.businessName}
+                          onChange={handleChange}
+                          placeholder="e.g. Royal Bengal Sweets"
+                          className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Phone Number *</label>
+                        <input
+                          type="tel"
+                          required
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          placeholder="9876543210"
+                          className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Email Address *</label>
+                        <input
+                          type="email"
+                          required
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          placeholder="ananya@brand.com"
+                          className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Website Type / Package</label>
+                      <select
+                        name="websiteType"
+                        value={formData.websiteType}
+                        onChange={handleChange}
+                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
+                      >
+                        <option value="Showcase Demo Customization (from ₹9,999)">Showcase Demo Customization (from ₹9,999 / $399)</option>
+                        <option value="Custom Business Website (from ₹19,999)">Custom Business Website (from ₹19,999)</option>
+                        <option value="E-Commerce Store with Gateway (from ₹34,999)">E-Commerce Store with Gateway (from ₹34,999)</option>
+                        <option value="Enterprise Web App / Custom Software">Enterprise Web App / Custom Software</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Project Requirements / Ideas</label>
+                      <textarea
+                        rows={3}
+                        name="requirements"
+                        value={formData.requirements}
+                        onChange={handleChange}
+                        placeholder="Tell us about the pages you need, reference websites, or special features..."
+                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white resize-none"
+                      />
+                    </div>
+
                     <button
                       type="submit"
-                      className="w-full py-4 px-8 rounded-btn font-bold text-sm sm:text-base text-white l2b-gradient-bg shadow-glass-highlight hover:shadow-xl active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer hover:opacity-95"
+                      disabled={loading}
+                      className="w-full py-3.5 rounded-2xl text-xs sm:text-sm font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-2"
                     >
-                      <MessageCircle className="w-5 h-5" />
-                      <span>Submit & Open WhatsApp Inquiry</span>
-                      <Send className="w-4 h-4 ml-1" />
+                      <Send className="w-4 h-4" />
+                      <span>{loading ? 'Submitting...' : 'Submit Project Inquiry'}</span>
                     </button>
-                    <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-2">
-                      Instant WhatsApp response within 15 minutes during IST business hours.
-                    </p>
-                  </div>
-                </form>
+                  </form>
+                )}
 
-                {/* Subtle bottom tricolor accent */}
-                <div className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full bg-gradient-to-r from-amber-500/60 via-blue-500/40 to-emerald-500/60" />
               </div>
             </div>
 

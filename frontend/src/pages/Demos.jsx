@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Search, Sparkles, Filter, CheckCircle2, ArrowRight } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
@@ -6,23 +6,48 @@ import DemoCard from '../components/demos/DemoCard';
 import { demoCategories, demoWebsites } from '../data/demos';
 import FinalCTA from '../components/home/FinalCTA';
 import AshokaChakra from '../components/common/AshokaChakra';
+import api from '../services/api';
 
 export default function Demos() {
+  const [demosList, setDemosList] = useState(demoWebsites);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    const fetchDemos = async () => {
+      try {
+        const res = await api.get('/demos');
+        if (res.success && Array.isArray(res.demos) && res.demos.length > 0) {
+          // Merge API demos with static demo attributes if needed
+          const merged = res.demos.map((apiDemo) => {
+            const staticMatch = demoWebsites.find((d) => d.slug === apiDemo.slug || d.templateId === apiDemo.templateId);
+            return {
+              ...(staticMatch || {}),
+              ...apiDemo,
+              isPublished: apiDemo.status === 'published' || (apiDemo.status !== 'coming_soon' && apiDemo.isPublished !== false)
+            };
+          });
+          setDemosList(merged);
+        }
+      } catch (err) {
+        console.warn('Using default demo dataset fallback:', err);
+      }
+    };
+    fetchDemos();
+  }, []);
+
   const filteredDemos = useMemo(() => {
-    return demoWebsites.filter((demo) => {
+    return demosList.filter((demo) => {
       const matchesCategory = activeCategory === 'All' || demo.category === activeCategory;
       const matchesSearch =
-        demo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        demo.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        demo.shortDescription.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        demo.idealFor.toLowerCase().includes(searchQuery.toLowerCase());
+        demo.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        demo.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        demo.shortDescription?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (demo.idealFor && demo.idealFor.toLowerCase().includes(searchQuery.toLowerCase()));
 
       return matchesCategory && matchesSearch;
     });
-  }, [activeCategory, searchQuery]);
+  }, [demosList, activeCategory, searchQuery]);
 
   return (
     <>

@@ -1,0 +1,13 @@
+[
+  {
+    "_id": "admin_master_001",
+    "name": "LOCAL2BRAND Master Admin",
+    "email": "admin@local2brand.com",
+    "passwordHash": "$2b$10$yL68oDGY.nVJK2DpdDq.Ru3eop5DTBH4Rmyjv8jWlemh00gkZMF1W",
+    "role": "admin",
+    "phone": "+91 98765 43210",
+    "company": "LOCAL2BRAND HQ",
+    "status": "active",
+    "createdAt": "2026-08-31T06:57:02.503Z"
+  }
+]

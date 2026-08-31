@@ -1,10 +1,9 @@
 import React from 'react';
-import { X, Sparkles, MessageCircle, ArrowRight, Lock, Clock, CheckCircle2 } from 'lucide-react';
+import { X, Sparkles, PhoneCall, ArrowRight, Lock, Clock, CheckCircle2 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
-import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
 
 export default function ComingSoonModal({ isOpen, onClose, planName = 'Pricing Plan' }) {
-  const { openOrderModal } = useOrderModal();
+  const { openOrderModal, openCallbackModal } = useOrderModal();
 
   if (!isOpen) return null;
 
@@ -16,12 +15,9 @@ export default function ComingSoonModal({ isOpen, onClose, planName = 'Pricing P
     });
   };
 
-  const handleWhatsAppChat = () => {
+  const handleCallbackClick = () => {
     onClose();
-    const text = `⚡ *EARLY BIRD PRICING INQUIRY - LOCAL2BRAND*\n\n` +
-      `I'm interested in the *${planName}* package.\n` +
-      `Since official pricing packages are in final review, I'd like to get an early-bird quotation for my business.`;
-    openWhatsAppChat(generateWhatsAppGeneralUrl(text));
+    openCallbackModal({ topic: `Early Bird Inquiry for ${planName}` });
   };
 
   return (
@@ -79,11 +75,11 @@ export default function ComingSoonModal({ isOpen, onClose, planName = 'Pricing P
           </button>
 
           <button
-            onClick={handleWhatsAppChat}
-            className="w-full py-3 px-6 rounded-2xl font-bold text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200/90 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            onClick={handleCallbackClick}
+            className="w-full py-3 px-6 rounded-2xl font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <MessageCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Chat on WhatsApp for Early Quote</span>
+            <PhoneCall className="w-4 h-4 text-purple-600" />
+            <span>Request a Callback for Early Quote</span>
           </button>
         </div>
 

@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "notif_1788160017007",
+    "title": "New Callback Request",
+    "message": "Soham Test Caller requested a call at +91 9064971842 (⚡ ASAP (Within 30 mins during business hours))",
+    "type": "callback",
+    "link": "/admin/callbacks",
+    "isRead": false,
+    "createdAt": "2026-08-31T07:06:57.007Z"
+  },
+  {
+    "_id": "notif_1788159937224",
+    "title": "New Project Proposal Inquiry",
+    "message": "Soham Test Client requested a quote for E-Commerce Store (Showcase) (₹20,000 - ₹39,999)",
+    "type": "lead",
+    "link": "/admin/leads",
+    "isRead": false,
+    "createdAt": "2026-08-31T07:05:37.224Z"
+  }
+]

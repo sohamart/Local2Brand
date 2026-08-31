@@ -1,0 +1,67 @@
+[
+  {
+    "_id": "requ_1788161022191_rxijm",
+    "websiteType": "restaurant",
+    "websiteTypeName": "Restaurant / Fine Dining",
+    "clientInfo": {
+      "businessName": "The Royal Nawabi Biryani",
+      "ownerName": "Kabir Khan",
+      "mobile": "+91 9830012345",
+      "email": "kabir@nawabibiryani.in",
+      "city": "Kolkata, West Bengal - 700017",
+      "hasLogo": "yes",
+      "contentReady": "yes"
+    },
+    "selectedPages": [
+      "Home Page",
+      "Food Menu",
+      "Online Table Reservation",
+      "Photo Gallery",
+      "Google Map Integration"
+    ],
+    "selectedFeatures": [
+      "Online Food Ordering",
+      "Online Table Reservation",
+      "UPI & Razorpay Payment"
+    ],
+    "paymentMethods": [
+      "Razorpay",
+      "UPI (GPay / PhonePe)",
+      "Cash on Delivery"
+    ],
+    "orderMethods": [
+      "Website",
+      "WhatsApp",
+      "Phone Call"
+    ],
+    "adminFeatures": [
+      "Menu Management",
+      "Order Management",
+      "Table Reservations",
+      "Analytics"
+    ],
+    "adminPanelType": "Full Admin Panel",
+    "whatsappIntegration": true,
+    "whatsappOptions": [
+      "WhatsApp Floating Button",
+      "WhatsApp Enquiries",
+      "Automated Notifications"
+    ],
+    "emailIntegration": true,
+    "emailOptions": [
+      "Order Confirmation Emails",
+      "Admin Alert Emails"
+    ],
+    "designStyle": "Modern Glassmorphic",
+    "budget": "₹25,000 – ₹50,000",
+    "timeline": "⚡ Express (48 - 72 Hours)",
+    "additionalNotes": "Need live table booking calendar and dynamic menu items",
+    "requirementId": "REQ-2026-45281",
+    "status": "Submitted",
+    "user": null,
+    "ipAddress": "::1",
+    "createdAt": "2026-08-31T07:23:42.191Z",
+    "updatedAt": "2026-08-31T07:23:42.202Z",
+    "submittedAt": "2026-08-31T07:23:42.200Z"
+  }
+]

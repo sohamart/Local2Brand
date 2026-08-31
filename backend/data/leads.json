@@ -1,0 +1,26 @@
+[
+  {
+    "_id": "lead_1788159937223_k5zik",
+    "name": "Soham Test Client",
+    "email": "client@local2brand.com",
+    "phone": "+91 9876543210",
+    "businessName": "Royal Bengal Jewels",
+    "websiteType": "E-Commerce Store (Showcase)",
+    "selectedDemo": "",
+    "selectedServices": [],
+    "selectedFeatures": [],
+    "industry": "Jewellery Atelier",
+    "themePreference": "Modern Glassmorphic",
+    "budget": "₹20,000 - ₹39,999",
+    "timeline": "⚡ Express (48 - 72 Hours)",
+    "requirements": "Need gold rate ticker and booking flow",
+    "couponCode": "",
+    "discountPercent": 0,
+    "estimatedPrice": "",
+    "user": null,
+    "ipAddress": "::1",
+    "status": "pending",
+    "adminNotes": "",
+    "createdAt": "2026-08-31T07:05:37.223Z"
+  }
+]

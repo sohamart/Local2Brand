@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function CustomCursor() {
   const dotRef = useRef(null);
@@ -48,10 +49,11 @@ export default function CustomCursor() {
       animationFrameId = requestAnimationFrame(render);
     };
 
-    // Detect clickable element hovers
+    // Detect clickable element hovers across the entire DOM tree
     const handleElementHover = (e) => {
       const target = e.target;
-      const isClickable = target.closest('a, button, input, select, textarea, [role="button"], .glass-card, .cursor-pointer');
+      if (!target || typeof target.closest !== 'function') return;
+      const isClickable = target.closest('a, button, input, select, textarea, [role="button"], .glass-card, .cursor-pointer, [tabindex="0"]');
       setIsHovered(!!isClickable);
     };
 
@@ -71,9 +73,11 @@ export default function CustomCursor() {
     };
   }, [isVisible]);
 
-  return (
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <div
-      className={`pointer-events-none fixed inset-0 z-50 transition-opacity duration-300 hidden lg:block ${
+      className={`pointer-events-none fixed inset-0 z-[2147483647] transition-opacity duration-300 hidden lg:block ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
       aria-hidden="true"
@@ -81,10 +85,10 @@ export default function CustomCursor() {
       {/* Precision Center Dot */}
       <div
         ref={dotRef}
-        className={`fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform duration-75 ease-out ${
+        className={`pointer-events-none fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform duration-75 ease-out z-[2147483647] ${
           isHovered
-            ? 'w-1.5 h-1.5 bg-purple-600 dark:bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]'
-            : 'w-2 h-2 bg-slate-900 dark:bg-white shadow-xs'
+            ? 'w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 shadow-[0_0_12px_rgba(236,72,153,0.9)]'
+            : 'w-2 h-2 bg-purple-600 dark:bg-cyan-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]'
         }`}
         style={{ willChange: 'transform' }}
       />
@@ -92,13 +96,14 @@ export default function CustomCursor() {
       {/* Smooth Trailing Liquid Glass Ring */}
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 rounded-full border transition-all duration-300 ease-out ${
+        className={`pointer-events-none fixed top-0 left-0 rounded-full border transition-all duration-300 ease-out z-[2147483647] ${
           isHovered
-            ? 'w-12 h-12 bg-purple-500/10 dark:bg-purple-500/20 border-purple-500/50 dark:border-purple-400/60 backdrop-blur-[2px] scale-110 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
-            : 'w-8 h-8 bg-slate-900/[0.04] dark:bg-white/[0.06] border-slate-900/20 dark:border-white/30'
+            ? 'w-14 h-14 bg-purple-500/15 dark:bg-purple-500/25 border-purple-500/70 dark:border-pink-400/80 backdrop-blur-[2px] scale-110 shadow-[0_0_20px_rgba(168,85,247,0.4)]'
+            : 'w-9 h-9 bg-purple-500/5 dark:bg-cyan-500/10 border-purple-500/30 dark:border-cyan-400/40'
         }`}
         style={{ willChange: 'transform' }}
       />
-    </div>
+    </div>,
+    document.body
   );
 }
