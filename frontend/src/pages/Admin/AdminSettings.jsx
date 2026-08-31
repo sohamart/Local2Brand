@@ -132,20 +132,37 @@ export default function AdminSettings() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setLoading(true);
     setSuccessMessage('');
     setErrorMessage('');
+    const toastId = toast.loading('Saving and synchronizing site customizations... ⏳');
 
     try {
       const res = await api.put('/settings', formData);
-      if (res.success) {
+      if (res.success && res.settings) {
         setSuccessMessage('Site customizations updated & synced live across the frontend!');
         refreshSettings();
+        localStorage.setItem('l2b_cached_settings', JSON.stringify(res.settings));
+        toast.update(toastId, {
+          render: 'Site customizations saved & live synchronized! 🚀',
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000,
+        });
         setTimeout(() => setSuccessMessage(''), 4000);
+      } else {
+        throw new Error(res?.message || 'Update failed');
       }
     } catch (err) {
+      console.error('Settings update error:', err);
       setErrorMessage(err.message || 'Error updating settings');
+      toast.update(toastId, {
+        render: 'Failed to sync settings: ' + err.message,
+        type: 'error',
+        isLoading: false,
+        autoClose: 4000,
+      });
     } finally {
       setLoading(false);
     }
@@ -469,7 +486,39 @@ export default function AdminSettings() {
             </div>
           </div>
 
+          {/* Bottom Primary Save Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 rounded-2xl font-black text-sm text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 transition-all"
+            >
+              <Save className="w-4 h-4" />
+              <span>{loading ? 'Saving & Syncing All Customizations...' : 'Save & Publish All Customizations Live 🚀'}</span>
+            </button>
+          </div>
+
         </form>
+
+        {/* Floating / Sticky Bottom Action Bar */}
+        <div className="sticky bottom-4 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-3 sm:p-4 rounded-2xl border-2 border-purple-500/40 shadow-2xl flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              Live Customizer Active
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="px-6 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50 transition-all hover:scale-102"
+          >
+            <Save className="w-3.5 h-3.5" />
+            <span>{loading ? 'Saving...' : 'Save Changes'}</span>
+          </button>
+        </div>
 
       </div>
     </>
