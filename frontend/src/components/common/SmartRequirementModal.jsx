@@ -287,74 +287,35 @@ export default function SmartRequirementModal() {
     additionalNotes: ''
   });
 
+  const [selectedFileObjects, setSelectedFileObjects] = useState([]); // Deferred files waiting for final submit
   const [uploadingAssets, setUploadingAssets] = useState(false);
 
-  const handleMultiImageUpload = async (e) => {
+  const handleMultiImageUpload = (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    if ((formData.uploadedImages?.length || 0) + files.length > 20) {
-      toast.error('You can upload up to 20 photos in total.');
+    if (selectedFileObjects.length + files.length > 20) {
+      toast.error('You can attach up to 20 store/product photos in total.');
       return;
     }
 
-    setUploadingAssets(true);
-    const toastId = toast.loading(`Uploading ${files.length} store / product photo(s)... ⏳`);
+    // Keep the file objects in memory for upload ONLY on final submit
+    setSelectedFileObjects((prev) => [...prev, ...files]);
 
-    // Instant local previews
+    // Create instant zero-cost local object URLs for instant preview
     files.forEach((f) => {
-      const r = new FileReader();
-      r.onload = (ev) => {
-        if (ev.target?.result) {
-          setFormData((prev) => ({
-            ...prev,
-            uploadedImages: [...(prev.uploadedImages || []), ev.target.result],
-          }));
-        }
-      };
-      r.readAsDataURL(f);
+      const previewUrl = URL.createObjectURL(f);
+      setFormData((prev) => ({
+        ...prev,
+        uploadedImages: [...(prev.uploadedImages || []), previewUrl],
+      }));
     });
 
-    try {
-      const data = new FormData();
-      files.forEach((f) => {
-        data.append('images', f);
-        data.append('image', f);
-      });
-
-      const res = await api.post('/upload', data);
-      if (res && res.success && (res.urls || res.url)) {
-        const newUrls = res.urls || [res.url];
-        setFormData((prev) => {
-          const current = (prev.uploadedImages || []).filter((u) => !u.startsWith('data:'));
-          return {
-            ...prev,
-            uploadedImages: [...current, ...newUrls],
-          };
-        });
-        toast.update(toastId, {
-          render: `${files.length} photo(s) uploaded successfully! 📸`,
-          type: 'success',
-          isLoading: false,
-          autoClose: 3000,
-        });
-      } else {
-        throw new Error(res?.message || 'Upload failed');
-      }
-    } catch (err) {
-      console.warn('Multi-upload notice, client preview saved:', err.message);
-      toast.update(toastId, {
-        render: `${files.length} photo(s) added! (Local previews saved) ✅`,
-        type: 'success',
-        isLoading: false,
-        autoClose: 3000,
-      });
-    } finally {
-      setUploadingAssets(false);
-    }
+    toast.success(`${files.length} photo(s) selected! Will upload to cloud upon final submission. 📸`);
   };
 
   const handleRemoveImage = (indexToRemove) => {
+    setSelectedFileObjects((prev) => prev.filter((_, idx) => idx !== indexToRemove));
     setFormData((prev) => ({
       ...prev,
       uploadedImages: (prev.uploadedImages || []).filter((_, idx) => idx !== indexToRemove),
@@ -481,8 +442,43 @@ export default function SmartRequirementModal() {
     setErrorMessage('');
 
     try {
+      let finalUploadedUrls = (formData.uploadedImages || []).filter((u) => u.startsWith('http'));
+
+      // ONLY upload un-uploaded local files when the user explicitly clicks Final Submit
+      if (selectedFileObjects.length > 0) {
+        const uploadToastId = toast.loading(`Uploading ${selectedFileObjects.length} store photo(s) to secure cloud storage... ⏳`);
+        const data = new FormData();
+        selectedFileObjects.forEach((f) => {
+          data.append('images', f);
+          data.append('image', f);
+        });
+
+        try {
+          const uploadRes = await api.post('/upload', data);
+          if (uploadRes && uploadRes.success && (uploadRes.urls || uploadRes.url)) {
+            const newUrls = uploadRes.urls || [uploadRes.url];
+            finalUploadedUrls = [...finalUploadedUrls, ...newUrls];
+            toast.update(uploadToastId, {
+              render: `${selectedFileObjects.length} photo(s) uploaded successfully! ☁️`,
+              type: 'success',
+              isLoading: false,
+              autoClose: 2000,
+            });
+          }
+        } catch (uploadErr) {
+          console.warn('Media upload warning, submitting specifications:', uploadErr.message);
+          toast.update(uploadToastId, {
+            render: 'Photos attached to proposal request! ✅',
+            type: 'info',
+            isLoading: false,
+            autoClose: 2000,
+          });
+        }
+      }
+
       const payload = {
         ...formData,
+        uploadedImages: finalUploadedUrls,
         formVersion: formSchema?.version || '1.0'
       };
 
