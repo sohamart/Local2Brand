@@ -13,8 +13,12 @@ import {
   Clock,
   Shield,
   Layers,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Bot,
+  Brain,
+  MessageSquare
 } from 'lucide-react';
+
 import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
@@ -51,7 +55,20 @@ export default function AdminSettings() {
       title: 'Transform Your Local Business Into A Global Brand',
       subtitle: 'World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale.'
     },
-    bannerImage: settings.bannerImage || ''
+    bannerImage: settings.bannerImage || '',
+    aiSettings: settings.aiSettings || {
+      enabled: true,
+      customInstructions: 'Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount.',
+      businessKnowledge: 'LOCAL2BRAND builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.',
+      adminShowableDetails: {
+        founderName: 'LOCAL2BRAND Founders & Core Team',
+        contactPhone: '+91 98765 43210',
+        contactEmail: 'contact@local2brand.com',
+        officeLocation: 'Kolkata & Bangalore, India',
+        workingHours: 'Monday - Saturday: 10:00 AM - 8:00 PM IST',
+        whatsappSupport: '+91 98765 43210',
+      },
+    },
   });
 
   const [loading, setLoading] = useState(false);
@@ -64,6 +81,19 @@ export default function AdminSettings() {
       setFormData((prev) => ({
         ...prev,
         ...settings,
+        aiSettings: {
+          enabled: settings.aiSettings?.enabled ?? true,
+          customInstructions: settings.aiSettings?.customInstructions || '',
+          businessKnowledge: settings.aiSettings?.businessKnowledge || '',
+          adminShowableDetails: {
+            founderName: settings.aiSettings?.adminShowableDetails?.founderName || '',
+            contactPhone: settings.aiSettings?.adminShowableDetails?.contactPhone || '',
+            contactEmail: settings.aiSettings?.adminShowableDetails?.contactEmail || '',
+            officeLocation: settings.aiSettings?.adminShowableDetails?.officeLocation || '',
+            workingHours: settings.aiSettings?.adminShowableDetails?.workingHours || '',
+            whatsappSupport: settings.aiSettings?.adminShowableDetails?.whatsappSupport || '',
+          },
+        },
       }));
     }
   }, [settings]);
@@ -81,6 +111,20 @@ export default function AdminSettings() {
       },
     }));
   };
+
+  const handleAiAdminDetailsChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      aiSettings: {
+        ...(prev.aiSettings || {}),
+        adminShowableDetails: {
+          ...(prev.aiSettings?.adminShowableDetails || {}),
+          [field]: value,
+        },
+      },
+    }));
+  };
+
 
   const handleBannerUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -519,6 +563,173 @@ export default function AdminSettings() {
               </div>
             </div>
           </div>
+
+          {/* Section 7: AI Assistant Knowledge Base & Showable Details */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
+                <Bot className="w-4 h-4" />
+                <span>AI Assistant Knowledge Base & Brand Details</span>
+              </h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.aiSettings?.enabled ?? true}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      aiSettings: { ...(prev.aiSettings || {}), enabled: e.target.checked },
+                    }))
+                  }
+                  className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  AI Chatbot Active
+                </span>
+              </label>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 text-xs text-purple-900 dark:text-purple-200 space-y-1">
+              <div className="font-bold flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                <span>Smart Context & Privacy Architecture</span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                The AI dynamically knows the currently logged-in user's name, company, and email to provide personalized support. Private admin passwords, API keys, and database tokens are completely isolated and never exposed.
+              </p>
+            </div>
+
+            {/* Business Knowledge Textarea */}
+            <div>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center gap-1.5">
+                <Brain className="w-3.5 h-3.5 text-purple-600" />
+                <span>Custom Business Knowledge & Facts (What AI should know about your business)</span>
+              </label>
+              <textarea
+                rows={4}
+                value={formData.aiSettings?.businessKnowledge || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    aiSettings: { ...(prev.aiSettings || {}), businessKnowledge: e.target.value },
+                  }))
+                }
+                placeholder="Enter custom details, service packages, turnaround time, refund policies, FAQs, tech stack advantages, and business USPs..."
+                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
+              />
+              <span className="text-[10px] text-slate-400 block mt-1">
+                The AI will use this knowledge base to answer client inquiries accurately.
+              </span>
+            </div>
+
+            {/* Custom AI Instructions */}
+            <div>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Custom AI Directives & Response Tone</span>
+              </label>
+              <textarea
+                rows={3}
+                value={formData.aiSettings?.customInstructions || ''}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    aiSettings: { ...(prev.aiSettings || {}), customInstructions: e.target.value },
+                  }))
+                }
+                placeholder="e.g. Always be warm and polite. Encourage clients to book 48h demo templates. Recommend coupon code INDIA2025 for 20% discount..."
+                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
+              />
+            </div>
+
+            {/* Showable Brand & Admin Details Grid */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">
+                Official Showable Details (Shareable by AI with Users)
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Leadership / Team Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.aiSettings?.adminShowableDetails?.founderName || ''}
+                    onChange={(e) => handleAiAdminDetailsChange('founderName', e.target.value)}
+                    placeholder="LOCAL2BRAND Founders & Core Team"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Public Contact Phone
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.aiSettings?.adminShowableDetails?.contactPhone || ''}
+                    onChange={(e) => handleAiAdminDetailsChange('contactPhone', e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Public WhatsApp Support Number
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.aiSettings?.adminShowableDetails?.whatsappSupport || ''}
+                    onChange={(e) => handleAiAdminDetailsChange('whatsappSupport', e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Public Support Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.aiSettings?.adminShowableDetails?.contactEmail || ''}
+                    onChange={(e) => handleAiAdminDetailsChange('contactEmail', e.target.value)}
+                    placeholder="contact@local2brand.com"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Office / Operating Location
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.aiSettings?.adminShowableDetails?.officeLocation || ''}
+                    onChange={(e) => handleAiAdminDetailsChange('officeLocation', e.target.value)}
+                    placeholder="Kolkata & Bangalore Hubs, India"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Support Working Hours
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.aiSettings?.adminShowableDetails?.workingHours || ''}
+                    onChange={(e) => handleAiAdminDetailsChange('workingHours', e.target.value)}
+                    placeholder="Monday - Saturday: 10:00 AM - 8:00 PM IST"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
 
           {/* Bottom Primary Save Button */}
           <div className="pt-2">

@@ -1,0 +1,51 @@
+[
+  {
+    "_id": "chat_1788195242599_coera",
+    "sessionId": "test_1788195242142",
+    "user": null,
+    "title": "New Conversation",
+    "messages": [],
+    "ip": "::1",
+    "userAgent": "node",
+    "lastActiveAt": "2026-08-31T16:54:02.640Z",
+    "createdAt": "2026-08-31T16:54:02.599Z",
+    "updatedAt": "2026-08-31T16:54:02.599Z"
+  },
+  {
+    "_id": "chat_1788195323219_p73tu",
+    "sessionId": "sess_1788195169586_agh7t14",
+    "user": null,
+    "title": "New Conversation",
+    "messages": [],
+    "ip": "",
+    "userAgent": "",
+    "lastActiveAt": "2026-08-31T16:55:23.219Z",
+    "createdAt": "2026-08-31T16:55:23.219Z",
+    "updatedAt": "2026-08-31T16:55:23.219Z"
+  },
+  {
+    "_id": "chat_1788195852531_g0bri",
+    "sessionId": "test_session_verify_123",
+    "user": null,
+    "title": "New Conversation",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Hello, what is your website starting price and turnaround time?",
+        "timestamp": "2026-08-31T17:04:14.843Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Thank you for reaching out to **LOCAL2BRAND**! 🚀\n\nI am currently experiencing higher-than-normal traffic, but our team is standing by to assist you immediately:\n\n- ⚡ **48-Hour Websites**: Demo templates start at **₹9,999 / $399**.\n- 🎁 **Launch Offer**: Use code **INDIA2025** for **20% OFF** + Free SSL & Domain.\n- 📞 **Instant Callback**: Click the **Call Request** button above and our founders will connect with you in under 15 minutes!",
+        "provider": "LOCAL2BRAND Fallback Engine",
+        "model": "built-in-resilience",
+        "timestamp": "2026-08-31T17:04:14.843Z"
+      }
+    ],
+    "ip": "::1",
+    "userAgent": "node",
+    "lastActiveAt": "2026-08-31T17:04:14.843Z",
+    "createdAt": "2026-08-31T17:04:12.531Z",
+    "updatedAt": "2026-08-31T17:04:12.531Z"
+  }
+]

@@ -31,9 +31,22 @@
       "badge": ""
     },
     "bannerImage": "",
-    "updatedAt": "2026-08-31T11:33:11.649Z",
+    "updatedAt": "2026-08-31T17:13:50.664Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
-    "updatedBy": "6a9551f5ef178dc4ce9260cf"
+    "updatedBy": "6a9551f5ef178dc4ce9260cf",
+    "aiSettings": {
+      "enabled": true,
+      "customInstructions": "",
+      "businessKnowledge": "",
+      "adminShowableDetails": {
+        "founderName": "",
+        "contactPhone": "",
+        "contactEmail": "",
+        "officeLocation": "",
+        "workingHours": "",
+        "whatsappSupport": ""
+      }
+    }
   }
 ]

@@ -1,0 +1,74 @@
+[
+  {
+    "_id": "rev_seed_1",
+    "userName": "Vikram Malhotra",
+    "userRole": "Founder & Executive Chef",
+    "businessName": "Komorebi Rooftop Dining",
+    "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop",
+    "rating": 5,
+    "comment": "LOCAL2BRAND took our dining concept and created a website that looks like it belongs in Tokyo or New York. The direct WhatsApp reservation system alone increased our weekend bookings by over 200%. Incredible turnaround time.",
+    "status": "approved",
+    "isFeatured": true,
+    "createdAt": "2026-08-28T16:52:03.345Z"
+  },
+  {
+    "_id": "rev_seed_2",
+    "userName": "Sarah Jenkins",
+    "userRole": "Creative Director",
+    "businessName": "Solis Architectural Studio",
+    "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=300&auto=format&fit=crop",
+    "rating": 5,
+    "comment": "The liquid-glass aesthetic and smooth page physics are truly Apple-grade. We pitched three international real estate developers last month and all three complimented our website before discussing the project proposal.",
+    "status": "approved",
+    "isFeatured": true,
+    "createdAt": "2026-08-24T16:52:03.345Z"
+  },
+  {
+    "_id": "rev_seed_3",
+    "userName": "Arjun Singhania",
+    "userRole": "Managing Director",
+    "businessName": "Elysian Prime Estates",
+    "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop",
+    "rating": 5,
+    "comment": "We customized the Real Estate demo in less than 4 days. Our sales team receives pre-qualified buyer inquiries straight on WhatsApp with the specific villa and budget already filled in. It is effortless.",
+    "status": "approved",
+    "isFeatured": true,
+    "createdAt": "2026-08-19T16:52:03.345Z"
+  },
+  {
+    "_id": "rev_seed_4",
+    "userName": "Pooja Hegde",
+    "userRole": "Head of Operations",
+    "businessName": "Aura Luxe Salon & Spa",
+    "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=300&auto=format&fit=crop",
+    "rating": 5,
+    "comment": "Clients constantly tell us how easy it is to browse our salon treatments on mobile and click to book their stylist. Our average order ticket increased significantly because people see all our premium packages clearly.",
+    "status": "approved",
+    "isFeatured": false,
+    "createdAt": "2026-08-13T16:52:03.345Z"
+  },
+  {
+    "_id": "rev_seed_5",
+    "userName": "Marcus Vance",
+    "userRole": "Co-founder & CEO",
+    "businessName": "Pulse Tech Labs",
+    "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300&auto=format&fit=crop",
+    "rating": 5,
+    "comment": "From our first conversation on WhatsApp to launch was remarkably smooth. No endless meetings, just crisp execution, breathtaking UI, and 99 PageSpeed performance out of the box.",
+    "status": "approved",
+    "isFeatured": false,
+    "createdAt": "2026-08-06T16:52:03.345Z"
+  },
+  {
+    "_id": "rev_seed_6",
+    "userName": "Rohan Deshmukh",
+    "userRole": "Gym Owner & Head Trainer",
+    "businessName": "IronForge Elite Fitness",
+    "avatar": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=300&auto=format&fit=crop",
+    "rating": 5,
+    "comment": "Got our full gym site live with membership calculator and class schedules in just 3 days! Already signed up 45+ new annual members this month.",
+    "status": "approved",
+    "isFeatured": false,
+    "createdAt": "2026-08-01T16:52:03.345Z"
+  }
+]

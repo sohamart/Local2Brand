@@ -34,7 +34,9 @@ export const updateSettings = async (req, res) => {
       'heroConfig',
       'announcementBar',
       'bannerImage',
+      'aiSettings',
     ];
+
 
     const updates = {};
     fields.forEach((f) => {

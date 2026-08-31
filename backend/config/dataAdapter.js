@@ -47,7 +47,21 @@ const DEFAULT_SETTINGS = {
     link: '/pricing',
   },
   bannerImage: '',
+  aiSettings: {
+    enabled: true,
+    customInstructions: 'Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount.',
+    businessKnowledge: 'LOCAL2BRAND builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.',
+    adminShowableDetails: {
+      founderName: 'LOCAL2BRAND Founders & Core Team',
+      contactPhone: '+91 98765 43210',
+      contactEmail: 'contact@local2brand.com',
+      officeLocation: 'Kolkata & Bangalore, India',
+      workingHours: 'Monday - Saturday: 10:00 AM - 8:00 PM IST',
+      whatsappSupport: '+91 98765 43210',
+    },
+  },
 };
+
 
 // Generic Data Manager
 export const dataStore = {
@@ -471,4 +485,126 @@ export const dataStore = {
       }
     }
   },
+
+  // --- Chatbot Session Management ---
+  async getOrCreateChatSession(sessionId, userId = null, meta = {}) {
+    if (!sessionId) {
+      sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    }
+
+    if (isDbConnected()) {
+      const { ChatSession } = await import('../models/ChatSession.js');
+      let session = await ChatSession.findOne({ sessionId });
+      if (!session) {
+        session = await ChatSession.create({
+          sessionId,
+          user: userId || null,
+          messages: [],
+          ip: meta.ip || '',
+          userAgent: meta.userAgent || '',
+          lastActiveAt: new Date(),
+        });
+      } else if (userId && !session.user) {
+        session.user = userId;
+        await session.save();
+      }
+      return session;
+    }
+
+    const sessions = readLocalStore('chat_sessions');
+    let session = sessions.find((s) => s.sessionId === sessionId);
+    if (!session) {
+      session = {
+        _id: `chat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        sessionId,
+        user: userId || null,
+        title: 'New Conversation',
+        messages: [],
+        ip: meta.ip || '',
+        userAgent: meta.userAgent || '',
+        lastActiveAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      sessions.push(session);
+      writeLocalStore('chat_sessions', sessions);
+    } else if (userId && !session.user) {
+      session.user = userId;
+      writeLocalStore('chat_sessions', sessions);
+    }
+    return session;
+  },
+
+  async appendChatMessages(sessionId, newMessages = []) {
+    if (!sessionId || !newMessages.length) return null;
+
+    if (isDbConnected()) {
+      const { ChatSession } = await import('../models/ChatSession.js');
+      const updated = await ChatSession.findOneAndUpdate(
+        { sessionId },
+        {
+          $push: { messages: { $each: newMessages } },
+          $set: { lastActiveAt: new Date() },
+        },
+        { new: true, upsert: true }
+      );
+      return updated;
+    }
+
+    const sessions = readLocalStore('chat_sessions');
+    let session = sessions.find((s) => s.sessionId === sessionId);
+    if (!session) {
+      session = {
+        _id: `chat_${Date.now()}`,
+        sessionId,
+        messages: [],
+        lastActiveAt: new Date().toISOString(),
+      };
+      sessions.push(session);
+    }
+    session.messages.push(...newMessages);
+    session.lastActiveAt = new Date().toISOString();
+    writeLocalStore('chat_sessions', sessions);
+    return session;
+  },
+
+  async clearChatSession(sessionId) {
+    if (!sessionId) return false;
+
+    if (isDbConnected()) {
+      const { ChatSession } = await import('../models/ChatSession.js');
+      await ChatSession.findOneAndUpdate(
+        { sessionId },
+        { $set: { messages: [], lastActiveAt: new Date() } }
+      );
+      return true;
+    }
+
+    const sessions = readLocalStore('chat_sessions');
+    const index = sessions.findIndex((s) => s.sessionId === sessionId);
+    if (index !== -1) {
+      sessions[index].messages = [];
+      sessions[index].lastActiveAt = new Date().toISOString();
+      writeLocalStore('chat_sessions', sessions);
+    }
+    return true;
+  },
+
+  async getServices() {
+    if (isDbConnected()) {
+      const { Service } = await import('../models/Service.js');
+      return await Service.find().sort({ order: 1 });
+    }
+    return readLocalStore('services');
+  },
+
+  async getDemos() {
+    if (isDbConnected()) {
+      const { PortfolioDemo } = await import('../models/PortfolioDemo.js');
+      return await PortfolioDemo.find().sort({ order: 1 });
+    }
+    return readLocalStore('demos');
+  },
 };
+
+

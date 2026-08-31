@@ -1,6 +1,15 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Ensure reliable SRV DNS resolution on Windows & restricted networks
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1']);
+} catch (e) {
+  // Ignored if custom DNS is not permitted
+}
 
 // Prevent Mongoose from throwing unhandled error events on failed background retries
+
 mongoose.connection.on('error', (err) => {
   // Gracefully handle connection error events without crashing the process
 });

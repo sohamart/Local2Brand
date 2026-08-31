@@ -73,10 +73,30 @@ const siteSettingsSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    aiSettings: {
+      enabled: { type: Boolean, default: true },
+      customInstructions: {
+        type: String,
+        default: 'Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount.',
+      },
+      businessKnowledge: {
+        type: String,
+        default: 'LOCAL2BRAND builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.',
+      },
+      adminShowableDetails: {
+        founderName: { type: String, default: 'LOCAL2BRAND Founders & Core Team' },
+        contactPhone: { type: String, default: '+91 98765 43210' },
+        contactEmail: { type: String, default: 'contact@local2brand.com' },
+        officeLocation: { type: String, default: 'Kolkata & Bangalore, India' },
+        workingHours: { type: String, default: 'Monday - Saturday: 10:00 AM - 8:00 PM IST' },
+        whatsappSupport: { type: String, default: '+91 98765 43210' },
+      },
+    },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
+
   },
   {
     timestamps: true,

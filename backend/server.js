@@ -31,6 +31,7 @@ import demoRoutes from './routes/demos.js';
 import formRoutes from './routes/forms.js';
 import requirementRoutes from './routes/requirements.js';
 import reviewRoutes from './routes/reviews.js';
+import chatRoutes from './routes/chat.js';
 
 dotenv.config();
 
@@ -136,6 +137,7 @@ app.get('/', (req, res) => {
       demos: '/api/demos',
       requirements: '/api/requirements',
       callbacks: '/api/callbacks',
+      chat: '/api/chat',
     },
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'production',
@@ -163,6 +165,8 @@ app.use('/api/demos', demoRoutes);
 app.use('/api/forms', formRoutes);
 app.use('/api/requirements', requirementRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/chat', chatRoutes);
+
 
 // Global 404 Handler
 app.use((req, res, next) => {
