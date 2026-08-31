@@ -241,15 +241,15 @@ export default function Navbar() {
                     className="flex items-center gap-2 py-1 pl-1.5 pr-2.5 rounded-full bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-purple-400 dark:hover:border-purple-600 transition-all cursor-pointer shadow-xs"
                     aria-expanded={userDropdownOpen}
                   >
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm overflow-hidden">
-                      {user.avatar ? (
-                        <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm overflow-hidden border border-white/40 dark:border-slate-700">
+                      {user?.avatar ? (
+                        <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                       ) : (
-                        user.name?.[0]?.toUpperCase() || 'U'
+                        user?.name?.[0]?.toUpperCase() || 'U'
                       )}
                     </div>
-                    <span className="max-w-[70px] truncate text-xs font-bold text-slate-800 dark:text-slate-200">
-                      {user.name.split(' ')[0]}
+                    <span className="max-w-[80px] truncate text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {user?.name ? user.name.split(' ')[0] : 'User'}
                     </span>
                     <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -429,11 +429,11 @@ export default function Navbar() {
                 {user ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-xs overflow-hidden">
-                        {user.avatar ? (
-                          <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 text-white flex items-center justify-center font-black text-base shadow-md overflow-hidden border-2 border-white/60 dark:border-slate-700 shrink-0">
+                        {user?.avatar ? (
+                          <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
                         ) : (
-                          user.name?.[0]?.toUpperCase() || 'U'
+                          user?.name?.[0]?.toUpperCase() || 'U'
                         )}
                       </div>
                       <div className="min-w-0">
