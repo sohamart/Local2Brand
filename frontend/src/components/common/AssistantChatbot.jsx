@@ -15,6 +15,10 @@ import {
   MessageCircle,
   ChevronRight,
   ShieldCheck,
+  Tag,
+  Clock,
+  Code2,
+  Flame,
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
@@ -22,11 +26,66 @@ import api from '../../services/api';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import AshokaChakra from './AshokaChakra';
 
-const QUICK_SUGGESTIONS = [
-  'How much does a website cost in India?',
-  'Can you launch my website in 48 hours?',
-  'What discount offer is available with code INDIA2025?',
-  'How does the custom website design process work?',
+const PREMIUM_SUGGESTION_CATEGORIES = [
+  { id: 'all', label: '🔥 All Questions' },
+  { id: 'pricing', label: '💰 Pricing & Deals' },
+  { id: 'delivery', label: '⚡ 48h Delivery' },
+  { id: 'custom', label: '💎 Custom Builds' },
+];
+
+const PREMIUM_QUESTIONS = [
+  {
+    category: 'delivery',
+    icon: '⚡',
+    title: 'Can you deliver my website in 48 hours?',
+    subtitle: 'How the rapid marketplace template launch works',
+    prompt: 'Can you really build and launch my website in 48 hours? What is the process?',
+    badge: '48H LAUNCH',
+    badgeColor: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+  },
+  {
+    category: 'pricing',
+    icon: '💰',
+    title: 'What are your website packages & pricing?',
+    subtitle: 'Showcase templates from ₹9,999 / $399 & bespoke builds',
+    prompt: 'What are your website packages, starting prices in India, and what is included?',
+    badge: '₹9,999 START',
+    badgeColor: 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+  },
+  {
+    category: 'pricing',
+    icon: '🎁',
+    title: 'How do I claim 20% discount with INDIA2025?',
+    subtitle: 'Instant 20% OFF + Free SSL & custom domain setup',
+    prompt: 'How can I claim the INDIA2025 (20% OFF) discount code + Free SSL and domain?',
+    badge: '20% OFF CODE',
+    badgeColor: 'bg-pink-50 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border-pink-200 dark:border-pink-800',
+  },
+  {
+    category: 'custom',
+    icon: '💎',
+    title: 'Custom E-Commerce & Web Application',
+    subtitle: 'Bespoke UI/UX, SaaS portals & WhatsApp lead capture',
+    prompt: 'Tell me about your custom bespoke web application and e-commerce development services.',
+    badge: 'ENTERPRISE',
+    badgeColor: 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+  },
+  {
+    category: 'delivery',
+    icon: '📞',
+    title: 'Request an Instant 15-Minute Callback',
+    subtitle: 'Connect directly with senior engineers & founders',
+    prompt: 'I want to schedule a quick 15-minute consultation callback with your founders.',
+    badge: 'INSTANT CALL',
+    badgeColor: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+  },
+];
+
+const FOLLOWUP_QUICK_CHIPS = [
+  '⚡ 48h website timeline',
+  '🎁 Claim 20% discount',
+  '💰 Pricing & packages',
+  '📞 15-min call request',
 ];
 
 export default function AssistantChatbot() {
@@ -38,6 +97,7 @@ export default function AssistantChatbot() {
   const [sessionId, setSessionId] = useState('');
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -74,7 +134,7 @@ export default function AssistantChatbot() {
             setMessages([
               {
                 role: 'assistant',
-                content: `### 👋 Welcome to ${settings.brandName || 'LOCAL2BRAND'} AI Assistant\n\nI am your dedicated digital solutions consultant. How can I help launch or grow your brand today?\n\n* **🚀 48-Hour Websites:** Ready templates starting from **₹9,999 / $399**\n* **🎁 20% Launch Discount:** Use promo code \`INDIA2025\`\n* **💎 Bespoke Builds:** Custom web apps, e-commerce & WhatsApp lead automation\n\nFeel free to ask any question or tap a suggestion below!`,
+                content: `### 👋 Welcome to ${settings.brandName || 'LOCAL2BRAND'} AI Assistant\n\nI am your dedicated digital solutions consultant. How can I help launch or grow your brand today?\n\n* **🚀 48-Hour Websites:** Ready templates starting from **₹9,999 / $399**\n* **🎁 20% Launch Discount:** Use promo code \`INDIA2025\`\n* **💎 Bespoke Builds:** Custom web apps, e-commerce & WhatsApp lead automation\n\nTap any suggested question below or type your inquiry!`,
                 timestamp: new Date().toISOString(),
                 provider: 'L2B AI Engine',
               },
@@ -289,6 +349,10 @@ export default function AssistantChatbot() {
     return <div className="space-y-1">{elements}</div>;
   };
 
+  const filteredQuestions = activeCategory === 'all'
+    ? PREMIUM_QUESTIONS
+    : PREMIUM_QUESTIONS.filter((q) => q.category === activeCategory);
+
   return (
     <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-[99999]">
       {/* Floating Launcher Button */}
@@ -298,7 +362,7 @@ export default function AssistantChatbot() {
             onClick={() => setIsOpen(true)}
             className="hidden sm:flex items-center gap-2.5 mr-3 px-4 py-2 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-purple-200/80 dark:border-purple-800/80 shadow-glass-highlight text-xs font-bold text-slate-800 dark:text-slate-100 cursor-pointer animate-float"
           >
-            <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
             <span className="flex items-center gap-1.5">
               <span>Chat with</span>
               <span className="l2b-gradient-text font-black">L2B AI</span>
@@ -348,10 +412,6 @@ export default function AssistantChatbot() {
             )}
           </div>
         </button>
-
-
-
-
       </div>
 
       {/* Glassmorphic Drawer Window */}
@@ -359,7 +419,7 @@ export default function AssistantChatbot() {
         <div
           data-lenis-prevent="true"
           onWheel={(e) => e.stopPropagation()}
-          className="absolute bottom-16 sm:bottom-18 right-0 w-[92vw] sm:w-[410px] h-[580px] max-h-[85vh] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-white/90 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-200 z-[99999] pointer-events-auto"
+          className="absolute bottom-16 sm:bottom-18 right-0 w-[92vw] sm:w-[420px] h-[600px] max-h-[85vh] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl border border-white/90 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-200 z-[99999] pointer-events-auto"
         >
           {/* Header */}
           <div className="p-3.5 sm:p-4 bg-gradient-to-r from-purple-600/15 via-pink-600/15 to-indigo-600/15 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
@@ -505,21 +565,83 @@ export default function AssistantChatbot() {
               </div>
             )}
 
-            {/* Starter Suggestion Chips (show when few messages exist) */}
+            {/* PREMIUM SUGGESTED QUESTIONS SYSTEM */}
             {messages.length <= 2 && !isTyping && (
-              <div className="pt-2 space-y-1.5">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Suggested Prompts
+              <div className="pt-2 space-y-2.5">
+                <div className="flex items-center justify-between px-0.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <span>Frequently Asked Questions</span>
+                  </div>
+                  <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
+                    1-Tap Ask
+                  </span>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  {QUICK_SUGGESTIONS.map((suggestion, i) => (
+
+                {/* Category Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                  {PREMIUM_SUGGESTION_CATEGORIES.map((cat) => (
                     <button
-                      key={i}
-                      onClick={() => handleSendMessage(suggestion)}
-                      className="w-full text-left p-2.5 rounded-xl bg-white dark:bg-slate-800/70 hover:bg-purple-50 dark:hover:bg-purple-950/40 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium text-[11px] transition-all flex items-center justify-between group cursor-pointer shadow-xs"
+                      key={cat.id}
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 transition-all cursor-pointer ${
+                        activeCategory === cat.id
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
                     >
-                      <span>{suggestion}</span>
-                      <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all" />
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Question Cards Grid */}
+                <div className="space-y-2">
+                  {filteredQuestions.map((q, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => handleSendMessage(q.prompt)}
+                      className="p-3 rounded-2xl bg-white/95 dark:bg-slate-800/80 hover:bg-purple-50/80 dark:hover:bg-purple-950/40 border border-slate-200/90 dark:border-slate-700/80 hover:border-purple-400/80 dark:hover:border-purple-600/80 shadow-xs hover:shadow-md transition-all cursor-pointer group flex items-start justify-between gap-2.5 transform active:scale-[0.99]"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span className="text-base select-none mt-0.5">{q.icon}</span>
+                        <div className="space-y-0.5">
+                          <div className="font-bold text-xs text-slate-900 dark:text-white group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors leading-tight">
+                            {q.title}
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                            {q.subtitle}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border tracking-wider uppercase ${q.badgeColor}`}>
+                          {q.badge}
+                        </span>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all mt-0.5" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Smart Follow-up Chips after conversation has started */}
+            {messages.length > 2 && !isTyping && (
+              <div className="pt-2">
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 px-0.5">
+                  Suggested Follow-ups
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {FOLLOWUP_QUICK_CHIPS.map((chip, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSendMessage(chip)}
+                      className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950/50 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-300 font-semibold text-[11px] transition-all cursor-pointer shadow-2xs hover:scale-102 flex items-center gap-1"
+                    >
+                      <span>{chip}</span>
+                      <ArrowRight className="w-3 h-3 opacity-60" />
                     </button>
                   ))}
                 </div>
@@ -557,7 +679,7 @@ export default function AssistantChatbot() {
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Ask anything (e.g. pricing, 48h launch)..."
+                  placeholder="Ask anything (e.g. pricing, 48h launch, custom)..."
                   disabled={isTyping}
                   className="w-full pl-3.5 pr-8 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-60 font-medium"
                 />
