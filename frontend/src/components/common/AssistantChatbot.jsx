@@ -414,15 +414,16 @@ export default function AssistantChatbot() {
         </button>
       </div>
 
-      {/* Glassmorphic Drawer Window with Glowing Emerald Border */}
+      {/* Glassmorphic Drawer Window with Animated Thin Moving Border */}
       {isOpen && (
         <div
           data-lenis-prevent="true"
           onWheel={(e) => e.stopPropagation()}
-          className="absolute bottom-16 sm:bottom-18 right-0 w-[92vw] sm:w-[420px] h-[600px] max-h-[85vh] bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-3xl border-2 border-emerald-500/80 dark:border-emerald-400/80 shadow-[0_0_35px_rgba(16,185,129,0.35)] dark:shadow-[0_0_45px_rgba(16,185,129,0.45)] overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 duration-200 z-[99999] pointer-events-auto"
+          className="absolute bottom-16 sm:bottom-18 right-0 w-[92vw] sm:w-[420px] h-[600px] max-h-[85vh] p-[1.5px] rounded-3xl moving-emerald-border shadow-2xl shadow-emerald-500/25 dark:shadow-emerald-500/35 animate-in slide-in-from-bottom-5 duration-200 z-[99999] pointer-events-auto"
         >
-          {/* Header */}
-          <div className="p-3.5 sm:p-4 bg-gradient-to-r from-purple-600/15 via-pink-600/15 to-indigo-600/15 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+          <div className="w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[22.5px] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-purple-600/15 via-pink-600/15 to-indigo-600/15 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl l2b-gradient-bg text-white flex items-center justify-center font-bold text-sm shadow-md">
                   <Sparkles className="w-4.5 h-4.5" />
@@ -707,6 +708,7 @@ export default function AssistantChatbot() {
             </div>
           </div>
         </div>
+      </div>
       )}
     </div>
   );

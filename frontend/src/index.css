@@ -857,3 +857,22 @@ html[data-theme="dark"] body {
 .animate-spin-conic {
   animation: spinConic 3.5s linear infinite;
 }
+
+/* Animated Moving Thin Border */
+@keyframes movingBorderGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.moving-emerald-border {
+  background: linear-gradient(135deg, #059669, #10b981, #34d399, #6ee7b7, #10b981, #059669);
+  background-size: 350% 350%;
+  animation: movingBorderGradient 3.5s ease infinite;
+}
