@@ -153,6 +153,15 @@ const CATEGORY_SPECS = {
       { id: 'specialties', label: 'Faculty Credentials & Past Toppers', type: 'textarea', placeholder: 'e.g. IITian Faculty, Top 100 AIR rankers in NEET 2025' }
     ]
   },
+  lms: {
+    title: 'SkillCraft LMS & Online Course Platform Specifications',
+    cuisines: ['Full-Stack Web Development', 'Data Science & AI', 'Business & Marketing', 'Video Course Creator', 'Test Prep & Gate/JEE', 'Corporate Training'],
+    fields: [
+      { id: 'courseDelivery', label: 'Course Mode & Infrastructure', type: 'multiselect', options: ['Self-Paced Video Course Player', 'Live Online Classes', 'Quiz Engine & Certificates', 'Downloadable PDF Notes'] },
+      { id: 'admissionFunnel', label: 'Student Enrollment Funnel', type: 'select', options: ['1-Click Instant Course Checkout', 'Free Demo Class Registration', 'WhatsApp Student Counseling'] },
+      { id: 'specialties', label: 'Curriculum Highlights & Instructor Bio', type: 'textarea', placeholder: 'e.g. 50+ hours video lessons, code playground, Discord community access' }
+    ]
+  },
   clinic: {
     title: 'Clinic & Doctor Practice Specifications',
     cuisines: ['Dental & Orthodontics', 'Dermatology & Skin', 'General Medicine', 'Pediatrics & Child Care', 'Cardiology & Diagnostics', 'Physiotherapy & Eye Care'],
@@ -363,63 +372,80 @@ export default function SmartRequirementModal() {
     fetchSchema();
   }, []);
 
-  // Sync inquiryData from trigger (e.g. Demos page Pre-Order / Get Website)
-  useEffect(() => {
-    if (isInquiryOpen && inquiryData) {
-      if (inquiryData.websiteType || inquiryData.selectedDemo) {
-        const matched = dbDemos.find(
-          (d) => d.slug === inquiryData.templateId || d.title === inquiryData.selectedDemo || d._id === inquiryData.templateId
-        );
-        setFormData((prev) => ({
-          ...prev,
-          websiteType: inquiryData.templateId || matched?.slug || prev.websiteType,
-          websiteTypeName: inquiryData.websiteType || matched?.title || prev.websiteTypeName,
-          additionalNotes: inquiryData.initialRequirements
-            ? `${prev.additionalNotes ? prev.additionalNotes + '\n' : ''}${inquiryData.initialRequirements}`
-            : prev.additionalNotes
-        }));
-      }
-    }
-  }, [isInquiryOpen, inquiryData, dbDemos]);
-
-  // 2. Autosave Restore & Initialize
+  // 2. Initialize and Synchronize Pre-Order / Selected Template Data
   useEffect(() => {
     if (isInquiryOpen) {
       setSubmittedData(null);
       setErrorMessage('');
 
-      // Check localStorage for autosaved draft
-      const savedDraft = localStorage.getItem('l2b_smart_form_autosave');
-      if (savedDraft) {
-        try {
-          const parsed = JSON.parse(savedDraft);
-          setFormData((prev) => ({
-            ...prev,
-            ...parsed,
-            clientInfo: {
-              ...prev.clientInfo,
-              ...parsed.clientInfo,
-              ownerName: user?.name || parsed.clientInfo?.ownerName || '',
-              email: user?.email || parsed.clientInfo?.email || '',
-              mobile: user?.phone || parsed.clientInfo?.mobile || ''
-            }
-          }));
-        } catch (e) {
-          console.error(e);
-        }
-      } else if (user) {
+      if (inquiryData && (inquiryData.websiteType || inquiryData.selectedDemo || inquiryData.templateId)) {
+        // Priority 1: User explicitly clicked "Get Website" or "Pre-Order" on a Demo
+        const matched = dbDemos.find(
+          (d) =>
+            d.slug === inquiryData.templateId ||
+            d._id === inquiryData.templateId ||
+            (inquiryData.selectedDemo && d.title?.toLowerCase() === inquiryData.selectedDemo?.toLowerCase()) ||
+            d.slug === inquiryData.selectedDemo
+        );
+
+        const chosenSlug = matched?.slug || inquiryData.templateId || 'restaurant';
+        const chosenTitle = matched?.title || inquiryData.selectedDemo || inquiryData.websiteType || 'Website Template';
+        const chosenFeatures = matched?.features ? matched.features.join(', ') : '';
+
         setFormData((prev) => ({
           ...prev,
+          websiteType: chosenSlug,
+          websiteTypeName: chosenTitle,
+          designStyle: matched ? `Inspired by ${matched.title} (${matched.category})` : prev.designStyle,
+          budget: matched ? (matched.priceInr || matched.price || prev.budget) : prev.budget,
+          timeline: matched ? (matched.turnaround || '⚡ Express Delivery (48 - 72 Hours)') : prev.timeline,
+          referenceUrls: matched?.liveUrl || prev.referenceUrls,
+          businessDetails: {
+            ...prev.businessDetails,
+            specialties: chosenFeatures || prev.businessDetails?.specialties || ''
+          },
+          additionalNotes: inquiryData.initialRequirements || (matched ? `Pre-order specifications for "${matched.title}".` : ''),
           clientInfo: {
             ...prev.clientInfo,
-            ownerName: user.name || '',
-            email: user.email || '',
-            mobile: user.phone || ''
+            ownerName: user?.name || prev.clientInfo?.ownerName || '',
+            email: user?.email || prev.clientInfo?.email || '',
+            mobile: user?.phone || prev.clientInfo?.mobile || ''
           }
         }));
+      } else {
+        // Priority 2: Restore from autosaved draft if available
+        const savedDraft = localStorage.getItem('l2b_smart_form_autosave');
+        if (savedDraft) {
+          try {
+            const parsed = JSON.parse(savedDraft);
+            setFormData((prev) => ({
+              ...prev,
+              ...parsed,
+              clientInfo: {
+                ...prev.clientInfo,
+                ...parsed.clientInfo,
+                ownerName: user?.name || parsed.clientInfo?.ownerName || '',
+                email: user?.email || parsed.clientInfo?.email || '',
+                mobile: user?.phone || parsed.clientInfo?.mobile || ''
+              }
+            }));
+          } catch (e) {
+            console.error(e);
+          }
+        } else if (user) {
+          setFormData((prev) => ({
+            ...prev,
+            clientInfo: {
+              ...prev.clientInfo,
+              ownerName: user.name || '',
+              email: user.email || '',
+              mobile: user.phone || ''
+            }
+          }));
+        }
       }
     }
-  }, [isInquiryOpen, user]);
+  }, [isInquiryOpen, inquiryData, dbDemos, user]);
 
   // 3. Periodic Autosave
   useEffect(() => {
@@ -451,7 +477,12 @@ export default function SmartRequirementModal() {
   ];
 
   const currentStep = STEPS[currentStepIndex] || STEPS[0];
-  const activeCategorySpec = CATEGORY_SPECS[formData.websiteType] || CATEGORY_SPECS.custom;
+  const matchedDbDemo = dbDemos.find((d) => d.slug === formData.websiteType || d._id === formData.websiteType);
+  const activeCategorySpec =
+    CATEGORY_SPECS[formData.websiteType] ||
+    CATEGORY_SPECS[formData.websiteType?.replace(/-/g, '_')] ||
+    CATEGORY_SPECS[matchedDbDemo?.category?.toLowerCase()] ||
+    CATEGORY_SPECS.custom;
 
   const handleNext = () => {
     // Validate Step 2 Client info
