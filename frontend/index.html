@@ -1,7 +1,32 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth" data-theme="light">
+<html lang="en" class="scroll-smooth">
 
 <head>
+  <!-- Instant Zero-FOUC Theme Initializer (Prevents Light Mode Blink on Refresh) -->
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('l2b_theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'dark');
+        var root = document.documentElement;
+        if (theme === 'dark') {
+          root.classList.add('dark');
+          root.classList.remove('light');
+          root.setAttribute('data-theme', 'dark');
+          root.style.colorScheme = 'dark';
+          root.style.backgroundColor = '#07090e';
+        } else {
+          root.classList.add('light');
+          root.classList.remove('dark');
+          root.setAttribute('data-theme', 'light');
+          root.style.colorScheme = 'light';
+          root.style.backgroundColor = '#ffffff';
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Character Encoding & Viewport -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />

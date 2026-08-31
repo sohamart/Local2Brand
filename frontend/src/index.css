@@ -628,8 +628,20 @@ html[data-theme="dark"] body {
 .Toastify__toast-container {
   width: auto !important;
   max-width: 90vw !important;
-  padding: 8px !important;
+  padding: 12px !important;
   z-index: 2147483647 !important;
+}
+
+/* Mobile-Centric Floating Waterdrop Positioning */
+@media (max-width: 640px) {
+  .Toastify__toast-container {
+    width: 100% !important;
+    max-width: 360px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    top: 14px !important;
+    padding: 0 14px !important;
+  }
 }
 
 /* Waterdrop Floating Capsule */
@@ -637,23 +649,32 @@ html[data-theme="dark"] body {
   border-radius: 9999px !important;
   overflow: hidden !important; /* Prevents progress bar from spilling outside the capsule */
   position: relative !important;
-  padding: 7px 14px 7px 12px !important;
-  min-height: 38px !important;
-  max-width: 330px !important;
+  padding: 8px 16px 8px 14px !important;
+  min-height: 42px !important;
+  max-width: 350px !important;
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif !important;
-  font-size: 11.5px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   letter-spacing: -0.01em !important;
   line-height: 1.35 !important;
   margin-bottom: 8px !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
   
-  /* Ultra-Transparent Liquid Glass Blur */
-  backdrop-filter: blur(32px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(200%) !important;
+  /* Ultra-Intense Liquid Glass Blur & Saturation */
+  backdrop-filter: blur(40px) saturate(240%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(240%) !important;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@media (max-width: 640px) {
+  .Toastify__toast {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto 8px auto !important;
+    box-sizing: border-box !important;
+  }
 }
 
 .Toastify__toast:hover {
@@ -665,11 +686,13 @@ html[data-theme="dark"] body {
   margin: 0 !important;
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
 }
 
 .Toastify__toast-icon {
-  width: 16px !important;
+  width: 18px !important;
   margin-right: 4px !important;
   flex-shrink: 0 !important;
 }
@@ -680,79 +703,79 @@ html[data-theme="dark"] body {
 .dark .Toastify__toast,
 .Toastify__toast-theme--dark,
 .Toastify__toast-theme--colored {
-  background: rgba(10, 15, 30, 0.48) !important;
+  background: rgba(10, 15, 30, 0.65) !important;
   color: #f8fafc !important;
-  box-shadow: 0 12px 35px -4px rgba(0, 0, 0, 0.45),
-              0 1.5px 2px 0 rgba(255, 255, 255, 0.25) inset,
-              0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
+  box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.5),
+              0 1.5px 3px 0 rgba(255, 255, 255, 0.3) inset,
+              0 0 0 1px rgba(255, 255, 255, 0.18) inset !important;
 }
 
 /* 2. Light Mode: Pure Crystal Frosted Waterdrop */
 :not(.dark) .Toastify__toast,
 :not(.dark) .Toastify__toast-theme--colored,
 :not(.dark) .Toastify__toast-theme--light {
-  background: rgba(255, 255, 255, 0.45) !important;
+  background: rgba(255, 255, 255, 0.7) !important;
   color: #0f172a !important;
-  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08),
-              0 1.5px 2.5px 0 rgba(255, 255, 255, 0.95) inset,
-              0 0 0 1px rgba(255, 255, 255, 0.6) inset !important;
+  box-shadow: 0 12px 35px -4px rgba(15, 23, 42, 0.12),
+              0 1.5px 3px 0 rgba(255, 255, 255, 0.95) inset,
+              0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
 }
 
 /* --- COLOR ACCENT WATERDROPS --- */
 
 /* SUCCESS: Mint Waterdrop */
 .Toastify__toast--success {
-  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+  border: 1px solid rgba(16, 185, 129, 0.45) !important;
 }
 .dark .Toastify__toast--success {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 78, 59, 0.25) 100%),
-              rgba(10, 15, 30, 0.5) !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(6, 78, 59, 0.35) 100%),
+              rgba(10, 15, 30, 0.65) !important;
 }
 :not(.dark) .Toastify__toast--success {
-  background: linear-gradient(135deg, rgba(236, 253, 245, 0.6) 0%, rgba(209, 250, 229, 0.5) 100%),
-              rgba(255, 255, 255, 0.45) !important;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.8) 0%, rgba(209, 250, 229, 0.7) 100%),
+              rgba(255, 255, 255, 0.65) !important;
   color: #065f46 !important;
 }
 
 /* ERROR: Crimson Waterdrop */
 .Toastify__toast--error {
-  border: 1px solid rgba(244, 63, 94, 0.4) !important;
+  border: 1px solid rgba(244, 63, 94, 0.45) !important;
 }
 .dark .Toastify__toast--error {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.12) 0%, rgba(136, 19, 55, 0.25) 100%),
-              rgba(10, 15, 30, 0.5) !important;
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.18) 0%, rgba(136, 19, 55, 0.35) 100%),
+              rgba(10, 15, 30, 0.65) !important;
 }
 :not(.dark) .Toastify__toast--error {
-  background: linear-gradient(135deg, rgba(255, 241, 242, 0.6) 0%, rgba(255, 228, 230, 0.5) 100%),
-              rgba(255, 255, 255, 0.45) !important;
+  background: linear-gradient(135deg, rgba(255, 241, 242, 0.8) 0%, rgba(255, 228, 230, 0.7) 100%),
+              rgba(255, 255, 255, 0.65) !important;
   color: #9f1239 !important;
 }
 
 /* INFO: Violet / Cyan Waterdrop */
 .Toastify__toast--info {
-  border: 1px solid rgba(168, 85, 247, 0.4) !important;
+  border: 1px solid rgba(168, 85, 247, 0.45) !important;
 }
 .dark .Toastify__toast--info {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(88, 28, 135, 0.25) 100%),
-              rgba(10, 15, 30, 0.5) !important;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.18) 0%, rgba(88, 28, 135, 0.35) 100%),
+              rgba(10, 15, 30, 0.65) !important;
 }
 :not(.dark) .Toastify__toast--info {
-  background: linear-gradient(135deg, rgba(245, 243, 255, 0.6) 0%, rgba(237, 233, 254, 0.5) 100%),
-              rgba(255, 255, 255, 0.45) !important;
+  background: linear-gradient(135deg, rgba(245, 243, 255, 0.8) 0%, rgba(237, 233, 254, 0.7) 100%),
+              rgba(255, 255, 255, 0.65) !important;
   color: #581c87 !important;
 }
 
 /* WARNING: Amber Waterdrop */
 .Toastify__toast--warning {
-  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
 }
 .dark .Toastify__toast--warning {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(120, 53, 15, 0.25) 100%),
-              rgba(10, 15, 30, 0.5) !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(120, 53, 15, 0.35) 100%),
+              rgba(10, 15, 30, 0.65) !important;
 }
 :not(.dark) .Toastify__toast--warning {
-  background: linear-gradient(135deg, rgba(254, 252, 232, 0.6) 0%, rgba(254, 243, 199, 0.5) 100%),
-              rgba(255, 255, 255, 0.45) !important;
+  background: linear-gradient(135deg, rgba(254, 252, 232, 0.8) 0%, rgba(254, 243, 199, 0.7) 100%),
+              rgba(255, 255, 255, 0.65) !important;
   color: #854d0e !important;
 }
 
@@ -760,7 +783,7 @@ html[data-theme="dark"] body {
 .Toastify__close-button {
   margin-left: 4px !important;
   color: currentColor !important;
-  opacity: 0.55 !important;
+  opacity: 0.6 !important;
   transform: scale(0.85) !important;
   transition: all 0.2s ease !important;
 }
@@ -771,12 +794,12 @@ html[data-theme="dark"] body {
 
 /* Progress Bar Locked Inside Waterdrop Capsule */
 .Toastify__progress-bar {
-  height: 2px !important;
+  height: 2.5px !important;
   bottom: 0px !important;
   left: 0px !important;
   right: 0px !important;
   width: 100% !important;
-  opacity: 0.75 !important;
+  opacity: 0.8 !important;
 }
 
 .Toastify__progress-bar--success {
