@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Star,
@@ -31,6 +32,7 @@ export default function WriteReviewModal({
   initialData = null, // for editing existing review
 }) {
   const { user, openAuthModal } = useAuth();
+  const [mounted, setMounted] = useState(false);
 
   const [rating, setRating] = useState(initialData?.rating || 5);
   const [hoverRating, setHoverRating] = useState(0);
@@ -39,6 +41,10 @@ export default function WriteReviewModal({
   const [userRole, setUserRole] = useState('');
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (initialData) {
@@ -74,7 +80,7 @@ export default function WriteReviewModal({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -117,20 +123,20 @@ export default function WriteReviewModal({
     }
   };
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-[9999999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-2xl animate-fade-in overflow-y-auto"
+      className="fixed inset-0 z-[2147483640] flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-2xl animate-fade-in overflow-y-auto"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg max-h-[92vh] sm:max-h-[88vh] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden my-auto"
+        className="relative w-full max-w-lg max-h-[90vh] sm:max-h-[86vh] rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden my-auto"
       >
         {/* Header Ribbon (Sticky Top) */}
         <div className="p-4 sm:p-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white relative shrink-0">
           <button
             onClick={onClose}
-            className="absolute top-3.5 right-3.5 p-2 sm:p-2.5 rounded-full bg-black/25 hover:bg-black/50 text-white transition-all cursor-pointer z-10"
+            className="absolute top-3.5 right-3.5 p-2 sm:p-2.5 rounded-full bg-black/25 hover:bg-black/50 text-white transition-all cursor-pointer z-20"
             aria-label="Close review modal"
           >
             <X className="w-4 h-4" />
@@ -305,4 +311,6 @@ export default function WriteReviewModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
