@@ -125,43 +125,44 @@ export default function UserDashboard() {
     <>
       <SEO title="Client Portal & Projects — LOCAL2BRAND" description="Manage your website specifications, track quotes, and view development status." />
 
-      <div className="pt-24 sm:pt-28 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Welcome Top Banner */}
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white dark:border-slate-800 shadow-glass mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white/70 dark:bg-slate-900/70">
-          <div className="flex items-center gap-4">
-            <div className="relative group">
-              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center font-black text-2xl shadow-md border-2 border-white dark:border-slate-700">
+        <div className="glass-panel p-5 sm:p-8 rounded-3xl border border-white dark:border-slate-800 shadow-glass mb-8 flex flex-col md:flex-row items-center md:items-center justify-between gap-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-5 w-full md:w-auto">
+            <div className="relative group shrink-0">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-md border-2 border-white dark:border-slate-700">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={user?.name} className="w-full h-full object-cover" />
                 ) : (
                   user?.name?.[0]?.toUpperCase() || 'U'
                 )}
               </div>
-              <label className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-slate-900 text-white cursor-pointer hover:bg-purple-600 transition-colors shadow-md">
-                <Upload className="w-3 h-3" />
+              <label className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-slate-900 text-white cursor-pointer hover:bg-purple-600 transition-colors shadow-md" title="Upload Photo">
+                <Upload className="w-3.5 h-3.5" />
                 <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
               </label>
             </div>
 
-            <div>
-              <div className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-200/80 dark:border-amber-500/40">
                 <AshokaChakra size={11} />
                 <span>Verified Client Account</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 Welcome, {user?.name || 'Client'}! 👋
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate max-w-xs sm:max-w-md">
                 {user?.email} • {user?.company || 'Local Business'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 w-full md:w-auto">
+          {/* Quick Action CTAs */}
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto">
             <button
               onClick={() => openOrderModal({ websiteType: 'New Project Proposal' })}
-              className="flex-1 md:flex-initial px-5 py-2.5 rounded-full text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto px-5 py-3 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
             >
               <Zap className="w-4 h-4" />
               <span>Start New Website</span>
@@ -169,49 +170,49 @@ export default function UserDashboard() {
 
             <button
               onClick={() => openCallbackModal()}
-              className="flex-1 md:flex-initial px-4 py-2.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto px-4 py-3 rounded-2xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
             >
               <PhoneCall className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Request Call</span>
+              <span>Request Callback</span>
             </button>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto">
+        {/* Tab Navigation Segmented Bar */}
+        <div className="flex items-center gap-2 mb-6 p-1.5 bg-slate-200/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('requirements')}
-            className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'requirements'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-sm border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Layers className="w-4 h-4" />
-            <span>Website Specifications ({requirements.length})</span>
+            <Layers className="w-4 h-4 text-purple-500" />
+            <span>Specifications ({requirements.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('callbacks')}
-            className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'callbacks'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-sm border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <PhoneCall className="w-4 h-4" />
-            <span>Callback Requests ({callbacks.length})</span>
+            <PhoneCall className="w-4 h-4 text-emerald-500" />
+            <span>Callbacks ({callbacks.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('profile')}
-            className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'profile'
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                ? 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-sm border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <User className="w-4 h-4" />
+            <User className="w-4 h-4 text-pink-500" />
             <span>Profile & Settings</span>
           </button>
         </div>
@@ -220,15 +221,15 @@ export default function UserDashboard() {
         {activeTab === 'requirements' && (
           <div className="space-y-4">
             {requirements.length === 0 ? (
-              <div className="glass-panel p-10 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
+              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
                 <Layers className="w-12 h-12 text-purple-500 mx-auto animate-pulse" />
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No website requirements submitted yet</h3>
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No website specifications yet</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Configure your 12-step intelligent website specifications with dynamic questions, payment setup & instant quotes.
+                  Submit your custom website requirements, pick features, select turnaround time & get instant proposals.
                 </p>
                 <button
                   onClick={() => openOrderModal()}
-                  className="px-6 py-2.5 rounded-full text-xs font-bold text-white l2b-gradient-bg shadow-md cursor-pointer"
+                  className="px-6 py-3 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-md cursor-pointer"
                 >
                   Launch Requirement Wizard
                 </button>
@@ -238,20 +239,20 @@ export default function UserDashboard() {
                 {requirements.map((req) => (
                   <div
                     key={req._id}
-                    className="glass-panel p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass space-y-4 bg-white/80 dark:bg-slate-900/80 hover:border-purple-400 transition-all"
+                    className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass space-y-4 bg-white/80 dark:bg-slate-900/80 hover:border-purple-400 transition-all"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <span className="font-mono text-[10px] font-bold text-purple-600 dark:text-purple-400 block">
                           {req.requirementId}
                         </span>
-                        <h3 className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5">
+                        <h3 className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5 break-words">
                           {req.clientInfo?.businessName || req.websiteTypeName}
                         </h3>
                         <p className="text-xs text-slate-500">{req.websiteTypeName || req.websiteType}</p>
                       </div>
 
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${STATUS_BADGES[req.status] || STATUS_BADGES.Submitted}`}>
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${STATUS_BADGES[req.status] || STATUS_BADGES.Submitted}`}>
                         {req.status || 'Submitted'}
                       </span>
                     </div>
@@ -285,7 +286,7 @@ export default function UserDashboard() {
                     )}
 
                     <div className="text-[11px] text-slate-400 flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800">
-                      <span>Submitted on {new Date(req.createdAt).toLocaleDateString()}</span>
+                      <span>Submitted: {new Date(req.createdAt).toLocaleDateString()}</span>
                       <span className="font-semibold text-purple-600">Active Workflow</span>
                     </div>
                   </div>
@@ -299,7 +300,7 @@ export default function UserDashboard() {
         {activeTab === 'callbacks' && (
           <div className="space-y-4">
             {callbacks.length === 0 ? (
-              <div className="glass-panel p-10 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
+              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
                 <PhoneCall className="w-12 h-12 text-emerald-500 mx-auto" />
                 <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No callbacks requested</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
@@ -307,7 +308,7 @@ export default function UserDashboard() {
                 </p>
                 <button
                   onClick={() => openCallbackModal()}
-                  className="px-6 py-2.5 rounded-full text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer"
+                  className="px-6 py-3 rounded-2xl text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer"
                 >
                   Schedule Callback
                 </button>
@@ -317,7 +318,7 @@ export default function UserDashboard() {
                 {callbacks.map((cb) => (
                   <div
                     key={cb._id}
-                    className="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-glass space-y-2 bg-white/70 dark:bg-slate-900/70"
+                    className="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-glass space-y-2 bg-white/80 dark:bg-slate-900/80"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
@@ -342,11 +343,11 @@ export default function UserDashboard() {
 
         {/* TAB 3: PROFILE */}
         {activeTab === 'profile' && (
-          <div className="max-w-2xl glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass bg-white/80 dark:bg-slate-900/80 space-y-4">
+          <div className="max-w-2xl glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass bg-white/80 dark:bg-slate-900/80 space-y-5">
             <h3 className="text-lg font-black text-slate-900 dark:text-white">Profile & Brand Settings</h3>
 
             {saveSuccess && (
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
+              <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Profile updated successfully!</span>
               </div>
@@ -359,7 +360,7 @@ export default function UserDashboard() {
                   type="text"
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-900 dark:text-white"
+                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-900 dark:text-white text-sm"
                 />
               </div>
 
@@ -369,7 +370,7 @@ export default function UserDashboard() {
                   type="email"
                   disabled
                   value={user?.email || ''}
-                  className="w-full p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-400 cursor-not-allowed"
+                  className="w-full p-3 rounded-2xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-400 cursor-not-allowed text-sm"
                 />
               </div>
 
@@ -380,7 +381,7 @@ export default function UserDashboard() {
                   value={profilePhone}
                   onChange={(e) => setProfilePhone(e.target.value)}
                   placeholder="+91 98765 43210"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm"
                 />
               </div>
 
@@ -391,15 +392,15 @@ export default function UserDashboard() {
                   value={profileCompany}
                   onChange={(e) => setProfileCompany(e.target.value)}
                   placeholder="e.g. Royal Bengal Sweets"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-between">
+              <div className="pt-3 flex flex-col-reverse sm:flex-row items-center justify-between gap-3">
                 <button
                   type="button"
                   onClick={logout}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 cursor-pointer flex items-center gap-1.5"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-2xl text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>Sign Out</span>
@@ -407,7 +408,7 @@ export default function UserDashboard() {
 
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-full text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 cursor-pointer"
                 >
                   Save Profile Changes
                 </button>

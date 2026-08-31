@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   X,
   Lock,
@@ -17,6 +18,7 @@ import AshokaChakra from './AshokaChakra';
 
 export default function AuthModal() {
   const { isAuthModalOpen, closeAuthModal, authSuccessCallback, login, register } = useAuth();
+  const navigate = useNavigate();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [name, setName] = useState('');
@@ -36,19 +38,27 @@ export default function AuthModal() {
 
     try {
       if (mode === 'login') {
-        const user = await login(email, password);
+        const loggedUser = await login(email, password);
         closeAuthModal();
         if (typeof authSuccessCallback === 'function') {
-          authSuccessCallback(user);
+          authSuccessCallback(loggedUser);
+        } else {
+          if (loggedUser?.role === 'admin') {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
         }
       } else {
         if (!name || !email || !password) {
           throw new Error('Please fill in Name, Email and Password');
         }
-        const user = await register({ name, email, password, phone });
+        const registeredUser = await register({ name, email, password, phone });
         closeAuthModal();
         if (typeof authSuccessCallback === 'function') {
-          authSuccessCallback(user);
+          authSuccessCallback(registeredUser);
+        } else {
+          navigate('/dashboard');
         }
       }
     } catch (err) {
