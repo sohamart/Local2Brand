@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Save,
+  Check,
   Upload,
   CheckCircle2,
   Sparkles,
@@ -14,6 +15,7 @@ import {
   Layers,
   Image as ImageIcon
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { SEO } from '../../components/common/CommonUI';
@@ -131,8 +133,11 @@ export default function AdminSettings() {
     }
   };
 
+  const [savedRecently, setSavedRecently] = useState(false);
+
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setSuccessMessage('');
     setErrorMessage('');
@@ -145,15 +150,18 @@ export default function AdminSettings() {
 
     try {
       const res = await api.put('/settings', formData);
-      if (res.success && res.settings) {
+      if (res && (res.success || res.settings)) {
+        const newSettings = res.settings || formData;
         setSuccessMessage('Site customizations updated & synced live across the frontend!');
         refreshSettings();
-        localStorage.setItem('l2b_cached_settings', JSON.stringify(res.settings));
+        localStorage.setItem('l2b_cached_settings', JSON.stringify(newSettings));
+        setSavedRecently(true);
+        setTimeout(() => setSavedRecently(false), 2500);
         toast.update(toastId, {
           render: 'Site customizations saved & live synchronized! 🚀',
           type: 'success',
           isLoading: false,
-          autoClose: 3000,
+          autoClose: 2500,
         });
         setTimeout(() => setSuccessMessage(''), 4000);
       } else {
@@ -164,11 +172,13 @@ export default function AdminSettings() {
       refreshSettings();
       localStorage.setItem('l2b_cached_settings', JSON.stringify(formData));
       setSuccessMessage('Site customizations updated locally and synced live!');
+      setSavedRecently(true);
+      setTimeout(() => setSavedRecently(false), 2500);
       toast.update(toastId, {
         render: 'Site customizations saved & synced live! 🚀',
         type: 'success',
         isLoading: false,
-        autoClose: 3000,
+        autoClose: 2500,
       });
       setTimeout(() => setSuccessMessage(''), 4000);
     } finally {
@@ -197,10 +207,26 @@ export default function AdminSettings() {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="px-5 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className={`px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-glass-highlight flex items-center gap-2 cursor-pointer disabled:opacity-50 transition-all ${
+              savedRecently ? 'bg-emerald-600' : 'l2b-gradient-bg'
+            }`}
           >
-            <Save className="w-4 h-4" />
-            <span>{loading ? 'Saving...' : 'Save & Sync Live'}</span>
+            {loading ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : savedRecently ? (
+              <>
+                <Check className="w-4 h-4 text-white" />
+                <span>Saved & Live! ✅</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Save & Sync Live</span>
+              </>
+            )}
           </button>
         </div>
 
@@ -499,10 +525,26 @@ export default function AdminSettings() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-2xl font-black text-sm text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 transition-all"
+              className={`w-full py-4 rounded-2xl font-black text-sm text-white shadow-glass-highlight hover:opacity-95 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 transition-all ${
+                savedRecently ? 'bg-emerald-600' : 'l2b-gradient-bg'
+              }`}
             >
-              <Save className="w-4 h-4" />
-              <span>{loading ? 'Saving & Syncing All Customizations...' : 'Save & Publish All Customizations Live 🚀'}</span>
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Saving & Syncing All Customizations...</span>
+                </>
+              ) : savedRecently ? (
+                <>
+                  <Check className="w-5 h-5 text-white" />
+                  <span>All Customizations Saved & Synced Live! ✅</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Save & Publish All Customizations Live 🚀</span>
+                </>
+              )}
             </button>
           </div>
 
@@ -521,10 +563,26 @@ export default function AdminSettings() {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="px-6 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50 transition-all hover:scale-102"
+            className={`px-6 py-2.5 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50 transition-all hover:scale-102 ${
+              savedRecently ? 'bg-emerald-600' : 'l2b-gradient-bg'
+            }`}
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>{loading ? 'Saving...' : 'Save Changes'}</span>
+            {loading ? (
+              <>
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : savedRecently ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-white" />
+                <span>Saved! ✅</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Changes</span>
+              </>
+            )}
           </button>
         </div>
 

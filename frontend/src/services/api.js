@@ -47,13 +47,18 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 7000);
+
     const config = {
       ...options,
       headers,
+      signal: options.signal || controller.signal,
     };
 
     try {
       const res = await fetch(url, config);
+      clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -65,6 +70,7 @@ class ApiClient {
 
       return data;
     } catch (err) {
+      clearTimeout(timeoutId);
       console.error(`API Error on [${options.method || 'GET'}] ${endpoint}:`, err.message);
       throw err;
     }

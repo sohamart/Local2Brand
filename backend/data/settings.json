@@ -9,7 +9,7 @@
     "turnaroundTime": "48 Hours",
     "startingPriceUsd": "$399",
     "startingPriceInr": "₹9,999",
-    "isMaintenanceMode": true,
+    "isMaintenanceMode": false,
     "isComingSoonMode": false,
     "maintenanceMessage": "We are currently upgrading our platform. We will be back online shortly!",
     "socialLinks": {
@@ -27,10 +27,11 @@
     "announcementBar": {
       "enabled": true,
       "text": "🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025",
-      "link": "/pricing"
+      "link": "/pricing",
+      "badge": ""
     },
     "bannerImage": "",
-    "updatedAt": "2026-08-31T11:29:55.785Z",
+    "updatedAt": "2026-08-31T11:33:11.649Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
     "updatedBy": "6a9551f5ef178dc4ce9260cf"
