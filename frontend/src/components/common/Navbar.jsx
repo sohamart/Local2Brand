@@ -140,15 +140,15 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-out flex flex-col ${
-          isScrolled ? 'gap-1' : 'gap-2 sm:gap-2.5'
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col ${
+          isScrolled ? 'gap-0' : 'gap-2 sm:gap-2.5'
         }`}
       >
         {/* Animated Top Announcement Bar */}
-        {!isScrolled && <AnnouncementBar />}
+        <AnnouncementBar isScrolled={isScrolled} />
 
         <div className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full transition-all duration-300 ${
-          isScrolled ? 'pt-1.5 sm:pt-2' : 'pt-0'
+          isScrolled ? 'pt-1 sm:pt-1.5' : 'pt-0'
         }`}>
           <nav
             className={`flex items-center justify-between glass-waterdrop rounded-full transition-all duration-300 relative border border-white/95 dark:border-slate-800/90 ${

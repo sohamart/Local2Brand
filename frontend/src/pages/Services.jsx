@@ -45,7 +45,7 @@ export default function Services() {
         description="Comprehensive web development services: Business Websites, High-Converting Landing Pages, Portfolios, E-commerce & Custom Web Applications."
       />
 
-      <div className="pt-32 sm:pt-40 pb-20">
+      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20">
 
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

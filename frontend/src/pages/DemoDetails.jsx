@@ -50,7 +50,7 @@ export default function DemoDetails() {
         description={`Interactive preview of ${demo.title}. Features ${demo.features.slice(0, 2).join(', ')}. Order via WhatsApp with 3 - 7 days turnaround.`}
       />
 
-      <div className="pt-28 xs:pt-32 sm:pt-36 pb-20">
+      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20">
 
         {/* Navigation Breadcrumb */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">

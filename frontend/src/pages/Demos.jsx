@@ -56,7 +56,7 @@ export default function Demos() {
         description="Experience 100% live working websites for restaurants, salons, real estate, jewellery, boutiques, and gyms. Real-time menus, WhatsApp orders, and instant customization."
       />
 
-      <div className="pt-28 xs:pt-32 sm:pt-40 pb-20">
+      <div className="pt-36 sm:pt-44 lg:pt-48 pb-20">
 
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

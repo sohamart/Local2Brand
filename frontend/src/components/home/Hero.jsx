@@ -207,7 +207,7 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative pt-32 sm:pt-40 lg:pt-44 pb-16 sm:pb-20 overflow-hidden">
+    <section className="relative pt-36 sm:pt-44 lg:pt-48 pb-16 sm:pb-20 overflow-hidden">
       {/* Dynamic Ambient Hero Glow that shifts subtly with active tab */}
       <div
         className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] sm:w-[950px] h-[500px] rounded-full blur-[100px] pointer-events-none transition-all duration-1000 -z-10 opacity-60 dark:opacity-40"

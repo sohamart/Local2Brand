@@ -39,10 +39,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Ensure uploads folder exists
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// Ensure uploads folder exists safely (handles read-only Vercel serverless environments)
+const uploadsDir = process.env.VERCEL
+  ? path.join('/tmp', 'uploads')
+  : path.join(__dirname, 'uploads');
+
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (e) {
+  // Gracefully ignored on read-only environments
 }
 
 // Middleware
@@ -65,7 +72,6 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow non-browser requests or same-origin requests (curl, server-to-server)
     if (!origin) return callback(null, true);
     
     // Check if origin matches allowed list or any Vercel preview domain (*.vercel.app)
@@ -96,8 +102,44 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// Serve uploaded static files
-app.use('/uploads', express.static(uploadsDir));
+// Serve uploaded static files if available
+try {
+  app.use('/uploads', express.static(uploadsDir));
+} catch (e) {}
+
+// Serverless DB Auto-Connect Middleware
+let dbInitialized = false;
+app.use(async (req, res, next) => {
+  if (!dbInitialized) {
+    try {
+      await connectDB();
+      await dataStore.seedDefaultAdmin();
+      await dataStore.getSettings();
+      dbInitialized = true;
+    } catch (e) {
+      console.warn('DB initialization notice:', e.message);
+    }
+  }
+  next();
+});
+
+// Root API Endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: '🚀 LOCAL2BRAND Enterprise Backend API is live & operational',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      settings: '/api/settings',
+      demos: '/api/demos',
+      requirements: '/api/requirements',
+      callbacks: '/api/callbacks',
+    },
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'production',
+  });
+});
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -120,11 +162,6 @@ app.use('/api/demos', demoRoutes);
 app.use('/api/forms', formRoutes);
 app.use('/api/requirements', requirementRoutes);
 
-// Root Endpoint
-app.get('/', (req, res) => {
-  res.send('🚀 LOCAL2BRAND API Server is running smoothly.');
-});
-
 // Global 404 Handler
 app.use((req, res, next) => {
   res.status(404).json({
@@ -142,25 +179,26 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start Server
-const startServer = async () => {
-  try {
-    await connectDB();
-    await dataStore.seedDefaultAdmin();
-    await dataStore.getSettings();
+// Start Server locally if not running on Vercel Serverless
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const startServer = async () => {
+    try {
+      await connectDB();
+      await dataStore.seedDefaultAdmin();
+      await dataStore.getSettings();
+      dbInitialized = true;
 
-    if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
       app.listen(PORT, () => {
         console.log(`\n🚀 LOCAL2BRAND Backend running on http://localhost:${PORT}`);
         console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`🔗 API Base: http://localhost:${PORT}/api\n`);
       });
+    } catch (err) {
+      console.error('Error during server startup:', err.message);
     }
-  } catch (err) {
-    console.error('Error during server startup:', err.message);
-  }
-};
+  };
 
-startServer();
+  startServer();
+}
 
 export default app;

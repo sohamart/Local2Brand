@@ -1,19 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, X, Flame, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, X, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
-import AshokaChakra from './AshokaChakra';
 
-export default function AnnouncementBar() {
+export default function AnnouncementBar({ isScrolled = false }) {
   const { settings } = useSiteSettings();
-  const [mounted, setMounted] = useState(false);
   const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    // Smooth mount trigger
-    const t = setTimeout(() => setMounted(true), 80);
-    return () => clearTimeout(t);
-  }, []);
 
   const announcement = settings?.announcementBar || {
     enabled: true,
@@ -22,27 +14,27 @@ export default function AnnouncementBar() {
     badge: 'FLASH OFFER'
   };
 
-  if (!announcement.enabled) return null;
+  if (!announcement.enabled || dismissed) return null;
 
   return (
     <div
-      className={`relative z-[110] overflow-hidden transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-        mounted && !dismissed
-          ? 'max-h-20 opacity-100 translate-y-0'
-          : 'max-h-0 opacity-0 -translate-y-full pointer-events-none'
+      className={`w-full overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] transform-gpu ${
+        isScrolled
+          ? 'max-h-0 opacity-0 -translate-y-full pointer-events-none'
+          : 'max-h-14 opacity-100 translate-y-0'
       }`}
     >
-      {/* Outer Aurora Gradient Wrapper with Moving Mesh */}
+      {/* Outer Aurora Liquid Shimmer Wrapper */}
       <div className="relative animate-aurora bg-gradient-to-r from-purple-100/90 via-pink-50/90 to-sky-100/90 dark:from-[#0a0518] dark:via-[#19082d] dark:to-[#070d1e] text-slate-800 dark:text-slate-100 border-b border-purple-300/60 dark:border-purple-500/30 backdrop-blur-2xl shadow-[0_4px_25px_rgba(168,85,247,0.12)]">
         
         {/* Shimmer Light Beam Gliding Effect */}
         <div className="absolute inset-y-0 w-48 bg-gradient-to-r from-transparent via-white/40 dark:via-purple-400/20 to-transparent pointer-events-none animate-shimmer-beam" />
 
-        {/* Ambient Subtle Glow Highlights */}
+        {/* Ambient Glow */}
         <div className="absolute top-0 left-1/4 w-96 h-full bg-pink-500/10 dark:bg-pink-500/20 blur-xl pointer-events-none" />
         <div className="absolute top-0 right-1/4 w-96 h-full bg-cyan-500/10 dark:bg-cyan-500/20 blur-xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-3 text-xs relative z-10">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex items-center justify-between gap-3 text-xs relative z-10">
           
           {/* Centered Dynamic Content Pill */}
           <div className="flex items-center gap-2 sm:gap-3 mx-auto truncate group">
@@ -75,7 +67,7 @@ export default function AnnouncementBar() {
           <button
             onClick={() => setDismissed(true)}
             className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800/80 transition-all shrink-0 cursor-pointer hover:rotate-90 duration-300"
-            title="Dismiss notification"
+            title="Dismiss announcement"
           >
             <X className="w-3.5 h-3.5" />
           </button>
