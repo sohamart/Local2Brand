@@ -84,6 +84,14 @@ export const handleChatMessage = async (req, res) => {
           company: req.user.company || '',
           role: req.user.role || 'user',
         }
+      : (req.body.userContext && (req.body.userContext.email || req.body.userContext.name))
+      ? {
+          name: req.body.userContext.name || '',
+          email: req.body.userContext.email || '',
+          phone: req.body.userContext.phone || '',
+          company: req.body.userContext.company || '',
+          role: req.body.userContext.role || 'user',
+        }
       : null;
 
     // Invoke Multi-Provider Fallback (Gemini -> Groq -> Cerebras -> OpenRouter) with dynamic context
@@ -93,6 +101,7 @@ export const handleChatMessage = async (req, res) => {
       activeServices: services,
       activeDemos: demos,
     });
+
 
 
     const userMessageDoc = {

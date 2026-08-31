@@ -70,7 +70,7 @@ export const optionalAuth = async (req, res, next) => {
       process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026_ultra_safe'
     );
     const user = await dataStore.findUserById(decoded.id);
-    if (user && user.status === 'active') {
+    if (user && user.status !== 'suspended') {
       req.user = user;
     }
   } catch (err) {

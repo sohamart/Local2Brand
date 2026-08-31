@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import AshokaChakra from './AshokaChakra';
@@ -104,6 +105,7 @@ export default function AssistantChatbot() {
 
   const { openOrderModal, openCallbackModal } = useOrderModal();
   const { settings } = useSiteSettings();
+  const { user } = useAuth();
 
   // Initialize or retrieve Session ID
   useEffect(() => {
@@ -189,11 +191,22 @@ export default function AssistantChatbot() {
     setIsTyping(true);
 
     try {
+      const userContext = user
+        ? {
+            name: user.name || '',
+            email: user.email || '',
+            phone: user.phone || '',
+            company: user.company || '',
+            role: user.role || 'user',
+          }
+        : null;
+
       const res = await api.post(
         '/chat',
         {
           message: query,
           sessionId,
+          userContext,
         },
         { timeout: 40000 }
       );
@@ -267,8 +280,17 @@ export default function AssistantChatbot() {
   };
 
   // Rich formatted visual renderer for AI responses
-  const renderMessageContent = (text) => {
+  const renderMessageContent = (text, isUser = false) => {
     if (!text) return null;
+
+    // For user's sent message: render directly with bright crisp white text
+    if (isUser) {
+      return (
+        <p className="text-white font-semibold leading-relaxed text-xs whitespace-pre-wrap select-text">
+          {text}
+        </p>
+      );
+    }
 
     const lines = text.split('\n');
     const elements = [];
@@ -516,8 +538,8 @@ export default function AssistantChatbot() {
                     )}
 
                     {isUser ? (
-                      <div className="max-w-[86%] sm:max-w-[82%] rounded-2xl rounded-br-xs px-3.5 py-2.5 text-xs font-semibold bg-purple-600 dark:bg-purple-600 text-white shadow-md shadow-purple-500/20 leading-relaxed break-words">
-                        {renderMessageContent(msg.content)}
+                      <div className="max-w-[86%] sm:max-w-[82%] rounded-2xl rounded-br-xs px-4 py-2.5 text-xs font-semibold bg-purple-600 dark:bg-purple-600 text-white shadow-md shadow-purple-500/25 leading-relaxed break-words">
+                        {renderMessageContent(msg.content, true)}
                       </div>
                     ) : (
                       <div
@@ -527,7 +549,7 @@ export default function AssistantChatbot() {
                             : 'bg-slate-100/95 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100'
                         }`}
                       >
-                        {renderMessageContent(msg.content)}
+                        {renderMessageContent(msg.content, false)}
 
                         {/* AI Provider attribution tag */}
                         {msg.provider && msg.provider !== 'unknown' && (
