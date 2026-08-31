@@ -843,3 +843,17 @@ html[data-theme="dark"] body {
 .dark .custom-chat-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(168, 85, 247, 0.6);
 }
+
+/* Animated Conic Gradient Border for AI Launcher */
+@keyframes spinConic {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-conic {
+  animation: spinConic 3.5s linear infinite;
+}
