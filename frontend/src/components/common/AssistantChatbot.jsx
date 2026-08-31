@@ -319,35 +319,36 @@ export default function AssistantChatbot() {
           className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] overflow-hidden flex items-center justify-center transition-all duration-300 transform active:scale-95 cursor-pointer relative group ${
             isOpen
               ? 'bg-slate-900 text-white shadow-xl'
-              : 'shadow-[0_0_22px_rgba(16,185,129,0.45)] hover:shadow-[0_0_32px_rgba(16,185,129,0.75)] hover:scale-105'
+              : 'shadow-xl shadow-emerald-500/20 dark:shadow-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/50 hover:scale-105'
           }`}
           aria-label="Toggle L2B AI Assistant"
         >
           {/* Rotating Laser Conic Neon Green Border */}
           {!isOpen && (
-            <span className="absolute -inset-[150%] rounded-full bg-[conic-gradient(from_0deg,transparent_0_280deg,#10b981_320deg,#34d399_360deg)] animate-spin-conic pointer-events-none" />
+            <span className="absolute -inset-[150%] rounded-full bg-[conic-gradient(from_0deg,transparent_0_260deg,#059669_300deg,#10b981_330deg,#34d399_360deg)] animate-spin-conic pointer-events-none" />
           )}
 
-          {/* Frosted Glass Core */}
-          <div className="w-full h-full rounded-full bg-slate-900/60 dark:bg-slate-950/60 backdrop-blur-2xl border border-white/20 dark:border-white/10 flex flex-col items-center justify-center relative z-10 select-none">
+          {/* Frosted Glass High-Contrast Core */}
+          <div className="w-full h-full rounded-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-white dark:border-slate-800 shadow-sm flex flex-col items-center justify-center relative z-10 select-none">
             {isOpen ? (
-              <X className="w-6 h-6 text-white" />
+              <X className="w-6 h-6 text-slate-800 dark:text-white" />
             ) : (
               <>
                 {/* Active Online Pulse Dot */}
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse" />
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse" />
 
-                {/* Direct Clean AI Sparkles Logo - No inner background circle */}
-                <Sparkles className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.9)] group-hover:scale-110 transition-transform" />
+                {/* Direct Clean AI Sparkles Logo - Crisp in both light and dark */}
+                <Sparkles className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-emerald-600 dark:text-emerald-400 drop-shadow-xs group-hover:scale-110 transition-transform" />
 
                 {/* Crisp Modern L2B AI Text */}
-                <span className="font-black text-[9px] sm:text-[10px] tracking-widest uppercase bg-gradient-to-r from-emerald-300 via-teal-100 to-emerald-400 bg-clip-text text-transparent leading-none mt-1 drop-shadow-sm">
+                <span className="font-black text-[9px] sm:text-[10px] tracking-widest uppercase text-slate-900 dark:text-emerald-300 leading-none mt-1 drop-shadow-2xs">
                   L2B AI
                 </span>
               </>
             )}
           </div>
         </button>
+
 
 
 
