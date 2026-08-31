@@ -37,6 +37,45 @@ const iconMap = {
 
 export default function Services() {
   const { openOrderModal } = useOrderModal();
+  const [servicesList, setServicesList] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('l2b_cached_services');
+      if (cached) {
+        try { return JSON.parse(cached); } catch (e) {}
+      }
+    }
+    return agencyServices;
+  });
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await api.get('/services');
+        if (res.success && Array.isArray(res.services) && res.services.length > 0) {
+          const merged = res.services.map((s, idx) => {
+            const staticMatch = agencyServices.find((as) => as.id === s.slug || as.title === s.title);
+            return {
+              ...(staticMatch || {}),
+              ...s,
+              id: s.slug || s._id || `srv_${idx}`,
+              title: s.title,
+              tagline: s.tagline || staticMatch?.tagline || 'High Performance Web Architecture',
+              description: s.description || s.shortDesc || staticMatch?.description || '',
+              features: Array.isArray(s.features) ? s.features : (s.features ? s.features.split(',') : (staticMatch?.features || [])),
+              startingPriceInr: s.startingPrice || staticMatch?.startingPriceInr || '₹9,999',
+              turnaroundTime: s.turnaroundTime || staticMatch?.turnaroundTime || '48 Hours',
+              idealFor: s.idealFor || staticMatch?.idealFor || 'Businesses & Entrepreneurs'
+            };
+          });
+          setServicesList(merged);
+          localStorage.setItem('l2b_cached_services', JSON.stringify(merged));
+        }
+      } catch (err) {
+        console.warn('Using default agency services fallback:', err);
+      }
+    };
+    fetchServices();
+  }, []);
 
   return (
     <>
@@ -62,7 +101,7 @@ export default function Services() {
 
         {/* Services In-Depth List */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-24 space-y-16 sm:space-y-24">
-          {agencyServices.map((service, index) => {
+          {servicesList.map((service, index) => {
             const Icon = iconMap[service.iconName] || Globe;
             const isReversed = index % 2 !== 0;
             const imgUrl = serviceImages[service.id] || serviceImages['business-websites'];

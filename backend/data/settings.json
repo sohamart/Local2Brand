@@ -1,15 +1,15 @@
 [
   {
-    "_id": "settings_default_id_001",
+    "_id": "6a955e52fbc06cc76d6648d3",
     "brandName": "LOCAL2BRAND",
     "domain": "local2brand.com",
-    "tagline": "Build Local. Scale Global. (Updated via Admin Panel)",
-    "supportEmail": "founders@local2brand.com",
+    "tagline": "Build Local. Think Global.",
+    "supportEmail": "hello@local2brand.com",
     "displayPhone": "",
     "turnaroundTime": "48 Hours",
     "startingPriceUsd": "$399",
     "startingPriceInr": "₹9,999",
-    "isMaintenanceMode": false,
+    "isMaintenanceMode": true,
     "isComingSoonMode": false,
     "maintenanceMessage": "We are currently upgrading our platform. We will be back online shortly!",
     "socialLinks": {
@@ -30,6 +30,9 @@
       "link": "/pricing"
     },
     "bannerImage": "",
-    "updatedAt": "2026-08-31T07:07:35.953Z"
+    "updatedAt": "2026-08-31T11:29:55.785Z",
+    "createdAt": "2026-08-31T10:58:26.575Z",
+    "__v": 0,
+    "updatedBy": "6a9551f5ef178dc4ce9260cf"
   }
 ]

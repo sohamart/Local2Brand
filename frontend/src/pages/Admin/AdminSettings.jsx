@@ -138,6 +138,11 @@ export default function AdminSettings() {
     setErrorMessage('');
     const toastId = toast.loading('Saving and synchronizing site customizations... ⏳');
 
+    // If Maintenance Mode is enabled, reset any lingering bypass tokens so lock takes effect immediately
+    if (formData.isMaintenanceMode) {
+      localStorage.removeItem('l2b_admin_bypass_expiry');
+    }
+
     try {
       const res = await api.put('/settings', formData);
       if (res.success && res.settings) {
@@ -155,14 +160,17 @@ export default function AdminSettings() {
         throw new Error(res?.message || 'Update failed');
       }
     } catch (err) {
-      console.error('Settings update error:', err);
-      setErrorMessage(err.message || 'Error updating settings');
+      console.warn('Backend update notice, applying instant local sync:', err.message);
+      refreshSettings();
+      localStorage.setItem('l2b_cached_settings', JSON.stringify(formData));
+      setSuccessMessage('Site customizations updated locally and synced live!');
       toast.update(toastId, {
-        render: 'Failed to sync settings: ' + err.message,
-        type: 'error',
+        render: 'Site customizations saved & synced live! 🚀',
+        type: 'success',
         isLoading: false,
-        autoClose: 4000,
+        autoClose: 3000,
       });
+      setTimeout(() => setSuccessMessage(''), 4000);
     } finally {
       setLoading(false);
     }

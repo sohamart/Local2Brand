@@ -198,9 +198,10 @@ export const dataStore = {
     if (isDbConnected()) {
       try {
         const { SiteSettings } = await import('../models/SiteSettings.js');
-        let s = await SiteSettings.findOne();
-        if (!s) s = await SiteSettings.create(DEFAULT_SETTINGS);
-        return s;
+        let s = await SiteSettings.findOne().lean();
+        if (s) return s;
+        const created = await SiteSettings.create(DEFAULT_SETTINGS);
+        return created ? (created.toObject ? created.toObject() : created) : DEFAULT_SETTINGS;
       } catch (err) {
         console.warn('MongoDB getSettings notice:', err.message);
       }
@@ -219,22 +220,21 @@ export const dataStore = {
     if (isDbConnected()) {
       try {
         const { SiteSettings } = await import('../models/SiteSettings.js');
-        let s = await SiteSettings.findOne();
-        if (!s) {
-          s = new SiteSettings({ ...DEFAULT_SETTINGS, ...cleanUpdates });
-        } else {
-          Object.assign(s, cleanUpdates);
-        }
-        savedSettings = await s.save();
+        savedSettings = await SiteSettings.findOneAndUpdate(
+          {},
+          { $set: cleanUpdates },
+          { new: true, upsert: true, setDefaultsOnInsert: true }
+        ).lean();
       } catch (err) {
         console.warn('MongoDB updateSettings notice, syncing to local fallback:', err.message);
       }
     }
 
-    const current = (await this.getSettings()) || {};
+    const currentList = readLocalStore('settings');
+    const current = (currentList && currentList[0]) || DEFAULT_SETTINGS;
     const updated = {
       ...current,
-      ...(savedSettings ? (savedSettings.toObject ? savedSettings.toObject() : savedSettings) : cleanUpdates),
+      ...(savedSettings || cleanUpdates),
       updatedAt: new Date().toISOString()
     };
     writeLocalStore('settings', [updated]);

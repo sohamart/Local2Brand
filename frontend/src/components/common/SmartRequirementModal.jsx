@@ -290,6 +290,29 @@ export default function SmartRequirementModal() {
   const [selectedFileObjects, setSelectedFileObjects] = useState([]); // Deferred files waiting for final submit
   const [uploadingAssets, setUploadingAssets] = useState(false);
 
+  // Dynamic Demos from Database
+  const [dbDemos, setDbDemos] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('l2b_cached_demos');
+      if (cached) {
+        try { return JSON.parse(cached); } catch (e) {}
+      }
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    const fetchDemos = async () => {
+      try {
+        const res = await api.get('/demos');
+        if (res.success && Array.isArray(res.demos) && res.demos.length > 0) {
+          setDbDemos(res.demos);
+        }
+      } catch (e) {}
+    };
+    fetchDemos();
+  }, []);
+
   const handleMultiImageUpload = (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -339,6 +362,25 @@ export default function SmartRequirementModal() {
     };
     fetchSchema();
   }, []);
+
+  // Sync inquiryData from trigger (e.g. Demos page Pre-Order / Get Website)
+  useEffect(() => {
+    if (isInquiryOpen && inquiryData) {
+      if (inquiryData.websiteType || inquiryData.selectedDemo) {
+        const matched = dbDemos.find(
+          (d) => d.slug === inquiryData.templateId || d.title === inquiryData.selectedDemo || d._id === inquiryData.templateId
+        );
+        setFormData((prev) => ({
+          ...prev,
+          websiteType: inquiryData.templateId || matched?.slug || prev.websiteType,
+          websiteTypeName: inquiryData.websiteType || matched?.title || prev.websiteTypeName,
+          additionalNotes: inquiryData.initialRequirements
+            ? `${prev.additionalNotes ? prev.additionalNotes + '\n' : ''}${inquiryData.initialRequirements}`
+            : prev.additionalNotes
+        }));
+      }
+    }
+  }, [isInquiryOpen, inquiryData, dbDemos]);
 
   // 2. Autosave Restore & Initialize
   useEffect(() => {
@@ -632,26 +674,32 @@ export default function SmartRequirementModal() {
                       What type of website does your business need?
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Select your industry. Subsequent questions will dynamically adapt specifically to your business model.
+                      Select a website model or template. Subsequent questions will dynamically adapt specifically to your business.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
-                    {(formSchema?.categories || [
-                      { id: 'restaurant', name: 'Restaurant / Fine Dining', icon: 'Utensils', badge: 'Popular', description: 'Table reservations, digital food menus & takeaway delivery funnels' },
-                      { id: 'cafe', name: 'Café / Coffee Shop / Bakery', icon: 'Coffee', badge: 'Trending', description: 'Cozy visual lookbook, signature brews & pickup takeout orders' },
-                      { id: 'salon', name: 'Salon / Spa / Beauty Studio', icon: 'Sparkles', badge: 'High Demand', description: 'Stylist rosters, service rate-cards & online slot booking' },
-                      { id: 'gym', name: 'Gym / Fitness Hub / Crossfit', icon: 'Dumbbell', badge: 'High ROI', description: 'Membership plans, trainer profiles, workout schedule & admissions' },
-                      { id: 'hotel', name: 'Hotel / Resort / Homestay', icon: 'Hotel', badge: 'Luxury', description: 'Room showcase, amenities, seasonal tariffs & direct room booking' },
-                      { id: 'real_estate', name: 'Real Estate / Property Agency', icon: 'Building2', badge: 'Commercial', description: 'Property listings, virtual tours, map search & broker lead capture' },
-                      { id: 'photography', name: 'Photography / Wedding Studio', icon: 'Camera', badge: 'Visual', description: 'High-res portfolio albums, package rates & consultation booking' },
-                      { id: 'boutique', name: 'Boutique / Fashion & Apparel', icon: 'ShoppingBag', badge: 'E-Commerce', description: 'Apparel lookbook, size guides, cart checkout & collections' },
-                      { id: 'coaching', name: 'Coaching / EdTech / Institute', icon: 'GraduationCap', badge: 'Education', description: 'Course catalogues, batch schedules & admission registration' },
-                      { id: 'clinic', name: 'Clinic / Doctor / Healthcare', icon: 'Stethoscope', badge: 'Verified', description: 'Doctor bio, OPD token booking & prescription uploads' },
-                      { id: 'jewellery', name: 'Jewellery / Luxury Gift Shop', icon: 'Gem', badge: 'Prestige', description: 'Gold/diamond showcases, live rates & custom enquiry funnels' },
-                      { id: 'showroom', name: 'Car / Bike Showroom & Service', icon: 'Car', badge: 'Automotive', description: 'Vehicle inventory, EMI calculators & test drive booking' },
-                      { id: 'custom', name: 'Other / Custom Business Website', icon: 'Layers', badge: 'Bespoke', description: 'Custom web software, B2B wholesale, or bespoke enterprise build' }
-                    ]).map((cat) => {
+                    {(dbDemos && dbDemos.length > 0
+                      ? dbDemos.map((d) => ({
+                          id: d.slug || d._id,
+                          name: d.title,
+                          category: d.category,
+                          icon: 'Globe',
+                          badge: d.badge || (d.status === 'published' ? 'Live Ready' : 'Coming Soon'),
+                          description: d.description || `Specialized web platform engineered for ${d.category}.`,
+                          thumbnail: d.thumbnail,
+                          price: d.priceInr || d.price
+                        }))
+                      : (formSchema?.categories || [
+                          { id: 'restaurant', name: 'Restaurant / Fine Dining', icon: 'Utensils', badge: 'Popular', description: 'Table reservations, digital food menus & takeaway delivery funnels' },
+                          { id: 'cafe', name: 'Café / Coffee Shop / Bakery', icon: 'Coffee', badge: 'Trending', description: 'Cozy visual lookbook, signature brews & pickup takeout orders' },
+                          { id: 'salon', name: 'Salon / Spa / Beauty Studio', icon: 'Sparkles', badge: 'High Demand', description: 'Stylist rosters, service rate-cards & online slot booking' },
+                          { id: 'gym', name: 'Gym / Fitness Hub / Crossfit', icon: 'Dumbbell', badge: 'High ROI', description: 'Membership plans, trainer profiles, workout schedule & admissions' },
+                          { id: 'hotel', name: 'Hotel / Resort / Homestay', icon: 'Hotel', badge: 'Luxury', description: 'Room showcase, amenities, seasonal tariffs & direct room booking' },
+                          { id: 'real_estate', name: 'Real Estate / Property Agency', icon: 'Building2', badge: 'Commercial', description: 'Property listings, virtual tours, map search & broker lead capture' },
+                          { id: 'custom', name: 'Other / Custom Business Website', icon: 'Layers', badge: 'Bespoke', description: 'Custom web software, B2B wholesale, or bespoke enterprise build' }
+                        ])
+                    ).map((cat) => {
                       const isSelected = formData.websiteType === cat.id;
                       const IconComponent = ICON_MAP[cat.icon] || Globe;
 
@@ -665,30 +713,43 @@ export default function SmartRequirementModal() {
                               websiteTypeName: cat.name
                             }));
                           }}
-                          className={`p-4 rounded-2xl border-2 transition-all cursor-pointer group relative ${
+                          className={`p-3.5 sm:p-4 rounded-2xl border-2 transition-all cursor-pointer group relative flex flex-col justify-between ${
                             isSelected
                               ? 'border-purple-600 bg-purple-50/70 dark:bg-purple-950/60 shadow-md ring-2 ring-purple-500/30'
                               : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 hover:border-purple-400'
                           }`}
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold ${
-                              isSelected ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                            }`}>
-                              <IconComponent className="w-5 h-5" />
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              {cat.thumbnail ? (
+                                <img src={cat.thumbnail} alt={cat.name} className="w-10 h-10 rounded-xl object-cover shadow-xs shrink-0" />
+                              ) : (
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${
+                                  isSelected ? 'bg-purple-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                }`}>
+                                  <IconComponent className="w-5 h-5" />
+                                </div>
+                              )}
+                              {cat.badge && (
+                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                                  {cat.badge}
+                                </span>
+                              )}
                             </div>
-                            {cat.badge && (
-                              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                                {cat.badge}
-                              </span>
-                            )}
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-purple-600 transition-colors line-clamp-1">
+                              {cat.name}
+                            </h4>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">
+                              {cat.description}
+                            </p>
                           </div>
-                          <h4 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-purple-600 transition-colors">
-                            {cat.name}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed line-clamp-2">
-                            {cat.description}
-                          </p>
+
+                          {cat.price && (
+                            <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between text-[11px]">
+                              <span className="font-bold text-slate-400">Investment</span>
+                              <span className="font-black text-purple-600 dark:text-purple-400">{cat.price}</span>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
