@@ -492,9 +492,20 @@ export const dataStore = {
       sessionId = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     }
 
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
     if (isDbConnected()) {
       const { ChatSession } = await import('../models/ChatSession.js');
       let session = await ChatSession.findOne({ sessionId });
+
+      // If no session found by sessionId but user is logged in, find their latest session from the last 7 days
+      if (!session && userId) {
+        session = await ChatSession.findOne({
+          user: userId,
+          lastActiveAt: { $gte: sevenDaysAgo }
+        }).sort({ lastActiveAt: -1 });
+      }
+
       if (!session) {
         session = await ChatSession.create({
           sessionId,
@@ -504,8 +515,11 @@ export const dataStore = {
           userAgent: meta.userAgent || '',
           lastActiveAt: new Date(),
         });
-      } else if (userId && !session.user) {
-        session.user = userId;
+      } else {
+        if (userId && !session.user) {
+          session.user = userId;
+        }
+        session.lastActiveAt = new Date();
         await session.save();
       }
       return session;
@@ -513,6 +527,12 @@ export const dataStore = {
 
     const sessions = readLocalStore('chat_sessions');
     let session = sessions.find((s) => s.sessionId === sessionId);
+    if (!session && userId) {
+      session = sessions.find(
+        (s) => s.user?.toString() === userId.toString() && new Date(s.lastActiveAt) >= sevenDaysAgo
+      );
+    }
+
     if (!session) {
       session = {
         _id: `chat_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -528,8 +548,11 @@ export const dataStore = {
       };
       sessions.push(session);
       writeLocalStore('chat_sessions', sessions);
-    } else if (userId && !session.user) {
-      session.user = userId;
+    } else {
+      if (userId && !session.user) {
+        session.user = userId;
+      }
+      session.lastActiveAt = new Date().toISOString();
       writeLocalStore('chat_sessions', sessions);
     }
     return session;

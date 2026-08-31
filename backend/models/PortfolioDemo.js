@@ -50,6 +50,38 @@ const portfolioDemoSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    heroOrder: {
+      type: Number,
+      default: 0,
+    },
+    shortName: {
+      type: String,
+      default: '',
+    },
+    heroTag: {
+      type: String,
+      default: '',
+    },
+    heroStat: {
+      type: String,
+      default: '',
+    },
+    rating: {
+      type: String,
+      default: '',
+    },
+    accentColor: {
+      type: String,
+      default: '',
+    },
+    glowColor: {
+      type: String,
+      default: '',
+    },
+    iconName: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: true,

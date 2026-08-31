@@ -19,14 +19,65 @@ import {
   Eye,
   Activity,
   ShieldCheck,
-  GraduationCap
+  GraduationCap,
+  ShoppingBag
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { useAuth } from '../../context/AuthContext';
 import AshokaChakra from '../common/AshokaChakra';
 import { getDemoBySlug } from '../../data/demos';
+import api from '../../services/api';
 
-const heroShowcases = [
+const ICON_MAP = {
+  GraduationCap,
+  Utensils,
+  Gem,
+  Building2,
+  Sparkles,
+  Zap,
+  Star,
+  Globe,
+  ShoppingBag,
+  Activity,
+  ShieldCheck,
+  Eye,
+  Lock
+};
+
+const getDynamicIcon = (iconName, category) => {
+  if (iconName && ICON_MAP[iconName]) return ICON_MAP[iconName];
+  if (!category) return Sparkles;
+  const lower = category.toLowerCase();
+  if (lower.includes('lms') || lower.includes('course') || lower.includes('edtech') || lower.includes('coaching')) return GraduationCap;
+  if (lower.includes('restaurant') || lower.includes('food') || lower.includes('dine')) return Utensils;
+  if (lower.includes('jewel') || lower.includes('gold') || lower.includes('bridal') || lower.includes('luxury')) return Gem;
+  if (lower.includes('real') || lower.includes('estate') || lower.includes('hotel') || lower.includes('property')) return Building2;
+  if (lower.includes('boutique') || lower.includes('fashion') || lower.includes('store') || lower.includes('ecommerce')) return ShoppingBag;
+  if (lower.includes('gym') || lower.includes('fitness') || lower.includes('crossfit')) return Zap;
+  if (lower.includes('salon') || lower.includes('spa') || lower.includes('beauty')) return Sparkles;
+  if (lower.includes('dental') || lower.includes('health') || lower.includes('clinic')) return Activity;
+  return Sparkles;
+};
+
+const GLOW_COLORS = [
+  'rgba(59, 130, 246, 0.28)', // Blue
+  'rgba(234, 179, 8, 0.28)',  // Amber
+  'rgba(14, 165, 233, 0.28)', // Cyan
+  'rgba(236, 72, 153, 0.28)', // Rose
+  'rgba(147, 51, 234, 0.28)', // Purple
+  'rgba(16, 185, 129, 0.28)'  // Emerald
+];
+
+const ACCENT_COLORS = [
+  'from-blue-500/30 via-indigo-500/20 to-purple-500/30',
+  'from-yellow-500/30 via-amber-500/20 to-emerald-500/30',
+  'from-blue-500/30 via-cyan-500/20 to-indigo-500/30',
+  'from-purple-500/30 via-pink-500/20 to-rose-500/30',
+  'from-indigo-500/30 via-purple-500/20 to-pink-500/30',
+  'from-emerald-500/30 via-teal-500/20 to-cyan-500/30'
+];
+
+const defaultHeroShowcases = [
   {
     id: 'lms',
     title: 'SkillCraft Pro LMS & Course Selling',
@@ -39,7 +90,9 @@ const heroShowcases = [
     glowColor: 'rgba(59, 130, 246, 0.28)',
     tag: 'Video Curriculum & Instant Checkout',
     rating: '5.0 ★ (78+ Reviews)',
-    icon: GraduationCap
+    icon: GraduationCap,
+    isPublished: true,
+    liveUrl: 'https://stackadda.me'
   },
   {
     id: 'jewellery',
@@ -53,7 +106,9 @@ const heroShowcases = [
     glowColor: 'rgba(234, 179, 8, 0.28)',
     tag: 'Custom Bridal & Gold Inquiries',
     rating: '5.0 ★ (64+ Reviews)',
-    icon: Gem
+    icon: Gem,
+    isPublished: false,
+    liveUrl: ''
   },
   {
     id: 'realestate',
@@ -67,7 +122,9 @@ const heroShowcases = [
     glowColor: 'rgba(14, 165, 233, 0.28)',
     tag: 'Virtual Tours & High-Ticket Leads',
     rating: '4.9 ★ (39+ Reviews)',
-    icon: Building2
+    icon: Building2,
+    isPublished: false,
+    liveUrl: ''
   },
   {
     id: 'boutique',
@@ -81,7 +138,9 @@ const heroShowcases = [
     glowColor: 'rgba(236, 72, 153, 0.28)',
     tag: 'Curated Lookbook & WhatsApp Buy',
     rating: '4.8 ★ (52+ Reviews)',
-    icon: Sparkles
+    icon: Sparkles,
+    isPublished: false,
+    liveUrl: ''
   }
 ];
 
@@ -92,6 +151,73 @@ export default function Hero() {
   const { user, isAdmin, openAuthModal } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Dynamic showcases loaded from cache or defaults
+  const [showcases, setShowcases] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('l2b_cached_hero_demos');
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((item) => ({
+              ...item,
+              icon: getDynamicIcon(item.iconName, item.category)
+            }));
+          }
+        } catch (e) {}
+      }
+    }
+    return defaultHeroShowcases;
+  });
+
+  // Fetch dynamic demos from backend (filtered by isFeatured & sorted by heroOrder)
+  useEffect(() => {
+    const fetchHeroDemos = async () => {
+      try {
+        const res = await api.get('/demos');
+        if (res.success && Array.isArray(res.demos) && res.demos.length > 0) {
+          // Filter featured demos or fallback to top published demos
+          const featured = res.demos
+            .filter((d) => Boolean(d.isFeatured))
+            .sort((a, b) => (a.heroOrder || a.order || 0) - (b.heroOrder || b.order || 0));
+
+          const sourceList = featured.length > 0 ? featured : res.demos.slice(0, 4);
+
+          const formatted = sourceList.map((d, idx) => {
+            const staticMeta = getDemoBySlug(d.slug) || {};
+            const defFallback = defaultHeroShowcases[idx % defaultHeroShowcases.length];
+
+            return {
+              id: d.slug || d._id || `demo_${idx}`,
+              slug: d.slug,
+              title: d.title,
+              shortName: d.shortName || staticMeta.shortName || (d.title.split(' ')[0] + ' ' + (d.category?.split(' ')[0] || 'Demo')),
+              category: d.category || staticMeta.category || 'Bespoke Website',
+              image: d.thumbnail || d.heroImage || staticMeta.heroImage || defFallback.image,
+              stat: d.heroStat || d.badge || staticMeta.badge || 'PRO READY',
+              accentColor: d.accentColor || ACCENT_COLORS[idx % ACCENT_COLORS.length],
+              glowColor: d.glowColor || GLOW_COLORS[idx % GLOW_COLORS.length],
+              tag: d.heroTag || d.description || staticMeta.shortDescription || 'Interactive Demo Experience',
+              rating: d.rating || `${staticMeta.rating || '5.0'} ★ (${staticMeta.reviewsCount || '50'}+ Reviews)`,
+              icon: getDynamicIcon(d.iconName, d.category),
+              iconName: d.iconName,
+              liveUrl: d.liveUrl || staticMeta.liveUrl || '',
+              isPublished: d.status === 'published' || staticMeta.isPublished
+            };
+          });
+
+          setShowcases(formatted);
+          localStorage.setItem('l2b_cached_hero_demos', JSON.stringify(formatted));
+        }
+      } catch (err) {
+        console.warn('Hero dynamic showcases fallback active:', err);
+      }
+    };
+
+    fetchHeroDemos();
+  }, []);
 
   const handleStartWebsite = () => {
     if (!user) {
@@ -102,8 +228,6 @@ export default function Hero() {
       openOrderModal();
     }
   };
-  const [isPaused, setIsPaused] = useState(false);
-  const [isLiveLoading, setIsLiveLoading] = useState(true);
 
   // Liquid Waterdrop Pill Indicator State & Refs
   const tabContainerRef = useRef(null);
@@ -116,32 +240,24 @@ export default function Hero() {
     opacity: 0
   });
 
-  const current = heroShowcases[activeTab];
-  const CurrentIcon = current.icon;
-
-  // Trigger 2-second smooth loading state on slide change
-  useEffect(() => {
-    setIsLiveLoading(true);
-    const loadTimer = setTimeout(() => {
-      setIsLiveLoading(false);
-    }, 1800);
-    return () => clearTimeout(loadTimer);
-  }, [activeTab]);
+  const safeIndex = activeTab >= showcases.length ? 0 : activeTab;
+  const current = showcases[safeIndex] || defaultHeroShowcases[0];
+  const CurrentIcon = current.icon || Sparkles;
 
   // Auto-slide effect with pause on hover
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || showcases.length <= 1) return;
 
     const timer = setInterval(() => {
-      setActiveTab((prev) => (prev + 1) % heroShowcases.length);
+      setActiveTab((prev) => (prev + 1) % showcases.length);
     }, AUTO_SLIDE_INTERVAL);
 
     return () => clearInterval(timer);
-  }, [isPaused]);
+  }, [isPaused, showcases.length]);
 
   // Update dynamic moving liquid waterdrop pill position
   const updatePill = () => {
-    const activeEl = tabRefs.current[activeTab];
+    const activeEl = tabRefs.current[safeIndex];
     if (activeEl) {
       setPillStyle({
         left: activeEl.offsetLeft,
@@ -161,13 +277,13 @@ export default function Hero() {
       cancelAnimationFrame(frameId);
       clearTimeout(timeoutId);
     };
-  }, [activeTab]);
+  }, [safeIndex, showcases]);
 
   // Recalculate on window resize
   useEffect(() => {
     window.addEventListener('resize', updatePill);
     return () => window.removeEventListener('resize', updatePill);
-  }, [activeTab]);
+  }, [safeIndex, showcases]);
 
   // Handle tab selection without causing any scroll jump
   const handleTabSelect = (idx, e) => {
@@ -178,21 +294,17 @@ export default function Hero() {
     const currentScrollY = window.scrollY;
     setActiveTab(idx);
 
-    // Keep window scroll stable against iframe focus
     requestAnimationFrame(() => {
       window.scrollTo(0, currentScrollY);
     });
     setTimeout(() => {
       window.scrollTo(0, currentScrollY);
     }, 100);
-    setTimeout(() => {
-      window.scrollTo(0, currentScrollY);
-    }, 300);
   };
 
   const handleNext = () => {
     const currentScrollY = window.scrollY;
-    setActiveTab((prev) => (prev + 1) % heroShowcases.length);
+    setActiveTab((prev) => (prev + 1) % showcases.length);
     setTimeout(() => {
       window.scrollTo(0, currentScrollY);
     }, 50);
@@ -200,7 +312,7 @@ export default function Hero() {
 
   const handlePrev = () => {
     const currentScrollY = window.scrollY;
-    setActiveTab((prev) => (prev - 1 + heroShowcases.length) % heroShowcases.length);
+    setActiveTab((prev) => (prev - 1 + showcases.length) % showcases.length);
     setTimeout(() => {
       window.scrollTo(0, currentScrollY);
     }, 50);
@@ -217,7 +329,6 @@ export default function Hero() {
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-
         {/* Top Pill Badge with Animated Ashoka Chakra */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-sm text-xs font-semibold text-slate-800 dark:text-slate-200 animate-float relative overflow-hidden">
@@ -315,7 +426,6 @@ export default function Hero() {
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
-
           {/* Liquid Waterdrop Tab Switcher (Matching Top Navbar 3D Liquid Drop) */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4 px-1">
             <div
@@ -337,23 +447,25 @@ export default function Hero() {
               </div>
 
               {/* Tab Buttons with Category Icons */}
-              {heroShowcases.map((item, idx) => {
-                const isActive = activeTab === idx;
-                const IconComponent = item.icon;
+              {showcases.map((item, idx) => {
+                const isActive = safeIndex === idx;
+                const IconComponent = item.icon || Sparkles;
                 return (
                   <button
-                    key={item.id}
+                    key={item.id || idx}
                     type="button"
                     ref={(el) => (tabRefs.current[idx] = el)}
                     onClick={(e) => handleTabSelect(idx, e)}
-                    className={`relative z-10 flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 cursor-pointer whitespace-nowrap ${isActive
+                    className={`relative z-10 flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold tracking-tight transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                      isActive
                         ? 'text-slate-950 dark:text-white font-bold scale-[1.02]'
                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white'
-                      }`}
+                    }`}
                   >
                     <IconComponent
-                      className={`w-3.5 h-3.5 transition-transform duration-300 ${isActive ? 'text-purple-600 dark:text-purple-400 scale-110' : 'text-slate-400 dark:text-slate-500'
-                        }`}
+                      className={`w-3.5 h-3.5 transition-transform duration-300 ${
+                        isActive ? 'text-purple-600 dark:text-purple-400 scale-110' : 'text-slate-400 dark:text-slate-500'
+                      }`}
                     />
                     <span>{item.shortName || item.title}</span>
                   </button>
@@ -402,7 +514,6 @@ export default function Hero() {
 
             {/* Main Outer Browser Window Frame */}
             <div className="relative bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-[32px] border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden transition-all duration-300">
-
               {/* 1. macOS Safari Styled Header Bar */}
               <div className="px-4 py-2.5 sm:py-3 bg-slate-100/90 dark:bg-slate-950/90 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
                 {/* Left Traffic Light Dots */}
@@ -433,14 +544,15 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* 2. Main Live Visual Area (No Scroll Interception) */}
+              {/* 2. Main Live Visual Area */}
               <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden select-none">
                 {/* Continuous Smooth Progress Line */}
                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-black/30 z-30 overflow-hidden">
                   <div
-                    key={activeTab}
-                    className={`h-full bg-gradient-to-r from-amber-400 via-blue-500 to-purple-500 ${isPaused ? 'w-full opacity-30' : 'w-full animate-slide-progress'
-                      }`}
+                    key={safeIndex}
+                    className={`h-full bg-gradient-to-r from-amber-400 via-blue-500 to-purple-500 ${
+                      isPaused ? 'w-full opacity-30' : 'w-full animate-slide-progress'
+                    }`}
                     style={{
                       animationDuration: `${AUTO_SLIDE_INTERVAL}ms`
                     }}
@@ -450,13 +562,13 @@ export default function Hero() {
                 {/* Dynamic Showcase Visual Display */}
                 {(() => {
                   const currentDemoMeta = getDemoBySlug(current.slug) || getDemoBySlug(current.id);
-                  const isLiveReady = currentDemoMeta?.isPublished && Boolean(currentDemoMeta?.liveUrl);
+                  const isLiveReady = current.isPublished || (currentDemoMeta?.isPublished && Boolean(currentDemoMeta?.liveUrl));
 
                   return (
                     <div className="w-full h-full relative overflow-hidden select-none bg-slate-950">
                       {/* Active Showcase Image with Cinematic Ken-Burns Transition */}
                       <img
-                        key={current.id}
+                        key={current.id || safeIndex}
                         src={current.image}
                         alt={current.title}
                         className="w-full h-full object-cover object-top transition-transform duration-1000 ease-out group-hover:scale-105 animate-in fade-in pointer-events-none select-none"
@@ -484,7 +596,7 @@ export default function Hero() {
                   <span>{current.tag}</span>
                 </div>
 
-                {/* Navigation Chevrons - High Z-Index & Stop Propagation */}
+                {/* Navigation Chevrons */}
                 <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between px-3 sm:px-4 pointer-events-none z-30 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <button
                     type="button"
@@ -512,7 +624,7 @@ export default function Hero() {
                   </button>
                 </div>
 
-                {/* Rich Bottom Glass Banner (Pointer Events None on Container, Auto on Children) */}
+                {/* Rich Bottom Glass Banner */}
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/40 to-transparent flex items-end p-4 sm:p-6 z-20 pointer-events-none">
                   <div className="text-white w-full flex flex-col sm:flex-row sm:items-end justify-between gap-4 pointer-events-none">
                     <div className="pointer-events-auto">
@@ -544,10 +656,10 @@ export default function Hero() {
                 </div>
               </div>
 
-              {/* 3. Bottom Showcase Bar with Dot Indicators, Navigation Arrows & Mini Metric */}
+              {/* 3. Bottom Showcase Bar with Dot Indicators & Navigation */}
               <div className="px-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200/70 dark:border-slate-800/80 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  {/* Mini bottom Prev/Next arrow controls */}
+                  {/* Mini bottom Prev/Next controls */}
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -577,15 +689,16 @@ export default function Hero() {
 
                   {/* Dot Indicators */}
                   <div className="flex items-center gap-1.5">
-                    {heroShowcases.map((item, idx) => (
+                    {showcases.map((item, idx) => (
                       <button
-                        key={idx}
+                        key={item.id || idx}
                         type="button"
                         onClick={(e) => handleTabSelect(idx, e)}
-                        className={`transition-all duration-300 rounded-full cursor-pointer ${activeTab === idx
+                        className={`transition-all duration-300 rounded-full cursor-pointer ${
+                          safeIndex === idx
                             ? 'w-7 h-2 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 shadow-sm'
                             : 'w-2 h-2 bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600'
-                          }`}
+                        }`}
                         aria-label={`Switch to ${item.title}`}
                       />
                     ))}
@@ -598,23 +711,19 @@ export default function Hero() {
                   <span className="text-purple-600 dark:text-purple-400 font-bold">100% Customized For You</span>
                 </div>
               </div>
-
             </div>
 
             {/* Indian Flag Tricolor Micro-Line Accent on Rim */}
             <div
               className="absolute bottom-0 left-8 right-8 h-[2px] rounded-full pointer-events-none opacity-80"
               style={{
-                background: 'linear-gradient(90deg, rgba(255,153,51,0.9) 0%, rgba(255,255,255,0.6) 30%, rgba(0,114,255,0.8) 50%, rgba(255,255,255,0.6) 70%, rgba(19,136,8,0.9) 100%)'
+                background:
+                  'linear-gradient(90deg, rgba(255,153,51,0.9) 0%, rgba(255,255,255,0.6) 30%, rgba(0,114,255,0.8) 50%, rgba(255,255,255,0.6) 70%, rgba(19,136,8,0.9) 100%)'
               }}
             />
           </div>
-
         </div>
-
       </div>
     </section>
   );
 }
-
-

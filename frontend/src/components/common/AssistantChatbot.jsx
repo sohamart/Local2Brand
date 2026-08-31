@@ -89,13 +89,67 @@ const FOLLOWUP_QUICK_CHIPS = [
   '📞 15-min call request',
 ];
 
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+// Helper to get or create a session valid for 7 days
+const getStoredSessionId = () => {
+  if (typeof window === 'undefined') return '';
+  try {
+    const storedTime = localStorage.getItem('l2b_chat_session_time');
+    const storedId = localStorage.getItem('l2b_chat_session_id');
+    const now = Date.now();
+
+    if (storedId && storedTime && now - parseInt(storedTime, 10) < SEVEN_DAYS_MS) {
+      return storedId;
+    }
+
+    const newId = `sess_${now}_${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem('l2b_chat_session_id', newId);
+    localStorage.setItem('l2b_chat_session_time', now.toString());
+    localStorage.removeItem('l2b_chat_messages');
+    return newId;
+  } catch (e) {
+    return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  }
+};
+
+// Helper to get stored messages from 7-day cache
+const getStoredMessages = (brandName) => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const storedTime = localStorage.getItem('l2b_chat_session_time');
+    const now = Date.now();
+
+    if (storedTime && now - parseInt(storedTime, 10) < SEVEN_DAYS_MS) {
+      const raw = localStorage.getItem('l2b_chat_messages');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    }
+  } catch (e) {}
+
+  return [
+    {
+      role: 'assistant',
+      content: `### 👋 Welcome to ${brandName || 'LOCAL2BRAND'} AI Assistant\n\nI am your dedicated digital solutions consultant. How can I help launch or grow your brand today?\n\n* **🚀 48-Hour Websites:** Ready templates starting from **₹9,999 / $399**\n* **🎁 20% Launch Discount:** Use promo code \`INDIA2025\`\n* **💎 Bespoke Builds:** Custom web apps, e-commerce & WhatsApp lead automation\n\nTap any suggested question below or type your inquiry!`,
+      timestamp: new Date().toISOString(),
+      provider: 'L2B AI Engine',
+    },
+  ];
+};
+
 export default function AssistantChatbot() {
+  const { openOrderModal, openCallbackModal } = useOrderModal();
+  const { settings } = useSiteSettings();
+  const { user } = useAuth();
+
   const [isOpen, setIsOpen] = useState(false);
   const [hasPrompted, setHasPrompted] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [sessionId, setSessionId] = useState(() => getStoredSessionId());
+  const [messages, setMessages] = useState(() => getStoredMessages(settings?.brandName));
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [sessionId, setSessionId] = useState('');
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
@@ -103,61 +157,33 @@ export default function AssistantChatbot() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const { openOrderModal, openCallbackModal } = useOrderModal();
-  const { settings } = useSiteSettings();
-  const { user } = useAuth();
-
-  // Initialize or retrieve Session ID
-  useEffect(() => {
-    let currentSession = localStorage.getItem('l2b_chat_session_id');
-    if (!currentSession) {
-      currentSession = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      localStorage.setItem('l2b_chat_session_id', currentSession);
-    }
-    setSessionId(currentSession);
-  }, []);
-
   // Trigger floating prompt indicator once after 6 seconds
   useEffect(() => {
     const timer = setTimeout(() => setHasPrompted(true), 6000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch chat history from MongoDB when drawer is opened
+  // Sync / verify chat history with backend database on mount
   useEffect(() => {
-    if (isOpen && sessionId && !historyLoaded) {
-      const fetchHistory = async () => {
-        try {
-          const res = await api.get(`/chat/history?sessionId=${sessionId}`);
-          if (res?.success && Array.isArray(res.messages) && res.messages.length > 0) {
-            setMessages(res.messages);
-          } else {
-            // Default initial greeting if no history exists yet
-            setMessages([
-              {
-                role: 'assistant',
-                content: `### 👋 Welcome to ${settings.brandName || 'LOCAL2BRAND'} AI Assistant\n\nI am your dedicated digital solutions consultant. How can I help launch or grow your brand today?\n\n* **🚀 48-Hour Websites:** Ready templates starting from **₹9,999 / $399**\n* **🎁 20% Launch Discount:** Use promo code \`INDIA2025\`\n* **💎 Bespoke Builds:** Custom web apps, e-commerce & WhatsApp lead automation\n\nTap any suggested question below or type your inquiry!`,
-                timestamp: new Date().toISOString(),
-                provider: 'L2B AI Engine',
-              },
-            ]);
-          }
-        } catch (err) {
-          console.warn('Failed to load chat history:', err.message);
-          setMessages([
-            {
-              role: 'assistant',
-              content: `### 👋 Welcome to ${settings.brandName || 'LOCAL2BRAND'} AI!\n\nHow can I help you today? Ask me about our website packages, 48-hour delivery, or launch discounts!`,
-              timestamp: new Date().toISOString(),
-            },
-          ]);
-        } finally {
-          setHistoryLoaded(true);
+    if (!sessionId) return;
+
+    const syncHistoryFromDb = async () => {
+      try {
+        const res = await api.get(`/chat/history?sessionId=${sessionId}`);
+        if (res?.success && Array.isArray(res.messages) && res.messages.length > 0) {
+          setMessages(res.messages);
+          localStorage.setItem('l2b_chat_messages', JSON.stringify(res.messages));
+          localStorage.setItem('l2b_chat_session_time', Date.now().toString());
         }
-      };
-      fetchHistory();
-    }
-  }, [isOpen, sessionId, historyLoaded, settings.brandName]);
+      } catch (err) {
+        console.warn('Chat DB sync notice (using 7-day cache):', err.message);
+      } finally {
+        setHistoryLoaded(true);
+      }
+    };
+
+    syncHistoryFromDb();
+  }, [sessionId]);
 
   // Auto-scroll to bottom of messages container
   useEffect(() => {
@@ -180,14 +206,17 @@ export default function AssistantChatbot() {
     setInputText('');
     setErrorMessage('');
 
-    // Append user message immediately to UI
+    // Append user message immediately to UI and 7-day LocalStorage
     const newUserMsg = {
       role: 'user',
       content: query,
       timestamp: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, newUserMsg]);
+    const updatedWithUser = [...messages, newUserMsg];
+    setMessages(updatedWithUser);
+    localStorage.setItem('l2b_chat_messages', JSON.stringify(updatedWithUser));
+    localStorage.setItem('l2b_chat_session_time', Date.now().toString());
     setIsTyping(true);
 
     try {
@@ -219,7 +248,10 @@ export default function AssistantChatbot() {
           model: res.model,
           timestamp: res.timestamp || new Date().toISOString(),
         };
-        setMessages((prev) => [...prev, assistantReply]);
+        const finalThread = [...updatedWithUser, assistantReply];
+        setMessages(finalThread);
+        localStorage.setItem('l2b_chat_messages', JSON.stringify(finalThread));
+        localStorage.setItem('l2b_chat_session_time', Date.now().toString());
       } else {
         throw new Error(res?.message || 'Failed to get response from AI');
       }
@@ -227,15 +259,16 @@ export default function AssistantChatbot() {
       console.error('Chat error:', err);
       const errMsg = err.data?.message || err.message || 'Connection error. Please try again.';
       setErrorMessage(errMsg);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: `⚠️ *Notice*: We encountered a temporary connection issue. You can retry your message or request an instant callback from our founders.`,
-          timestamp: new Date().toISOString(),
-          isError: true,
-        },
-      ]);
+      const errorReply = {
+        role: 'assistant',
+        content: `⚠️ *Notice*: We encountered a temporary connection issue. You can retry your message or request an instant callback from our founders.`,
+        timestamp: new Date().toISOString(),
+        isError: true,
+      };
+      const threadWithError = [...updatedWithUser, errorReply];
+      setMessages(threadWithError);
+      localStorage.setItem('l2b_chat_messages', JSON.stringify(threadWithError));
+      localStorage.setItem('l2b_chat_session_time', Date.now().toString());
     } finally {
       setIsTyping(false);
     }
@@ -256,17 +289,21 @@ export default function AssistantChatbot() {
       console.warn('Clear chat error:', err.message);
     }
 
-    const newSession = `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const now = Date.now();
+    const newSession = `sess_${now}_${Math.random().toString(36).substring(2, 9)}`;
     localStorage.setItem('l2b_chat_session_id', newSession);
+    localStorage.setItem('l2b_chat_session_time', now.toString());
     setSessionId(newSession);
 
-    setMessages([
+    const initial = [
       {
         role: 'assistant',
         content: `👋 **Chat reset!** How can I assist you with your website project today?`,
         timestamp: new Date().toISOString(),
       },
-    ]);
+    ];
+    setMessages(initial);
+    localStorage.setItem('l2b_chat_messages', JSON.stringify(initial));
   };
 
   // Helper to format inline markdown text (bold, code, links)

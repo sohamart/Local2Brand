@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Grid,
   Plus,
   Edit2,
   Trash2,
-  Upload,
   ExternalLink,
   X,
   ArrowUp,
@@ -12,25 +10,56 @@ import {
   Sparkles,
   Save,
   CheckCircle,
-  Eye,
-  Clock,
-  Layers
+  Search
 } from 'lucide-react';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
+
+const CATEGORIES = [
+  'LMS & Courses',
+  'Restaurant',
+  'Cafe',
+  'Salon',
+  'Gym',
+  'Hotel',
+  'Real Estate',
+  'Photography',
+  'Boutique',
+  'Coaching',
+  'Dental',
+  'Jewellery',
+  'Automotive',
+  'Custom'
+];
+
+const ICONS = [
+  { label: 'Graduation Cap (LMS/Edu)', value: 'GraduationCap' },
+  { label: 'Utensils (Restaurant/Food)', value: 'Utensils' },
+  { label: 'Gem (Jewellery/Luxe)', value: 'Gem' },
+  { label: 'Building (Real Estate/Hotel)', value: 'Building2' },
+  { label: 'Shopping Bag (E-Com/Boutique)', value: 'ShoppingBag' },
+  { label: 'Sparkles (Salon/Creative)', value: 'Sparkles' },
+  { label: 'Zap (Gym/Speed/Fitness)', value: 'Zap' },
+  { label: 'Star (General)', value: 'Star' }
+];
 
 export default function AdminDemos() {
   const [demos, setDemos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDemo, setEditingDemo] = useState(null);
-  const [savingOrder, setSavingOrder] = useState(false);
-  const [orderChanged, setOrderChanged] = useState(false);
+  const [savingHeroOrder, setSavingHeroOrder] = useState(false);
+  const [savingCatalogOrder, setSavingCatalogOrder] = useState(false);
+  const [heroOrderChanged, setHeroOrderChanged] = useState(false);
+  const [catalogOrderChanged, setCatalogOrderChanged] = useState(false);
   const [notification, setNotification] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
 
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
+    shortName: '',
     category: 'Restaurant',
     badge: 'PRO READY',
     price: '$149',
@@ -42,11 +71,15 @@ export default function AdminDemos() {
     description: '',
     features: '',
     isFeatured: true,
+    heroTag: '',
+    heroStat: '',
+    rating: '5.0 ★ (50+ Reviews)',
+    iconName: 'Sparkles'
   });
 
   const showNotification = (msg) => {
     setNotification(msg);
-    setTimeout(() => setNotification(''), 3500);
+    setTimeout(() => setNotification(''), 4000);
   };
 
   const fetchDemos = async () => {
@@ -55,7 +88,8 @@ export default function AdminDemos() {
       const res = await api.get('/demos');
       if (res.success) {
         setDemos(res.demos || []);
-        setOrderChanged(false);
+        setHeroOrderChanged(false);
+        setCatalogOrderChanged(false);
       }
     } catch (err) {
       console.warn('Error fetching demos:', err);
@@ -68,8 +102,71 @@ export default function AdminDemos() {
     fetchDemos();
   }, []);
 
-  // Move template up/down in order
-  const moveDemo = (index, direction) => {
+  // Filtered Demos for the Hero Slider (featured demos sorted by heroOrder or order)
+  const heroDemos = useMemo(() => {
+    return demos
+      .filter((d) => Boolean(d.isFeatured))
+      .sort((a, b) => (a.heroOrder || a.order || 0) - (b.heroOrder || b.order || 0));
+  }, [demos]);
+
+  // Catalog filtered by search & category
+  const filteredCatalog = useMemo(() => {
+    return demos.filter((d) => {
+      const matchCat = activeCategory === 'All' || d.category === activeCategory;
+      const matchSearch =
+        !searchQuery ||
+        d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        d.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        d.slug.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchSearch;
+    });
+  }, [demos, activeCategory, searchQuery]);
+
+  // Move a demo UP or DOWN in the Hero Showcase Sequence
+  const moveHeroDemo = (index, direction) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= heroDemos.length) return;
+
+    const updatedHeroList = [...heroDemos];
+    const temp = updatedHeroList[index];
+    updatedHeroList[index] = updatedHeroList[newIndex];
+    updatedHeroList[newIndex] = temp;
+
+    // Assign new sequential heroOrder
+    const updatedIds = updatedHeroList.map((d) => d._id?.toString());
+    const newAllDemos = demos.map((d) => {
+      const hIdx = updatedIds.indexOf(d._id?.toString());
+      if (hIdx !== -1) {
+        return { ...d, heroOrder: hIdx + 1, isFeatured: true };
+      }
+      return d;
+    });
+
+    setDemos(newAllDemos);
+    setHeroOrderChanged(true);
+  };
+
+  // Save the new Hero Slider Order to API
+  const handleSaveHeroOrder = async () => {
+    setSavingHeroOrder(true);
+    try {
+      const heroOrderedIds = heroDemos.map((d) => d._id);
+      const res = await api.put('/demos/reorder', { heroOrderedIds });
+      if (res.success) {
+        showNotification('🎉 Hero slider showcase sequence saved successfully! Home page updated.');
+        setHeroOrderChanged(false);
+        // Refresh local cache
+        localStorage.removeItem('l2b_cached_hero_demos');
+      }
+    } catch (err) {
+      alert(err.message || 'Failed to save Hero order');
+    } finally {
+      setSavingHeroOrder(false);
+    }
+  };
+
+  // Move a demo UP or DOWN in the general catalog
+  const moveCatalogDemo = (index, direction) => {
     const newIndex = index + direction;
     if (newIndex < 0 || newIndex >= demos.length) return;
 
@@ -78,37 +175,66 @@ export default function AdminDemos() {
     updated[index] = updated[newIndex];
     updated[newIndex] = temp;
 
-    // Update order indexes
     updated.forEach((d, idx) => {
       d.order = idx + 1;
     });
 
     setDemos(updated);
-    setOrderChanged(true);
+    setCatalogOrderChanged(true);
   };
 
-  const handleSaveOrder = async () => {
-    setSavingOrder(true);
+  // Save general catalog order
+  const handleSaveCatalogOrder = async () => {
+    setSavingCatalogOrder(true);
     try {
       const orderedIds = demos.map((d) => d._id);
       const res = await api.put('/demos/reorder', { orderedIds });
       if (res.success) {
-        showNotification('Display order saved successfully! ✅');
-        setOrderChanged(false);
+        showNotification('✅ Marketplace catalog display order saved!');
+        setCatalogOrderChanged(false);
       }
     } catch (err) {
-      alert(err.message || 'Failed to save order');
+      alert(err.message || 'Failed to save catalog order');
     } finally {
-      setSavingOrder(false);
+      setSavingCatalogOrder(false);
     }
   };
 
+  // 1-Click Toggle for Show on Hero
+  const handleToggleFeatured = async (demo) => {
+    const newFeaturedState = !demo.isFeatured;
+    try {
+      const res = await api.put(`/demos/${demo._id}`, {
+        isFeatured: newFeaturedState,
+        heroOrder: newFeaturedState ? heroDemos.length + 1 : 999
+      });
+      if (res.success) {
+        setDemos((prev) =>
+          prev.map((d) =>
+            d._id === demo._id
+              ? { ...d, isFeatured: newFeaturedState, heroOrder: newFeaturedState ? heroDemos.length + 1 : 999 }
+              : d
+          )
+        );
+        showNotification(
+          newFeaturedState
+            ? `🌟 "${demo.title}" added to Home Hero Slider!`
+            : `Removed "${demo.title}" from Home Hero Slider.`
+        );
+        localStorage.removeItem('l2b_cached_hero_demos');
+      }
+    } catch (err) {
+      alert('Failed to update Hero featured status: ' + err.message);
+    }
+  };
+
+  // 1-Click Toggle Status (published vs coming_soon)
   const handleToggleStatus = async (demo) => {
     const newStatus = demo.status === 'published' ? 'coming_soon' : 'published';
     try {
       const res = await api.put(`/demos/${demo._id}`, { status: newStatus });
       if (res.success) {
-        setDemos(demos.map((d) => (d._id === demo._id ? { ...d, status: newStatus } : d)));
+        setDemos((prev) => prev.map((d) => (d._id === demo._id ? { ...d, status: newStatus } : d)));
         showNotification(`Status updated to "${newStatus.replace('_', ' ').toUpperCase()}"!`);
       }
     } catch (err) {
@@ -120,9 +246,10 @@ export default function AdminDemos() {
     if (demo) {
       setEditingDemo(demo);
       setFormData({
-        title: demo.title,
-        slug: demo.slug,
-        category: demo.category,
+        title: demo.title || '',
+        slug: demo.slug || '',
+        shortName: demo.shortName || demo.title?.split(' ')[0] || '',
+        category: demo.category || 'Restaurant',
         badge: demo.badge || 'PRO READY',
         price: demo.price || '$149',
         priceInr: demo.priceInr || '₹4,999',
@@ -131,14 +258,19 @@ export default function AdminDemos() {
         liveUrl: demo.liveUrl || '',
         thumbnail: demo.thumbnail || '',
         description: demo.description || '',
-        features: Array.isArray(demo.features) ? demo.features.join(', ') : '',
-        isFeatured: demo.isFeatured || false,
+        features: Array.isArray(demo.features) ? demo.features.join(', ') : demo.features || '',
+        isFeatured: Boolean(demo.isFeatured),
+        heroTag: demo.heroTag || '',
+        heroStat: demo.heroStat || demo.badge || '',
+        rating: demo.rating || '5.0 ★ (50+ Reviews)',
+        iconName: demo.iconName || 'Sparkles'
       });
     } else {
       setEditingDemo(null);
       setFormData({
         title: '',
         slug: '',
+        shortName: '',
         category: 'Restaurant',
         badge: 'NEW',
         price: '$149',
@@ -150,6 +282,10 @@ export default function AdminDemos() {
         description: '',
         features: '',
         isFeatured: true,
+        heroTag: '',
+        heroStat: '',
+        rating: '5.0 ★ (50+ Reviews)',
+        iconName: 'Sparkles'
       });
     }
     setIsModalOpen(true);
@@ -160,10 +296,9 @@ export default function AdminDemos() {
     try {
       const payload = {
         ...formData,
-        features: formData.features
-          .split(',')
-          .map((f) => f.trim())
-          .filter(Boolean),
+        features: typeof formData.features === 'string'
+          ? formData.features.split(',').map((f) => f.trim()).filter(Boolean)
+          : formData.features
       };
 
       if (editingDemo) {
@@ -190,7 +325,7 @@ export default function AdminDemos() {
     try {
       const res = await api.delete(`/demos/${id}`);
       if (res.success) {
-        setDemos(demos.filter((d) => d._id !== id));
+        setDemos((prev) => prev.filter((d) => d._id !== id));
         showNotification('Template deleted.');
       }
     } catch (err) {
@@ -199,184 +334,399 @@ export default function AdminDemos() {
   };
 
   return (
-    <div className="space-y-6">
-      
+    <div className="space-y-8">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs font-bold uppercase tracking-wider mb-1">
             <AshokaChakra size={11} />
-            <span>Marketplace Catalog & Hero Showcase</span>
+            <span>Interactive Hero Slider & Marketplace CMS</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Website Demo Templates
+            Hero Slider & Demo Websites Manager
           </h1>
-          <p className="text-xs text-slate-500">
-            Set display order, toggle Hero Showcase slides, and customize pricing & live preview URLs.
+          <p className="text-xs text-slate-500 max-w-2xl mt-1">
+            Control exactly which demo showcases appear in the <strong>Home Page Hero 3D Slider</strong> and set their display order (1st, 2nd, 3rd, etc.).
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {orderChanged && (
-            <button
-              onClick={handleSaveOrder}
-              disabled={savingOrder}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 flex items-center gap-1.5 cursor-pointer shadow-sm animate-pulse"
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>{savingOrder ? 'Saving...' : 'Save New Order'}</span>
-            </button>
-          )}
-
           <button
             onClick={() => handleOpenModal()}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center gap-1.5 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center gap-1.5 cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4" />
             <span>Add New Template</span>
           </button>
         </div>
       </div>
 
       {notification && (
-        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
-          <CheckCircle className="w-4 h-4" />
+        <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+          <CheckCircle className="w-4 h-4 shrink-0" />
           <span>{notification}</span>
         </div>
       )}
 
-      {/* Demos List & Order Controls */}
-      <div className="space-y-3">
-        {loading ? (
-          <div className="p-8 text-center text-slate-400 text-xs">Loading template catalog...</div>
-        ) : demos.length === 0 ? (
-          <div className="p-8 text-center text-slate-400 text-xs">No demo templates found. Click "Add New Template" above.</div>
-        ) : (
-          demos.map((demo, idx) => (
-            <div
-              key={demo._id}
-              className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs transition-all hover:border-purple-400/50"
-            >
-              {/* Left: Reorder controls & Index & Thumbnail */}
-              <div className="flex items-center gap-3">
-                
-                {/* Up/Down buttons */}
-                <div className="flex flex-col gap-1 shrink-0">
-                  <button
-                    onClick={() => moveDemo(idx, -1)}
-                    disabled={idx === 0}
-                    className="p-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-950 text-slate-600 dark:text-slate-400 disabled:opacity-30 cursor-pointer"
-                    title="Move Up"
-                  >
-                    <ArrowUp className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => moveDemo(idx, 1)}
-                    disabled={idx === demos.length - 1}
-                    className="p-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-950 text-slate-600 dark:text-slate-400 disabled:opacity-30 cursor-pointer"
-                    title="Move Down"
-                  >
-                    <ArrowDown className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="w-6 text-center font-mono font-black text-xs text-purple-600">
-                  #{idx + 1}
-                </div>
-
-                <div className="w-14 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0">
-                  <img
-                    src={demo.thumbnail || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=300'}
-                    alt={demo.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-                      {demo.title}
-                    </h3>
-                    {demo.badge && (
-                      <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                        {demo.badge}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
-                    <span>{demo.category}</span>
-                    <span>•</span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400">{demo.priceInr || demo.price}</span>
-                    <span>•</span>
-                    <span>{demo.turnaround || '2 - 4 Days'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right: Hero Showcase Toggle, Status Toggle & Action buttons */}
-              <div className="flex items-center gap-2 sm:self-center self-end">
-                {/* 1-Click Show on Hero Toggle */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleFeatured(demo)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold transition-all cursor-pointer border flex items-center gap-1.5 ${
-                    demo.isFeatured
-                      ? 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-300 shadow-xs'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 opacity-60'
-                  }`}
-                  title="Click to toggle Show on Home Page Hero"
-                >
-                  <Sparkles className={`w-3 h-3 ${demo.isFeatured ? 'text-purple-600 fill-purple-600' : ''}`} />
-                  <span>{demo.isFeatured ? 'Hero Active 🌟' : 'Hero Off'}</span>
-                </button>
-
-                {/* Status Switcher */}
-                <button
-                  type="button"
-                  onClick={() => handleToggleStatus(demo)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer border ${
-                    demo.status === 'published'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-300'
-                      : 'bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300'
-                  }`}
-                  title="Click to toggle Published vs Coming Soon"
-                >
-                  {demo.status === 'published' ? '● Published' : '⏳ Coming Soon'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleOpenModal(demo)}
-                  className="p-2 rounded-xl text-slate-600 hover:text-purple-600 bg-slate-100 dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950 cursor-pointer"
-                  title="Edit Template Details"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDeleteDemo(demo._id)}
-                  className="p-2 rounded-xl text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-950/60 cursor-pointer"
-                  title="Delete Template"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
+      {/* ========================================================================= */}
+      {/* SECTION 1: HERO SLIDER SHOWCASE MANAGER (THE CORE USER REQUIREMENT)        */}
+      {/* ========================================================================= */}
+      <div className="p-6 rounded-3xl bg-gradient-to-b from-purple-500/10 via-white to-white dark:from-purple-950/40 dark:via-slate-900 dark:to-slate-900 border-2 border-purple-500/40 shadow-xl space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-200/60 dark:border-purple-800/60 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-purple-600 text-white flex items-center justify-center shadow-md">
+              <Sparkles className="w-5 h-5" />
             </div>
-          ))
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                  Home Hero Slider Showcase Order
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border border-purple-300">
+                  {heroDemos.length} Slides Active
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                These demo templates will appear in the 3D showcase slider on the Homepage. Use ⬆️ / ⬇️ arrows to reorder which demo plays first.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {heroOrderChanged && (
+              <button
+                onClick={handleSaveHeroOrder}
+                disabled={savingHeroOrder}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 flex items-center gap-1.5 cursor-pointer shadow-lg animate-pulse"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>{savingHeroOrder ? 'Saving Sequence...' : 'Save Slider Order'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {heroDemos.length === 0 ? (
+          <div className="p-8 text-center bg-white/70 dark:bg-slate-800/40 rounded-2xl border border-dashed border-purple-300 dark:border-purple-800">
+            <Sparkles className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+              No demos are currently selected for the Hero Slider.
+            </p>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Click the "🌟 Hero Active" toggle on any demo in the catalog below to add it to the slider!
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {heroDemos.map((demo, idx) => (
+              <div
+                key={demo._id || demo.slug}
+                className="relative rounded-2xl bg-white dark:bg-slate-800/90 border-2 border-purple-300 dark:border-purple-700/60 p-3.5 shadow-md flex flex-col justify-between group hover:border-purple-500 transition-all"
+              >
+                {/* Hero Position Badge */}
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="px-2 py-0.5 rounded-md bg-purple-600 text-white font-mono font-black text-[10px] shadow-xs">
+                    Slide #{idx + 1} {idx === 0 ? '(1st on Homepage)' : ''}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => moveHeroDemo(idx, -1)}
+                      disabled={idx === 0}
+                      className="p-1 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-purple-100 dark:hover:bg-purple-950 text-slate-700 dark:text-slate-200 disabled:opacity-20 cursor-pointer transition-colors"
+                      title="Move slide earlier in sequence"
+                    >
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => moveHeroDemo(idx, 1)}
+                      disabled={idx === heroDemos.length - 1}
+                      className="p-1 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-purple-100 dark:hover:bg-purple-950 text-slate-700 dark:text-slate-200 disabled:opacity-20 cursor-pointer transition-colors"
+                      title="Move slide later in sequence"
+                    >
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Thumbnail Preview */}
+                <div className="aspect-[16/10] rounded-xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-slate-700 relative mb-3">
+                  <img
+                    src={demo.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600'}
+                    alt={demo.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-950/80 backdrop-blur-md text-[9px] font-bold text-white border border-white/20">
+                    {demo.category}
+                  </div>
+                  {demo.badge && (
+                    <div className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 text-[9px] font-extrabold">
+                      {demo.badge}
+                    </div>
+                  )}
+                </div>
+
+                {/* Demo Details */}
+                <div className="space-y-1 flex-1">
+                  <h3 className="text-xs font-black text-slate-900 dark:text-white leading-tight line-clamp-1">
+                    {demo.title}
+                  </h3>
+                  <div className="text-[10px] text-slate-500 flex items-center justify-between">
+                    <span>Tab Label: <strong>{demo.shortName || demo.title?.split(' ')[0]}</strong></span>
+                    <span className="text-emerald-600 font-bold">{demo.priceInr || demo.price}</span>
+                  </div>
+                  {demo.heroTag && (
+                    <p className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold truncate">
+                      🏷️ {demo.heroTag}
+                    </p>
+                  )}
+                </div>
+
+                {/* Bottom Card Actions */}
+                <div className="flex items-center justify-between gap-2 pt-3 mt-2 border-t border-slate-100 dark:border-slate-700/60">
+                  <button
+                    onClick={() => handleOpenModal(demo)}
+                    className="text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    <span>Edit Showcase</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleToggleFeatured(demo)}
+                    className="px-2 py-1 rounded-lg text-[9px] font-bold bg-red-50 dark:bg-red-950/60 text-red-600 hover:bg-red-100 cursor-pointer"
+                    title="Remove from Hero Slider"
+                  >
+                    Remove Slide ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* EDIT / CREATE MODAL */}
+      {/* ========================================================================= */}
+      {/* SECTION 2: FULL TEMPLATE CATALOG CMS                                      */}
+      {/* ========================================================================= */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white">
+              All Template Catalog ({demos.length})
+            </h2>
+            <p className="text-xs text-slate-500">
+              Manage complete website listings, pricing, live demo URLs, and toggle Hero visibility.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {catalogOrderChanged && (
+              <button
+                onClick={handleSaveCatalogOrder}
+                disabled={savingCatalogOrder}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 flex items-center gap-1.5 cursor-pointer shadow-sm animate-pulse"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>{savingCatalogOrder ? 'Saving...' : 'Save Catalog Order'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Filter / Search Bar */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="relative flex-1 w-full">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search template by title, category, or slug..."
+              className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-hidden"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-1 sm:pb-0 scrollbar-none">
+            {['All', ...CATEGORIES.slice(0, 7)].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveCategory(cat)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  activeCategory === cat
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Catalog List Items */}
+        <div className="space-y-2.5">
+          {loading ? (
+            <div className="p-8 text-center text-slate-400 text-xs">Loading template catalog...</div>
+          ) : filteredCatalog.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-xs">No matching demo templates found.</div>
+          ) : (
+            filteredCatalog.map((demo, idx) => (
+              <div
+                key={demo._id || demo.slug}
+                className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs ${
+                  demo.isFeatured
+                    ? 'border-purple-300 dark:border-purple-800/80 bg-purple-50/20 dark:bg-purple-950/10'
+                    : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                }`}
+              >
+                {/* Left Section: Reorder, Thumbnail & Info */}
+                <div className="flex items-center gap-3">
+                  {/* Up/Down buttons for general catalog */}
+                  <div className="flex flex-col gap-1 shrink-0">
+                    <button
+                      onClick={() => moveCatalogDemo(idx, -1)}
+                      disabled={idx === 0}
+                      className="p-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-950 text-slate-600 dark:text-slate-400 disabled:opacity-20 cursor-pointer"
+                      title="Move Up in Catalog"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => moveCatalogDemo(idx, 1)}
+                      disabled={idx === demos.length - 1}
+                      className="p-1 rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-950 text-slate-600 dark:text-slate-400 disabled:opacity-20 cursor-pointer"
+                      title="Move Down in Catalog"
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  <div className="w-6 text-center font-mono font-black text-xs text-slate-400">
+                    #{idx + 1}
+                  </div>
+
+                  <div className="w-14 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0">
+                    <img
+                      src={demo.thumbnail || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=300'}
+                      alt={demo.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                        {demo.title}
+                      </h3>
+                      {demo.badge && (
+                        <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                          {demo.badge}
+                        </span>
+                      )}
+                      {demo.isFeatured && (
+                        <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border border-purple-300 flex items-center gap-1">
+                          <Sparkles className="w-2.5 h-2.5 fill-purple-600" />
+                          <span>Hero Slide #{demo.heroOrder || 1}</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                      <span>{demo.category}</span>
+                      <span>•</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                        {demo.priceInr || demo.price}
+                      </span>
+                      <span>•</span>
+                      <span>{demo.turnaround || '2 - 4 Days'}</span>
+                      {demo.liveUrl && (
+                        <>
+                          <span>•</span>
+                          <a
+                            href={demo.liveUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-purple-600 dark:text-purple-400 font-semibold hover:underline flex items-center gap-1"
+                          >
+                            <span>Live</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Section: Action Controls */}
+                <div className="flex items-center gap-2 sm:self-center self-end shrink-0">
+                  {/* Hero Showcase Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleFeatured(demo)}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-extrabold transition-all cursor-pointer border flex items-center gap-1.5 ${
+                      demo.isFeatured
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-purple-50 dark:hover:bg-purple-950 hover:text-purple-600'
+                    }`}
+                    title="Click to toggle Show on Home Page Hero Slider"
+                  >
+                    <Sparkles className={`w-3 h-3 ${demo.isFeatured ? 'fill-white' : ''}`} />
+                    <span>{demo.isFeatured ? 'Hero Active 🌟' : 'Add to Hero'}</span>
+                  </button>
+
+                  {/* Status Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleStatus(demo)}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer border ${
+                      demo.status === 'published'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-300'
+                        : 'bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300'
+                    }`}
+                    title="Click to toggle Published vs Coming Soon"
+                  >
+                    {demo.status === 'published' ? '● Published' : '⏳ Coming Soon'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleOpenModal(demo)}
+                    className="p-2 rounded-xl text-slate-600 hover:text-purple-600 bg-slate-100 dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950 cursor-pointer transition-colors"
+                    title="Edit Template Details"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteDemo(demo._id)}
+                    className="p-2 rounded-xl text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-950/60 cursor-pointer transition-colors"
+                    title="Delete Template"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* EDIT / CREATE TEMPLATE MODAL WITH HERO SPECIFIC FIELDS                    */}
+      {/* ========================================================================= */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-xl overflow-y-auto">
           <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto max-h-[92vh] flex flex-col">
-            
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60 shrink-0">
-              <h3 className="text-base font-black text-slate-900 dark:text-white">
-                {editingDemo ? 'Edit Template Details' : 'Add New Demo Template'}
-              </h3>
+              <div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">
+                  {editingDemo ? 'Edit Template Details' : 'Add New Demo Template'}
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Configure catalog details, pricing, and Home Page Hero showcase appearance.
+                </p>
+              </div>
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
@@ -386,16 +736,15 @@ export default function AdminDemos() {
             </div>
 
             <form onSubmit={handleSaveDemo} className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Title *</label>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Full Title *</label>
                   <input
                     type="text"
                     required
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="e.g. Royal Nawabi Fine Dining"
+                    placeholder="e.g. Royal Nawabi Fine Dining Hub"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold"
                   />
                 </div>
@@ -420,7 +769,7 @@ export default function AdminDemos() {
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold"
                   >
-                    {['LMS & Courses', 'Restaurant', 'Cafe', 'Salon', 'Gym', 'Hotel', 'Real Estate', 'Photography', 'Boutique', 'Coaching', 'Dental', 'Jewellery', 'Automotive', 'Custom'].map((cat) => (
+                    {CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
@@ -442,7 +791,7 @@ export default function AdminDemos() {
                     type="text"
                     value={formData.badge}
                     onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
-                    placeholder="e.g. BEST SELLER"
+                    placeholder="e.g. BEST SELLER / PRO READY"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
                   />
                 </div>
@@ -482,7 +831,9 @@ export default function AdminDemos() {
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Thumbnail / Hero Image URL</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Thumbnail / Hero Showcase Image URL
+                </label>
                 <input
                   type="text"
                   value={formData.thumbnail}
@@ -504,7 +855,9 @@ export default function AdminDemos() {
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Features (Comma Separated)</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Features (Comma Separated)
+                </label>
                 <input
                   type="text"
                   value={formData.features}
@@ -514,49 +867,103 @@ export default function AdminDemos() {
                 />
               </div>
 
-              {/* Show on Hero Showcase Switch */}
-              <div className="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-xs font-black text-slate-900 dark:text-white block">
-                    Showcase on Home Page Hero Slider 🌟
-                  </span>
-                  <span className="text-[11px] text-slate-500 block">
-                    Display this template in the main interactive 3D hero slider on the home page.
-                  </span>
+              {/* HOME HERO SLIDER SETTINGS CARD */}
+              <div className="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border-2 border-purple-300 dark:border-purple-800 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-black text-slate-900 dark:text-white block">
+                      🌟 Home Page Hero Slider Visibility
+                    </span>
+                    <span className="text-[11px] text-slate-500 block">
+                      Include this template in the main interactive 3D hero slider on the home page.
+                    </span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={formData.isFeatured}
+                      onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-10 h-5 bg-slate-300 peer-focus:outline-hidden rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-purple-600"></div>
+                  </label>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={formData.isFeatured}
-                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-10 h-5 bg-slate-300 peer-focus:outline-hidden rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-purple-600"></div>
-                </label>
+
+                {formData.isFeatured && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-purple-200/70 dark:border-purple-900/60 animate-in fade-in">
+                    <div>
+                      <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                        Hero Tab Short Name (Pill Label)
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.shortName}
+                        onChange={(e) => setFormData({ ...formData, shortName: e.target.value })}
+                        placeholder="e.g. LMS Platform / Fine Dining"
+                        className="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                        Hero Tag / Headline Feature
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.heroTag}
+                        onChange={(e) => setFormData({ ...formData, heroTag: e.target.value })}
+                        placeholder="e.g. Video Curriculum & Instant Checkout"
+                        className="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                        Hero Stat Badge
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.heroStat}
+                        onChange={(e) => setFormData({ ...formData, heroStat: e.target.value })}
+                        placeholder="e.g. Full-Stack EdTech / High Ticket"
+                        className="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                        Showcase Icon
+                      </label>
+                      <select
+                        value={formData.iconName}
+                        onChange={(e) => setFormData({ ...formData, iconName: e.target.value })}
+                        className="w-full p-2 rounded-lg bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-xs font-bold"
+                      >
+                        {ICONS.map((ico) => (
+                          <option key={ico.value} value={ico.value}>{ico.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight"
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight cursor-pointer hover:opacity-95"
                 >
                   Save Template
                 </button>
               </div>
-
             </form>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }

@@ -60,7 +60,7 @@ const chatSessionSchema = new mongoose.Schema(
     lastActiveAt: {
       type: Date,
       default: Date.now,
-      index: true,
+      index: { expires: 604800 }, // 7 days in seconds (7 * 24 * 60 * 60)
     },
   },
   {
