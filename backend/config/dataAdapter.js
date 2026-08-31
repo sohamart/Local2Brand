@@ -158,30 +158,46 @@ export const dataStore = {
   },
 
   async updateUser(id, updates) {
+    let mongoUpdated = null;
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
-        if (mongoose.Types.ObjectId.isValid(id)) {
-          const updated = await User.findByIdAndUpdate(id, { $set: updates }, { new: true });
-          if (updated) return updated;
+        if (id && mongoose.Types.ObjectId.isValid(id)) {
+          mongoUpdated = await User.findByIdAndUpdate(id, { $set: updates }, { new: true });
         }
-        // Fallback search by email or admin role
-        const fallbackUpdated = await User.findOneAndUpdate(
-          { $or: [{ email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim() }, { role: 'admin' }] },
-          { $set: updates },
-          { new: true }
-        );
-        if (fallbackUpdated) return fallbackUpdated;
+        if (!mongoUpdated) {
+          mongoUpdated = await User.findOneAndUpdate(
+            { $or: [{ email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim() }, { role: 'admin' }] },
+            { $set: updates },
+            { new: true }
+          );
+        }
       } catch (err) {
         console.warn('MongoDB updateUser fallback notice:', err.message);
       }
     }
     const users = readLocalStore('users') || [];
-    const index = users.findIndex((u) => u && (String(u._id || u.id) === String(id) || (id === 'admin_default_id_001' && u.role === 'admin')));
-    if (index === -1) return null;
+    const index = users.findIndex((u) => u && (String(u._id || u.id) === String(id) || (u.role === 'admin' && (id === 'admin_master_001' || id === 'admin_default_id_001'))));
+    if (index === -1) {
+      const adminUser = {
+        _id: id || 'admin_master_001',
+        id: id || 'admin_master_001',
+        name: updates.name || 'LOCAL2BRAND Master Admin',
+        email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim(),
+        role: 'admin',
+        avatar: updates.avatar || '',
+        phone: updates.phone || '',
+        company: updates.company || '',
+        status: 'active',
+        ...updates
+      };
+      users.push(adminUser);
+      writeLocalStore('users', users);
+      return mongoUpdated || adminUser;
+    }
     users[index] = { ...users[index], ...updates, updatedAt: new Date().toISOString() };
     writeLocalStore('users', users);
-    return users[index];
+    return mongoUpdated || users[index];
   },
 
   async getAllUsers() {

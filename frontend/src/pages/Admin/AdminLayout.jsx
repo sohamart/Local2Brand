@@ -158,8 +158,12 @@ export default function AdminLayout() {
 
           <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
             <div className="flex items-center gap-2 overflow-hidden">
-              <div className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
-                A
+              <div className="w-8 h-8 rounded-xl overflow-hidden shadow-xs shrink-0 border border-slate-200 dark:border-slate-700 bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
+                {user?.avatar ? (
+                  <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span>{user?.name ? user.name[0].toUpperCase() : 'A'}</span>
+                )}
               </div>
               <div className="truncate">
                 <span className="text-xs font-bold block truncate">{user.name}</span>
@@ -204,6 +208,21 @@ export default function AdminLayout() {
             >
               User Portal
             </Link>
+
+            {/* Admin Top Avatar */}
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+              <div className="w-8 h-8 rounded-xl overflow-hidden shadow-xs border border-purple-500/40 bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
+                {user?.avatar ? (
+                  <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <span>{user?.name ? user.name[0].toUpperCase() : 'A'}</span>
+                )}
+              </div>
+              <div className="hidden sm:block text-left">
+                <span className="text-xs font-black text-slate-900 dark:text-white block leading-none">{user.name}</span>
+                <span className="text-[10px] text-purple-600 dark:text-purple-400 font-extrabold uppercase">Master Admin</span>
+              </div>
+            </div>
           </div>
         </header>
 
