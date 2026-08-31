@@ -313,29 +313,42 @@ export default function AssistantChatbot() {
           </div>
         )}
 
-        {/* L2B AI Pure Circular Floating Launcher Button */}
+        {/* L2B AI Modern Glass Circular Floating Launcher Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex flex-col items-center justify-center shadow-2xl transition-all duration-300 transform active:scale-95 cursor-pointer relative border ${
+          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 cursor-pointer relative group ${
             isOpen
-              ? 'bg-slate-900 text-white dark:bg-slate-800 border-slate-700 shadow-purple-500/20'
-              : 'l2b-gradient-bg text-white border-white/40 shadow-purple-500/40 hover:scale-105 hover:shadow-purple-500/60 animate-pulse-glow'
+              ? 'bg-slate-900 text-white border-2 border-slate-700 shadow-xl'
+              : 'bg-slate-950/90 backdrop-blur-2xl border-2 border-emerald-400/90 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:shadow-[0_0_30px_rgba(16,185,129,0.7)] hover:border-emerald-300 hover:scale-105'
           }`}
           aria-label="Toggle L2B AI Assistant"
         >
+          {/* Subtle Ambient Pulse Ring */}
+          {!isOpen && (
+            <span className="absolute inset-0 rounded-full border-2 border-emerald-500/40 animate-ping opacity-25 pointer-events-none" />
+          )}
+
+          {/* Active Online Status Pip */}
+          {!isOpen && (
+            <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-slate-950 flex items-center justify-center shadow-xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            </span>
+          )}
+
           {isOpen ? (
             <X className="w-6 h-6 text-white" />
           ) : (
-            <div className="flex flex-col items-center justify-center gap-0.5 select-none">
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center font-bold text-white shadow-xs">
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white animate-pulse" />
+            <div className="flex flex-col items-center justify-center gap-0.5 select-none relative z-10">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center shadow-xs group-hover:scale-110 transition-transform">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 drop-shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
               </div>
-              <span className="font-black text-[9px] sm:text-[10px] tracking-wider uppercase text-white drop-shadow-sm leading-tight">
+              <span className="font-black text-[9px] sm:text-[10px] tracking-wider uppercase bg-gradient-to-r from-emerald-300 via-teal-200 to-emerald-400 bg-clip-text text-transparent leading-tight drop-shadow-xs">
                 L2B AI
               </span>
             </div>
           )}
         </button>
+
 
       </div>
 
