@@ -18,7 +18,6 @@ const DEFAULT_ADMIN = {
 };
 
 const DEFAULT_SETTINGS = {
-  _id: 'settings_default_id_001',
   brandName: 'LOCAL2BRAND',
   domain: 'local2brand.com',
   tagline: 'Build Local. Think Global.',
@@ -197,24 +196,37 @@ export const dataStore = {
   // Settings
   async getSettings() {
     if (isDbConnected()) {
-      const { SiteSettings } = await import('../models/SiteSettings.js');
-      let s = await SiteSettings.findOne();
-      if (!s) s = await SiteSettings.create(DEFAULT_SETTINGS);
-      return s;
+      try {
+        const { SiteSettings } = await import('../models/SiteSettings.js');
+        let s = await SiteSettings.findOne();
+        if (!s) s = await SiteSettings.create(DEFAULT_SETTINGS);
+        return s;
+      } catch (err) {
+        console.warn('MongoDB getSettings notice:', err.message);
+      }
     }
     const settingsList = readLocalStore('settings');
-    if (settingsList.length > 0) return settingsList[0];
-    writeLocalStore('settings', [DEFAULT_SETTINGS]);
-    return DEFAULT_SETTINGS;
+    if (settingsList && settingsList.length > 0) return settingsList[0];
+    const initial = { _id: 'settings_default_id_001', ...DEFAULT_SETTINGS };
+    writeLocalStore('settings', [initial]);
+    return initial;
   },
 
   async updateSettings(updates) {
     if (isDbConnected()) {
-      const { SiteSettings } = await import('../models/SiteSettings.js');
-      let s = await SiteSettings.findOne();
-      if (!s) s = new SiteSettings(DEFAULT_SETTINGS);
-      Object.assign(s, updates);
-      return await s.save();
+      try {
+        const { SiteSettings } = await import('../models/SiteSettings.js');
+        const { _id, ...cleanUpdates } = updates;
+        let s = await SiteSettings.findOne();
+        if (!s) {
+          s = new SiteSettings({ ...DEFAULT_SETTINGS, ...cleanUpdates });
+        } else {
+          Object.assign(s, cleanUpdates);
+        }
+        return await s.save();
+      } catch (err) {
+        console.warn('MongoDB updateSettings notice:', err.message);
+      }
     }
     const current = await this.getSettings();
     const updated = { ...current, ...updates, updatedAt: new Date().toISOString() };
