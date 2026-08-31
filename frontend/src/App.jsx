@@ -30,6 +30,7 @@ import DemoDetails from './pages/DemoDetails';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import LiveDemoViewer from './pages/LiveDemoViewer';
+import GetStarted from './pages/GetStarted';
 import NotFound from './pages/NotFound';
 
 // Auth Pages
@@ -43,6 +44,7 @@ import UserDashboard from './pages/User/UserDashboard';
 import AdminLayout from './pages/Admin/AdminLayout';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminRequirements from './pages/Admin/AdminRequirements';
+import AdminPricing from './pages/Admin/AdminPricing';
 import AdminFormBuilder from './pages/Admin/AdminFormBuilder';
 import AdminLeads from './pages/Admin/AdminLeads';
 import AdminCallbacks from './pages/Admin/AdminCallbacks';
@@ -53,7 +55,7 @@ import AdminBroadcast from './pages/Admin/AdminBroadcast';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminReviews from './pages/Admin/AdminReviews';
 
-function TransitionRoutes({ isLivePreview, isAdminRoute }) {
+function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }) {
   const { displayLocation } = usePageTransition();
   const location = useLocation();
 
@@ -74,6 +76,11 @@ function TransitionRoutes({ isLivePreview, isAdminRoute }) {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
 
+        {/* Dedicated Standalone Interactive Form Routes */}
+        <Route path="/get-started" element={<GetStarted />} />
+        <Route path="/start-project" element={<GetStarted />} />
+        <Route path="/order" element={<GetStarted />} />
+
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -85,6 +92,7 @@ function TransitionRoutes({ isLivePreview, isAdminRoute }) {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="requirements" element={<AdminRequirements />} />
+          <Route path="pricing" element={<AdminPricing />} />
           <Route path="form-builder" element={<AdminFormBuilder />} />
           <Route path="leads" element={<AdminLeads />} />
           <Route path="callbacks" element={<AdminCallbacks />} />
@@ -101,7 +109,7 @@ function TransitionRoutes({ isLivePreview, isAdminRoute }) {
       </Routes>
 
       {/* Footer */}
-      {!isLivePreview && !isAdminRoute && <Footer />}
+      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <Footer />}
     </div>
   );
 }
@@ -118,6 +126,10 @@ function MainAppContent() {
 
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+  const isStandaloneFormRoute =
+    location.pathname === '/get-started' ||
+    location.pathname === '/start-project' ||
+    location.pathname === '/order';
 
   const isMaintenanceOrComingSoon =
     (settings.isMaintenanceMode || settings.isComingSoonMode) && !isAdminRoute && !isAuthRoute;
@@ -180,7 +192,7 @@ function MainAppContent() {
     <div className="relative min-h-screen flex flex-col font-sans text-slate-900 dark:text-slate-100 selection:bg-purple-600 selection:text-white transition-colors duration-300">
       
       {/* Animated Initial Liquid Glass Preloader */}
-      {!isLivePreview && !isAdminRoute && <Preloader />}
+      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <Preloader />}
 
       {/* Admin Bypass Pill */}
       {isBypassed && isMaintenanceOrComingSoon && (
@@ -206,20 +218,24 @@ function MainAppContent() {
       <CustomCursor />
 
       {/* Ambient Liquid Background */}
-      {!isLivePreview && !isAdminRoute && <LiquidBackground />}
+      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <LiquidBackground />}
 
       {/* Global Navbar */}
-      {!isLivePreview && !isAdminRoute && <Navbar />}
+      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <Navbar />}
 
       {/* Route Views with Synchronized Page Transition */}
       <div className="flex-1 z-10 flex flex-col">
         <PageTransition>
-          <TransitionRoutes isLivePreview={isLivePreview} isAdminRoute={isAdminRoute} />
+          <TransitionRoutes
+            isLivePreview={isLivePreview}
+            isAdminRoute={isAdminRoute}
+            isStandaloneFormRoute={isStandaloneFormRoute}
+          />
         </PageTransition>
       </div>
 
       {/* Floating Interactive Assistant */}
-      {!isLivePreview && !isAdminRoute && <AssistantChatbot />}
+      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <AssistantChatbot />}
 
       {/* Global Modals */}
       <SmartRequirementModal />

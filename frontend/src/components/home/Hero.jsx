@@ -220,13 +220,7 @@ export default function Hero() {
   }, []);
 
   const handleStartWebsite = () => {
-    if (!user) {
-      openAuthModal(() => openOrderModal());
-    } else if (isAdmin || user?.role === 'admin') {
-      navigate('/admin');
-    } else {
-      openOrderModal();
-    }
+    navigate('/get-started');
   };
 
   // Liquid Waterdrop Pill Indicator State & Refs

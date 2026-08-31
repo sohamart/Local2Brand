@@ -95,11 +95,36 @@ const siteSettingsSchema = new mongoose.Schema(
         whatsappSupport: { type: String, default: '+91 98765 43210' },
       },
     },
+    pricingPlans: {
+      type: [
+        {
+          id: { type: String, default: '' },
+          name: { type: String, default: '' },
+          badge: { type: String, default: '' },
+          popular: { type: Boolean, default: false },
+          price: { type: String, default: '$399' },
+          priceInr: { type: String, default: '₹12,999' },
+          billingNote: { type: String, default: 'One-time investment' },
+          turnaround: { type: String, default: '3 - 7 Days' },
+          description: { type: String, default: '' },
+          features: { type: [String], default: [] },
+          notIncluded: { type: [String], default: [] },
+          ctaText: { type: String, default: 'Get Started' },
+          websiteType: { type: String, default: 'Starter Website' },
+          status: { type: String, enum: ['published', 'coming_soon'], default: 'published' },
+          order: { type: Number, default: 1 },
+        }
+      ],
+      default: []
+    },
+    demoCategories: {
+      type: [String],
+      default: []
+    },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
     },
-
   },
   {
     timestamps: true,

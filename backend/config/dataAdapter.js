@@ -51,6 +51,108 @@ const DEFAULT_SETTINGS = {
     btnText: 'Claim Offer',
   },
   bannerImage: '',
+  pricingPlans: [
+    {
+      id: "starter",
+      name: "Starter",
+      badge: "Fast Launch",
+      popular: false,
+      price: "$399",
+      priceInr: "₹12,999",
+      billingNote: "One-time investment",
+      turnaround: "3 - 7 Days",
+      description: "Ideal for local businesses, consultants, and creators looking to launch a polished online presence quickly.",
+      features: [
+        "Up to 5 High-Conversion Pages / Sections",
+        "Choice of any Ready-Made Demo Template",
+        "Full Customization (Branding, Colors, Content)",
+        "100% Mobile & Tablet Responsive Layout",
+        "WhatsApp Direct Ordering & Inquiry Integration",
+        "Basic SEO Setup & Google Maps Location Embed",
+        "14 Days Post-Launch Support & Minor Edits"
+      ],
+      notIncluded: [
+        "Custom Complex Web App Logic",
+        "Advanced Multi-level Catalog",
+        "Dedicated Project Manager"
+      ],
+      ctaText: "Start with Starter",
+      websiteType: "Starter Website",
+      status: "published",
+      order: 1
+    },
+    {
+      id: "professional",
+      name: "Professional",
+      badge: "Most Popular",
+      popular: true,
+      price: "$799",
+      priceInr: "₹24,999",
+      billingNote: "One-time investment",
+      turnaround: "5 - 7 Business Days",
+      description: "Our flagship custom website tier for ambitious brands who want an Apple-grade, high-converting digital experience.",
+      features: [
+        "Up to 12 Bespoke Pages / Dynamic Architecture",
+        "Bespoke Liquid Glass UI / Custom Design System",
+        "GSAP Micro-Animations & Lenis Smooth Scroll",
+        "Interactive WhatsApp Order Funnel with Dynamic Messages",
+        "Full On-Page Technical SEO & Schema Optimization",
+        "Speed Optimization (98+ Google Lighthouse Guaranteed)",
+        "Social Media Feeds & Lead Capture Integration",
+        "30 Days VIP Priority Post-Launch Support"
+      ],
+      notIncluded: [
+        "Full-stack Custom SaaS Backend (Phase 4)"
+      ],
+      ctaText: "Get Professional",
+      websiteType: "Professional Website",
+      status: "published",
+      order: 2
+    },
+    {
+      id: "custom",
+      name: "Custom Enterprise",
+      badge: "Tailored Growth",
+      popular: false,
+      price: "$1,499+",
+      priceInr: "₹49,999+",
+      billingNote: "Scope-based pricing",
+      turnaround: "10 - 15 Business Days",
+      description: "Full-scale custom digital products, extensive e-commerce catalogs, and multi-location business solutions.",
+      features: [
+        "Unlimited Custom Pages & Modular Design Tokens",
+        "Custom Component Architecture & Micro-Interactions",
+        "Complete E-Commerce / Multi-Category WhatsApp Shop",
+        "Interactive Calculators, Multi-Step Form Funnels",
+        "Dedicated Senior UI/UX Designer & Lead Engineer",
+        "Priority 24/7 WhatsApp & Strategy Call Access",
+        "60 Days Dedicated Hyper-Care Support & Training",
+        "Scalable code architecture ready for future Backend API"
+      ],
+      notIncluded: [],
+      ctaText: "Discuss Custom Scope",
+      websiteType: "Custom Enterprise Solution",
+      status: "published",
+      order: 3
+    }
+  ],
+  demoCategories: [
+    "LMS & Courses",
+    "Restaurant",
+    "Cafe",
+    "Salon",
+    "Gym",
+    "Hotel",
+    "Real Estate",
+    "Photography",
+    "Boutique",
+    "Coaching",
+    "Dental",
+    "Jewellery",
+    "Automotive",
+    "Healthcare",
+    "Custom"
+  ],
   aiSettings: {
     enabled: true,
     customInstructions: 'Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount.',

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Check, X, Sparkles, ArrowRight, ShieldCheck, HelpCircle, Tag, Globe, Server, Lock, Clock, Info } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
-import { pricingPlans, featureMatrix } from '../data/pricing';
+import { pricingPlans as defaultPricingPlans, featureMatrix } from '../data/pricing';
 import FAQSection from '../components/home/FAQSection';
 import FinalCTA from '../components/home/FinalCTA';
 import { useOrderModal } from '../context/OrderModalContext';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import AshokaChakra from '../components/common/AshokaChakra';
 import ComingSoonModal from '../components/common/ComingSoonModal';
 
@@ -55,9 +57,14 @@ const subscriptionPlans = [
 
 export default function Pricing() {
   const { openOrderModal } = useOrderModal();
+  const { settings } = useSiteSettings();
   const [currency, setCurrency] = useState('INR'); // 'INR' or 'USD'
   const [billingType, setBillingType] = useState('onetime'); // 'onetime' or 'subscription'
   const [comingSoonPlan, setComingSoonPlan] = useState(null);
+
+  const activePricingPlans = (settings?.pricingPlans && settings.pricingPlans.length > 0)
+    ? settings.pricingPlans
+    : defaultPricingPlans;
 
   return (
     <>
@@ -104,21 +111,21 @@ export default function Pricing() {
                     : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <span>🔄 Monthly Retainer Care</span>
-                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black uppercase">
-                  Coming Soon
+                <span>🔄 Monthly Care Retainers</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 font-black">
+                  BETA
                 </span>
               </button>
             </div>
 
-            {/* Currency Selector */}
+            {/* Currency Selector (INR vs USD) */}
             {billingType === 'onetime' && (
-              <div className="p-1 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-sm inline-flex items-center gap-1">
+              <div className="p-1 rounded-xl bg-slate-200/60 dark:bg-slate-900/90 backdrop-blur-md border border-slate-300 dark:border-slate-800 inline-flex items-center gap-1">
                 <button
                   onClick={() => setCurrency('INR')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     currency === 'INR'
-                      ? 'bg-amber-600 text-white shadow-sm'
+                      ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -126,7 +133,7 @@ export default function Pricing() {
                 </button>
                 <button
                   onClick={() => setCurrency('USD')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                     currency === 'USD'
                       ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -153,12 +160,12 @@ export default function Pricing() {
                 </div>
               </div>
 
-              <button
-                onClick={() => openOrderModal({ websiteType: 'Offer Code: INDIA2025 (20% OFF)' })}
+              <Link
+                to="/get-started?coupon=INDIA2025"
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm transition-all cursor-pointer hover:opacity-95 shrink-0"
               >
                 Claim 20% OFF
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -167,8 +174,10 @@ export default function Pricing() {
         {billingType === 'onetime' && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 sm:mt-14 animate-fade-in">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-              {pricingPlans.map((plan) => {
+              {activePricingPlans.map((plan) => {
                 const isPopular = plan.popular;
+                const isPublished = plan.status !== 'coming_soon';
+                const displayPrice = currency === 'INR' ? (plan.priceInr || '₹12,999') : (plan.price || '$399');
 
                 return (
                   <div
@@ -191,8 +200,12 @@ export default function Pricing() {
                         <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                           {plan.name}
                         </h3>
-                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                          {plan.badge}
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                          isPublished
+                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                            : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300'
+                        }`}>
+                          {isPublished ? (plan.badge || 'PRO') : '⏳ Coming Soon'}
                         </span>
                       </div>
 
@@ -200,30 +213,39 @@ export default function Pricing() {
                         {plan.description}
                       </p>
 
-                      {/* Price Block: Blurred Coming Soon Badge */}
+                      {/* Price Block */}
                       <div className="pb-6 mb-6 border-b border-slate-200/70 dark:border-slate-800">
-                        <div className="relative overflow-hidden p-3.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/80 flex items-center justify-between">
-                          <div className="flex items-center gap-2.5">
-                            <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                            <div>
-                              <span className="font-extrabold text-sm text-purple-900 dark:text-purple-200 block">Coming Soon</span>
-                              <span className="text-[11px] text-purple-700 dark:text-purple-400 font-medium">Pricing in Final Review</span>
+                        {isPublished ? (
+                          <div className="space-y-1">
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
+                                {displayPrice}
+                              </span>
+                              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                {plan.billingNote || 'One-time investment'}
+                              </span>
+                            </div>
+                            <div className="text-xs font-bold text-purple-600 dark:text-purple-400 mt-2 flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>⚡ {plan.turnaround || '3 - 7 Days'} Delivery Guarantee</span>
                             </div>
                           </div>
-
-                          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 line-through blur-[3px] select-none">
-                            ₹24,999
-                          </span>
-                        </div>
-
-                        <div className="text-xs font-bold text-purple-600 dark:text-purple-400 mt-2.5 flex items-center gap-1">
-                          <span>⚡ {plan.turnaround} Delivery Guarantee</span>
-                        </div>
+                        ) : (
+                          <div className="relative overflow-hidden p-3.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/80 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                              <div>
+                                <span className="font-extrabold text-sm text-purple-900 dark:text-purple-200 block">Coming Soon</span>
+                                <span className="text-[11px] text-purple-700 dark:text-purple-400 font-medium">Pricing in Final Review</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Features List */}
                       <ul className="space-y-3.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-8">
-                        {plan.features.map((feat, i) => (
+                        {(plan.features || []).map((feat, i) => (
                           <li key={i} className="flex items-start gap-3">
                             <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                             <span>{feat}</span>
@@ -234,17 +256,26 @@ export default function Pricing() {
 
                     {/* Plan CTA */}
                     <div>
-                      <button
-                        onClick={() => setComingSoonPlan(plan.name)}
-                        className={`w-full py-4 px-6 rounded-btn font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
-                          isPopular
-                            ? 'text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95'
-                            : 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700'
-                        }`}
-                      >
-                        <span>Inquire & Request Quote 🚀</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
+                      {isPublished ? (
+                        <Link
+                          to={`/get-started?plan=${encodeURIComponent(plan.name)}&tier=${encodeURIComponent(plan.id || '')}`}
+                          className={`w-full py-4 px-6 rounded-btn font-bold text-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+                            isPopular
+                              ? 'text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95'
+                              : 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700'
+                          }`}
+                        >
+                          <span>{plan.ctaText || 'Get Started Now'} 🚀</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={() => setComingSoonPlan(plan.name)}
+                          className="w-full py-4 px-6 rounded-btn font-bold text-sm bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 hover:bg-amber-200 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <span>Pre-Book & Notify Me ⏳</span>
+                        </button>
+                      )}
                       <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-2">
                         Direct WhatsApp order confirmation • GST billing supported
                       </p>

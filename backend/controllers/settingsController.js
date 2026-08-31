@@ -35,6 +35,8 @@ export const updateSettings = async (req, res) => {
       'announcementBar',
       'bannerImage',
       'aiSettings',
+      'pricingPlans',
+      'demoCategories',
     ];
 
 

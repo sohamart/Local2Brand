@@ -211,6 +211,7 @@ export default function SmartRequirementModal() {
   const { settings } = useSiteSettings();
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [maxReachedStep, setMaxReachedStep] = useState(0);
   const [formSchema, setFormSchema] = useState(null);
   const [loadingSchema, setLoadingSchema] = useState(true);
   const [autoSavedTime, setAutoSavedTime] = useState('');
@@ -504,14 +505,17 @@ export default function SmartRequirementModal() {
   const handleNext = () => {
     // Validate Step 2 Client info
     if (currentStepIndex === 1) {
-      if (!formData.clientInfo.businessName || !formData.clientInfo.mobile || !formData.clientInfo.email) {
+      if (!formData.clientInfo.businessName?.trim() || !formData.clientInfo.mobile?.trim() || !formData.clientInfo.email?.trim()) {
         setErrorMessage('Please provide Business Name, Mobile Number and Email Address.');
+        toast.error('Please provide Business Name, Mobile Number and Email Address.');
         return;
       }
     }
     setErrorMessage('');
     if (currentStepIndex < STEPS.length - 1) {
-      setCurrentStepIndex((prev) => prev + 1);
+      const nextStep = currentStepIndex + 1;
+      setCurrentStepIndex(nextStep);
+      setMaxReachedStep((prev) => Math.max(prev, nextStep));
     }
   };
 
@@ -523,6 +527,10 @@ export default function SmartRequirementModal() {
   };
 
   const jumpToStep = (index) => {
+    if (index > maxReachedStep) {
+      toast.warning(`Please complete Step ${currentStepIndex + 1} before proceeding to future questions.`);
+      return;
+    }
     setErrorMessage('');
     setCurrentStepIndex(index);
   };
@@ -656,6 +664,7 @@ export default function SmartRequirementModal() {
               {STEPS.map((s, idx) => {
                 const isActive = idx === currentStepIndex;
                 const isPassed = idx < currentStepIndex;
+                const isLocked = idx > maxReachedStep;
 
                 return (
                   <button
@@ -665,11 +674,19 @@ export default function SmartRequirementModal() {
                       isActive
                         ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-400/40'
                         : isPassed
-                        ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/80'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+                        : isLocked
+                        ? 'bg-slate-100 dark:bg-slate-800/40 text-slate-400 cursor-not-allowed opacity-50'
                         : 'bg-white dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
-                    <span>{idx + 1 < 10 ? `0${idx + 1}` : idx + 1}</span>
+                    {isPassed ? (
+                      <Check className="w-3 h-3 text-emerald-500" />
+                    ) : isLocked ? (
+                      <Lock className="w-2.5 h-2.5" />
+                    ) : (
+                      <span>{idx + 1 < 10 ? `0${idx + 1}` : idx + 1}</span>
+                    )}
                     <span className="hidden md:inline">{s.title.replace(/^\d+\s*/, '')}</span>
                   </button>
                 );

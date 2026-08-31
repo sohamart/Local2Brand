@@ -37,13 +37,13 @@ export default function FinalCTA() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md sm:max-w-none mx-auto">
-              <button
-                onClick={() => openOrderModal({ websiteType: 'Custom Project Inquiry' })}
+              <Link
+                to="/get-started"
                 className="w-full sm:w-auto px-8 py-4 rounded-btn text-base font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:shadow-xl transition-all flex items-center justify-center gap-2 group cursor-pointer hover:opacity-95"
               >
                 <span>Start Your Website Now</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Link>
 
               <button
                 onClick={() => openCallbackModal()}

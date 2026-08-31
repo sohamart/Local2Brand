@@ -149,13 +149,7 @@ export default function Navbar() {
   };
 
   const handleGetStartedClick = () => {
-    if (!user) {
-      openAuthModal(() => openOrderModal({ websiteType: 'Custom Project Inquiry' }));
-    } else if (isAdmin || user?.role === 'admin') {
-      navigate('/admin');
-    } else {
-      openOrderModal({ websiteType: 'Custom Project Inquiry' });
-    }
+    navigate('/get-started');
   };
 
   return (
@@ -578,11 +572,11 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  handleGetStartedClick();
+                  navigate('/get-started');
                 }}
                 className="w-full py-3.5 px-6 rounded-2xl font-bold text-sm text-white l2b-gradient-bg flex items-center justify-center gap-2 shadow-glass-highlight cursor-pointer"
               >
-                <span>{isAdmin ? 'Open Admin Panel' : 'Start Your Website'}</span>
+                <span>Start Your Website</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
 
