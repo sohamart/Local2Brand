@@ -206,13 +206,13 @@ export default function AdminDemos() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs font-bold uppercase tracking-wider mb-1">
             <AshokaChakra size={11} />
-            <span>Marketplace Catalog & Ordering</span>
+            <span>Marketplace Catalog & Hero Showcase</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Website Demo Templates
           </h1>
           <p className="text-xs text-slate-500">
-            Set display order, toggle Published vs Coming Soon status, and customize template pricing & details.
+            Set display order, toggle Hero Showcase slides, and customize pricing & live preview URLs.
           </p>
         </div>
 
@@ -313,22 +313,39 @@ export default function AdminDemos() {
                 </div>
               </div>
 
-              {/* Right: Status Toggle & Action buttons */}
+              {/* Right: Hero Showcase Toggle, Status Toggle & Action buttons */}
               <div className="flex items-center gap-2 sm:self-center self-end">
+                {/* 1-Click Show on Hero Toggle */}
+                <button
+                  type="button"
+                  onClick={() => handleToggleFeatured(demo)}
+                  className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold transition-all cursor-pointer border flex items-center gap-1.5 ${
+                    demo.isFeatured
+                      ? 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-300 shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 opacity-60'
+                  }`}
+                  title="Click to toggle Show on Home Page Hero"
+                >
+                  <Sparkles className={`w-3 h-3 ${demo.isFeatured ? 'text-purple-600 fill-purple-600' : ''}`} />
+                  <span>{demo.isFeatured ? 'Hero Active 🌟' : 'Hero Off'}</span>
+                </button>
+
                 {/* Status Switcher */}
                 <button
+                  type="button"
                   onClick={() => handleToggleStatus(demo)}
                   className={`px-3 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer border ${
                     demo.status === 'published'
                       ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-300'
                       : 'bg-amber-50 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border-amber-300'
                   }`}
-                  title="Click to toggle status"
+                  title="Click to toggle Published vs Coming Soon"
                 >
-                  {demo.status === 'published' ? '● Published Live' : '⏳ Coming Soon'}
+                  {demo.status === 'published' ? '● Published' : '⏳ Coming Soon'}
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => handleOpenModal(demo)}
                   className="p-2 rounded-xl text-slate-600 hover:text-purple-600 bg-slate-100 dark:bg-slate-800 hover:bg-purple-50 dark:hover:bg-purple-950 cursor-pointer"
                   title="Edit Template Details"
@@ -337,6 +354,7 @@ export default function AdminDemos() {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => handleDeleteDemo(demo._id)}
                   className="p-2 rounded-xl text-red-500 hover:text-red-700 bg-red-50 dark:bg-red-950/60 cursor-pointer"
                   title="Delete Template"
@@ -494,6 +512,27 @@ export default function AdminDemos() {
                   placeholder="Full Video Lecture Player, 1-Click Checkout, WhatsApp Sync"
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
                 />
+              </div>
+
+              {/* Show on Hero Showcase Switch */}
+              <div className="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-xs font-black text-slate-900 dark:text-white block">
+                    Showcase on Home Page Hero Slider 🌟
+                  </span>
+                  <span className="text-[11px] text-slate-500 block">
+                    Display this template in the main interactive 3D hero slider on the home page.
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={formData.isFeatured}
+                    onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-5 bg-slate-300 peer-focus:outline-hidden rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-purple-600"></div>
+                </label>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">

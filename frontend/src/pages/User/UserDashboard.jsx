@@ -20,8 +20,13 @@ import {
   Check,
   CreditCard,
   Globe,
-  ExternalLink
+  ExternalLink,
+  Star,
+  MessageSquarePlus,
+  Edit3,
+  Trash2
 } from 'lucide-react';
+import WriteReviewModal from '../../components/common/WriteReviewModal';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { useOrderModal } from '../../context/OrderModalContext';
@@ -47,10 +52,13 @@ export default function UserDashboard() {
   const { openOrderModal, openCallbackModal } = useOrderModal();
   const { settings } = useSiteSettings();
 
-  const [activeTab, setActiveTab] = useState('requirements'); // 'requirements' | 'inquiries' | 'callbacks' | 'profile'
+  const [activeTab, setActiveTab] = useState('requirements'); // 'requirements' | 'reviews' | 'callbacks' | 'profile'
   const [requirements, setRequirements] = useState([]);
   const [inquiries, setInquiries] = useState([]);
   const [callbacks, setCallbacks] = useState([]);
+  const [userReviews, setUserReviews] = useState([]);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Profile form state
@@ -76,19 +84,34 @@ export default function UserDashboard() {
   const fetchUserData = async () => {
     setLoading(true);
     try {
-      const [reqsRes, leadsRes, cbRes] = await Promise.all([
+      const [reqsRes, leadsRes, cbRes, revsRes] = await Promise.all([
         api.get('/requirements/my').catch(() => ({ requirements: [] })),
         api.get('/queries/my').catch(() => ({ leads: [] })),
         api.get('/callbacks/my').catch(() => ({ callbacks: [] })),
+        api.get('/reviews/my').catch(() => ({ reviews: [] })),
       ]);
 
       if (reqsRes && reqsRes.success) setRequirements(reqsRes.requirements || []);
       if (leadsRes && leadsRes.success) setInquiries(leadsRes.leads || []);
       if (cbRes && cbRes.success) setCallbacks(cbRes.callbacks || []);
+      if (revsRes && revsRes.success) setUserReviews(revsRes.reviews || []);
     } catch (err) {
       console.warn('Dashboard data fetch notice:', err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Are you sure you want to delete this review?')) return;
+    try {
+      const res = await api.delete(`/reviews/${reviewId}`);
+      if (res && res.success) {
+        toast.success('Review removed successfully');
+        setUserReviews((prev) => prev.filter((r) => r._id !== reviewId));
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete review');
     }
   };
 
@@ -313,8 +336,8 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Tab Navigation Segmented Bar (Zero Overflow 3-Column Grid) */}
-        <div className="grid grid-cols-3 gap-1 sm:gap-2 mb-6 p-1 sm:p-1.5 bg-slate-200/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 w-full">
+        {/* Tab Navigation Segmented Bar (Zero Overflow 4-Column Grid) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-2 mb-6 p-1 sm:p-1.5 bg-slate-200/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 w-full">
           <button
             onClick={() => setActiveTab('requirements')}
             className={`py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
@@ -325,6 +348,18 @@ export default function UserDashboard() {
           >
             <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-500 shrink-0" />
             <span className="truncate">Specs ({requirements.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
+              activeTab === 'reviews'
+                ? 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-sm border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
+            <span className="truncate">Reviews ({userReviews.length})</span>
           </button>
 
           <button
@@ -424,6 +459,132 @@ export default function UserDashboard() {
                       <span>Submitted: {new Date(req.createdAt).toLocaleDateString()}</span>
                       <span className="font-semibold text-purple-600">Active Workflow</span>
                     </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: CLIENT REVIEWS */}
+        {activeTab === 'reviews' && (
+          <div className="space-y-5">
+            {/* Header / Add Review Bar */}
+            <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass bg-white/80 dark:bg-slate-900/80 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
+                  <span>My Reviews & Feedback</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Share your verified experience with our high-speed website delivery, design, or lead generation.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingReview(null);
+                  setIsReviewModalOpen(true);
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center justify-center gap-1.5 cursor-pointer transition-all shrink-0"
+              >
+                <MessageSquarePlus className="w-4 h-4" />
+                <span>Write New Review</span>
+              </button>
+            </div>
+
+            {userReviews.length === 0 ? (
+              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-700 flex items-center justify-center mx-auto text-amber-500 shadow-sm">
+                  <Star className="w-7 h-7 fill-amber-400" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No reviews submitted yet</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Tell us how your website project went! Your review will be featured on our homepage and helps other ambitious brands.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingReview(null);
+                    setIsReviewModalOpen(true);
+                  }}
+                  className="px-6 py-3 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-md cursor-pointer inline-flex items-center gap-2"
+                >
+                  <MessageSquarePlus className="w-4 h-4" />
+                  <span>Submit Your First Review</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {userReviews.map((rev) => (
+                  <div
+                    key={rev._id}
+                    className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass bg-white/80 dark:bg-slate-900/80 flex flex-col justify-between space-y-4"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        {/* Rating stars */}
+                        <div className="flex items-center gap-1 text-amber-400">
+                          {[...Array(rev.rating || 5)].map((_, i) => (
+                            <Star key={i} className="w-4 h-4 fill-amber-400" />
+                          ))}
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-1">
+                            {rev.rating || 5}.0
+                          </span>
+                        </div>
+
+                        {/* Status Badge */}
+                        <span
+                          className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                            rev.status === 'approved'
+                              ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                              : rev.status === 'rejected'
+                              ? 'bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800'
+                              : 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                          }`}
+                        >
+                          {rev.status === 'approved' ? '✓ Published Live' : rev.status === 'rejected' ? 'Rejected' : 'Under Review'}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed italic mb-3">
+                        "{rev.comment}"
+                      </p>
+
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
+                        <div className="font-bold text-slate-900 dark:text-white">{rev.userName}</div>
+                        <div>{rev.userRole} • {rev.businessName}</div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Actions */}
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+                      <span className="text-slate-400">
+                        {new Date(rev.createdAt).toLocaleDateString()}
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingReview(rev);
+                            setIsReviewModalOpen(true);
+                          }}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/60 transition-colors cursor-pointer"
+                          title="Edit Review"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReview(rev._id)}
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/60 transition-colors cursor-pointer"
+                          title="Delete Review"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
                 ))}
               </div>
@@ -551,6 +712,19 @@ export default function UserDashboard() {
             </form>
           </div>
         )}
+
+        {/* Review Submission Modal */}
+        <WriteReviewModal
+          isOpen={isReviewModalOpen}
+          initialData={editingReview}
+          onClose={() => {
+            setIsReviewModalOpen(false);
+            setEditingReview(null);
+          }}
+          onSuccess={() => {
+            fetchUserData();
+          }}
+        />
 
       </div>
     </>

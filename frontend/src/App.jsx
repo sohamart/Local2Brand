@@ -51,6 +51,7 @@ import AdminServices from './pages/Admin/AdminServices';
 import AdminDemos from './pages/Admin/AdminDemos';
 import AdminBroadcast from './pages/Admin/AdminBroadcast';
 import AdminUsers from './pages/Admin/AdminUsers';
+import AdminReviews from './pages/Admin/AdminReviews';
 
 function TransitionRoutes({ isLivePreview, isAdminRoute }) {
   const { displayLocation } = usePageTransition();
@@ -87,6 +88,7 @@ function TransitionRoutes({ isLivePreview, isAdminRoute }) {
           <Route path="form-builder" element={<AdminFormBuilder />} />
           <Route path="leads" element={<AdminLeads />} />
           <Route path="callbacks" element={<AdminCallbacks />} />
+          <Route path="reviews" element={<AdminReviews />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="services" element={<AdminServices />} />
           <Route path="demos" element={<AdminDemos />} />

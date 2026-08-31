@@ -13,7 +13,8 @@ import {
   Layers,
   Settings,
   ExternalLink,
-  Filter
+  Filter,
+  Star
 } from 'lucide-react';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
@@ -85,6 +86,14 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <Link
+              to="/admin/reviews"
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 flex items-center gap-1.5 shadow-xs"
+            >
+              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+              <span>Reviews</span>
+            </Link>
+
             <Link
               to="/admin/settings"
               className="px-4 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 flex items-center gap-1.5 shadow-xs"

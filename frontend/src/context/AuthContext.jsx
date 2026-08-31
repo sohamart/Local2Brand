@@ -94,6 +94,12 @@ export function AuthProvider({ children }) {
     if (showToast) {
       toast.info('Logged out successfully. See you soon! 👋');
     }
+    // Redirect all users and admins immediately to Home Page ('/')
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
+    }
   };
 
   const updateProfile = async (profileData) => {

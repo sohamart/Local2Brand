@@ -30,6 +30,7 @@ import serviceRoutes from './routes/services.js';
 import demoRoutes from './routes/demos.js';
 import formRoutes from './routes/forms.js';
 import requirementRoutes from './routes/requirements.js';
+import reviewRoutes from './routes/reviews.js';
 
 dotenv.config();
 
@@ -161,6 +162,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/demos', demoRoutes);
 app.use('/api/forms', formRoutes);
 app.use('/api/requirements', requirementRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // Global 404 Handler
 app.use((req, res, next) => {

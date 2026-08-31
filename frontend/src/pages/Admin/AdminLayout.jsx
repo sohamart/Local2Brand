@@ -16,7 +16,8 @@ import {
   X,
   ExternalLink,
   Layers,
-  Send
+  Send,
+  Star
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { label: 'Dynamic Form Builder', href: '/admin/form-builder', icon: Sliders },
   { label: 'Project Inquiries', href: '/admin/leads', icon: Inbox },
   { label: 'Callback Requests', href: '/admin/callbacks', icon: PhoneCall },
+  { label: 'Client Reviews', href: '/admin/reviews', icon: Star },
   { label: 'Site Customizer', href: '/admin/settings', icon: Settings },
   { label: 'Services CMS', href: '/admin/services', icon: Grid },
   { label: 'Demos / Templates', href: '/admin/demos', icon: Sparkles },
