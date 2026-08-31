@@ -349,9 +349,14 @@ export default function Navbar() {
               ) : (
                 <Link
                   to={isAdmin ? '/admin' : '/dashboard'}
-                  className="w-7 h-7 rounded-full bg-purple-600 text-white flex items-center justify-center font-black text-xs shadow-sm"
+                  className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center font-black text-xs shadow-sm overflow-hidden border border-white/40 dark:border-slate-700"
+                  aria-label="User Profile"
                 >
-                  {user.name?.[0]?.toUpperCase() || 'U'}
+                  {user?.avatar ? (
+                    <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    user?.name?.[0]?.toUpperCase() || 'U'
+                  )}
                 </Link>
               )}
 
