@@ -32,6 +32,7 @@ export const siteConfig = {
     { label: "Templates", href: "/demos" },
     { label: "Services", href: "/services" },
     { label: "Pricing", href: "/pricing" },
+    { label: "Track Order", href: "/track-order" },
     { label: "Portfolio", href: "/portfolio" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" }

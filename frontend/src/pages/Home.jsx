@@ -5,6 +5,7 @@ import ServicesOverview from '../components/home/ServicesOverview';
 import FeaturedWork from '../components/home/FeaturedWork';
 import DemoShowcase from '../components/home/DemoShowcase';
 import ProcessTimeline from '../components/home/ProcessTimeline';
+import HomeTrackOrderSection from '../components/home/HomeTrackOrderSection';
 import WhyUs from '../components/home/WhyUs';
 import Testimonials from '../components/home/Testimonials';
 import PricingPreview from '../components/home/PricingPreview';
@@ -39,19 +40,22 @@ export default function Home() {
         {/* 6. Process Section */}
         <ProcessTimeline />
 
-        {/* 7. Why LOCAL2BRAND Section */}
+        {/* 7. Dedicated Real-Time Order & Sprint Tracker */}
+        <HomeTrackOrderSection />
+
+        {/* 8. Why LOCAL2BRAND Section */}
         <WhyUs />
 
-        {/* 8. Testimonials Section */}
+        {/* 9. Testimonials Section */}
         <Testimonials />
 
-        {/* 9. Pricing Section */}
+        {/* 10. Pricing Section */}
         <PricingPreview />
 
-        {/* 10. FAQ Section */}
+        {/* 11. FAQ Section */}
         <FAQSection />
 
-        {/* 11. Final CTA Section */}
+        {/* 12. Final CTA Section */}
         <FinalCTA />
       </main>
     </>

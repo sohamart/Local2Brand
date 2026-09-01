@@ -2235,47 +2235,47 @@ export default function GetStarted() {
       {/* ========================================================================= */}
       {isAiModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in overflow-hidden"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-xl animate-in fade-in overflow-y-auto"
           onClick={() => setIsAiModalOpen(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full h-[88vh] max-h-[88vh] flex flex-col shadow-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden my-auto min-h-0 animate-in zoom-in-95"
+            className="relative bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden my-auto min-h-0 animate-in zoom-in-95"
           >
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white flex items-center justify-between shrink-0 shadow-md">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xs">
-                  <Bot className="w-6 h-6 text-white" />
+            <div className="p-3 sm:p-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 shrink-0 shadow-md">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xs shrink-0">
+                  <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-sm sm:text-base">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <h3 className="font-black text-xs sm:text-base truncate">
                       {aiModalLang === 'bn'
-                        ? '✨ LOCAL2BRAND এআই অ্যাসিস্ট্যান্ট ও গাইড'
+                        ? '✨ AI অ্যাসিস্ট্যান্ট ও গাইড'
                         : aiModalLang === 'hi'
-                        ? '✨ LOCAL2BRAND एআই सहायक व सारांश'
-                        : '✨ LOCAL2BRAND AI Assistant & Guide'}
+                        ? '✨ AI सहायक व सारांश'
+                        : '✨ AI Assistant & Guide'}
                     </h3>
-                    <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-white/25 text-white">
+                    <span className="text-[9px] sm:text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-white/25 text-white shrink-0">
                       {aiModalTab === 'step' 
                         ? (aiModalLang === 'bn' ? `ধাপ ${aiModalStepIndex + 1}` : `Step ${aiModalStepIndex + 1}`)
                         : 'Executive'}
                     </span>
                   </div>
-                  <p className="text-[11px] text-white/85">
+                  <p className="text-[10px] sm:text-[11px] text-white/85 truncate">
                     {aiModalTab === 'step'
                       ? (aiModalLang === 'bn' 
-                          ? 'এই ধাপের প্রশ্ন ও সকল অপশনের সহজ সংক্ষিপ্ত সারসংক্ষেপ'
-                          : 'Clear, concise summary of questions, options & recommendations')
+                          ? 'এই ধাপের প্রশ্ন ও সকল অপশনের সারসংক্ষেপ'
+                          : 'Clear summary of questions, options & recommendations')
                       : (aiModalLang === 'bn'
-                          ? 'আপনার নির্বাচিত টেক স্ট্যাক ও প্রজেক্টের সম্পূর্ণ রোডম্যাপ'
-                          : 'Intelligent synthesis of your tech stack & milestone plan')}
+                          ? 'নির্বাচিত টেক স্ট্যাক ও প্রজেক্ট রোডম্যাপ'
+                          : 'Intelligent synthesis of your tech stack & roadmap')}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
                 {/* In-Modal Direct Language Switcher Pills */}
                 <div className="p-0.5 rounded-xl bg-black/25 backdrop-blur-md flex items-center gap-0.5 border border-white/20 shadow-xs">
                   <button

@@ -31,6 +31,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import LiveDemoViewer from './pages/LiveDemoViewer';
 import GetStarted from './pages/GetStarted';
+import TrackOrder from './pages/TrackOrder';
 import NotFound from './pages/NotFound';
 
 // Auth Pages
@@ -76,10 +77,13 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
 
-        {/* Dedicated Standalone Interactive Form Routes */}
+        {/* Dedicated Standalone Interactive Form & Tracking Routes */}
         <Route path="/get-started" element={<GetStarted />} />
         <Route path="/start-project" element={<GetStarted />} />
         <Route path="/order" element={<GetStarted />} />
+        <Route path="/track-order" element={<TrackOrder />} />
+        <Route path="/track" element={<TrackOrder />} />
+        <Route path="/track/:id" element={<TrackOrder />} />
 
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
@@ -129,7 +133,8 @@ function MainAppContent() {
   const isStandaloneFormRoute =
     location.pathname === '/get-started' ||
     location.pathname === '/start-project' ||
-    location.pathname === '/order';
+    location.pathname === '/order' ||
+    location.pathname.startsWith('/track');
 
   const isMaintenanceOrComingSoon =
     (settings.isMaintenanceMode || settings.isComingSoonMode) && !isAdminRoute && !isAuthRoute;

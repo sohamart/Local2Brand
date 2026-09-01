@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Mail, User, Phone, Building, ArrowRight, Sparkles, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SEO } from '../../components/common/CommonUI';
+import PhoneInputWithCountry, { validatePhoneNumber } from '../../components/common/PhoneInputWithCountry';
+import PasswordStrengthMeter, { calculatePasswordStrength } from '../../components/common/PasswordStrengthMeter';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -12,6 +14,8 @@ export default function Register() {
     company: '',
     password: '',
   });
+  const [phoneDialCode, setPhoneDialCode] = useState('+91');
+  const [countryCode, setCountryCode] = useState('IN');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -25,13 +29,26 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password) {
-      setError('Please fill in all required fields.');
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password) {
+      setError('Please fill in Name, Email and Password.');
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    // Validate Phone Number
+    const phoneValidation = validatePhoneNumber(formData.phone, countryCode);
+    if (!phoneValidation.valid) {
+      setError(phoneValidation.message);
+      return;
+    }
+
+    // Validate Password Strength
+    const passCheck = calculatePasswordStrength(formData.password);
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
+    if (passCheck.score < 2) {
+      setError('Please choose a stronger password with a mix of letters, numbers, and symbols.');
       return;
     }
 
@@ -39,7 +56,11 @@ export default function Register() {
     setError('');
 
     try {
-      await register(formData);
+      const fullPhone = `${phoneDialCode} ${formData.phone.trim()}`;
+      await register({
+        ...formData,
+        phone: fullPhone
+      });
       navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Registration failed. Please check your details.');
@@ -114,39 +135,37 @@ export default function Register() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder="9876543210"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm focus:outline-purple-500 text-slate-900 dark:text-white"
-                    />
-                  </div>
-                </div>
+              {/* REQUIRED Country-Aware Phone Number */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  WhatsApp / Phone Number *
+                </label>
+                <PhoneInputWithCountry
+                  value={formData.phone}
+                  onChange={(val, dial) => {
+                    setFormData((prev) => ({ ...prev, phone: val }));
+                    if (dial) setPhoneDialCode(dial);
+                  }}
+                  countryCode={countryCode}
+                  onCountryChange={(cc) => setCountryCode(cc)}
+                  required={true}
+                />
+              </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Company / Brand
-                  </label>
-                  <div className="relative">
-                    <Building className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-                    <input
-                      type="text"
-                      name="company"
-                      value={formData.company}
-                      onChange={handleChange}
-                      placeholder="e.g. Apex Studio"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm focus:outline-purple-500 text-slate-900 dark:text-white"
-                    />
-                  </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                  Company / Brand (Optional)
+                </label>
+                <div className="relative">
+                  <Building className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    name="company"
+                    value={formData.company}
+                    onChange={handleChange}
+                    placeholder="e.g. Apex Studio"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm focus:outline-purple-500 text-slate-900 dark:text-white"
+                  />
                 </div>
               </div>
 
@@ -162,7 +181,7 @@ export default function Register() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    placeholder="At least 6 characters"
+                    placeholder="At least 8 characters"
                     className="w-full pl-10 pr-10 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm focus:outline-purple-500 text-slate-900 dark:text-white"
                   />
                   <button
@@ -173,14 +192,17 @@ export default function Register() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+
+                {/* Live Password Security Strength Gauge */}
+                <PasswordStrengthMeter password={formData.password} showChecks={true} />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-4"
+                className="w-full py-3.5 rounded-2xl text-sm font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-4 active:scale-95"
               >
-                <span>{loading ? 'Creating Account...' : 'Register & Enter Dashboard'}</span>
+                <span>{loading ? 'Creating Account...' : 'Register & Enter Dashboard 🚀'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>

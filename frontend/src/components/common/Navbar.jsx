@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   LogIn,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  Compass
 } from 'lucide-react';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAuth } from '../../context/AuthContext';
@@ -323,6 +324,16 @@ export default function Navbar() {
                           <span>Client Dashboard</span>
                         </Link>
 
+                        {/* Track Order Link */}
+                        <Link
+                          to="/track-order"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 text-xs font-semibold transition-colors"
+                        >
+                          <Compass className="w-4 h-4 text-purple-500" />
+                          <span>Track Live Order</span>
+                        </Link>
+
                         {/* Sign Out Button */}
                         <button
                           onClick={() => {
@@ -537,11 +548,23 @@ export default function Navbar() {
                   </NavLink>
                 ))}
 
+                <NavLink
+                  to="/track-order"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-3 rounded-2xl text-sm font-bold text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-950/40 border border-purple-200/50 dark:border-purple-800/50 flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <Compass className="w-4 h-4" />
+                    <span>Track Live Order & Sprint</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4" />
+                </NavLink>
+
                 {user && (
                   <NavLink
                     to="/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-3 rounded-2xl text-sm font-bold text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-950/40 border border-purple-200/50 dark:border-purple-800/50 flex items-center justify-between"
+                    className="px-4 py-3 rounded-2xl text-sm font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between"
                   >
                     <span className="flex items-center gap-2">
                       <LayoutDashboard className="w-4 h-4" />

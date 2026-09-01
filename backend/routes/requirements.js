@@ -21,5 +21,6 @@ router.get('/:id', optionalAuth, getRequirementById);
 // Admin routes
 router.get('/admin/all', protect, adminOnly, getAllRequirements);
 router.patch('/admin/:id/status', protect, adminOnly, updateRequirementStatus);
+router.put('/admin/:id/status', protect, adminOnly, updateRequirementStatus);
 
 export default router;

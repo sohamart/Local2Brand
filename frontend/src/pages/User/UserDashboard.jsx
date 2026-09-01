@@ -125,6 +125,7 @@ export default function UserDashboard() {
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar || '');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(new Date());
 
   useEffect(() => {
     if (user) {
@@ -132,7 +133,13 @@ export default function UserDashboard() {
       setProfilePhone(user.phone || '');
       setProfileCompany(user.company || '');
       setAvatarUrl(user.avatar || '');
-      fetchUserData();
+      fetchUserData(false);
+
+      // Real-time silent live background auto-poll every 3s
+      const pollTimer = setInterval(() => {
+        fetchUserData(true);
+      }, 3000);
+      return () => clearInterval(pollTimer);
     } else if (!authLoading) {
       setLoading(false);
     }
@@ -148,8 +155,8 @@ export default function UserDashboard() {
     }
   }, [searchParams]);
 
-  const fetchUserData = async () => {
-    setLoading(true);
+  const fetchUserData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const emailParam = user?.email ? `?email=${encodeURIComponent(user.email)}` : '';
       const [reqsRes, leadsRes, cbRes, revsRes] = await Promise.all([
@@ -165,14 +172,33 @@ export default function UserDashboard() {
       if (cbRes && cbRes.success) setCallbacks(cbRes.callbacks || []);
       if (revsRes && revsRes.success) setUserReviews(revsRes.reviews || []);
 
-      // If tracking was opened without specific order, default to the latest requirement
-      if (!trackedOrder && reqList.length > 0 && !searchParams.get('track')) {
+      // Live update the currently tracked order smoothly if present
+      if (trackedOrder) {
+        const liveMatch = reqList.find(
+          (r) => r.requirementId === trackedOrder.requirementId || r._id === trackedOrder._id
+        );
+        if (liveMatch) {
+          setTrackedOrder(liveMatch);
+        } else if (trackedOrder.requirementId) {
+          // If tracked by external ID, fetch single update silently
+          api.get(`/requirements/${trackedOrder.requirementId}`)
+            .then((res) => {
+              if (res?.success && res.requirement) {
+                setTrackedOrder(res.requirement);
+              }
+            })
+            .catch(() => {});
+        }
+      } else if (reqList.length > 0 && !searchParams.get('track')) {
+        // Default to latest requirement
         setTrackedOrder(reqList[0]);
       }
+
+      setLastSyncTime(new Date());
     } catch (err) {
       console.warn('Dashboard data fetch notice:', err.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -649,7 +675,271 @@ export default function UserDashboard() {
           </div>
         )}
 
-        {/* TAB: CLIENT REVIEWS */}
+        {/* ======================================================== */}
+        {/* TAB 2: REAL-TIME PROJECT ROADMAP & ORDER TRACKER          */}
+        {/* ======================================================== */}
+        {activeTab === 'track' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            {/* Search / Select Order Bar */}
+            <div className="glass-panel p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass bg-white/80 dark:bg-slate-900/80 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <Compass className="w-5 h-5 text-purple-600" />
+                    <span>Real-Time Project Roadmap &amp; Order Tracker</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Select one of your registered website orders or enter an Order Tracking ID.
+                  </p>
+                </div>
+
+                {requirements.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-500">My Orders:</span>
+                    <select
+                      value={trackedOrder?.requirementId || ''}
+                      onChange={(e) => {
+                        const selected = requirements.find((r) => r.requirementId === e.target.value);
+                        if (selected) {
+                          setTrackedOrder(selected);
+                          setTrackSearchId(selected.requirementId);
+                          setTrackError('');
+                        }
+                      }}
+                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-purple-700 dark:text-purple-300 focus:outline-purple-500 cursor-pointer"
+                    >
+                      {requirements.map((r) => (
+                        <option key={r.requirementId || r._id} value={r.requirementId}>
+                          {r.requirementId} — {r.clientInfo?.businessName || r.websiteTypeName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Live Search Input */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  performTrackOrder();
+                }}
+                className="flex items-center gap-2"
+              >
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={trackSearchId}
+                    onChange={(e) => setTrackSearchId(e.target.value)}
+                    placeholder="Enter Order / Requirement ID (e.g. REQ-2026-XXXXX)..."
+                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-mono font-bold text-purple-700 dark:text-purple-300 placeholder:font-sans placeholder-slate-400 focus:outline-purple-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={trackLoading}
+                  className="px-6 py-3 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 cursor-pointer disabled:opacity-50 shrink-0 flex items-center gap-1.5"
+                >
+                  {trackLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  <span>Track Sprint</span>
+                </button>
+              </form>
+
+              {trackError && (
+                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{trackError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Display Tracked Order Details */}
+            {trackedOrder ? (
+              <div className="space-y-6">
+                
+                {/* 1. Milestone Roadmap Progress Card */}
+                <div className="glass-panel p-5 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass bg-white/80 dark:bg-slate-900/80 space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950 px-3 py-1 rounded-full border border-purple-200 dark:border-purple-800">
+                          {trackedOrder.requirementId}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(trackedOrder.requirementId);
+                            toast.success(`Copied ${trackedOrder.requirementId}!`);
+                          }}
+                          className="p-1 text-slate-400 hover:text-purple-600 cursor-pointer"
+                          title="Copy ID"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800 text-[10px] font-black tracking-wider uppercase shadow-2xs">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                          <span>Live Sync Active</span>
+                        </span>
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-2">
+                        {trackedOrder.clientInfo?.businessName || trackedOrder.websiteTypeName || 'Custom Website Project'}
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        {trackedOrder.websiteTypeName || trackedOrder.websiteType} • Submitted on {new Date(trackedOrder.createdAt || trackedOrder.submittedAt || Date.now()).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:items-end gap-1.5">
+                      <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border transition-all duration-500 ${STATUS_BADGES[trackedOrder.status] || STATUS_BADGES.Submitted}`}>
+                        {trackedOrder.status || 'Submitted'}
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-400">
+                        Target Delivery: <strong className="text-purple-600 dark:text-purple-400">{trackedOrder.timeline || 'Express (48-72h)'}</strong>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Visual Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-slate-600 dark:text-slate-300">Sprint Roadmap Completion</span>
+                      <span className="text-purple-600 dark:text-purple-400 font-mono text-sm">{currentTrackProgress}% Complete</span>
+                    </div>
+                    <div className="w-full h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 shadow-md transition-all duration-700"
+                        style={{ width: `${currentTrackProgress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* 6-Stage Stepper Roadmap */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+                    {TRACKING_STAGES.map((stage, idx) => {
+                      const isPast = idx < currentStageIdx;
+                      const isCurrent = idx === currentStageIdx;
+
+                      return (
+                        <div
+                          key={stage.id}
+                          className={`p-3.5 rounded-2xl border transition-all ${
+                            isCurrent
+                              ? 'bg-purple-50/90 dark:bg-purple-950/60 border-purple-400 dark:border-purple-600 shadow-sm scale-[1.02]'
+                              : isPast
+                              ? 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80'
+                              : 'bg-white/40 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/60 opacity-60'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs ${
+                              isPast
+                                ? 'bg-emerald-500 text-white'
+                                : isCurrent
+                                ? 'bg-purple-600 text-white animate-pulse'
+                                : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+                            }`}>
+                              {isPast ? <Check className="w-3.5 h-3.5" /> : stage.id}
+                            </span>
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                              isPast
+                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                                : isCurrent
+                                ? 'bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-200 animate-pulse'
+                                : 'text-slate-400'
+                            }`}>
+                              {isPast ? 'Done' : isCurrent ? 'Active Phase' : 'Upcoming'}
+                            </span>
+                          </div>
+                          <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
+                            {stage.name}
+                          </h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
+                            {stage.desc}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Engineer Notes if available */}
+                  {trackedOrder.internalNotes && (
+                    <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs space-y-1">
+                      <strong className="text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-indigo-600" />
+                        <span>Engineering Team Status Note:</span>
+                      </strong>
+                      <p className="text-indigo-950 dark:text-indigo-300 leading-relaxed font-medium">
+                        {trackedOrder.internalNotes}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Quoted Price if set */}
+                  {trackedOrder.quotedAmount && (
+                    <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase block">
+                          Official Quoted Investment
+                        </span>
+                        <strong className="text-base sm:text-lg font-black text-emerald-700 dark:text-emerald-300">
+                          {trackedOrder.quotedAmount}
+                        </strong>
+                      </div>
+                      <span className="px-3 py-1 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
+                        Quotation Locked
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Quick Consultant Communication CTAs */}
+                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                    <a
+                      href={`https://wa.me/919876543210?text=${encodeURIComponent(`Hi LOCAL2BRAND, I want a live status update on my project Order ${trackedOrder.requirementId} (${trackedOrder.clientInfo?.businessName || ''}).`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>WhatsApp Live Update</span>
+                    </a>
+
+                    <button
+                      onClick={() => openCallbackModal({ topic: `Status Discussion for Order ${trackedOrder.requirementId}` })}
+                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center gap-2 cursor-pointer transition-all"
+                    >
+                      <PhoneCall className="w-4 h-4 text-purple-600" />
+                      <span>Request Founder Call</span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            ) : (
+              <div className="glass-panel p-10 sm:p-14 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
+                <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 flex items-center justify-center mx-auto text-purple-600 shadow-sm">
+                  <Compass className="w-8 h-8 animate-pulse" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">No project order selected for tracking</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Select one of your submitted orders above or enter an Order Tracking ID to see the live milestone delivery sprint.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: CLIENT REVIEWS */}
         {activeTab === 'reviews' && (
           <div className="space-y-5">
             <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass bg-white/80 dark:bg-slate-900/80 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -940,8 +1230,8 @@ export default function UserDashboard() {
 
       {/* Client Specs Detail Modal */}
       {viewingReqSpec && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="glass-panel w-full max-w-2xl max-h-[88vh] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900 flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-xl animate-in fade-in duration-200 overflow-y-auto">
+          <div className="glass-panel w-full max-w-2xl max-h-[90vh] my-auto rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900 flex flex-col overflow-hidden animate-in zoom-in-95">
             
             {/* Modal Header */}
             <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
