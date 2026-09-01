@@ -32,6 +32,7 @@ import formRoutes from './routes/forms.js';
 import requirementRoutes from './routes/requirements.js';
 import reviewRoutes from './routes/reviews.js';
 import chatRoutes from './routes/chat.js';
+import telemetryRoutes from './routes/telemetry.js';
 
 dotenv.config();
 
@@ -166,6 +167,7 @@ app.use('/api/forms', formRoutes);
 app.use('/api/requirements', requirementRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/telemetry', telemetryRoutes);
 
 
 // Global 404 Handler

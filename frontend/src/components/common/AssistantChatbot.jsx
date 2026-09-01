@@ -23,11 +23,13 @@ import {
 import { useOrderModal } from '../../context/OrderModalContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../../utils/whatsapp';
 import AshokaChakra from './AshokaChakra';
 
 const QUICK_CHIPS = [
+  { icon: '📦', label: 'Track Order', prompt: 'I want to track my project sprint with my Order ID.' },
   { icon: '📞', label: '15-Min Callback', isCallback: true, topic: '15-Minute Founder Callback' },
   { icon: '⚡', label: '48h Launch', prompt: 'Can you deliver my website in 48 hours? What is the process?' },
   { icon: '🎁', label: '20% OFF (INDIA2025)', prompt: 'How do I claim 20% discount with promo code INDIA2025?' },
@@ -79,7 +81,7 @@ const getStoredMessages = (brandName) => {
   return [
     {
       role: 'assistant',
-      content: `### 👋 Welcome to ${brandName || 'LOCAL2BRAND'} AI Assistant\n\nI am your dedicated digital solutions consultant. How can I help launch or grow your brand today?\n\n* **🚀 48-Hour Websites:** Ready templates starting from **₹9,999 / $399**\n* **🎁 20% Launch Discount:** Use promo code \`INDIA2025\`\n* **💎 Bespoke Builds:** Custom web apps, e-commerce & WhatsApp lead automation\n\nTap any quick topic below or type your inquiry!`,
+      content: `### 👋 Welcome to ${brandName || 'LOCAL2BRAND'} AI Assistant\n\nI am your dedicated digital solutions consultant. How can I help launch or grow your brand today?\n\n* **🚀 48-Hour Websites:** Ready templates starting from **₹9,999 / $399**\n* **📦 Live Sprint Tracker:** Type your **Order ID** (e.g. \`REQ-2026-XXXXX\`) for instant real-time progress\n* **🎁 20% Launch Discount:** Use promo code \`INDIA2025\`\n* **💎 Bespoke Builds:** Custom web apps, e-commerce & WhatsApp lead automation\n\nTap any quick topic below or type your inquiry!`,
       timestamp: new Date().toISOString(),
       provider: 'L2B AI Engine',
     },
@@ -267,6 +269,7 @@ function InteractiveCallbackCard({ msg, user, onSubmitted }) {
 }
 
 export default function AssistantChatbot() {
+  const navigate = useNavigate();
   const { openOrderModal, openCallbackModal } = useOrderModal();
   const { settings } = useSiteSettings();
   const { user } = useAuth();
@@ -464,8 +467,9 @@ export default function AssistantChatbot() {
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-slate-950 dark:text-white">$1</strong>')
       .replace(/`INDIA2025`/gi, '<span class="px-2 py-0.5 rounded-lg bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-mono font-extrabold text-[11px] border border-purple-300 dark:border-purple-700 shadow-xs tracking-wider">INDIA2025</span>')
-      .replace(/`(.*?)`/g, '<code class="px-1.5 py-0.5 rounded bg-slate-200/90 dark:bg-slate-800 text-purple-600 dark:text-purple-300 font-mono text-[11px] border border-slate-300/60 dark:border-slate-700">$1</code>')
-      .replace(/\*(.*?)\*/g, '<em class="italic text-slate-700 dark:text-slate-300">$1</em>');
+      .replace(/`(.*?)`/g, '<code class="px-1.5 py-0.5 rounded bg-slate-200/90 dark:bg-slate-800 text-purple-600 dark:text-purple-300 font-mono text-[11px] border border-slate-300/60 dark:border-slate-700 font-bold">$1</code>')
+      .replace(/\*(.*?)\*/g, '<em class="italic text-slate-700 dark:text-slate-300">$1</em>')
+      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="inline-flex items-center gap-1 font-bold text-purple-600 dark:text-purple-400 hover:text-purple-700 underline cursor-pointer">$1 ↗</a>');
   };
 
   // Rich formatted visual renderer for AI responses
@@ -496,6 +500,33 @@ export default function AssistantChatbot() {
       if (line === '---' || line === '***' || line === '___') {
         elements.push(
           <div key={idx} className="my-2 h-[1px] bg-gradient-to-r from-transparent via-purple-300 dark:via-purple-800/80 to-transparent" />
+        );
+        return;
+      }
+
+      // Standalone Action CTA Link / Button (e.g. 👉 [Click here to view full roadmap](/track-order?id=...))
+      const ctaLinkMatch = line.match(/(?:👉\s*)?\[(.*?)\]\((.*?)\)/);
+      if (ctaLinkMatch && (line.startsWith('👉') || line.startsWith('[') || line.includes('/track-order') || line.includes('/get-started') || line.includes('/dashboard'))) {
+        const linkText = ctaLinkMatch[1];
+        const linkHref = ctaLinkMatch[2];
+        elements.push(
+          <div key={idx} className="pt-2 pb-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (linkHref.startsWith('/')) {
+                  navigate(linkHref);
+                } else {
+                  window.open(linkHref, '_blank');
+                }
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 hover:opacity-95 text-white font-bold text-xs shadow-md transition-all cursor-pointer active:scale-95 group"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span>{linkText}</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
         );
         return;
       }

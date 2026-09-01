@@ -88,30 +88,46 @@
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-/* Official Lenis Ultra-Smooth Scrolling Standards */
-html.lenis,
-html.lenis body {
-  height: auto;
-}
-
+/* Super Smooth Responsive Momentum Scrolling Standards */
 html {
-  scroll-behavior: auto !important;
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch;
 }
 
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
+body {
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  touch-action: pan-y pinch-zoom;
 }
 
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
+/* Butter-Smooth Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
 }
 
-.lenis.lenis-stopped {
-  overflow: hidden;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.lenis.lenis-scrolling iframe {
-  pointer-events: none;
+::-webkit-scrollbar-thumb {
+  background: rgba(147, 51, 234, 0.25);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(147, 51, 234, 0.6);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.5);
 }
 
 /* Authentic Circular UI Reveal Lens Standards */

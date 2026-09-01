@@ -321,12 +321,56 @@ export const dataStore = {
   },
 
   async getAllUsers() {
+    let baseUsers = [];
     if (isDbConnected()) {
-      const { User } = await import('../models/User.js');
-      return await User.find().select('-password').sort({ createdAt: -1 });
+      try {
+        const { User } = await import('../models/User.js');
+        const dbUsers = await User.find().select('-password').sort({ createdAt: -1 });
+        baseUsers = JSON.parse(JSON.stringify(dbUsers));
+      } catch (err) {
+        console.warn('MongoDB User.find notice:', err.message);
+        const users = readLocalStore('users') || [];
+        baseUsers = users.map(({ password, passwordHash, ...safe }) => safe);
+      }
+    } else {
+      const users = readLocalStore('users') || [];
+      baseUsers = users.map(({ password, passwordHash, ...safe }) => safe);
     }
-    const users = readLocalStore('users');
-    return users.map(({ password, passwordHash, ...safe }) => safe);
+
+    // Consolidate verified clients who submitted order requirements
+    try {
+      let requirements = [];
+      if (isDbConnected()) {
+        const { default: Requirement } = await import('../models/Requirement.js');
+        requirements = await Requirement.find().sort({ createdAt: -1 });
+      } else {
+        requirements = readLocalStore('requirements') || [];
+      }
+
+      const existingEmails = new Set(baseUsers.map((u) => (u.email || '').toLowerCase().trim()));
+
+      requirements.forEach((reqDoc) => {
+        const clientEmail = (reqDoc.clientInfo?.email || '').toLowerCase().trim();
+        if (clientEmail && !existingEmails.has(clientEmail)) {
+          existingEmails.add(clientEmail);
+          baseUsers.push({
+            _id: `client_${reqDoc._id || reqDoc.requirementId}`,
+            name: reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Client / Lead',
+            email: clientEmail,
+            role: 'client',
+            phone: reqDoc.clientInfo?.mobile || '',
+            company: reqDoc.clientInfo?.businessName || '',
+            status: 'active',
+            source: 'Order Submission',
+            createdAt: reqDoc.createdAt || new Date().toISOString(),
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('Client consolidation notice:', e.message);
+    }
+
+    return baseUsers;
   },
 
   // Settings

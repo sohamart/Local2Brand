@@ -3,6 +3,22 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Universal Base URL Resolver (Guarantees email buttons open the correct working application)
+export const getClientUrl = () => {
+  if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL.replace(/\/$/, '');
+  const rawUrls = (process.env.CLIENT_URL || '').split(',').map(u => u.trim().replace(/\/$/, '')).filter(Boolean);
+
+  if (process.env.NODE_ENV === 'development') {
+    // In development mode, prioritize local Vite dev port 5173
+    const local = rawUrls.find(u => u.includes('localhost:5173') || u.includes('127.0.0.1:5173') || u.includes('5173'));
+    if (local) return local;
+    return 'http://localhost:5173';
+  }
+
+  if (rawUrls.length > 0) return rawUrls[0];
+  return 'http://localhost:5173';
+};
+
 // Create transporter
 const createTransporter = () => {
   const host = process.env.EMAIL_HOST;
@@ -176,7 +192,7 @@ const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml,
 
 // 1. Welcome Email
 export const sendWelcomeEmail = async (user) => {
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const clientUrl = getClientUrl();
   const subject = `Welcome to LOCAL2BRAND, ${user.name}! 🚀`;
   
   const contentHtml = `
@@ -209,7 +225,7 @@ export const sendWelcomeEmail = async (user) => {
 
 // 2. Requirement / Order Submitted Email (to Client) - ULTRA PREMIUM
 export const sendRequirementConfirmationEmail = async (reqDoc) => {
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const clientUrl = getClientUrl();
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
   const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Your Business';
@@ -277,7 +293,7 @@ export const sendRequirementConfirmationEmail = async (reqDoc) => {
     orderId: reqId,
     contentHtml,
     ctaText: `Track Order ${reqId} Online`,
-    ctaUrl: `${clientUrl}/dashboard?track=${reqId}`,
+    ctaUrl: `${clientUrl}/track-order?id=${reqId}`,
   });
 
   return await sendEmail({ to: clientEmail, subject, html, text: `Requirements confirmed for ${businessName} (${reqId})` });
@@ -285,7 +301,7 @@ export const sendRequirementConfirmationEmail = async (reqDoc) => {
 
 // 3. Admin Notification on New Requirement Submission
 export const sendAdminRequirementAlert = async (reqDoc) => {
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
   const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
@@ -371,7 +387,7 @@ export const sendAdminRequirementAlert = async (reqDoc) => {
 
 // 4. Requirement Status & Quote Update Email (to Client)
 export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const clientUrl = getClientUrl();
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
   const clientEmail = reqDoc.clientInfo?.email;
@@ -419,7 +435,7 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
     orderId: reqId,
     contentHtml,
     ctaText: `Track Order ${reqId} Live`,
-    ctaUrl: `${clientUrl}/dashboard?track=${reqId}`,
+    ctaUrl: `${clientUrl}/track-order?id=${reqId}`,
   });
 
   return await sendEmail({ to: clientEmail, subject, html, text: `Your order ${reqId} status is now ${status}` });
@@ -427,7 +443,7 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
 
 // 5. Project Inquiry / Lead Submitted Email (to Client)
 export const sendLeadConfirmationEmail = async (lead) => {
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const clientUrl = getClientUrl();
   const leadIdShort = (lead._id || '').toString().slice(-6).toUpperCase();
   const subject = `Proposal Received: ${lead.websiteType} (#${leadIdShort}) — LOCAL2BRAND`;
   
@@ -482,7 +498,7 @@ export const sendLeadConfirmationEmail = async (lead) => {
 
 // 6. Admin Notification on New Lead
 export const sendAdminNewLeadAlert = async (lead) => {
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
   const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
@@ -551,7 +567,7 @@ export const sendAdminNewLeadAlert = async (lead) => {
 // 6b. Lead / Proposal Status Update Email (to Client)
 export const sendLeadStatusUpdateEmail = async (lead) => {
   if (!lead.email) return;
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const clientUrl = getClientUrl();
   const leadIdShort = (lead._id || '').toString().slice(-6).toUpperCase();
   const status = lead.status || 'Updated';
   const subject = `Proposal Status: ${status.toUpperCase()} — LOCAL2BRAND (#${leadIdShort})`;
@@ -589,7 +605,7 @@ export const sendLeadStatusUpdateEmail = async (lead) => {
 // 7. Callback Scheduled Email (to Client)
 export const sendCallbackConfirmationEmail = async (callback) => {
   if (!callback.email) return;
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const clientUrl = getClientUrl();
   const cbId = (callback._id || '').toString().slice(-6).toUpperCase();
   const subject = `Founder Callback Confirmed — LOCAL2BRAND 📞`;
 
@@ -640,7 +656,7 @@ export const sendCallbackConfirmationEmail = async (callback) => {
 
 // 8. Admin & Brand Instant Alert on Callback Request
 export const sendAdminCallbackAlert = async (callback) => {
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
   const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');

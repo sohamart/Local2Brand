@@ -178,8 +178,8 @@ export default function AdminLeads() {
           </div>
         </div>
 
-        {/* Leads Table */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        {/* Desktop Table View (md+) */}
+        <div className="hidden md:block bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-wider">
@@ -205,9 +205,9 @@ export default function AdminLeads() {
                       <td className="p-4">
                         <div className="font-extrabold text-slate-900 dark:text-white text-sm">{lead.name}</div>
                         <div className="text-slate-400 flex items-center gap-2 mt-0.5">
-                          <span>{lead.phone}</span>
+                          <a href={`tel:${lead.phone}`} className="text-emerald-600 font-mono hover:underline">{lead.phone}</a>
                           <span>•</span>
-                          <span>{lead.email}</span>
+                          <span className="truncate max-w-[150px]">{lead.email}</span>
                         </div>
                         {lead.businessName && (
                           <span className="inline-block text-[10px] font-semibold text-purple-600 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full mt-1">
@@ -230,7 +230,7 @@ export default function AdminLeads() {
                         <select
                           value={lead.status}
                           onChange={(e) => handleStatusChange(lead._id, e.target.value)}
-                          className="p-1.5 rounded-lg border text-[11px] font-bold focus:outline-none bg-slate-50 dark:bg-slate-800"
+                          className="p-1.5 rounded-lg border text-[11px] font-bold focus:outline-none bg-slate-50 dark:bg-slate-800 cursor-pointer"
                         >
                           <option value="pending">Pending</option>
                           <option value="in_progress">In Progress</option>
@@ -250,7 +250,7 @@ export default function AdminLeads() {
                             setSelectedLead(lead);
                             setAdminNoteText(lead.adminNotes || '');
                           }}
-                          className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-purple-100 hover:text-purple-700 transition-colors cursor-pointer"
+                          className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-purple-100 hover:text-purple-700 transition-colors cursor-pointer shadow-2xs"
                           title="View Full Details"
                         >
                           <Eye className="w-4 h-4" />
@@ -258,7 +258,7 @@ export default function AdminLeads() {
 
                         <button
                           onClick={() => handleDeleteLead(lead._id)}
-                          className="p-1.5 rounded-lg bg-red-50 dark:bg-red-950/60 text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
+                          className="p-2 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-600 hover:bg-red-100 transition-colors cursor-pointer shadow-2xs"
                           title="Delete Lead"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -272,42 +272,145 @@ export default function AdminLeads() {
           </div>
         </div>
 
+        {/* Dedicated Mobile Card View (< md) */}
+        <div className="block md:hidden space-y-4">
+          {leads.length === 0 ? (
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+              No inquiries found matching criteria.
+            </div>
+          ) : (
+            leads.map((lead) => {
+              const cleanPhone = (lead.phone || '').replace(/\D/g, '');
+              const waNumber = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+              return (
+                <div
+                  key={lead._id}
+                  className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                        {lead.name}
+                      </h3>
+                      {lead.businessName && (
+                        <div className="text-[11px] font-bold text-purple-600 dark:text-purple-400">
+                          {lead.businessName}
+                        </div>
+                      )}
+                      <div className="text-[10px] text-slate-400 mt-0.5">
+                        {new Date(lead.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <select
+                      value={lead.status}
+                      onChange={(e) => handleStatusChange(lead._id, e.target.value)}
+                      className="text-[10px] font-black p-1.5 rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="contacted">Contacted</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Type</span>
+                      <strong className="text-slate-800 dark:text-slate-200 truncate block">
+                        {lead.websiteType}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Budget</span>
+                      <strong className="text-emerald-600 dark:text-emerald-400">
+                        {lead.budget}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* 1-Tap Mobile Touch Actions */}
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                    <a
+                      href={`https://wa.me/${waNumber}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] flex items-center justify-center gap-1 border border-emerald-200 dark:border-emerald-800"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>WhatsApp</span>
+                    </a>
+
+                    <a
+                      href={`tel:${lead.phone}`}
+                      className="px-2 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold text-[11px] flex items-center justify-center gap-1 border border-blue-200 dark:border-blue-800"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Call</span>
+                    </a>
+
+                    <button
+                      onClick={() => {
+                        setSelectedLead(lead);
+                        setAdminNoteText(lead.adminNotes || '');
+                      }}
+                      className="px-2 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold text-[11px] flex items-center justify-center gap-1 border border-purple-200 dark:border-purple-800 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Inspect</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
         {/* Lead Details Modal */}
         {selectedLead && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in">
-            <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[90vh] flex flex-col">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-text"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setSelectedLead(null);
+            }}
+          >
+            <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[88vh] sm:max-h-[92vh] flex flex-col min-h-0">
               
-              <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950 shrink-0">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
                     Proposal Details: {selectedLead.name}
                   </h3>
-                  <p className="text-xs text-slate-400">ID: {selectedLead._id}</p>
+                  <p className="text-[10px] font-mono text-slate-400">ID: {selectedLead._id}</p>
                 </div>
                 <button
                   onClick={() => setSelectedLead(null)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
+                  className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto space-y-4 text-xs">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60">
-                  <div><strong className="block text-slate-400">Phone:</strong> {selectedLead.phone}</div>
-                  <div><strong className="block text-slate-400">Email:</strong> {selectedLead.email}</div>
-                  <div><strong className="block text-slate-400">Business:</strong> {selectedLead.businessName || 'N/A'}</div>
-                  <div><strong className="block text-slate-400">Website Type:</strong> {selectedLead.websiteType}</div>
-                  <div><strong className="block text-slate-400">Industry:</strong> {selectedLead.industry}</div>
-                  <div><strong className="block text-slate-400">Theme:</strong> {selectedLead.themePreference}</div>
-                  <div><strong className="block text-slate-400">Budget:</strong> {selectedLead.budget}</div>
-                  <div><strong className="block text-slate-400">Timeline:</strong> {selectedLead.timeline}</div>
-                  <div><strong className="block text-slate-400">Coupon Applied:</strong> {selectedLead.couponCode || 'None'} ({selectedLead.discountPercent}%)</div>
+              <div
+                className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs flex-1 min-h-0 custom-scrollbar"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                  <div><strong className="block text-slate-400 text-[10px]">Phone:</strong> <a href={`tel:${selectedLead.phone}`} className="text-emerald-600 font-bold hover:underline font-mono">{selectedLead.phone}</a></div>
+                  <div><strong className="block text-slate-400 text-[10px]">Email:</strong> <a href={`mailto:${selectedLead.email}`} className="text-blue-600 hover:underline">{selectedLead.email}</a></div>
+                  <div><strong className="block text-slate-400 text-[10px]">Business:</strong> <span className="font-bold text-slate-900 dark:text-white">{selectedLead.businessName || 'N/A'}</span></div>
+                  <div><strong className="block text-slate-400 text-[10px]">Website Type:</strong> <span className="font-bold text-purple-600 dark:text-purple-400">{selectedLead.websiteType}</span></div>
+                  <div><strong className="block text-slate-400 text-[10px]">Industry:</strong> {selectedLead.industry}</div>
+                  <div><strong className="block text-slate-400 text-[10px]">Theme:</strong> {selectedLead.themePreference || 'Modern'}</div>
+                  <div><strong className="block text-slate-400 text-[10px]">Budget:</strong> <strong className="text-emerald-600 dark:text-emerald-400">{selectedLead.budget}</strong></div>
+                  <div><strong className="block text-slate-400 text-[10px]">Timeline:</strong> {selectedLead.timeline}</div>
+                  <div><strong className="block text-slate-400 text-[10px]">Coupon:</strong> {selectedLead.couponCode || 'None'}</div>
                 </div>
 
                 {selectedLead.selectedFeatures && selectedLead.selectedFeatures.length > 0 && (
                   <div>
-                    <strong className="block text-slate-500 mb-1.5 uppercase font-bold text-[10px]">Requested Modules & Features:</strong>
+                    <strong className="block text-slate-500 mb-1.5 uppercase font-bold text-[10px]">Requested Modules &amp; Features:</strong>
                     <div className="flex flex-wrap gap-1.5">
                       {selectedLead.selectedFeatures.map((f, i) => (
                         <span key={i} className="px-2.5 py-1 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 font-semibold text-[11px] border border-purple-200 dark:border-purple-800">
@@ -337,12 +440,20 @@ export default function AdminLeads() {
                     placeholder="Add internal notes regarding phone call discussions, quotation updates, or developer assignments..."
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
                   />
-                  <button
-                    onClick={handleSaveNotes}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm cursor-pointer"
-                  >
-                    Save Notes
-                  </button>
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      onClick={handleSaveNotes}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm cursor-pointer"
+                    >
+                      Save Notes
+                    </button>
+                    <button
+                      onClick={() => handleDeleteLead(selectedLead._id)}
+                      className="text-xs font-bold text-rose-600 hover:underline cursor-pointer"
+                    >
+                      Delete Inquiry
+                    </button>
+                  </div>
                 </div>
               </div>
 

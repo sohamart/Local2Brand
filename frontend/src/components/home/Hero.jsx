@@ -353,7 +353,7 @@ export default function Hero() {
             World-class UI/UX design, sub-second performance, and instant lead capture for ambitious Indian businesses ready to scale globally.
           </p>
 
-          {/* CTA Group with Start, Explore & Track Order */}
+          {/* Minimal CTA Pair */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-sm sm:max-w-none mx-auto">
             <button
               onClick={handleStartWebsite}
@@ -369,14 +369,6 @@ export default function Hero() {
             >
               <span>Explore Demos</span>
               <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
-            </Link>
-
-            <Link
-              to="/track-order"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-btn text-sm sm:text-base font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/80 hover:bg-purple-100 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800 shadow-sm transition-all duration-200 flex items-center justify-center gap-2 group"
-            >
-              <Compass className="w-4 h-4 text-purple-600 dark:text-purple-400 group-hover:rotate-45 transition-transform" />
-              <span>Track Order</span>
             </Link>
           </div>
 

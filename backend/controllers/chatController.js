@@ -183,43 +183,82 @@ export const handleChatMessage = async (req, res) => {
       }
     }
 
-    // 2. Direct Callback Registration from Chat
-    if (detectedPhone && (phoneMatch || callbackIntent) && !requirementCreated) {
+    // 3. Smart Order Tracking Query Handler in AI Chat
+    const orderIdRegex = /\b(REQ-\d{4}-\d{4,6}|REQ-[A-Za-z0-9-]+)\b/i;
+    const orderIdMatch = message.match(orderIdRegex);
+    const trackingQueryIntent = /track|tracking|status|order\s*id|order\s*status|progress|kotota\s*hoyeche|koto\s*dur|kobe\s*pabo|order\s*kothai|ট্র্যাক|অর্ডার|স্ট্যাটাস|কতটা\s*হয়েছে/i.test(message);
+
+    if (orderIdMatch || (trackingQueryIntent && !requirementCreated && !callbackCreated)) {
       try {
-        const callbackRecord = await dataStore.createCallback({
-          name: detectedName,
-          phone: detectedPhone,
-          email: detectedEmail,
-          preferredTime: '⚡ ASAP (Within 15-30 mins)',
-          topic: 'AI Chat Auto-Detected Callback Request',
-          notes: `User Message: "${message.trim()}"`,
-          user: (userId && mongoose.Types.ObjectId.isValid(userId)) ? userId : null,
-        });
+        const { default: Requirement } = await import('../models/Requirement.js');
+        let matchedOrder = null;
 
-        // Instant email alert to founders
-        sendAdminCallbackAlert(callbackRecord).catch((err) => console.warn('Chat auto-callback alert error:', err.message));
-
-        if (detectedEmail) {
-          sendCallbackConfirmationEmail(callbackRecord).catch((err) => console.warn('Chat client confirmation email error:', err.message));
+        if (orderIdMatch) {
+          const searchId = orderIdMatch[0].trim();
+          if (mongoose.connection.readyState === 1) {
+            matchedOrder = await Requirement.findOne({ requirementId: { $regex: new RegExp(`^${searchId}$`, 'i') } });
+          } else {
+            matchedOrder = dataStore.findRequirementById(searchId);
+          }
+        } else if (currentUser?.email || detectedEmail) {
+          // If no explicit Order ID in message, check if authenticated user has existing requirements
+          const userEmail = currentUser?.email || detectedEmail;
+          if (mongoose.connection.readyState === 1) {
+            const userOrders = await Requirement.find({
+              $or: [
+                { 'clientInfo.email': { $regex: new RegExp(`^${userEmail}$`, 'i') } },
+                { user: userId }
+              ]
+            }).sort({ createdAt: -1 }).limit(3);
+            if (userOrders.length === 1) {
+              matchedOrder = userOrders[0];
+            } else if (userOrders.length > 1) {
+              const ordersListText = userOrders.map(o => `• **${o.requirementId}** (${o.clientInfo?.businessName || o.websiteTypeName}) — \`${o.status}\``).join('\n');
+              const multiPrompt = isBengali
+                ? `\n\n📦 **আপনার একাধিক সক্রিয় প্রজেক্ট অর্ডার রয়েছে:**\n${ordersListText}\n\nনির্দিষ্ট অর্ডারের লাইভ স্প্রিন্ট দেখতে আপনার Order ID (যেমন: \`${userOrders[0].requirementId}\`) লিখুন অথবা সরাসরি [Track Order পেজ খুলুন](/track-order?id=${userOrders[0].requirementId})।`
+                : `\n\n📦 **You have multiple active project orders:**\n${ordersListText}\n\nPlease enter the specific Order ID (e.g. \`${userOrders[0].requirementId}\`) to inspect its live sprint, or [open the Track Order portal](/track-order?id=${userOrders[0].requirementId}).`;
+              aiResponse.text = multiPrompt;
+            }
+          }
         }
 
-        dataStore.createNotification({
-          title: 'New Instant Callback from Chat',
-          message: `${detectedName} requested a call via AI Chat (${detectedPhone})`,
-          type: 'callback',
-          link: '/admin/callbacks',
-        }).catch((err) => console.warn('Admin notification error:', err.message));
+        if (matchedOrder) {
+          const status = matchedOrder.status || 'Submitted';
+          const stageIdx = status === 'Completed' ? 5 : status === 'In Development' ? 3 : status === 'Approved' ? 3 : status === 'Quotation Sent' ? 2 : status === 'Under Review' ? 1 : 0;
+          const pct = status === 'Completed' ? 100 : status === 'In Development' ? 85 : status === 'Approved' ? 75 : status === 'Quotation Sent' ? 60 : status === 'Under Review' ? 40 : 20;
 
-        callbackCreated = true;
+          const STAGE_NAMES = [
+            'Stage 01: Requirement Logged & Spec Audit',
+            'Stage 02: Architecture & Scope Review',
+            'Stage 03: UI/UX Wireframe & Figma Blueprint',
+            'Stage 04: Rapid Full-Stack Development Sprint',
+            'Stage 05: SEO, Speed Audit & SSL Testing',
+            'Stage 06: Live Handover & VIP Launch'
+          ];
 
-        if (!aiResponse.text.includes(detectedPhone)) {
-          const confirmationBanner = isBengali
-            ? `\n\n---\n✅ **কল-ব্যাক রিকোয়েস্ট নিশ্চিত করা হয়েছে!**\nআমাদের ফাউন্ডার ও এডমিন ডেস্কে (\`sohamduttabwn@gmail.com\` ও \`stackaddacontact@gmail.com\`) তাত্ক্ষণিক ইমেইল অ্যালার্ট পাঠানো হয়েছে। আমরা খুব শীঘ্রই আপনার নম্বরে (**${detectedPhone}**) কল করছি! 📞`
-            : `\n\n---\n✅ **Instant Callback Request Registered!**\nReal-time email alerts have been dispatched to our founder & executive desk (\`sohamduttabwn@gmail.com\` & \`stackaddacontact@gmail.com\`). We will call you at **${detectedPhone}** shortly! 📞`;
-          aiResponse.text += confirmationBanner;
+          const stageName = STAGE_NAMES[stageIdx] || STAGE_NAMES[0];
+          const bName = matchedOrder.clientInfo?.businessName || matchedOrder.websiteTypeName || 'Custom Website Project';
+          const notes = matchedOrder.internalNotes ? `\n- 📝 **ইঞ্জিনিয়ারিং টিম নোট:** "${matchedOrder.internalNotes}"` : '';
+          const notesEn = matchedOrder.internalNotes ? `\n- 📝 **Engineering Note:** "${matchedOrder.internalNotes}"` : '';
+
+          const trackingReport = isBengali
+            ? `\n\n---\n📦 **লাইভ প্রজেক্ট ট্র্যাকিং রিপোর্ট:**\n- **Order ID:** \`${matchedOrder.requirementId}\`\n- **প্রজেক্ট:** **${bName}** (${matchedOrder.websiteTypeName || matchedOrder.websiteType})\n- **লাইভ স্ট্যাটাস:** 🚀 **${status}** (${pct}% সম্পন্ন)\n- **বর্তমান ফেজ:** \`${stageName}\`\n- **ডেলিভারি স্প্রিন্ট:** ${matchedOrder.timeline || '⚡ Express (48 - 72 Hours)'}${notes}\n\n👉 [পুরো ৬-ধাপের লাইভ রোডম্যাপ দেখতে এখানে ক্লিক করুন 🚀](/track-order?id=${matchedOrder.requirementId})`
+            : `\n\n---\n📦 **Live Project Tracking Dispatch:**\n- **Order ID:** \`${matchedOrder.requirementId}\`\n- **Project:** **${bName}** (${matchedOrder.websiteTypeName || matchedOrder.websiteType})\n- **Live Status:** 🚀 **${status}** (${pct}% Completed)\n- **Current Phase:** \`${stageName}\`\n- **Delivery Sprint:** ${matchedOrder.timeline || '⚡ Express (48 - 72 Hours)'}${notesEn}\n\n👉 [Click here to view full 6-stage interactive roadmap 🚀](/track-order?id=${matchedOrder.requirementId})`;
+
+          aiResponse.text = trackingReport;
+        } else if (orderIdMatch && !matchedOrder) {
+          const notFoundText = isBengali
+            ? `\n\n---\n⚠️ দুঃখিত, \`${orderIdMatch[0]}\` আইডি দিয়ে কোনো প্রজেক্ট অর্ডার পাওয়া যায়নি। অনুগ্রহ করে আপনার Order ID চেক করে সঠিক আইডি লিখুন (যেমন: \`REQ-2026-48391\`) অথবা সরাসরি [Track Order পেজে যান](/track-order)।`
+            : `\n\n---\n⚠️ Sorry, no project order was found matching \`${orderIdMatch[0]}\`. Please check your Order ID (e.g. \`REQ-2026-48391\`) or visit our [Track Order Portal](/track-order).`;
+          aiResponse.text = notFoundText;
+        } else if (trackingQueryIntent && !matchedOrder && !aiResponse.text.includes('Order ID')) {
+          const askIdText = isBengali
+            ? `\n\n---\n🔍 **আপনার প্রজেক্টের লাইভ স্ট্যাটাস ট্র্যাক করতে আপনার Order ID বলুন:**\nঅনুগ্রহ করে আপনার \`REQ-2026-XXXXX\` ফরম্যাটের Order ID লিখুন, আমি এখনই আমাদের সিস্টেম চেক করে আপনার লাইভ স্প্রিন্ট প্রগ্রেস ও ডেলিভারি স্ট্যাটাস জানিয়ে দেব! অথবা সরাসরি [Track Order পেজ দেখতে পারেন](/track-order)।`
+            : `\n\n---\n🔍 **To track your project live, please provide your Order ID:**\nPlease share your Order ID (e.g. \`REQ-2026-XXXXX\`), and I will instantly look up the engineering sprint milestones and delivery timeline! Or you can directly visit our [Track Order Gateway](/track-order).`;
+          aiResponse.text += askIdText;
         }
-      } catch (cbErr) {
-        console.warn('Chat auto-callback record notice:', cbErr.message);
+      } catch (trackErr) {
+        console.warn('AI chat order tracking lookup notice:', trackErr.message);
       }
     }
 
