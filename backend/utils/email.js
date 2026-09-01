@@ -27,7 +27,7 @@ const createTransporter = () => {
 };
 
 export const sendEmail = async ({ to, subject, html, text }) => {
-  const fromEmail = process.env.EMAIL_FROM || process.env.SUPPORT_EMAIL || 'LOCAL2BRAND <hello@local2brand.com>';
+  const fromEmail = process.env.EMAIL_FROM || process.env.SUPPORT_EMAIL || 'LOCAL2BRAND <stackaddacontact@gmail.com>';
   const transporter = createTransporter();
 
   if (!transporter) {
@@ -55,7 +55,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
 };
 
 // Universal Device-Adaptive (Light & Dark Theme Responsive) Agency Email Generator
-const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml, ctaText, ctaUrl, footerNote }) => {
+const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml, ctaText, ctaUrl, footerNote, orderId }) => {
   const currentYear = new Date().getFullYear();
   return `
 <!DOCTYPE html>
@@ -70,7 +70,7 @@ const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml,
   <style>
     :root { color-scheme: light dark; supported-color-schemes: light dark; }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; width: 100% !important; background-color: #f6f8fb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    body { margin: 0; padding: 0; width: 100% !important; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
     table { border-collapse: collapse; }
     a { text-decoration: none; }
 
@@ -86,9 +86,9 @@ const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml,
       .text-muted { color: #9ca3af !important; }
       .border-theme { border-color: #1f2937 !important; }
       .badge-theme { background-color: rgba(147, 51, 234, 0.2) !important; border-color: rgba(168, 85, 247, 0.4) !important; color: #c084fc !important; }
+      .id-badge { background-color: #1e1b4b !important; border-color: #4338ca !important; color: #a5b4fc !important; }
     }
 
-    /* Android Gmail Dark Mode Support */
     [data-ogsc] .bg-body { background-color: #0b0f19 !important; }
     [data-ogsc] .bg-card { background-color: #111827 !important; border-color: #1f2937 !important; }
     [data-ogsc] .bg-box { background-color: #162032 !important; border-color: #1f2937 !important; }
@@ -97,47 +97,55 @@ const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml,
     [data-ogsc] .text-muted { color: #9ca3af !important; }
   </style>
 </head>
-<body class="bg-body" style="margin: 0; padding: 20px 8px; background-color: #f6f8fb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+<body class="bg-body" style="margin: 0; padding: 24px 8px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
   ${preheader ? `<div style="display: none; max-height: 0px; overflow: hidden; opacity: 0; font-size: 1px; line-height: 1px; color: transparent;">${preheader}</div>` : ''}
   
   <!-- Outer Center Container -->
-  <div style="width: 100%; max-width: 520px; margin: 0 auto; box-sizing: border-box;">
+  <div style="width: 100%; max-width: 540px; margin: 0 auto; box-sizing: border-box;">
     
     <!-- Adaptive Rounded Main Agency Card -->
-    <div class="bg-card border-theme" style="background-color: #ffffff; border-radius: 18px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); box-sizing: border-box; width: 100%;">
+    <div class="bg-card border-theme" style="background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); box-sizing: border-box; width: 100%;">
       
       <!-- Top Glowing Radiant Accent Bar -->
-      <div style="height: 4px; width: 100%; background: linear-gradient(90deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); line-height: 4px; font-size: 4px;">&nbsp;</div>
+      <div style="height: 5px; width: 100%; background: linear-gradient(90deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); line-height: 5px; font-size: 5px;">&nbsp;</div>
 
       <!-- Header Section -->
-      <div class="bg-header border-theme" style="padding: 26px 20px 18px 20px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff; box-sizing: border-box;">
-        <div class="badge-theme" style="display: inline-block; padding: 4px 12px; border-radius: 9999px; background-color: #f3e8ff; border: 1px solid #e9d5ff; color: #7e22ce; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;">
+      <div class="bg-header border-theme" style="padding: 28px 24px 18px 24px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff; box-sizing: border-box;">
+        <div class="badge-theme" style="display: inline-block; padding: 4px 14px; border-radius: 9999px; background-color: #f3e8ff; border: 1px solid #e9d5ff; color: #7e22ce; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">
           ${headerBadge || '⚡ LOCAL2BRAND AGENCY'}
         </div>
-        <h1 class="text-title" style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.2;">
-          LOCAL<span style="color: #ec4899;">2</span>BRAND
+        <h1 class="text-title" style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.2;">
+          LOCAL<span style="color: #c026d3;">2</span>BRAND
         </h1>
         <p class="text-muted" style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">
-          High-Performance Digital Agency &amp; Engineering
+          Fast-Track Web Experience Engine &amp; Digital Agency
         </p>
+
+        ${orderId ? `
+          <div style="margin-top: 14px;">
+            <div class="id-badge" style="display: inline-block; padding: 6px 16px; border-radius: 12px; background-color: #eef2ff; border: 1.5px dashed #6366f1; color: #4338ca; font-size: 14px; font-weight: 900; font-family: monospace; letter-spacing: 1.5px;">
+              ORDER ID: ${orderId}
+            </div>
+          </div>
+        ` : ''}
       </div>
 
       <!-- Title / Intro Banner -->
-      <div class="bg-card" style="padding: 20px 20px 8px 20px; background-color: #ffffff; box-sizing: border-box;">
-        <h2 class="text-title" style="margin: 0 0 6px 0; font-size: 19px; font-weight: 800; color: #0f172a; line-height: 1.35;">
+      <div class="bg-card" style="padding: 20px 24px 8px 24px; background-color: #ffffff; box-sizing: border-box;">
+        <h2 class="text-title" style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.35;">
           ${title}
         </h2>
         ${subtitle ? `<p class="text-muted" style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5; font-weight: 500;">${subtitle}</p>` : ''}
       </div>
 
       <!-- Content Body -->
-      <div class="bg-card text-body" style="padding: 6px 20px 24px 20px; font-size: 14px; line-height: 1.6; color: #334155; background-color: #ffffff; box-sizing: border-box;">
+      <div class="bg-card text-body" style="padding: 6px 24px 28px 24px; font-size: 14px; line-height: 1.6; color: #334155; background-color: #ffffff; box-sizing: border-box;">
         ${contentHtml}
 
         <!-- Radiant Attractive CTA Button -->
         ${ctaText && ctaUrl ? `
-          <div style="margin-top: 24px; margin-bottom: 8px; text-align: center;">
-            <a href="${ctaUrl}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); background-color: #9333ea; color: #ffffff !important; padding: 14px 34px; text-decoration: none; border-radius: 12px; font-size: 14px; font-weight: 900; display: inline-block; box-shadow: 0 8px 24px rgba(192, 38, 211, 0.45); letter-spacing: 0.4px;">
+          <div style="margin-top: 26px; margin-bottom: 8px; text-align: center;">
+            <a href="${ctaUrl}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); background-color: #9333ea; color: #ffffff !important; padding: 14px 34px; text-decoration: none; border-radius: 14px; font-size: 14px; font-weight: 900; display: inline-block; box-shadow: 0 8px 24px rgba(192, 38, 211, 0.4); letter-spacing: 0.4px;">
               ${ctaText} &rarr;
             </a>
           </div>
@@ -150,9 +158,9 @@ const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml,
           ${footerNote || 'This is an official automated dispatch from LOCAL2BRAND Platform &amp; AI Dispatch System.'}
         </p>
         <div style="font-size: 11px; color: #4b5563; margin-bottom: 8px;">
-          <span>✉️ Official Contact: <a href="mailto:stackaddacontact@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">stackaddacontact@gmail.com</a></span>
+          <span>✉️ Support: <a href="mailto:stackaddacontact@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">stackaddacontact@gmail.com</a></span>
           <span style="margin: 0 4px; color: #94a3b8;">•</span>
-          <span>Admin: <a href="mailto:sohamduttabwn@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">sohamduttabwn@gmail.com</a></span>
+          <span>Founder Desk: <a href="mailto:sohamduttabwn@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">sohamduttabwn@gmail.com</a></span>
         </div>
         <p class="text-muted" style="margin: 0; font-size: 11px; color: #94a3b8; font-weight: 600;">
           &copy; ${currentYear} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved.
@@ -199,7 +207,225 @@ export const sendWelcomeEmail = async (user) => {
   return await sendEmail({ to: user.email, subject, html, text: `Welcome to LOCAL2BRAND, ${user.name}!` });
 };
 
-// 2. Project Inquiry / Lead Submitted Email (to Client)
+// 2. Requirement / Order Submitted Email (to Client) - ULTRA PREMIUM
+export const sendRequirementConfirmationEmail = async (reqDoc) => {
+  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Your Business';
+  const websiteType = reqDoc.websiteTypeName || reqDoc.websiteType || 'Custom Website';
+  const clientEmail = reqDoc.clientInfo?.email;
+
+  if (!clientEmail) return;
+
+  const subject = `🎉 Order Confirmed: ${businessName} (${reqId}) — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
+        Hi ${clientName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        We have received your complete website specifications for <strong>${businessName}</strong>. Our senior engineers &amp; UI designers have queued your project for architecture review.
+      </p>
+
+      <!-- Adaptive Spec Table -->
+      <table class="bg-box border-theme" style="width: 100% !important; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin: 16px 0; background-color: #f8fafc; border-radius: 14px; overflow: hidden; border: 1px solid #e2e8f0; box-sizing: border-box;">
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; width: 36%; font-size: 12px; font-weight: 600; vertical-align: top;">Order / Req ID:</td>
+          <td style="padding: 11px 12px; font-weight: 900; color: #4338ca; font-family: monospace; font-size: 14px; width: 64%; vertical-align: top;">${reqId}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Business Name:</td>
+          <td class="text-title" style="padding: 11px 12px; font-weight: 800; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${businessName}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Category:</td>
+          <td class="text-title" style="padding: 11px 12px; font-weight: 700; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${websiteType}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Delivery Speed:</td>
+          <td style="padding: 11px 12px; font-weight: 800; color: #2563eb; font-size: 13px; vertical-align: top;">${reqDoc.timeline || '⚡ Express (48 - 72 Hours)'}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Investment Tier:</td>
+          <td style="padding: 11px 12px; font-weight: 800; color: #059669; font-size: 13px; vertical-align: top;">${reqDoc.budget || '₹12,999 – ₹24,999'}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Selected Pages:</td>
+          <td style="padding: 11px 12px; font-weight: 600; color: #334155; font-size: 12px; vertical-align: top;">${(reqDoc.selectedPages || []).length} Custom Pages</td>
+        </tr>
+        <tr>
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Current Status:</td>
+          <td style="padding: 11px 12px; font-weight: 900; color: #7c3aed; font-size: 13px; vertical-align: top;">Submitted &bull; Under Engineering Review</td>
+        </tr>
+      </table>
+
+      <div style="background-color: #eef2ff; border: 1px solid #c7d2fe; border-radius: 12px; padding: 12px 16px; margin: 14px 0;">
+        <p style="margin: 0; font-size: 12px; color: #3730a3; font-weight: 600; line-height: 1.5;">
+          📍 <strong>Live Order Tracking:</strong> You can track live sprint milestones, review quotes, and communicate with founders using your Order ID <strong>${reqId}</strong> in your client portal.
+        </p>
+      </div>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Order ${reqId} confirmed for ${businessName}. Tracking is now active.`,
+    headerBadge: '🚀 WEBSITE ORDER INITIALIZED',
+    title: `Website Order Confirmed! 🎉`,
+    subtitle: `We have logged your specifications and started architecture planning.`,
+    orderId: reqId,
+    contentHtml,
+    ctaText: `Track Order ${reqId} Online`,
+    ctaUrl: `${clientUrl}/dashboard?track=${reqId}`,
+  });
+
+  return await sendEmail({ to: clientEmail, subject, html, text: `Requirements confirmed for ${businessName} (${reqId})` });
+};
+
+// 3. Admin Notification on New Requirement Submission
+export const sendAdminRequirementAlert = async (reqDoc) => {
+  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
+
+  const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'New Business';
+  const websiteType = reqDoc.websiteTypeName || reqDoc.websiteType || 'Custom Website';
+  const phone = reqDoc.clientInfo?.mobile || 'N/A';
+  const email = reqDoc.clientInfo?.email || 'N/A';
+
+  const subject = `🔥 [NEW WEBSITE ORDER ${reqId}] ${businessName} (${reqDoc.budget || 'Quotation'})`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <div style="display: inline-block; background-color: #fef3c7; border: 1px solid #fde68a; color: #b45309; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-bottom: 12px;">
+        ⚡ NEW CLIENT SPECIFICATION &amp; ORDER SUBMISSION
+      </div>
+
+      <!-- Adaptive Spec Table -->
+      <table class="bg-box border-theme" style="width: 100% !important; max-width: 100%; table-layout: fixed; border-collapse: collapse; background-color: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-sizing: border-box;">
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; width: 34%; font-size: 12px; font-weight: 600; vertical-align: top;">Requirement ID:</td>
+          <td style="padding: 11px 12px; font-weight: 900; color: #4338ca; font-family: monospace; font-size: 14px; width: 66%; vertical-align: top;">${reqId}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Client Name:</td>
+          <td class="text-title" style="padding: 11px 12px; font-weight: 800; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${clientName}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Phone:</td>
+          <td style="padding: 11px 12px; font-weight: 800; color: #059669; font-family: monospace; font-size: 14px; vertical-align: top; word-break: break-all;">
+            <a href="tel:${phone}" style="color: #059669; text-decoration: none;">${phone}</a>
+          </td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Email:</td>
+          <td style="padding: 11px 12px; font-weight: 700; color: #2563eb; font-size: 13px; vertical-align: top; word-break: break-all;">
+            <a href="mailto:${email}" style="color: #2563eb; text-decoration: none;">${email}</a>
+          </td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Business Name:</td>
+          <td class="text-title" style="padding: 11px 12px; font-weight: 700; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${businessName}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Industry &amp; Type:</td>
+          <td class="text-body" style="padding: 11px 12px; color: #334155; font-weight: 600; font-size: 13px; vertical-align: top; word-break: break-word;">${websiteType}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Budget &amp; Speed:</td>
+          <td style="padding: 11px 12px; font-weight: 800; color: #d97706; font-size: 13px; vertical-align: top;">${reqDoc.budget} &bull; ${reqDoc.timeline}</td>
+        </tr>
+        ${reqDoc.selectedPages?.length ? `
+          <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+            <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Pages:</td>
+            <td class="text-muted" style="padding: 11px 12px; color: #334155; font-size: 12px; vertical-align: top; word-break: break-word;">${reqDoc.selectedPages.join(', ')}</td>
+          </tr>
+        ` : ''}
+        ${reqDoc.additionalNotes ? `
+          <tr>
+            <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Notes:</td>
+            <td class="text-muted" style="padding: 11px 12px; color: #475569; font-size: 12px; font-style: italic; vertical-align: top; word-break: break-word;">${reqDoc.additionalNotes}</td>
+          </tr>
+        ` : ''}
+      </table>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `New order ${reqId} received from ${clientName} (${phone}) for ${businessName}.`,
+    headerBadge: '🚨 ADMIN ORDER DISPATCH',
+    title: `New Website Order Received! 🔥`,
+    subtitle: `Order: ${reqId} &bull; ${businessName}`,
+    orderId: reqId,
+    contentHtml,
+    ctaText: 'Open Requirements in Admin Panel',
+    ctaUrl: `${clientUrl}/admin/requirements`,
+  });
+
+  return await sendEmail({ to: recipients, subject, html, text: `New website order ${reqId} from ${clientName} (${phone})` });
+};
+
+// 4. Requirement Status & Quote Update Email (to Client)
+export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
+  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
+  const clientEmail = reqDoc.clientInfo?.email;
+  const status = reqDoc.status || 'Updated';
+
+  if (!clientEmail) return;
+
+  const subject = `Order Update: ${status.toUpperCase()} — ${reqDoc.clientInfo?.businessName || 'Your Website'} (${reqId})`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
+        Hi ${clientName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        The development progress &amp; milestone roadmap for your website order (<strong>${reqId}</strong>) has been updated:
+      </p>
+
+      <div class="bg-box border-theme" style="background-color: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 18px 22px; margin: 16px 0; text-align: center; box-sizing: border-box;">
+        <div style="font-size: 11px; color: #166534; text-transform: uppercase; font-weight: 800; margin-bottom: 4px; letter-spacing: 0.5px;">Current Milestone Status</div>
+        <div style="font-size: 20px; font-weight: 900; color: #15803d; letter-spacing: 0.5px;">${status.toUpperCase()}</div>
+      </div>
+
+      ${reqDoc.quotedAmount ? `
+        <div class="bg-box border-theme" style="background-color: #fefce8; border: 1px solid #fef08a; border-radius: 12px; padding: 14px 18px; margin: 14px 0; text-align: center; box-sizing: border-box;">
+          <div style="font-size: 11px; color: #854d0e; text-transform: uppercase; font-weight: 800; margin-bottom: 2px;">Official Quoted Investment</div>
+          <div style="font-size: 18px; font-weight: 900; color: #a16207;">${reqDoc.quotedAmount}</div>
+        </div>
+      ` : ''}
+
+      ${reqDoc.internalNotes ? `
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border-radius: 12px; padding: 12px 16px; border: 1px solid #e2e8f0; margin-top: 14px; box-sizing: border-box;">
+          <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Engineer Notes:</div>
+          <div class="text-body" style="font-size: 13px; color: #334155; word-break: break-word;">${reqDoc.internalNotes}</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Your website order ${reqId} is now ${status}. Track milestones live.`,
+    headerBadge: '📋 PROJECT ROADMAP UPDATE',
+    title: `Order Status Updated 📋`,
+    subtitle: `Current Phase: ${status} &bull; Order ID: ${reqId}`,
+    orderId: reqId,
+    contentHtml,
+    ctaText: `Track Order ${reqId} Live`,
+    ctaUrl: `${clientUrl}/dashboard?track=${reqId}`,
+  });
+
+  return await sendEmail({ to: clientEmail, subject, html, text: `Your order ${reqId} status is now ${status}` });
+};
+
+// 5. Project Inquiry / Lead Submitted Email (to Client)
 export const sendLeadConfirmationEmail = async (lead) => {
   const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
   const leadIdShort = (lead._id || '').toString().slice(-6).toUpperCase();
@@ -217,12 +443,12 @@ export const sendLeadConfirmationEmail = async (lead) => {
       <!-- Adaptive Spec Table -->
       <table class="bg-box border-theme" style="width: 100% !important; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin: 14px 0; background-color: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-sizing: border-box;">
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
-          <td class="text-muted" style="padding: 11px 12px; color: #64748b; width: 34%; font-size: 12px; font-weight: 600; vertical-align: top;">Project:</td>
-          <td class="text-title" style="padding: 11px 12px; font-weight: 800; color: #0f172a; width: 66%; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.websiteType}</td>
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; width: 34%; font-size: 12px; font-weight: 600; vertical-align: top;">Inquiry Ref:</td>
+          <td style="padding: 11px 12px; font-weight: 900; color: #4338ca; font-family: monospace; font-size: 13px; width: 66%; vertical-align: top;">#${leadIdShort}</td>
         </tr>
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
-          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Domain:</td>
-          <td class="text-title" style="padding: 11px 12px; font-weight: 700; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.industry || 'Custom Business'}</td>
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Project:</td>
+          <td class="text-title" style="padding: 11px 12px; font-weight: 800; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.websiteType}</td>
         </tr>
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
           <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Timeline:</td>
@@ -232,12 +458,6 @@ export const sendLeadConfirmationEmail = async (lead) => {
           <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Budget:</td>
           <td style="padding: 11px 12px; font-weight: 800; color: #059669; font-size: 13px; vertical-align: top;">${lead.budget}</td>
         </tr>
-        ${lead.estimatedPrice ? `
-          <tr>
-            <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Est. Price:</td>
-            <td style="padding: 11px 12px; font-weight: 900; color: #d97706; font-size: 13px; vertical-align: top;">${lead.estimatedPrice}</td>
-          </tr>
-        ` : ''}
       </table>
 
       <p class="text-muted" style="margin: 12px 0 0 0; color: #64748b; font-size: 12px; line-height: 1.5;">
@@ -249,8 +469,9 @@ export const sendLeadConfirmationEmail = async (lead) => {
   const html = wrapAgencyEmail({
     preheader: `We have received your website inquiry for ${lead.websiteType}.`,
     headerBadge: '📋 PROPOSAL INTAKE CONFIRMATION',
-    title: `Requirements Received! 🎉`,
-    subtitle: `Reference: Inquiry #${leadIdShort}`,
+    title: `Inquiry Received! 🎉`,
+    subtitle: `Reference: #${leadIdShort}`,
+    orderId: `#${leadIdShort}`,
     contentHtml,
     ctaText: 'Track Proposal in Portal',
     ctaUrl: `${clientUrl}/dashboard`,
@@ -259,7 +480,7 @@ export const sendLeadConfirmationEmail = async (lead) => {
   return await sendEmail({ to: lead.email, subject, html, text: `Thank you for your inquiry, ${lead.name}!` });
 };
 
-// 3. Admin Notification on New Lead
+// 6. Admin Notification on New Lead
 export const sendAdminNewLeadAlert = async (lead) => {
   const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
@@ -298,11 +519,11 @@ export const sendAdminNewLeadAlert = async (lead) => {
         </tr>
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
           <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Type &amp; Domain:</td>
-          <td class="text-body" style="padding: 11px 12px; color: #334155; font-weight: 600; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.websiteType} (${lead.industry})</td>
+          <td class="text-body" style="padding: 11px 12px; color: #334155; font-weight: 600; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.websiteType} (${lead.industry || 'Web'})</td>
         </tr>
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
           <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Budget / Time:</td>
-          <td style="padding: 11px 12px; font-weight: 800; color: #d97706; font-size: 13px; vertical-align: top;">${lead.budget} • ${lead.timeline}</td>
+          <td style="padding: 11px 12px; font-weight: 800; color: #d97706; font-size: 13px; vertical-align: top;">${lead.budget} &bull; ${lead.timeline}</td>
         </tr>
         ${lead.requirements ? `
           <tr>
@@ -318,7 +539,7 @@ export const sendAdminNewLeadAlert = async (lead) => {
     preheader: `New proposal from ${lead.name} (${lead.phone}) for ${lead.websiteType}.`,
     headerBadge: '🚨 ADMIN PRIORITY ALERT',
     title: `New Project Proposal Received! 🔥`,
-    subtitle: `Client: ${lead.name} • ${lead.websiteType}`,
+    subtitle: `Client: ${lead.name} &bull; ${lead.websiteType}`,
     contentHtml,
     ctaText: 'Open Leads Desk in Admin',
     ctaUrl: `${clientUrl}/admin/leads`,
@@ -327,10 +548,49 @@ export const sendAdminNewLeadAlert = async (lead) => {
   return await sendEmail({ to: recipients, subject, html, text: `New lead from ${lead.name}: ${lead.phone}` });
 };
 
-// 4. Callback Scheduled Email (to Client)
+// 6b. Lead / Proposal Status Update Email (to Client)
+export const sendLeadStatusUpdateEmail = async (lead) => {
+  if (!lead.email) return;
+  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const leadIdShort = (lead._id || '').toString().slice(-6).toUpperCase();
+  const status = lead.status || 'Updated';
+  const subject = `Proposal Status: ${status.toUpperCase()} — LOCAL2BRAND (#${leadIdShort})`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
+        Hi ${lead.name},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        The status of your project proposal for <strong>${lead.websiteType}</strong> has been updated to:
+      </p>
+
+      <div class="bg-box border-theme" style="background-color: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 18px 22px; margin: 16px 0; text-align: center; box-sizing: border-box;">
+        <div style="font-size: 11px; color: #166534; text-transform: uppercase; font-weight: 800; margin-bottom: 4px; letter-spacing: 0.5px;">Current Status</div>
+        <div style="font-size: 20px; font-weight: 900; color: #15803d; letter-spacing: 0.5px;">${status.toUpperCase()}</div>
+      </div>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Your proposal #${leadIdShort} status is now ${status}.`,
+    headerBadge: '📋 PROPOSAL STATUS UPDATE',
+    title: `Proposal Status Updated 📋`,
+    subtitle: `Reference: #${leadIdShort} &bull; ${status}`,
+    orderId: `#${leadIdShort}`,
+    contentHtml,
+    ctaText: 'Visit Client Portal',
+    ctaUrl: `${clientUrl}/dashboard`,
+  });
+
+  return await sendEmail({ to: lead.email, subject, html, text: `Your proposal #${leadIdShort} status is now ${status}` });
+};
+
+// 7. Callback Scheduled Email (to Client)
 export const sendCallbackConfirmationEmail = async (callback) => {
   if (!callback.email) return;
   const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
+  const cbId = (callback._id || '').toString().slice(-6).toUpperCase();
   const subject = `Founder Callback Confirmed — LOCAL2BRAND 📞`;
 
   const contentHtml = `
@@ -339,7 +599,7 @@ export const sendCallbackConfirmationEmail = async (callback) => {
         Hi ${callback.name},
       </p>
       <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
-        Your consultation callback has been scheduled with our senior engineering &amp; founding desk.
+        Your direct consultation callback has been scheduled with our senior engineering &amp; founding desk.
       </p>
 
       <!-- Adaptive Spec Table -->
@@ -369,6 +629,7 @@ export const sendCallbackConfirmationEmail = async (callback) => {
     headerBadge: '📞 FOUNDER CALLBACK QUEUE',
     title: `Callback Request Confirmed! 📞`,
     subtitle: `We'll call you at ${callback.phone} (${callback.preferredTime})`,
+    orderId: cbId ? `CALL-${cbId}` : undefined,
     contentHtml,
     ctaText: 'Visit LOCAL2BRAND Portal',
     ctaUrl: `${clientUrl}/dashboard`,
@@ -377,7 +638,7 @@ export const sendCallbackConfirmationEmail = async (callback) => {
   return await sendEmail({ to: callback.email, subject, html, text: `Callback request received for ${callback.phone}` });
 };
 
-// 5. Admin & Brand Instant Alert on Callback Request
+// 8. Admin & Brand Instant Alert on Callback Request
 export const sendAdminCallbackAlert = async (callback) => {
   const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
@@ -432,53 +693,11 @@ export const sendAdminCallbackAlert = async (callback) => {
     preheader: `Instant callback request from ${callback.name} (${callback.phone}).`,
     headerBadge: '🚨 FOUNDER CALLBACK ALERT',
     title: `Instant Callback Request! 📞`,
-    subtitle: `Client: ${callback.name} • ${callback.phone}`,
+    subtitle: `Client: ${callback.name} &bull; ${callback.phone}`,
     contentHtml,
     ctaText: 'Open Callbacks Queue in Admin',
     ctaUrl: `${clientUrl}/admin/callbacks`,
   });
 
   return await sendEmail({ to: recipients, subject, html, text: `Instant callback request from ${callback.name} (${callback.phone}) for ${callback.topic}` });
-};
-
-// 6. Lead Status Update Email
-export const sendLeadStatusUpdateEmail = async (lead) => {
-  const clientUrl = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0] : 'https://local2brand.vercel.app';
-  const formattedStatus = (lead.status || 'Updated').toUpperCase().replace('_', ' ');
-  const subject = `Status Update: ${formattedStatus} — ${lead.websiteType} (#${(lead._id || '').toString().slice(-6).toUpperCase()})`;
-
-  const contentHtml = `
-    <div style="margin: 10px 0 16px 0;">
-      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
-        Hi ${lead.name},
-      </p>
-      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
-        The progress status of your website project (<strong>${lead.websiteType}</strong>) has been updated:
-      </p>
-
-      <div class="bg-box border-theme" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px 20px; margin: 14px 0; text-align: center; box-sizing: border-box;">
-        <div style="font-size: 11px; color: #166534; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Current Project Status</div>
-        <div style="font-size: 18px; font-weight: 900; color: #15803d; letter-spacing: 0.5px;">${formattedStatus}</div>
-      </div>
-
-      ${lead.adminNotes ? `
-        <div class="bg-box border-theme" style="background-color: #f8fafc; border-radius: 12px; padding: 12px 16px; border: 1px solid #e2e8f0; margin-top: 14px; box-sizing: border-box;">
-          <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Engineer Notes:</div>
-          <div class="text-body" style="font-size: 13px; color: #334155; word-break: break-word;">${lead.adminNotes}</div>
-        </div>
-      ` : ''}
-    </div>
-  `;
-
-  const html = wrapAgencyEmail({
-    preheader: `Your project proposal status is now ${formattedStatus}.`,
-    headerBadge: '📋 PROJECT ROADMAP UPDATE',
-    title: `Project Status Updated 📋`,
-    subtitle: `New Status: ${formattedStatus}`,
-    contentHtml,
-    ctaText: 'View Project Progress',
-    ctaUrl: `${clientUrl}/dashboard`,
-  });
-
-  return await sendEmail({ to: lead.email, subject, html, text: `Your proposal status is now ${lead.status}` });
 };

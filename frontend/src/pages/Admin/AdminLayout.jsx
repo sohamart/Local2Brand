@@ -18,7 +18,8 @@ import {
   Layers,
   Send,
   Star,
-  DollarSign
+  DollarSign,
+  Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';

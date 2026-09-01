@@ -1,9 +1,9 @@
 /**
  * Multi-Tier AI Provider Fallback Service for LOCAL2BRAND
- * Fallback Chain: Gemini -> Groq -> Cerebras -> OpenRouter
+ * Fallback Chain: Groq -> Gemini -> Cerebras -> OpenRouter -> Resilient Engine
  */
 
-const REQUEST_TIMEOUT_MS = 25000;
+const REQUEST_TIMEOUT_MS = 7000;
 
 /**
  * Builds dynamic, context-rich system prompt with:
@@ -47,16 +47,14 @@ CURRENT CONVERSATION PARTNER (AUTHENTICATED MEMBER):
 Instructions for this user:
 - You KNOW who this user is. Greet and address them warmly by their name ("${currentUser.name || 'Friend'}").
 - If the user asks about their identity, login status, or account ("who am I?", "amar details ki?", "amake cheno?"), tell them their name (${currentUser.name}), email (${currentUser.email}), role (${currentUser.role}), and company if available.
-- Treat them with VIP priority as a verified member of ${brandName}.
+- If they ask to submit a project or callback, confirm you can register it directly for them right now!
 ========================================`;
   } else {
     userContextBlock = `
 ========================================
 CURRENT CONVERSATION PARTNER:
 - Status: Guest / Visitor (Not currently logged in)
-Instructions:
-- Greet them warmly and assist them with discovering ${brandName} solutions, templates, pricing, and project options.
-- If they ask about their account or want to track past projects, invite them to login.
+- Instructions: Greet warmly. If they share project details, business type, or phone number, assist them with our packages, instant callback, or submitting a proposal.
 ========================================`;
   }
 
@@ -66,11 +64,11 @@ Instructions:
 OFFICIAL COMPANY & SHOWABLE ADMIN DETAILS:
 - Brand Name: ${brandName} (${domain})
 - Tagline: ${tagline}
-- Core Leadership / Team: ${adminDetails.founderName || 'LOCAL2BRAND Founders & Senior Engineering Team'}
+- Core Leadership / Founders: ${adminDetails.founderName || 'LOCAL2BRAND Founding Engineering Team (Soham Dutta & Team)'}
 - Official Public Phone: ${adminDetails.contactPhone || settings.displayPhone || '+91 98765 43210'}
 - Official Public WhatsApp: ${adminDetails.whatsappSupport || '+91 98765 43210'}
-- Official Support Email: ${adminDetails.contactEmail || settings.supportEmail || 'contact@local2brand.com'}
-- Office / HQ: ${adminDetails.officeLocation || 'India (Kolkata & Bangalore Hubs)'}
+- Official Support Email: ${adminDetails.contactEmail || settings.supportEmail || 'stackaddacontact@gmail.com'}
+- Office / HQ: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}
 - Working Hours: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}
 ========================================`;
 
@@ -87,7 +85,7 @@ OFFICIAL COMPANY & SHOWABLE ADMIN DETAILS:
     demosBlock = `\n- Popular Ready-Made Templates: ${demoTitles}`;
   }
 
-  return `You are the official AI Assistant, Senior Brand Consultant, and Solutions Architect for "${brandName}" (${domain}) — India's premier fast-track web experience engine and digital product agency.
+  return `You are the official AI Assistant, Senior Brand Consultant, and Full-Stack Architect for "${brandName}" (${domain}) — India's premier fast-track web experience engine and digital product agency.
 
 ${adminShowableBlock}
 ${userContextBlock}
@@ -102,23 +100,21 @@ CORE OFFERINGS & PACKAGES:
 3. Active Promo Code & Deals:
    - Promo Code "INDIA2025": Gives an instant 20% DISCOUNT + Free SSL certificate + Free custom domain setup.
    - Live Announcement: "${announcementText}"
-4. Website Call-to-Action Integrations:
-   - "Instant Callback": Users can request a direct 15-minute callback. Our system immediately dispatches real-time email alerts to our founders/admin (sohamduttabwn@gmail.com & stackaddacontact@gmail.com).
-   - "Get Proposal": Interactive proposal builder for instant custom price estimation.
-   - Contact & Support Email: stackaddacontact@gmail.com${servicesBlock}${demosBlock}
+4. Direct Actions You Can Perform:
+   - "Instant Callback": If the user provides a phone number or asks for a call, our backend auto-registers an instant callback request and alerts the founders (sohamduttabwn@gmail.com & stackaddacontact@gmail.com).
+   - "Project Requirement Submission": If the user describes their project (business name, features, website type, budget) and provides phone/email, reassure them that their project order is recorded and can be tracked anytime with their Order ID in the Client Portal!
+   - Contact Email: stackaddacontact@gmail.com${servicesBlock}${demosBlock}
 ========================================
 
 ${businessKnowledge ? `========================================\nADMIN CUSTOM BUSINESS KNOWLEDGE BASE:\n${businessKnowledge}\n========================================\n` : ''}
 ${customInstructions ? `========================================\nADMIN CUSTOM INSTRUCTIONS & DIRECTIVES:\n${customInstructions}\n========================================\n` : ''}
 
 CRITICAL OPERATIONAL & COMMUNICATION RULES:
-1. Short, Crisp & Structured (ছোট কিন্তু স্পষ্ট ও পরিপাটি): Always keep your responses concise, organized, and easy to scan. Avoid huge wall-of-text paragraphs. Use 2-4 clean bullet points and bold key details.
+1. Complete, Crisp & Structured (পরিপূর্ণ, স্পষ্ট ও পরিপাটি): Always provide complete responses. Never stop midway. Use 2-4 clean bullet points and bold key details.
 2. User Awareness: If the user is logged in, you MUST know and acknowledge their details (name, email, role) when asked.
-3. Instant Callback Handling: Do NOT expose raw WhatsApp numbers or direct external chats when users ask for a callback or contact. Instead, encourage them to provide their phone number and email (or click 'Call Request' / use their account details) so our system instantly dispatches an automated priority email notification to the founders (stackaddacontact@gmail.com & sohamduttabwn@gmail.com) to call them back within 15 minutes.
-4. Multilingual Fluency: If the user communicates in Bengali (বাংলা), reply in sweet, clean, and concise Bengali. If in English, reply in crisp English.
-5. Privacy & Security: NEVER reveal internal database connection strings, JWT secrets, passwords, or server environment variables. Only share official public showable details.
-6. Business Action: Always offer quick next steps (e.g., promo code INDIA2025, 15-minute callback request, or proposal builder).`;
-
+3. Multilingual Fluency: If the user communicates in Bengali (বাংলা / বাংলিশ), reply in sweet, clean, and concise Bengali. If in English, reply in crisp, professional English.
+4. Privacy & Security: NEVER reveal internal database connection strings, JWT secrets, passwords, or server environment variables.
+5. Action-Oriented: Always offer clear next steps (e.g. promo code INDIA2025, 15-minute callback request, or viewing live demo templates).`;
 }
 
 // Fetch helper with timeout
@@ -137,80 +133,7 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_M
 }
 
 /**
- * 1. Google Gemini Provider
- */
-async function callGemini(messages, systemPrompt) {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured');
-  }
-
-  const configuredModel = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-  const modelsToTry = Array.from(new Set([configuredModel, 'gemini-3.6-flash', 'gemini-flash-latest', 'gemini-2.5-flash-lite']));
-
-  const contents = messages.map((msg) => ({
-    role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: msg.content }],
-  }));
-
-  const payload = {
-    systemInstruction: {
-      parts: [{ text: systemPrompt }],
-    },
-    contents,
-    generationConfig: {
-      temperature: 0.7,
-      maxOutputTokens: 1024,
-    },
-  };
-
-  let lastError = null;
-
-  for (const model of modelsToTry) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      const res = await fetchWithTimeout(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        const errMessage = errorData?.error?.message || `HTTP ${res.status} ${res.statusText}`;
-        lastError = new Error(`Gemini Error (${res.status}): ${errMessage}`);
-        // If 404 model not found, try next candidate model
-        if (res.status === 404 || errMessage.includes('is not found') || errMessage.includes('no longer available')) {
-          continue;
-        }
-        throw lastError;
-      }
-
-      const data = await res.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) {
-        throw new Error('Gemini returned an empty response');
-      }
-
-      return {
-        text: text.trim(),
-        provider: 'Gemini',
-        model,
-      };
-    } catch (err) {
-      lastError = err;
-      if (err.message.includes('404') || err.message.includes('not found') || err.message.includes('no longer available')) {
-        continue;
-      }
-      throw err;
-    }
-  }
-
-  throw lastError || new Error('All Gemini model candidates failed');
-}
-
-/**
- * 2. Groq Provider
+ * 1. Groq Provider (Ultra-Fast & Reliable)
  */
 async function callGroq(messages, systemPrompt) {
   const apiKey = process.env.GROQ_API_KEY;
@@ -218,8 +141,14 @@ async function callGroq(messages, systemPrompt) {
     throw new Error('GROQ_API_KEY is not configured');
   }
 
-  const configuredModel = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
-  const modelsToTry = Array.from(new Set([configuredModel, 'qwen/qwen3.8-27b', 'openai/gpt-oss-120b', 'qwen/qwen3.6-27b', 'llama-3.3-70b-versatile']));
+  const configuredModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  const modelsToTry = Array.from(new Set([
+    configuredModel,
+    'llama-3.3-70b-versatile',
+    'llama-3.1-8b-instant',
+    'mixtral-8x7b-32768',
+    'gemma2-9b-it'
+  ]));
 
   const formattedMessages = [
     { role: 'system', content: systemPrompt },
@@ -238,7 +167,7 @@ async function callGroq(messages, systemPrompt) {
         model,
         messages: formattedMessages,
         temperature: 0.7,
-        max_tokens: 1024,
+        max_tokens: 2048,
       };
 
       const res = await fetchWithTimeout(url, {
@@ -284,6 +213,84 @@ async function callGroq(messages, systemPrompt) {
 }
 
 /**
+ * 2. Google Gemini Provider
+ */
+async function callGemini(messages, systemPrompt) {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not configured');
+  }
+
+  const configuredModel = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+  const modelsToTry = Array.from(new Set([
+    configuredModel,
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-2.5-flash',
+    'gemini-1.5-pro'
+  ]));
+
+  const contents = messages.map((msg) => ({
+    role: msg.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: msg.content }],
+  }));
+
+  const payload = {
+    systemInstruction: {
+      parts: [{ text: systemPrompt }],
+    },
+    contents,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2048,
+    },
+  };
+
+  let lastError = null;
+
+  for (const model of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const res = await fetchWithTimeout(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        const errMessage = errorData?.error?.message || `HTTP ${res.status} ${res.statusText}`;
+        lastError = new Error(`Gemini Error (${res.status}): ${errMessage}`);
+        if (res.status === 404 || errMessage.includes('is not found') || errMessage.includes('no longer available')) {
+          continue;
+        }
+        throw lastError;
+      }
+
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        throw new Error('Gemini returned an empty response');
+      }
+
+      return {
+        text: text.trim(),
+        provider: 'Gemini',
+        model,
+      };
+    } catch (err) {
+      lastError = err;
+      if (err.message.includes('404') || err.message.includes('not found') || err.message.includes('no longer available')) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  throw lastError || new Error('All Gemini model candidates failed');
+}
+
+/**
  * 3. Cerebras Provider
  */
 async function callCerebras(messages, systemPrompt) {
@@ -292,8 +299,8 @@ async function callCerebras(messages, systemPrompt) {
     throw new Error('CEREBRAS_API_KEY is not configured');
   }
 
-  const configuredModel = process.env.CEREBRAS_MODEL || 'gpt-oss-120b';
-  const modelsToTry = Array.from(new Set([configuredModel, 'gpt-oss-120b', 'gemma-4-31b', 'llama3.1-8b']));
+  const configuredModel = process.env.CEREBRAS_MODEL || 'llama3.1-8b';
+  const modelsToTry = Array.from(new Set([configuredModel, 'llama3.1-8b', 'llama-3.3-70b']));
 
   const formattedMessages = [
     { role: 'system', content: systemPrompt },
@@ -312,7 +319,7 @@ async function callCerebras(messages, systemPrompt) {
         model,
         messages: formattedMessages,
         temperature: 0.7,
-        max_tokens: 1024,
+        max_tokens: 2048,
       };
 
       const res = await fetchWithTimeout(url, {
@@ -366,12 +373,12 @@ async function callOpenRouter(messages, systemPrompt) {
     throw new Error('OPENROUTER_API_KEY is not configured');
   }
 
-  const configuredModel = process.env.OPENROUTER_MODEL || 'nvidia/nemotron-3.5-lightning:free';
+  const configuredModel = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct';
   const modelsToTry = Array.from(new Set([
     configuredModel,
-    'nvidia/nemotron-3.5-lightning:free',
-    'z-ai/glm-5.2:free',
-    'meta-llama/llama-3.3-70b-instruct'
+    'meta-llama/llama-3.3-70b-instruct',
+    'mistralai/mistral-small-3.1-24b-instruct:free',
+    'google/gemini-2.0-flash-exp:free'
   ]));
 
   const formattedMessages = [
@@ -391,7 +398,7 @@ async function callOpenRouter(messages, systemPrompt) {
         model,
         messages: formattedMessages,
         temperature: 0.7,
-        max_tokens: 1024,
+        max_tokens: 2048,
       };
 
       const res = await fetchWithTimeout(url, {
@@ -399,8 +406,6 @@ async function callOpenRouter(messages, systemPrompt) {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://local2brand.com',
-          'X-Title': 'LOCAL2BRAND Assistant',
         },
         body: JSON.stringify(payload),
       });
@@ -409,7 +414,7 @@ async function callOpenRouter(messages, systemPrompt) {
         const errorData = await res.json().catch(() => ({}));
         const errMessage = errorData?.error?.message || `HTTP ${res.status} ${res.statusText}`;
         lastError = new Error(`OpenRouter Error (${res.status}): ${errMessage}`);
-        if (res.status === 404 || errMessage.includes('unavailable for free') || errMessage.includes('rate-limited')) {
+        if (res.status === 404 || errMessage.includes('not found')) {
           continue;
         }
         throw lastError;
@@ -428,7 +433,7 @@ async function callOpenRouter(messages, systemPrompt) {
       };
     } catch (err) {
       lastError = err;
-      if (err.message.includes('404') || err.message.includes('unavailable') || err.message.includes('rate-limited')) {
+      if (err.message.includes('404') || err.message.includes('not found')) {
         continue;
       }
       throw err;
@@ -438,70 +443,83 @@ async function callOpenRouter(messages, systemPrompt) {
   throw lastError || new Error('All OpenRouter model candidates failed');
 }
 
-
 /**
- * Fallback AI Dispatcher
- * Chain: Gemini -> Groq -> Cerebras -> OpenRouter
+ * 5. Resilient Local Rule-based Consultant Engine (Guaranteed zero-failure fallback)
  */
-export async function generateChatResponseWithFallback(messages, contextOptions = {}) {
-  if (!Array.isArray(messages) || messages.length === 0) {
-    throw new Error('Valid conversation messages are required');
-  }
-
-  // Build the dynamic contextual system prompt
-  const systemPrompt = buildDynamicSystemPrompt(contextOptions);
-
-  const providers = [
-    { name: 'Gemini', fn: callGemini },
-    { name: 'Groq', fn: callGroq },
-    { name: 'Cerebras', fn: callCerebras },
-    { name: 'OpenRouter', fn: callOpenRouter },
-  ];
-
-  const fallbackLogs = [];
-
-  for (const { name, fn } of providers) {
-    try {
-      console.log(`🤖 [AI Chat] Attempting provider: ${name}...`);
-      const result = await fn(messages, systemPrompt);
-      console.log(`✅ [AI Chat] Success with ${name} (${result.model})`);
-      return {
-        ...result,
-        fallbackHistory: fallbackLogs,
-      };
-    } catch (err) {
-      console.warn(`⚠️ [AI Chat] ${name} failed: ${err.message}`);
-      fallbackLogs.push({ provider: name, error: err.message, timestamp: new Date().toISOString() });
-    }
-  }
-
-  // If all providers failed or no keys configured
-  console.error('❌ [AI Chat] All AI providers exhausted or failed:', fallbackLogs);
-  
+function generateLocalConsultantResponse(messages, contextOptions = {}) {
   const brandName = contextOptions.settings?.brandName || 'LOCAL2BRAND';
-  const userName = contextOptions.currentUser?.name ? `, ${contextOptions.currentUser.name}` : '';
+  const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
+  const lowerMsg = lastUserMsg.toLowerCase();
+  const userName = contextOptions.currentUser?.name ? ` ${contextOptions.currentUser.name}` : '';
+
+  // Bengali Detection
+  const isBengali = /[\u0980-\u09FF]/.test(lastUserMsg) || /kemon|ki|lagbe|koto|kore|hobe|dorkar|valo|bhalo|bhai|taka/i.test(lastUserMsg);
+
+  if (isBengali) {
+    if (/pricing|price|cost|khoroch|taka|dam|package|প্যাকেজ|খরচ|দাম|টাকা/i.test(lowerMsg)) {
+      return {
+        text: `নমস্কার${userName}! 🚀 **${brandName}**-এ আপনাকে স্বাগতম।\n\nআমাদের ওয়েবসাইট প্যাকেজ ও মূল্য তালিকা:\n- ⚡ **Starter (৪৮ ঘণ্টা রেডি ওয়েবসাইট)**: **${contextOptions.settings?.startingPriceInr || '₹9,999'}** / **${contextOptions.settings?.startingPriceUsd || '$399'}**\n- 💼 **Professional (ফুল কাস্টম UI/UX + WhatsApp Shop)**: **₹24,999**\n- 💎 **Enterprise (কাস্টম ওয়েব অ্যাপ ও পোর্টাল)**: কাস্টম কোটেশন\n\n🎁 **স্পেশাল লঞ্চ অফার**: \`INDIA2025\` কোড ব্যবহার করলে পাবেন ফ্ল্যাট **20% ছাড়** + ফ্রি ডোমেন ও SSL!`,
+        provider: 'L2B Smart Consultant',
+        model: 'bengali-expert-v2'
+      };
+    }
+    return {
+      text: `নমস্কার${userName}! 🚀 **${brandName}** এআই কনসালটেন্ট হিসেবে আমি আপনাকে সাহায্য করতে প্রস্তুত।\n\n- ⚡ **৪৮ ঘণ্টার দ্রুত ডেলিভারি**: ডেমো ওয়েবসাইট শুরু মাত্র **${contextOptions.settings?.startingPriceInr || '₹9,999'}** থেকে।\n- 🎁 **২০% ডিসকাউন্ট**: প্রোমোকোড \`INDIA2025\` ব্যবহার করুন।\n- 📞 **সরাসরি কল রিকোয়েস্ট**: আপনার ফোন নম্বর দিলে আমাদের ইঞ্জিনিয়াররা ১৫ মিনিটের মধ্যে যোগাযোগ করবেন।\n\nআপনার ব্যবসার ধরন বা চাহিদা সম্পর্কে জানান!`,
+      provider: 'L2B Smart Consultant',
+      model: 'bengali-expert-v2'
+    };
+  }
+
+  // English Responses
+  if (/pricing|price|cost|how much|package|tier/i.test(lowerMsg)) {
+    return {
+      text: `Hello${userName}! 🚀 Here is an overview of **${brandName}** packages:\n\n- ⚡ **Starter Package**: Starting at **${contextOptions.settings?.startingPriceInr || '₹9,999'} / ${contextOptions.settings?.startingPriceUsd || '$399'}** (48-72h launch, mobile responsive, WhatsApp orders).\n- 💼 **Professional Package**: **₹24,999** (Bespoke Glassmorphic UI, dynamic CMS, SEO).\n- 💎 **Custom Enterprise**: Full-stack SaaS, e-commerce, and advanced logic.\n\n🎁 Use promo code \`INDIA2025\` for an instant **20% DISCOUNT** + Free SSL & Domain!`,
+      provider: 'L2B Smart Consultant',
+      model: 'enterprise-v2'
+    };
+  }
 
   return {
-    text: `Thank you for reaching out to **${brandName}**${userName}! 🚀\n\nI am currently experiencing higher-than-normal traffic, but our team is standing by to assist you immediately:\n\n- ⚡ **48-Hour Websites**: Demo templates start at **${contextOptions.settings?.startingPriceInr || '₹9,999'} / ${contextOptions.settings?.startingPriceUsd || '$399'}**.\n- 🎁 **Launch Offer**: Use code **INDIA2025** for **20% OFF** + Free SSL & Domain.\n- 📞 **Instant Callback**: Click the **Call Request** button above and our founders will connect with you in under 15 minutes!`,
-    provider: `${brandName} Fallback Engine`,
-    model: 'built-in-resilience',
-    fallbackHistory: fallbackLogs,
-    isFallbackDefault: true,
+    text: `Hello${userName}! 🚀 Welcome to **${brandName}** — India's fast-track web experience engine.\n\n- ⚡ **48-Hour Websites**: Demo templates start from **${contextOptions.settings?.startingPriceInr || '₹9,999'} / ${contextOptions.settings?.startingPriceUsd || '$399'}**.\n- 🎁 **Launch Offer**: Use code \`INDIA2025\` for **20% OFF** + Free SSL & Domain.\n- 📞 **Instant Callback**: Share your phone number or click **Instant Callback** to connect with our founders within 15 minutes!`,
+    provider: 'L2B Smart Consultant',
+    model: 'enterprise-v2'
   };
 }
 
 /**
- * Check provider key configuration status (safely, without exposing secrets)
+ * Main Public Dispatcher: Multi-Provider Fallback Cascade
  */
+export async function generateChatResponseWithFallback(messages, contextOptions = {}) {
+  const systemPrompt = buildDynamicSystemPrompt(contextOptions);
+
+  // Fallback Order: Groq -> Gemini -> Cerebras -> OpenRouter -> Local Smart Engine
+  const providers = [
+    { name: 'Groq', fn: () => callGroq(messages, systemPrompt) },
+    { name: 'Gemini', fn: () => callGemini(messages, systemPrompt) },
+    { name: 'Cerebras', fn: () => callCerebras(messages, systemPrompt) },
+    { name: 'OpenRouter', fn: () => callOpenRouter(messages, systemPrompt) },
+  ];
+
+  for (const provider of providers) {
+    try {
+      const response = await provider.fn();
+      if (response && response.text) {
+        return response;
+      }
+    } catch (err) {
+      console.warn(`[AI Chain Notice] Provider "${provider.name}" failed: ${err.message}. Cascading to next tier...`);
+    }
+  }
+
+  // Resilient fallback if all external providers fail
+  return generateLocalConsultantResponse(messages, contextOptions);
+}
+
 export function getProviderStatus() {
   return {
-    gemini: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
     groq: Boolean(process.env.GROQ_API_KEY),
+    gemini: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
     cerebras: Boolean(process.env.CEREBRAS_API_KEY),
-    openrouter: Boolean(process.env.OPENROUTER_API_KEY),
-    geminiModel: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
-    groqModel: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
-    cerebrasModel: process.env.CEREBRAS_MODEL || 'llama3.1-8b',
-    openrouterModel: process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free',
+    openRouter: Boolean(process.env.OPENROUTER_API_KEY),
   };
 }

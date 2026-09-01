@@ -1,9 +1,16 @@
 import { dataStore } from '../config/dataAdapter.js';
 import { generateChatResponseWithFallback, getProviderStatus } from '../utils/aiFallbackService.js';
-import { sendAdminCallbackAlert, sendCallbackConfirmationEmail } from '../utils/email.js';
+import {
+  sendAdminCallbackAlert,
+  sendCallbackConfirmationEmail,
+  sendRequirementConfirmationEmail,
+  sendAdminRequirementAlert
+} from '../utils/email.js';
+import { generateRequirementId } from './requirementController.js';
+import mongoose from 'mongoose';
 
 /**
- * Handle incoming conversational chat message with AI fallback
+ * Handle incoming conversational chat message with AI fallback & smart direct actions
  * POST /api/chat
  */
 export const handleChatMessage = async (req, res) => {
@@ -17,10 +24,10 @@ export const handleChatMessage = async (req, res) => {
       });
     }
 
-    if (message.length > 3000) {
+    if (message.length > 4000) {
       return res.status(400).json({
         success: false,
-        message: 'Message length exceeds maximum allowed limit (3000 characters).',
+        message: 'Message length exceeds maximum allowed limit (4000 characters).',
       });
     }
 
@@ -34,7 +41,7 @@ export const handleChatMessage = async (req, res) => {
     // Load or initialize chat session from MongoDB / data adapter
     const session = await dataStore.getOrCreateChatSession(sessionId, userId, clientMeta);
 
-    // Prepare message thread for AI (take last 12 messages for relevant context)
+    // Prepare message thread for AI
     const pastMessages = (session.messages || []).slice(-12).map((m) => ({
       role: m.role,
       content: m.content,
@@ -75,8 +82,7 @@ export const handleChatMessage = async (req, res) => {
       console.warn('Chat context (demos) notice:', e.message);
     }
 
-
-    // Construct safe showable user profile (no private hashes or tokens)
+    // Construct safe showable user profile
     const currentUser = req.user
       ? {
           name: req.user.name || '',
@@ -95,7 +101,7 @@ export const handleChatMessage = async (req, res) => {
         }
       : null;
 
-    // Invoke Multi-Provider Fallback (Gemini -> Groq -> Cerebras -> OpenRouter) with dynamic context
+    // Invoke Multi-Provider Fallback
     let aiResponse = await generateChatResponseWithFallback(aiInput, {
       settings,
       currentUser,
@@ -103,18 +109,82 @@ export const handleChatMessage = async (req, res) => {
       activeDemos: demos,
     });
 
-    // Smart auto-detection of Phone Number or Callback intent in message
+    // Smart auto-detection of Phone Number, Email, and Intents in message
     const phoneMatch = message.match(/(?:\+?91[\s-]?)?[6-9]\d{9}/) || message.match(/\b\d{10,12}\b/);
     const emailMatch = message.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
     const callbackIntent = /call|phone|callback|contact|reach|যোগাযোগ|কল|ফোন|নম্বর|কথা/i.test(message);
+    const requirementIntent = /requirement|order|website|app|build|banate|chai|dorkar|create|develop|restaurant|salon|hotel|ecommerce|shop|ওয়েবসাইট|অ্যাপ|বানাবো/i.test(message);
 
     let callbackCreated = false;
+    let requirementCreated = false;
+    let createdRequirementId = null;
+
     let detectedPhone = phoneMatch ? phoneMatch[0].replace(/[\s-]/g, '') : (currentUser?.phone || '');
     let detectedEmail = emailMatch ? emailMatch[0].toLowerCase() : (currentUser?.email || '');
-    let detectedName = currentUser?.name || 'Valued Visitor';
+    let detectedName = currentUser?.name || 'Valued Client';
+    const isBengali = /[\u0980-\u09FF]/.test(message);
 
-    // If user provided a phone number OR if logged-in user says "call me"
-    if (detectedPhone && (phoneMatch || callbackIntent)) {
+    // 1. Direct Requirement Registration from Chat if user shares phone + project need
+    if (detectedPhone && requirementIntent && (message.length > 25 || detectedEmail)) {
+      try {
+        const reqId = generateRequirementId();
+        const { default: Requirement } = await import('../models/Requirement.js');
+
+        const validUserId = userId && mongoose.Types.ObjectId.isValid(userId) ? userId : null;
+
+        const reqPayload = {
+          requirementId: reqId,
+          websiteType: 'AI Chat Custom Project Submission',
+          websiteTypeName: 'AI Chat Smart Order',
+          clientInfo: {
+            businessName: currentUser?.company || 'Client Business (via AI Chat)',
+            ownerName: detectedName,
+            mobile: detectedPhone,
+            email: detectedEmail || `${detectedPhone}@client.local2brand.com`,
+          },
+          additionalNotes: `Auto-submitted via AI Chatbot Session ${sessionId}. Client Message: "${message.trim()}"`,
+          status: 'Submitted',
+          timeline: '⚡ Express (48 - 72 Hours)',
+          budget: 'Standard Tier (from ₹9,999)',
+          user: validUserId,
+          submittedAt: new Date()
+        };
+
+        let reqDoc;
+        if (mongoose.connection.readyState === 1) {
+          reqDoc = await Requirement.create(reqPayload);
+        } else {
+          reqDoc = dataStore.create('requirements', reqPayload);
+        }
+
+        createdRequirementId = reqId;
+        requirementCreated = true;
+
+        // Dispatch alerts & emails
+        sendAdminRequirementAlert(reqDoc).catch((err) => console.warn('AI chat admin requirement alert error:', err.message));
+        if (detectedEmail) {
+          sendRequirementConfirmationEmail(reqDoc).catch((err) => console.warn('AI chat client requirement email error:', err.message));
+        }
+
+        dataStore.createNotification({
+          title: `New AI Chat Project Order (${reqId})`,
+          message: `${detectedName} submitted a project via AI Chat (${detectedPhone})`,
+          type: 'requirement',
+          link: '/admin/requirements',
+        }).catch((err) => console.warn('Notification error:', err.message));
+
+        const orderBanner = isBengali
+          ? `\n\n---\n🎉 **আপনার প্রজেক্ট অর্ডার সফলভাবে নথিভুক্ত হয়েছে!**\n- **Order ID:** \`${reqId}\`\n- **স্ট্যাটাস:** Submitted (ইঞ্জিনিয়ারিং রিভিউ চলছে)\n- ফাউন্ডার ও অ্যাডমিন ডেস্কে লাইভ অ্যালার্ট পাঠানো হয়েছে। আপনি আপনার ক্লায়েন্ট ড্যাশবোর্ড থেকে এই Order ID দিয়ে সরাসরি প্রোগ্রেস ট্র্যাক করতে পারবেন! 🚀`
+          : `\n\n---\n🎉 **Your Project Order Has Been Logged!**\n- **Order ID:** \`${reqId}\`\n- **Status:** Submitted (Under Engineering Review)\n- Live alert dispatched to our senior tech desk. You can track sprint progress online in your Client Portal using your Order ID! 🚀`;
+
+        aiResponse.text += orderBanner;
+      } catch (reqErr) {
+        console.warn('AI chat requirement create notice:', reqErr.message);
+      }
+    }
+
+    // 2. Direct Callback Registration from Chat
+    if (detectedPhone && (phoneMatch || callbackIntent) && !requirementCreated) {
       try {
         const callbackRecord = await dataStore.createCallback({
           name: detectedName,
@@ -123,10 +193,10 @@ export const handleChatMessage = async (req, res) => {
           preferredTime: '⚡ ASAP (Within 15-30 mins)',
           topic: 'AI Chat Auto-Detected Callback Request',
           notes: `User Message: "${message.trim()}"`,
-          user: userId || null,
+          user: (userId && mongoose.Types.ObjectId.isValid(userId)) ? userId : null,
         });
 
-        // Instant email alert to sohamduttabwn@gmail.com and stackaddacontact@gmail.com
+        // Instant email alert to founders
         sendAdminCallbackAlert(callbackRecord).catch((err) => console.warn('Chat auto-callback alert error:', err.message));
 
         if (detectedEmail) {
@@ -142,9 +212,7 @@ export const handleChatMessage = async (req, res) => {
 
         callbackCreated = true;
 
-        // If not already in text, append clear confirmation note
         if (!aiResponse.text.includes(detectedPhone)) {
-          const isBengali = /[\u0980-\u09FF]/.test(message);
           const confirmationBanner = isBengali
             ? `\n\n---\n✅ **কল-ব্যাক রিকোয়েস্ট নিশ্চিত করা হয়েছে!**\nআমাদের ফাউন্ডার ও এডমিন ডেস্কে (\`sohamduttabwn@gmail.com\` ও \`stackaddacontact@gmail.com\`) তাত্ক্ষণিক ইমেইল অ্যালার্ট পাঠানো হয়েছে। আমরা খুব শীঘ্রই আপনার নম্বরে (**${detectedPhone}**) কল করছি! 📞`
             : `\n\n---\n✅ **Instant Callback Request Registered!**\nReal-time email alerts have been dispatched to our founder & executive desk (\`sohamduttabwn@gmail.com\` & \`stackaddacontact@gmail.com\`). We will call you at **${detectedPhone}** shortly! 📞`;
@@ -180,6 +248,8 @@ export const handleChatMessage = async (req, res) => {
       sessionId,
       callbackCreated,
       callbackPhone: detectedPhone || null,
+      requirementCreated,
+      requirementId: createdRequirementId || null,
       timestamp: assistantMessageDoc.timestamp,
     });
   } catch (error) {

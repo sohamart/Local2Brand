@@ -393,6 +393,10 @@ export default function AssistantChatbot() {
           provider: res.provider,
           model: res.model,
           timestamp: res.timestamp || new Date().toISOString(),
+          requirementCreated: res.requirementCreated || false,
+          requirementId: res.requirementId || null,
+          callbackCreated: res.callbackCreated || false,
+          callbackPhone: res.callbackPhone || null,
           isStreaming: true,
         };
         const finalThread = [...updatedWithUser, assistantReply];
@@ -411,7 +415,7 @@ export default function AssistantChatbot() {
         content: `⚠️ *Notice*: We encountered a temporary connection issue. You can retry your message or request an instant callback from our founders.`,
         timestamp: new Date().toISOString(),
         isError: true,
-        isStreaming: true,
+        isStreaming: false,
       };
       const threadWithError = [...updatedWithUser, errorReply];
       setMessages(threadWithError);
@@ -558,38 +562,38 @@ export default function AssistantChatbot() {
 
   // Typewriter animated stream for assistant responses
   const TypewriterContent = ({ text, isStreaming, onComplete }) => {
-    const [displayedLength, setDisplayedLength] = useState(isStreaming ? 0 : text.length);
+    const [displayedText, setDisplayedText] = useState(isStreaming ? '' : text);
 
     useEffect(() => {
-      if (!isStreaming) {
-        setDisplayedLength(text.length);
+      if (!isStreaming || !text) {
+        setDisplayedText(text);
         return;
       }
 
-      setDisplayedLength(0);
-      let current = 0;
-      const step = Math.max(3, Math.floor(text.length / 35));
+      setDisplayedText('');
+      const words = text.split(' ');
+      let currentWordIdx = 0;
+      const step = Math.max(1, Math.floor(words.length / 25));
+
       const interval = setInterval(() => {
-        current += step;
-        if (current >= text.length) {
-          current = text.length;
-          setDisplayedLength(text.length);
+        currentWordIdx += step;
+        if (currentWordIdx >= words.length) {
+          setDisplayedText(text);
           clearInterval(interval);
           if (onComplete) onComplete();
         } else {
-          setDisplayedLength(current);
+          setDisplayedText(words.slice(0, currentWordIdx).join(' '));
         }
-      }, 15);
+      }, 30);
 
       return () => clearInterval(interval);
     }, [text, isStreaming]);
 
-    const visibleText = isStreaming ? text.slice(0, displayedLength) : text;
-    const isTypingActive = isStreaming && displayedLength < text.length;
+    const isTypingActive = isStreaming && displayedText.length < text.length;
 
     return (
-      <div className="relative">
-        {renderMessageContent(visibleText, false)}
+      <div className="relative select-text">
+        {renderMessageContent(displayedText || text, false)}
         {isTypingActive && (
           <span className="inline-block w-2 h-3.5 bg-purple-600 dark:bg-purple-400 ml-1 rounded-xs animate-pulse align-middle" />
         )}
@@ -799,6 +803,27 @@ export default function AssistantChatbot() {
                             msg.isStreaming = false;
                           }}
                         />
+
+                        {/* Interactive Order Action Card if requirement was created */}
+                        {msg.requirementId && (
+                          <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/30 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-300">
+                                📦 Order Logged
+                              </span>
+                              <span className="font-mono text-[10px] font-extrabold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/80 px-2 py-0.5 rounded-md">
+                                {msg.requirementId}
+                              </span>
+                            </div>
+                            <a
+                              href={`/dashboard?track=${msg.requirementId}`}
+                              className="w-full py-1.5 px-3 rounded-lg text-[11px] font-black text-white l2b-gradient-bg hover:opacity-95 flex items-center justify-center gap-1.5 shadow-xs transition-all text-center"
+                            >
+                              <span>Track Live Progress</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </a>
+                          </div>
+                        )}
 
                         {/* AI Provider attribution tag */}
                         {msg.provider && msg.provider !== 'unknown' && (

@@ -1,14 +1,32 @@
 import { dataStore } from '../config/dataAdapter.js';
 import { sendEmail } from '../utils/email.js';
+import mongoose from 'mongoose';
 
 export const getAdminStats = async (req, res) => {
   try {
+    let requirements = [];
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const { default: Requirement } = await import('../models/Requirement.js');
+        requirements = await Requirement.find().sort({ createdAt: -1 });
+      } catch (e) {
+        console.warn('MongoDB Requirement fetch notice:', e.message);
+      }
+    } else {
+      requirements = dataStore.read('requirements') || [];
+    }
+
     const [leads, callbacks, users, notifications] = await Promise.all([
       dataStore.getAllLeads(),
       dataStore.getAllCallbacks(),
       dataStore.getAllUsers(),
-      dataStore.getNotifications(10),
+      dataStore.getNotifications(15),
     ]);
+
+    const totalRequirements = requirements.length;
+    const pendingRequirements = requirements.filter((r) => r.status === 'Submitted' || r.status === 'Draft' || r.status === 'Under Review').length;
+    const inProgressRequirements = requirements.filter((r) => r.status === 'In Development' || r.status === 'Approved' || r.status === 'Quotation Sent').length;
+    const completedRequirements = requirements.filter((r) => r.status === 'Completed').length;
 
     const totalLeads = leads.length;
     const pendingLeads = leads.filter((l) => l.status === 'pending').length;
@@ -21,8 +39,12 @@ export const getAdminStats = async (req, res) => {
 
     // Type distribution
     const counts = {};
+    requirements.forEach((r) => {
+      const t = r.websiteTypeName || r.websiteType || 'Custom Website';
+      counts[t] = (counts[t] || 0) + 1;
+    });
     leads.forEach((l) => {
-      const t = l.websiteType || 'Custom Website';
+      const t = l.websiteType || 'Inquiry';
       counts[t] = (counts[t] || 0) + 1;
     });
     const typeDistribution = Object.keys(counts).map((k) => ({ _id: k, count: counts[k] }));
@@ -30,6 +52,10 @@ export const getAdminStats = async (req, res) => {
     return res.status(200).json({
       success: true,
       stats: {
+        totalRequirements,
+        pendingRequirements,
+        inProgressRequirements,
+        completedRequirements,
         totalLeads,
         pendingLeads,
         inProgressLeads,
@@ -39,6 +65,7 @@ export const getAdminStats = async (req, res) => {
         totalUsers,
       },
       typeDistribution,
+      recentRequirements: requirements.slice(0, 8),
       recentLeads: leads.slice(0, 6),
       recentCallbacks: callbacks.slice(0, 6),
       notifications,

@@ -18,7 +18,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['lead', 'callback', 'user', 'status', 'system'],
+      enum: ['lead', 'callback', 'requirement', 'order', 'user', 'status', 'system'],
       default: 'system',
     },
     link: {

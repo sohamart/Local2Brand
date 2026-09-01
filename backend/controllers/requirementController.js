@@ -1,10 +1,14 @@
 import Requirement from '../models/Requirement.js';
 import { dataStore } from '../config/dataAdapter.js';
-import { sendEmail } from '../utils/email.js';
+import {
+  sendRequirementConfirmationEmail,
+  sendAdminRequirementAlert,
+  sendRequirementStatusUpdateEmail
+} from '../utils/email.js';
 import mongoose from 'mongoose';
 
-// Generate clean unique human-readable ID e.g. REQ-2026-9821
-const generateRequirementId = () => {
+// Generate clean unique human-readable ID e.g. REQ-2026-98214
+export const generateRequirementId = () => {
   const year = new Date().getFullYear();
   const randomSuffix = Math.floor(10000 + Math.random() * 90000);
   return `REQ-${year}-${randomSuffix}`;
@@ -22,12 +26,16 @@ export const saveRequirementDraft = async (req, res) => {
       requirementId = generateRequirementId();
     }
 
+    const validUserId = req.user?._id && mongoose.Types.ObjectId.isValid(req.user._id)
+      ? req.user._id
+      : (data.user && mongoose.Types.ObjectId.isValid(data.user) ? data.user : null);
+
     const payload = {
       ...data,
       requirementId,
       status: data.status || 'Draft',
-      user: req.user?._id || data.user || null,
-      ipAddress: req.ip || req.connection.remoteAddress
+      user: validUserId,
+      ipAddress: req.ip || req.connection?.remoteAddress || ''
     };
 
     let doc;
@@ -66,8 +74,13 @@ export const submitRequirement = async (req, res) => {
     const { id } = req.params; // requirementId or _id
     const finalData = req.body;
 
+    const validUserId = req.user?._id && mongoose.Types.ObjectId.isValid(req.user._id)
+      ? req.user._id
+      : (finalData.user && mongoose.Types.ObjectId.isValid(finalData.user) ? finalData.user : null);
+
     const updatePayload = {
       ...finalData,
+      user: validUserId,
       status: 'Submitted',
       submittedAt: new Date()
     };
@@ -77,7 +90,7 @@ export const submitRequirement = async (req, res) => {
       doc = await Requirement.findOneAndUpdate(
         { $or: [{ requirementId: id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] },
         { $set: updatePayload },
-        { new: true }
+        { new: true, upsert: true }
       );
     } else {
       const existing = dataStore.find('requirements', (r) => r.requirementId === id || r._id === id);
@@ -92,55 +105,30 @@ export const submitRequirement = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Requirement session not found' });
     }
 
-    // Send confirmation emails
+    // Admin Notification
+    const businessName = doc.clientInfo?.businessName || doc.websiteTypeName || 'New Project';
+    const clientName = doc.clientInfo?.ownerName || doc.clientInfo?.contactPerson || 'Client';
+    const reqId = doc.requirementId || id;
+
+    dataStore.createNotification({
+      title: `New Requirement Submitted (${reqId})`,
+      message: `${clientName} submitted complete specifications for ${businessName}`,
+      type: 'requirement',
+      link: '/admin/requirements',
+    }).catch((err) => console.warn('Notification error:', err.message));
+
+    // Send ultra-premium styled confirmation emails
     try {
-      const clientEmail = doc.clientInfo?.email || finalData.clientInfo?.email;
-      const clientName = doc.clientInfo?.ownerName || doc.clientInfo?.contactPerson || 'Valued Client';
-      const businessName = doc.clientInfo?.businessName || 'Your Business';
-      const websiteType = doc.websiteTypeName || doc.websiteType || 'Custom Website';
-
-      if (clientEmail) {
-        await sendEmail({
-          to: clientEmail,
-          subject: `Website Requirements Received — LOCAL2BRAND (${doc.requirementId})`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 30px; border-radius: 12px;">
-              <h2 style="color: #38bdf8; margin-top: 0;">Requirements Received! 🎉</h2>
-              <p style="color: #cbd5e1;">Hi <strong>${clientName}</strong>, we have received your complete website specifications for <strong>${businessName}</strong>.</p>
-              <p style="color: #94a3b8; font-size: 13px;">Requirement ID: <strong>${doc.requirementId}</strong></p>
-              <p style="color: #94a3b8; font-size: 13px;">Website Type: <strong>${websiteType}</strong></p>
-              <p style="color: #94a3b8; font-size: 13px;">Budget: <strong>${doc.budget || 'Custom'}</strong></p>
-            </div>
-          `
-        });
-      }
-
-      // Notify Admin
-      const adminEmail = process.env.ADMIN_EMAIL || 'contact@local2brand.com';
-      await sendEmail({
-        to: adminEmail,
-        subject: `🚨 [NEW REQUIREMENT] ${businessName} — ${websiteType} (${doc.budget || 'Custom'})`,
-        html: `
-          <div style="font-family: sans-serif; padding: 20px;">
-            <h2>New Smart Requirement Submission!</h2>
-            <p><strong>Requirement ID:</strong> ${doc.requirementId}</p>
-            <p><strong>Business:</strong> ${businessName}</p>
-            <p><strong>Contact:</strong> ${clientName} (${doc.clientInfo?.mobile})</p>
-            <p><strong>Website Type:</strong> ${websiteType}</p>
-            <p><strong>Budget:</strong> ${doc.budget}</p>
-            <p><strong>Timeline:</strong> ${doc.timeline}</p>
-            <a href="http://localhost:5173/admin/requirements" style="display:inline-block; padding:10px 20px; background:#7c3aed; color:#fff; text-decoration:none; border-radius:8px;">View in Admin Panel</a>
-          </div>
-        `
-      });
+      sendRequirementConfirmationEmail(doc).catch((err) => console.warn('Client requirement email error:', err.message));
+      sendAdminRequirementAlert(doc).catch((err) => console.warn('Admin requirement alert error:', err.message));
     } catch (mailErr) {
-      console.warn('Email dispatch notice:', mailErr.message);
+      console.warn('Email dispatch error:', mailErr.message);
     }
 
     res.status(200).json({
       success: true,
       message: 'Your website requirements have been submitted successfully.',
-      requirementId: doc.requirementId,
+      requirementId: doc.requirementId || reqId,
       requirement: doc
     });
   } catch (error) {
@@ -149,26 +137,29 @@ export const submitRequirement = async (req, res) => {
   }
 };
 
-// @desc    Get Requirements submitted by current logged-in client
+// @desc    Get Requirements submitted by current logged-in client or matching email
 // @route   GET /api/requirements/my
 // @access  Authenticated / Optional
 export const getMyRequirements = async (req, res) => {
   try {
     const userId = req.user?._id?.toString();
-    const userEmail = req.user?.email?.toLowerCase().trim();
+    const userEmail = (req.user?.email || req.query.email || '').toLowerCase().trim();
 
     let requirements = [];
     if (mongoose.connection.readyState === 1) {
-      const query = {
-        $or: [
-          ...(userId ? [{ user: userId }] : []),
-          ...(userEmail ? [{ 'clientInfo.email': userEmail }] : [])
-        ]
-      };
-      if (query.$or.length === 0) {
+      const orClauses = [];
+      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+        orClauses.push({ user: userId });
+      }
+      if (userEmail) {
+        orClauses.push({ 'clientInfo.email': { $regex: new RegExp(`^${userEmail}$`, 'i') } });
+      }
+
+      if (orClauses.length === 0) {
         return res.status(200).json({ success: true, count: 0, requirements: [] });
       }
-      requirements = await Requirement.find(query).sort({ createdAt: -1 });
+
+      requirements = await Requirement.find({ $or: orClauses }).sort({ createdAt: -1 });
     } else {
       const allReqs = dataStore.read('requirements') || [];
       requirements = allReqs.filter((r) => {
@@ -185,11 +176,12 @@ export const getMyRequirements = async (req, res) => {
       requirements
     });
   } catch (error) {
+    console.error('getMyRequirements error:', error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Get Requirement by ID
+// @desc    Get Requirement / Order by ID (for Track Order & details)
 // @route   GET /api/requirements/:id
 // @access  Public / Authenticated
 export const getRequirementById = async (req, res) => {
@@ -197,13 +189,24 @@ export const getRequirementById = async (req, res) => {
     const { id } = req.params;
     let doc;
     if (mongoose.connection.readyState === 1) {
-      doc = await Requirement.findOne({ $or: [{ requirementId: id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] });
+      doc = await Requirement.findOne({
+        $or: [
+          { requirementId: id.trim() },
+          { requirementId: { $regex: new RegExp(`^${id.trim()}$`, 'i') } },
+          ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : [])
+        ]
+      });
     } else {
-      doc = dataStore.find('requirements', (r) => r.requirementId === id || r._id === id);
+      const allReqs = dataStore.read('requirements') || [];
+      doc = allReqs.find(
+        (r) =>
+          r.requirementId?.toLowerCase() === id.toLowerCase().trim() ||
+          r._id?.toString() === id.toString()
+      );
     }
 
     if (!doc) {
-      return res.status(404).json({ success: false, message: 'Requirement not found' });
+      return res.status(404).json({ success: false, message: `Requirement order "${id}" not found.` });
     }
 
     res.status(200).json({ success: true, requirement: doc });
@@ -213,11 +216,11 @@ export const getRequirementById = async (req, res) => {
 };
 
 // @desc    Get All Requirements (Admin)
-// @route   GET /api/admin/requirements
+// @route   GET /api/requirements/admin/all
 // @access  Admin
 export const getAllRequirements = async (req, res) => {
   try {
-    const { status, search, limit = 50, page = 1 } = req.query;
+    const { status, search, limit = 100 } = req.query;
 
     let requirements = [];
     if (mongoose.connection.readyState === 1) {
@@ -225,32 +228,36 @@ export const getAllRequirements = async (req, res) => {
       if (status && status !== 'all') {
         query.status = status;
       }
-      if (search) {
+      if (search && search.trim()) {
+        const s = search.trim();
         query.$or = [
-          { requirementId: { $regex: search, $options: 'i' } },
-          { 'clientInfo.businessName': { $regex: search, $options: 'i' } },
-          { 'clientInfo.ownerName': { $regex: search, $options: 'i' } },
-          { 'clientInfo.email': { $regex: search, $options: 'i' } },
-          { 'clientInfo.mobile': { $regex: search, $options: 'i' } },
-          { websiteType: { $regex: search, $options: 'i' } }
+          { requirementId: { $regex: s, $options: 'i' } },
+          { 'clientInfo.businessName': { $regex: s, $options: 'i' } },
+          { 'clientInfo.ownerName': { $regex: s, $options: 'i' } },
+          { 'clientInfo.email': { $regex: s, $options: 'i' } },
+          { 'clientInfo.mobile': { $regex: s, $options: 'i' } },
+          { websiteType: { $regex: s, $options: 'i' } },
+          { websiteTypeName: { $regex: s, $options: 'i' } }
         ];
       }
       requirements = await Requirement.find(query).sort({ createdAt: -1 }).limit(Number(limit));
     } else {
-      requirements = dataStore.read('requirements');
+      requirements = dataStore.read('requirements') || [];
       if (status && status !== 'all') {
         requirements = requirements.filter((r) => r.status?.toLowerCase() === status.toLowerCase());
       }
-      if (search) {
-        const s = search.toLowerCase();
+      if (search && search.trim()) {
+        const s = search.toLowerCase().trim();
         requirements = requirements.filter((r) =>
           r.requirementId?.toLowerCase().includes(s) ||
           r.clientInfo?.businessName?.toLowerCase().includes(s) ||
           r.clientInfo?.ownerName?.toLowerCase().includes(s) ||
           r.clientInfo?.email?.toLowerCase().includes(s) ||
-          r.clientInfo?.mobile?.includes(s)
+          r.clientInfo?.mobile?.includes(s) ||
+          r.websiteType?.toLowerCase().includes(s)
         );
       }
+      requirements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     res.status(200).json({
@@ -259,12 +266,13 @@ export const getAllRequirements = async (req, res) => {
       requirements
     });
   } catch (error) {
+    console.error('getAllRequirements error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 // @desc    Update Requirement Status (Admin)
-// @route   PATCH /api/admin/requirements/:id/status
+// @route   PATCH /api/requirements/admin/:id/status
 // @access  Admin
 export const updateRequirementStatus = async (req, res) => {
   try {
@@ -273,8 +281,8 @@ export const updateRequirementStatus = async (req, res) => {
 
     let updated;
     if (mongoose.connection.readyState === 1) {
-      updated = await Requirement.findByIdAndUpdate(
-        id,
+      updated = await Requirement.findOneAndUpdate(
+        { $or: [{ requirementId: id }, ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : [])] },
         { $set: { status, internalNotes, quotedAmount, updatedAt: new Date() } },
         { new: true }
       );
@@ -286,12 +294,18 @@ export const updateRequirementStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Requirement not found' });
     }
 
+    // Automatically send status update email to client
+    if (updated.clientInfo?.email) {
+      sendRequirementStatusUpdateEmail(updated).catch((err) => console.warn('Status email update notice:', err.message));
+    }
+
     res.status(200).json({
       success: true,
       message: `Status updated to ${status}`,
       requirement: updated
     });
   } catch (error) {
+    console.error('updateRequirementStatus error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

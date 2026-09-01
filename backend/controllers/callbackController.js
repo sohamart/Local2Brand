@@ -1,5 +1,6 @@
 import { dataStore } from '../config/dataAdapter.js';
 import { sendCallbackConfirmationEmail, sendAdminCallbackAlert } from '../utils/email.js';
+import mongoose from 'mongoose';
 
 export const createCallback = async (req, res) => {
   try {
@@ -12,14 +13,18 @@ export const createCallback = async (req, res) => {
       });
     }
 
+    const validUserId = req.user?._id && mongoose.Types.ObjectId.isValid(req.user._id)
+      ? req.user._id
+      : null;
+
     const callback = await dataStore.createCallback({
       name: name.trim(),
       phone: phone.trim(),
       email: email ? email.toLowerCase().trim() : '',
-      preferredTime: preferredTime || 'As soon as possible',
+      preferredTime: preferredTime || '⚡ ASAP (Within 15-30 mins)',
       topic: topic || 'General Website Discussion',
       notes: notes || '',
-      user: req.user ? req.user.id : null,
+      user: validUserId,
     });
 
     dataStore.createNotification({
@@ -52,7 +57,9 @@ export const createCallback = async (req, res) => {
 
 export const getUserCallbacks = async (req, res) => {
   try {
-    const callbacks = await dataStore.getUserCallbacks(req.user.id, req.user.email);
+    const userId = req.user?._id?.toString();
+    const userEmail = (req.user?.email || '').toLowerCase().trim();
+    const callbacks = await dataStore.getUserCallbacks(userId, userEmail);
     return res.status(200).json({
       success: true,
       count: callbacks.length,
