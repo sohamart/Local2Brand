@@ -574,17 +574,38 @@ export default function SmartRequirementModal() {
         }
       }
 
+      const answersMap = {
+        ...formData.businessDetails,
+        specialties: formData.businessDetails?.specialties || '',
+        operatingHours: formData.businessDetails?.operatingHours || '',
+        designStyle: formData.designStyle,
+        preferredColors: formData.preferredColors,
+        referenceUrls: formData.referenceUrls,
+        domainStatus: formData.domainStatus,
+        timeline: formData.timeline,
+        budget: formData.budget,
+        adminPanelType: formData.adminPanelType,
+        selectedPages: formData.selectedPages,
+        selectedFeatures: formData.selectedFeatures,
+        paymentMethods: formData.paymentMethods,
+        whatsappOptions: formData.whatsappOptions
+      };
+
       const payload = {
         ...formData,
+        answers: answersMap,
+        images: finalUploadedUrls,
         uploadedImages: finalUploadedUrls,
         formVersion: formSchema?.version || '1.0'
       };
 
       const res = await api.post('/requirements', payload);
-      if (res.success) {
-        const submitRes = await api.post(`/requirements/${res.requirementId}/submit`, payload);
-        if (submitRes.success) {
-          setSubmittedData(submitRes.requirement);
+      const generatedId = res?.requirementId || res?.requirement?.requirementId;
+
+      if (res && res.success && generatedId) {
+        const submitRes = await api.post(`/requirements/${generatedId}/submit`, payload);
+        if (submitRes && submitRes.success) {
+          setSubmittedData(submitRes.requirement || res.requirement || { requirementId: generatedId });
           localStorage.removeItem('l2b_smart_form_autosave');
           toast.success('Project requirements submitted successfully! 🚀');
         } else {
@@ -596,6 +617,7 @@ export default function SmartRequirementModal() {
         toast.error(res.message || 'Failed to initialize requirement session');
       }
     } catch (err) {
+      console.error('Modal submit error:', err);
       setErrorMessage(err.message || 'Network error submitting requirements');
       toast.error(err.message || 'Network error submitting requirements');
     } finally {

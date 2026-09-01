@@ -422,13 +422,19 @@ export const dataStore = {
   async getUserLeads(userId, email) {
     if (isDbConnected()) {
       const { QueryLead } = await import('../models/QueryLead.js');
-      return await QueryLead.find({
-        $or: [{ user: userId }, { email: email }],
-      }).sort({ createdAt: -1 });
+      const conditions = [];
+      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+        conditions.push({ user: userId });
+      }
+      if (email && String(email).trim()) {
+        conditions.push({ email: { $regex: new RegExp(`^${String(email).trim()}$`, 'i') } });
+      }
+      if (conditions.length === 0) return [];
+      return await QueryLead.find({ $or: conditions }).sort({ createdAt: -1 });
     }
-    const leads = readLocalStore('leads');
+    const leads = readLocalStore('leads') || [];
     return leads.filter(
-      (l) => (userId && l.user === userId) || (email && l.email?.toLowerCase() === email.toLowerCase())
+      (l) => (userId && l.user === userId) || (email && l.email?.toLowerCase() === String(email).toLowerCase())
     );
   },
 
@@ -437,7 +443,7 @@ export const dataStore = {
       const { QueryLead } = await import('../models/QueryLead.js');
       return await QueryLead.findByIdAndUpdate(id, updates, { new: true });
     }
-    const leads = readLocalStore('leads');
+    const leads = readLocalStore('leads') || [];
     const idx = leads.findIndex((l) => l._id.toString() === id.toString());
     if (idx === -1) return null;
     leads[idx] = { ...leads[idx], ...updates, updatedAt: new Date().toISOString() };
@@ -450,7 +456,7 @@ export const dataStore = {
       const { QueryLead } = await import('../models/QueryLead.js');
       return await QueryLead.findByIdAndDelete(id);
     }
-    let leads = readLocalStore('leads');
+    let leads = readLocalStore('leads') || [];
     leads = leads.filter((l) => l._id.toString() !== id.toString());
     writeLocalStore('leads', leads);
     return true;
@@ -462,7 +468,7 @@ export const dataStore = {
       const { CallbackRequest } = await import('../models/CallbackRequest.js');
       return await CallbackRequest.create(cbData);
     }
-    const cbs = readLocalStore('callbacks');
+    const cbs = readLocalStore('callbacks') || [];
     const newCb = {
       _id: 'cb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
       ...cbData,
@@ -484,7 +490,7 @@ export const dataStore = {
       }
       return await CallbackRequest.find(query).sort({ createdAt: -1 });
     }
-    let cbs = readLocalStore('callbacks');
+    let cbs = readLocalStore('callbacks') || [];
     if (filter.status && filter.status !== 'all') {
       cbs = cbs.filter((c) => c.status === filter.status);
     }
@@ -494,13 +500,19 @@ export const dataStore = {
   async getUserCallbacks(userId, email) {
     if (isDbConnected()) {
       const { CallbackRequest } = await import('../models/CallbackRequest.js');
-      return await CallbackRequest.find({
-        $or: [{ user: userId }, { email: email }],
-      }).sort({ createdAt: -1 });
+      const conditions = [];
+      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+        conditions.push({ user: userId });
+      }
+      if (email && String(email).trim()) {
+        conditions.push({ email: { $regex: new RegExp(`^${String(email).trim()}$`, 'i') } });
+      }
+      if (conditions.length === 0) return [];
+      return await CallbackRequest.find({ $or: conditions }).sort({ createdAt: -1 });
     }
-    const cbs = readLocalStore('callbacks');
+    const cbs = readLocalStore('callbacks') || [];
     return cbs.filter(
-      (c) => (userId && c.user === userId) || (email && c.email?.toLowerCase() === email.toLowerCase())
+      (c) => (userId && c.user === userId) || (email && c.email?.toLowerCase() === String(email).toLowerCase())
     );
   },
 

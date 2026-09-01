@@ -95,14 +95,28 @@ const RequirementSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  ipAddress: {
+  businessDetails: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+  images: [{ type: String }],
+  uploadedImages: [{ type: String }],
+  aiExecutiveSummary: {
     type: String,
     default: ''
+  },
+  couponCode: {
+    type: String,
+    default: ''
+  },
+  discountPercent: {
+    type: Number,
+    default: 0
   },
   submittedAt: {
     type: Date,
     default: Date.now
   }
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 export default mongoose.models.Requirement || mongoose.model('Requirement', RequirementSchema);

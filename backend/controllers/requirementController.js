@@ -85,12 +85,16 @@ export const submitRequirement = async (req, res) => {
       submittedAt: new Date()
     };
 
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ requirementId: id }, { _id: id }] }
+      : { requirementId: id };
+
     let doc;
     if (mongoose.connection.readyState === 1) {
       doc = await Requirement.findOneAndUpdate(
-        { $or: [{ requirementId: id }, { _id: mongoose.Types.ObjectId.isValid(id) ? id : null }] },
+        query,
         { $set: updatePayload },
-        { new: true, upsert: true }
+        { new: true, upsert: true, setDefaultsOnInsert: true }
       );
     } else {
       const existing = dataStore.find('requirements', (r) => r.requirementId === id || r._id === id);
@@ -203,6 +207,35 @@ export const getRequirementById = async (req, res) => {
           r.requirementId?.toLowerCase() === id.toLowerCase().trim() ||
           r._id?.toString() === id.toString()
       );
+    }
+
+    if (!doc && mongoose.connection.readyState === 1) {
+      const { QueryLead } = await import('../models/QueryLead.js');
+      const lead = await QueryLead.findOne({
+        $or: [
+          { leadId: id.trim() },
+          { leadId: { $regex: new RegExp(`^${id.trim()}$`, 'i') } },
+          ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : [])
+        ]
+      });
+      if (lead) {
+        doc = {
+          requirementId: lead.leadId || `ORD-${lead._id.toString().slice(-6).toUpperCase()}`,
+          websiteTypeName: lead.websiteType || 'Custom Project',
+          websiteType: lead.websiteType || 'Custom Project',
+          clientInfo: {
+            businessName: lead.businessName || lead.name,
+            ownerName: lead.name,
+            mobile: lead.phone,
+            email: lead.email,
+          },
+          status: lead.status === 'in_progress' ? 'In Development' : lead.status === 'contacted' ? 'Under Review' : lead.status === 'completed' ? 'Completed' : 'Submitted',
+          budget: lead.budget || 'Standard Commercial',
+          timeline: lead.timeline || 'Express 48-72 Hours',
+          additionalNotes: lead.requirements || '',
+          createdAt: lead.createdAt
+        };
+      }
     }
 
     if (!doc) {

@@ -709,18 +709,49 @@ export default function GetStarted() {
   const validateStep = (stepIdx) => {
     if (stepIdx === 0) {
       if (!formData.websiteType) {
-        return lang === 'bn' ? 'অনুগ্রহ করে একটি ইন্ডাস্ট্রি ক্যাটাগরি বেছে নিন।' : lang === 'hi' ? 'कृपया एक उद्योग श्रेणी चुनें।' : 'Please select a business industry or template.';
+        return lang === 'bn' ? 'অনুগ্রহ করে একটি ইন্ডাস্ট্রি ক্যাটাগরি বেছে নিন।' : lang === 'hi' ? 'कृपया एक उद्योग श्रेणी चुनें।' : 'Please select a business industry category.';
       }
     }
     if (stepIdx === 1) {
       if (!formData.clientInfo.businessName?.trim()) {
         return lang === 'bn' ? 'অনুগ্রহ করে আপনার ব্যবসার নাম লিখুন।' : lang === 'hi' ? 'कृपया अपने बिजनेस का नाम दर्ज करें।' : 'Please enter your Business / Brand Name.';
       }
-      if (!formData.clientInfo.mobile?.trim()) {
-        return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক মোবাইল বা হোয়াটসঅ্যাপ নম্বর দিন।' : lang === 'hi' ? 'कृपया एक वैध मोबाइल या व्हाट्सएप नंबर दर्ज करें।' : 'Please provide a valid Mobile / WhatsApp number for communication.';
+      if (!formData.clientInfo.ownerName?.trim()) {
+        return lang === 'bn' ? 'অনুগ্রহ করে প্রতিষ্ঠাতা বা মালিকের নাম লিখুন।' : lang === 'hi' ? 'कृपया मालिक / संस्थापक का नाम दर्ज करें।' : 'Please enter Owner / Founder Name.';
       }
-      if (!formData.clientInfo.email?.trim()) {
-        return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ইমেইল দিন।' : lang === 'hi' ? 'कृपया एक वैध ईमेल पता दर्ज करें।' : 'Please provide a valid Email address for invoices and credentials.';
+      if (!formData.clientInfo.mobile?.trim() || formData.clientInfo.mobile.replace(/[^0-9]/g, '').length < 8) {
+        return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক মোবাইল বা হোয়াটসঅ্যাপ নম্বর দিন।' : lang === 'hi' ? 'कृपया एक वैध 10-अंकीय मोबाइल नंबर दर्ज करें।' : 'Please provide a valid Mobile / WhatsApp number.';
+      }
+      if (!formData.clientInfo.email?.trim() || !formData.clientInfo.email.includes('@')) {
+        return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ইমেইল অ্যাড্রেস দিন।' : lang === 'hi' ? 'कृपया एक वैध ईमेल पता दर्ज करें।' : 'Please provide a valid Email address.';
+      }
+      if (!formData.clientInfo.city?.trim()) {
+        return lang === 'bn' ? 'অনুগ্রহ করে আপনার শহর বা লোকেশন দিন।' : lang === 'hi' ? 'कृपया अपना शहर दर्ज करें।' : 'Please enter your City / Location.';
+      }
+    }
+    if (stepIdx === 2) {
+      if (!formData.businessDetails.specialties?.trim()) {
+        return lang === 'bn' ? 'অনুগ্রহ করে আপনার মূল বিশেষত্ব বা অফারিংস লিখুন।' : lang === 'hi' ? 'कृपया अपनी मुख्य विशेषताएं या आइटम दर्ज करें।' : 'Please enter your brand signature offerings & specialties.';
+      }
+    }
+    if (stepIdx === 3) {
+      if (!formData.selectedPages || formData.selectedPages.length === 0) {
+        return lang === 'bn' ? 'অনুগ্রহ করে কমপক্ষে ১ টি প্রয়োজনীয় পেজ বেছে নিন।' : lang === 'hi' ? 'कृपया कम से कम 1 पेज चुनें।' : 'Please select at least 1 required website page.';
+      }
+    }
+    if (stepIdx === 4) {
+      if (!formData.selectedFeatures || formData.selectedFeatures.length === 0) {
+        return lang === 'bn' ? 'অনুগ্রহ করে কমপক্ষে ১ টি মূল ফিচার বেছে নিন।' : lang === 'hi' ? 'कृपया कम से कम 1 मुख्य फीचर चुनें।' : 'Please select at least 1 core feature.';
+      }
+    }
+    if (stepIdx === 5) {
+      if (!formData.paymentMethods || formData.paymentMethods.length === 0) {
+        return lang === 'bn' ? 'অনুগ্রহ করে পেমেন্ট মেথড বেছে নিন।' : lang === 'hi' ? 'कृपया पेमेंट विकल्प चुनें।' : 'Please select at least 1 payment method.';
+      }
+    }
+    if (stepIdx === 6) {
+      if (!formData.adminPanelType) {
+        return lang === 'bn' ? 'অনুগ্রহ করে এডমিন প্যানেল টাইপ বেছে নিন।' : lang === 'hi' ? 'कृपया एडमिन पैनल चुनें।' : 'Please choose an admin panel option.';
       }
     }
     return null;
@@ -949,11 +980,23 @@ export default function GetStarted() {
   };
 
   const handleFinalSubmit = async () => {
+    // Validate all steps from 0 to 11 before submitting
+    for (let i = 0; i < t.steps.length - 1; i++) {
+      const err = validateStep(i);
+      if (err) {
+        setCurrentStepIndex(i);
+        setErrorMessage(err);
+        toast.error(err);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setErrorMessage('');
 
     try {
-      let finalUploadedUrls = (formData.uploadedImages || []).filter((u) => u.startsWith('http'));
+      let finalUploadedUrls = (formData.uploadedImages || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
 
       if (selectedFileObjects.length > 0) {
         const uploadToastId = toast.loading(`Uploading ${selectedFileObjects.length} photo(s) to cloud storage... ⏳`);
@@ -980,17 +1023,41 @@ export default function GetStarted() {
         }
       }
 
+      // Structure rich answers dictionary for MongoDB & Admin inspect modal
+      const answersMap = {
+        ...formData.businessDetails,
+        specialties: formData.businessDetails?.specialties || '',
+        operatingHours: formData.businessDetails?.operatingHours || '',
+        designStyle: formData.designStyle,
+        preferredColors: formData.preferredColors,
+        referenceUrls: formData.referenceUrls,
+        domainStatus: formData.domainStatus,
+        timeline: formData.timeline,
+        budget: formData.budget,
+        adminPanelType: formData.adminPanelType,
+        selectedPages: formData.selectedPages,
+        selectedFeatures: formData.selectedFeatures,
+        paymentMethods: formData.paymentMethods,
+        whatsappOptions: formData.whatsappOptions
+      };
+
       const payload = {
         ...formData,
+        answers: answersMap,
+        images: finalUploadedUrls,
         uploadedImages: finalUploadedUrls,
         aiExecutiveSummary: aiSummary || undefined
       };
 
+      // 1. Create / Autosave requirement draft
       const res = await api.post('/requirements', payload);
-      if (res.success) {
-        const submitRes = await api.post(`/requirements/${res.requirementId}/submit`, payload);
-        if (submitRes.success) {
-          setSubmittedData(submitRes.requirement);
+      const generatedId = res?.requirementId || res?.requirement?.requirementId;
+
+      if (res && res.success && generatedId) {
+        // 2. Finalize & submit with email and admin notifications
+        const submitRes = await api.post(`/requirements/${generatedId}/submit`, payload);
+        if (submitRes && submitRes.success) {
+          setSubmittedData(submitRes.requirement || res.requirement || { requirementId: generatedId });
           toast.success(lang === 'bn' ? 'প্রজেক্ট রিকোয়ারমেন্টস সফলভাবে জমা হয়েছে! 🚀' : lang === 'hi' ? 'आवश्यकताएं सफलतापूर्वक सबमिट की गईं! 🚀' : 'Project requirements submitted successfully! 🚀');
         } else {
           setErrorMessage(submitRes.message || 'Submission failed');
@@ -1001,6 +1068,7 @@ export default function GetStarted() {
         toast.error(res.message || 'Failed to submit requirements');
       }
     } catch (err) {
+      console.error('Final submit error:', err);
       setErrorMessage(err.message || 'Network error submitting requirements');
       toast.error(err.message || 'Network error submitting requirements');
     } finally {
@@ -1345,10 +1413,11 @@ export default function GetStarted() {
                     <div className="space-y-1">
                       <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5 text-purple-600" />
-                        <span>{lang === 'bn' ? 'প্রতিষ্ঠাতা / মালিকের নাম' : lang === 'hi' ? 'मालिक / संस्थापक का नाम' : 'Owner / Founder Name'}</span>
+                        <span>{lang === 'bn' ? 'প্রতিষ্ঠাতা / মালিকের নাম *' : lang === 'hi' ? 'मालिक / संस्थापक का नाम *' : 'Owner / Founder Name *'}</span>
                       </label>
                       <input
                         type="text"
+                        required
                         value={formData.clientInfo.ownerName}
                         onChange={(e) =>
                           setFormData({
@@ -1357,7 +1426,7 @@ export default function GetStarted() {
                           })
                         }
                         placeholder="e.g. Rahul Sharma"
-                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs"
+                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs"
                       />
                     </div>
 
@@ -1407,10 +1476,11 @@ export default function GetStarted() {
                     <div className="space-y-1">
                       <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <Compass className="w-3.5 h-3.5 text-amber-500" />
-                        <span>{lang === 'bn' ? 'শহর / লোকেশন' : lang === 'hi' ? 'शहर / स्थान' : 'City / Region'}</span>
+                        <span>{lang === 'bn' ? 'শহর / লোকেশন *' : lang === 'hi' ? 'शहर / स्थान *' : 'City / Region *'}</span>
                       </label>
                       <input
                         type="text"
+                        required
                         value={formData.clientInfo.city}
                         onChange={(e) =>
                           setFormData({
@@ -1419,7 +1489,7 @@ export default function GetStarted() {
                           })
                         }
                         placeholder="e.g. Kolkata, Bangalore, Mumbai"
-                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs"
+                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs"
                       />
                     </div>
 
@@ -1451,7 +1521,7 @@ export default function GetStarted() {
                 <div className="space-y-6 animate-fade-in">
                   <StepHeader
                     stepIdx={2}
-                    title={lang === 'bn' ? 'ইন্ডাস্ট্রি স্পেসিফিকেশন ও অপশন' : lang === 'hi' ? 'उद्योग विशिष्ट विकल्प' : 'Industry Specifications & Custom Parameters'}
+                    title={lang === 'bn' ? 'ইন্ডাস্ট্রি স্পেসিফিকেশন ও অপশন *' : lang === 'hi' ? 'उद्योग विशिष्ट विकल्प *' : 'Industry Specifications & Custom Parameters *'}
                     t={t}
                     lang={lang}
                     onOpenAiSummary={handleOpenStepAiSummary}
@@ -1461,10 +1531,11 @@ export default function GetStarted() {
                     {/* Common Industry Field: Specialties */}
                     <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2">
                       <label className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 block">
-                        {lang === 'bn' ? 'আপনার ব্র্যান্ডের মূল বিশেষত্ব বা সিগনেচার আইটেম' : lang === 'hi' ? 'आपके ब्रांड की मुख्य विशेषताएं या सिग्नेचर आइटम' : 'Brand Signature Offerings & Specialties'}
+                        {lang === 'bn' ? 'আপনার ব্র্যান্ডের মূল বিশেষত্ব বা সিগনেচার আইটেম *' : lang === 'hi' ? 'आपके ब्रांड की मुख्य विशेषताएं या सिग्नेचर आइटम *' : 'Brand Signature Offerings & Specialties *'}
                       </label>
                       <textarea
                         rows={3}
+                        required
                         value={formData.businessDetails.specialties || ''}
                         onChange={(e) =>
                           setFormData({
