@@ -13,6 +13,7 @@ const router = express.Router();
 
 // Client routes
 router.post('/', optionalAuth, saveRequirementDraft);
+router.post('/submit', optionalAuth, submitRequirement);
 router.post('/:id/submit', optionalAuth, submitRequirement);
 router.get('/my', optionalAuth, getMyRequirements);
 router.get('/:id', optionalAuth, getRequirementById);

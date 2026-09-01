@@ -599,27 +599,22 @@ export default function SmartRequirementModal() {
         formVersion: formSchema?.version || '1.0'
       };
 
-      const res = await api.post('/requirements', payload);
-      const generatedId = res?.requirementId || res?.requirement?.requirementId;
+      const targetEndpoint = formData.requirementId ? `/requirements/${formData.requirementId}/submit` : '/requirements/submit';
+      const submitRes = await api.post(targetEndpoint, payload);
 
-      if (res && res.success && generatedId) {
-        const submitRes = await api.post(`/requirements/${generatedId}/submit`, payload);
-        if (submitRes && submitRes.success) {
-          setSubmittedData(submitRes.requirement || res.requirement || { requirementId: generatedId });
-          localStorage.removeItem('l2b_smart_form_autosave');
-          toast.success('Project requirements submitted successfully! 🚀');
-        } else {
-          setErrorMessage(submitRes.message || 'Submission failed');
-          toast.error(submitRes.message || 'Submission failed');
-        }
+      if (submitRes && submitRes.success) {
+        setSubmittedData(submitRes.requirement || { requirementId: submitRes.requirementId });
+        localStorage.removeItem('l2b_smart_form_autosave');
+        toast.success('Project requirements submitted successfully! 🚀');
       } else {
-        setErrorMessage(res.message || 'Failed to initialize requirement session');
-        toast.error(res.message || 'Failed to initialize requirement session');
+        setErrorMessage(submitRes?.message || 'Submission failed');
+        toast.error(submitRes?.message || 'Submission failed');
       }
     } catch (err) {
       console.error('Modal submit error:', err);
-      setErrorMessage(err.message || 'Network error submitting requirements');
-      toast.error(err.message || 'Network error submitting requirements');
+      const msg = err.data?.message || err.message || 'Network error submitting requirements';
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

@@ -57,8 +57,11 @@ export const createCallback = async (req, res) => {
 
 export const getUserCallbacks = async (req, res) => {
   try {
-    const userId = req.user?._id?.toString();
-    const userEmail = (req.user?.email || '').toLowerCase().trim();
+    const userId = req.user?._id?.toString() || req.user?.id;
+    const userEmail = (req.user?.email || req.query.email || '').toLowerCase().trim();
+    if (!userId && !userEmail) {
+      return res.status(200).json({ success: true, count: 0, callbacks: [] });
+    }
     const callbacks = await dataStore.getUserCallbacks(userId, userEmail);
     return res.status(200).json({
       success: true,

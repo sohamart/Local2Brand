@@ -1127,33 +1127,29 @@ export default function GetStarted() {
         aiExecutiveSummary: aiSummary || undefined
       };
 
-      // 1. Create / Autosave requirement draft
-      const res = await api.post('/requirements', payload);
-      const generatedId = res?.requirementId || res?.requirement?.requirementId;
+      // Single atomic submission with direct email and admin alerts
+      const targetEndpoint = formData.requirementId ? `/requirements/${formData.requirementId}/submit` : '/requirements/submit';
+      const submitRes = await api.post(targetEndpoint, payload);
 
-      if (res && res.success && generatedId) {
-        // 2. Finalize & submit with email and admin notifications
-        const submitRes = await api.post(`/requirements/${generatedId}/submit`, payload);
-        if (submitRes && submitRes.success) {
-          setSubmittedData(submitRes.requirement || res.requirement || { requirementId: generatedId });
-          try {
-            localStorage.removeItem('l2b_get_started_step');
-            localStorage.removeItem('l2b_get_started_max_step');
-            localStorage.removeItem('l2b_get_started_autosave_v2');
-          } catch (e) {}
-          toast.success(lang === 'bn' ? 'প্রজেক্ট রিকোয়ারমেন্টস সফলভাবে জমা হয়েছে! 🚀' : lang === 'hi' ? 'आवश्यकताएं सफलतापूर्वक सबमिट की गईं! 🚀' : 'Project requirements submitted successfully! 🚀');
-        } else {
-          setErrorMessage(submitRes.message || 'Submission failed');
-          toast.error(submitRes.message || 'Submission failed');
-        }
+      if (submitRes && submitRes.success) {
+        const orderData = submitRes.requirement || { requirementId: submitRes.requirementId || formData.requirementId };
+        setSubmittedData(orderData);
+        try {
+          localStorage.removeItem('l2b_get_started_step');
+          localStorage.removeItem('l2b_get_started_max_step');
+          localStorage.removeItem('l2b_get_started_autosave_v2');
+        } catch (e) {}
+        toast.success(lang === 'bn' ? 'প্রজেক্ট রিকোয়ারমেন্টস সফলভাবে জমা হয়েছে! 🚀' : lang === 'hi' ? 'आवश्यकताएं सफलतापूर्वक सबमिट की गईं! 🚀' : 'Project requirements submitted successfully! 🚀');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        setErrorMessage(res.message || 'Failed to submit requirements');
-        toast.error(res.message || 'Failed to submit requirements');
+        setErrorMessage(submitRes?.message || 'Failed to submit requirements');
+        toast.error(submitRes?.message || 'Failed to submit requirements');
       }
     } catch (err) {
       console.error('Final submit error:', err);
-      setErrorMessage(err.message || 'Network error submitting requirements');
-      toast.error(err.message || 'Network error submitting requirements');
+      const msg = err.data?.message || err.message || 'Network error submitting requirements';
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

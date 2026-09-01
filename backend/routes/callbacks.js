@@ -14,7 +14,7 @@ const router = express.Router();
 router.post('/', optionalAuth, createCallback);
 
 // User view own callbacks
-router.get('/my', protect, getUserCallbacks);
+router.get('/my', optionalAuth, getUserCallbacks);
 
 // Admin view all callbacks
 router.get('/', protect, adminOnly, getAllCallbacks);

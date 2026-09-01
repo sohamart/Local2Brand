@@ -74,20 +74,23 @@ export const submitRequirement = async (req, res) => {
     const { id } = req.params; // requirementId or _id
     const finalData = req.body;
 
+    let targetId = (id && id !== 'new' && id !== 'undefined') ? id.trim() : (finalData.requirementId || generateRequirementId());
+
     const validUserId = req.user?._id && mongoose.Types.ObjectId.isValid(req.user._id)
       ? req.user._id
       : (finalData.user && mongoose.Types.ObjectId.isValid(finalData.user) ? finalData.user : null);
 
     const updatePayload = {
       ...finalData,
+      requirementId: targetId,
       user: validUserId,
       status: 'Submitted',
       submittedAt: new Date()
     };
 
-    const query = mongoose.Types.ObjectId.isValid(id)
-      ? { $or: [{ requirementId: id }, { _id: id }] }
-      : { requirementId: id };
+    const query = mongoose.Types.ObjectId.isValid(targetId)
+      ? { $or: [{ requirementId: targetId }, { _id: targetId }] }
+      : { requirementId: targetId };
 
     let doc;
     if (mongoose.connection.readyState === 1) {
@@ -97,11 +100,11 @@ export const submitRequirement = async (req, res) => {
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );
     } else {
-      const existing = dataStore.find('requirements', (r) => r.requirementId === id || r._id === id);
+      const existing = dataStore.find('requirements', (r) => r.requirementId === targetId || r._id === targetId);
       if (existing) {
         doc = dataStore.update('requirements', existing._id, updatePayload);
       } else {
-        doc = dataStore.create('requirements', { ...updatePayload, requirementId: id || generateRequirementId() });
+        doc = dataStore.create('requirements', updatePayload);
       }
     }
 
@@ -112,7 +115,7 @@ export const submitRequirement = async (req, res) => {
     // Admin Notification
     const businessName = doc.clientInfo?.businessName || doc.websiteTypeName || 'New Project';
     const clientName = doc.clientInfo?.ownerName || doc.clientInfo?.contactPerson || 'Client';
-    const reqId = doc.requirementId || id;
+    const reqId = doc.requirementId || targetId;
 
     dataStore.createNotification({
       title: `New Requirement Submitted (${reqId})`,

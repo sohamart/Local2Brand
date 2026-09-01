@@ -31,7 +31,9 @@ import {
   Compass,
   Code2,
   Lock,
-  MessageCircle
+  MessageCircle,
+  Copy,
+  X
 } from 'lucide-react';
 import WriteReviewModal from '../../components/common/WriteReviewModal';
 import { useAuth } from '../../context/AuthContext';
@@ -107,6 +109,7 @@ export default function UserDashboard() {
   const [userReviews, setUserReviews] = useState([]);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
+  const [viewingReqSpec, setViewingReqSpec] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Track Order state
@@ -148,10 +151,11 @@ export default function UserDashboard() {
   const fetchUserData = async () => {
     setLoading(true);
     try {
+      const emailParam = user?.email ? `?email=${encodeURIComponent(user.email)}` : '';
       const [reqsRes, leadsRes, cbRes, revsRes] = await Promise.all([
-        api.get('/requirements/my').catch(() => ({ requirements: [] })),
-        api.get('/queries/my').catch(() => ({ leads: [] })),
-        api.get('/callbacks/my').catch(() => ({ callbacks: [] })),
+        api.get(`/requirements/my${emailParam}`).catch(() => ({ requirements: [] })),
+        api.get(`/queries/my${emailParam}`).catch(() => ({ leads: [] })),
+        api.get(`/callbacks/my${emailParam}`).catch(() => ({ callbacks: [] })),
         api.get('/reviews/my').catch(() => ({ reviews: [] })),
       ]);
 
@@ -432,18 +436,6 @@ export default function UserDashboard() {
         {/* Tab Navigation Segmented Bar (5-Column Clean Grid) */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 sm:gap-2 mb-6 p-1 sm:p-1.5 bg-slate-200/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 w-full">
           <button
-            onClick={() => setActiveTab('track')}
-            className={`py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
-              activeTab === 'track'
-                ? 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-sm border border-slate-200/80 dark:border-slate-700'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 shrink-0" />
-            <span className="truncate">Track Order</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('requirements')}
             className={`py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
               activeTab === 'requirements'
@@ -452,7 +444,19 @@ export default function UserDashboard() {
             }`}
           >
             <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-500 shrink-0" />
-            <span className="truncate">Specs ({requirements.length})</span>
+            <span className="truncate">My Orders & Specs ({requirements.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('track')}
+            className={`py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
+              activeTab === 'track'
+                ? 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-sm border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 shrink-0" />
+            <span className="truncate">Track Roadmap</span>
           </button>
 
           <button
@@ -493,323 +497,150 @@ export default function UserDashboard() {
         </div>
 
         {/* ======================================================== */}
-        {/* TAB: TRACK ORDER & LIVE ROADMAP PROGRESS                 */}
+        {/* TAB 1: ALL WEBSITE ORDERS & SPECIFICATIONS (DEFAULT)     */}
         {/* ======================================================== */}
-        {activeTab === 'track' && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Search / Select Order Bar */}
-            <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass bg-white/80 dark:bg-slate-900/80 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                    <Compass className="w-5 h-5 text-purple-600" />
-                    <span>Real-Time Project Roadmap &amp; Order Tracker</span>
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Enter your Order ID (e.g., REQ-2026-98214) or select a project from your registered submissions.
-                  </p>
-                </div>
-
-                {requirements.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500">My Orders:</span>
-                    <select
-                      value={trackedOrder?.requirementId || ''}
-                      onChange={(e) => {
-                        const selected = requirements.find((r) => r.requirementId === e.target.value);
-                        if (selected) {
-                          setTrackedOrder(selected);
-                          setTrackSearchId(selected.requirementId);
-                          setTrackError('');
-                        }
-                      }}
-                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-purple-700 dark:text-purple-300 focus:outline-purple-500 cursor-pointer"
-                    >
-                      {requirements.map((r) => (
-                        <option key={r.requirementId || r._id} value={r.requirementId}>
-                          {r.requirementId} — {r.clientInfo?.businessName || r.websiteTypeName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+        {activeTab === 'requirements' && (
+          <div className="space-y-5 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-slate-200 dark:border-slate-800">
+              <div>
+                <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-purple-600" />
+                  <span>My Website Orders & Submitted Specifications</span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  View all requirements, chosen features, live delivery status, and sprint milestones.
+                </p>
               </div>
 
-              {/* Live Search Input */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  performTrackOrder();
-                }}
-                className="flex items-center gap-2"
+              <button
+                onClick={() => openOrderModal()}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 flex items-center gap-1.5 cursor-pointer shrink-0"
               >
-                <div className="relative flex-1">
-                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    value={trackSearchId}
-                    onChange={(e) => setTrackSearchId(e.target.value)}
-                    placeholder="Enter Order / Requirement ID (e.g. REQ-2026-98214)..."
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-mono font-bold text-purple-700 dark:text-purple-300 placeholder:font-sans placeholder-slate-400 focus:outline-purple-500"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={trackLoading}
-                  className="px-6 py-3 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 cursor-pointer disabled:opacity-50 shrink-0"
-                >
-                  {trackLoading ? 'Locating...' : 'Track Sprint'}
-                </button>
-              </form>
-
-              {trackError && (
-                <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{trackError}</span>
-                </div>
-              )}
+                <Zap className="w-3.5 h-3.5" />
+                <span>Submit New Order</span>
+              </button>
             </div>
 
-            {/* Display Tracked Order Details */}
-            {trackedOrder ? (
-              <div className="space-y-6">
-                
-                {/* 1. Milestone Roadmap Progress Card */}
-                <div className="glass-panel p-5 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass bg-white/80 dark:bg-slate-900/80 space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
-                    <div>
-                      <span className="font-mono text-xs font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950 px-3 py-1 rounded-full border border-purple-200 dark:border-purple-800">
-                        {trackedOrder.requirementId}
-                      </span>
-                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-2">
-                        {trackedOrder.clientInfo?.businessName || trackedOrder.websiteTypeName}
-                      </h2>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {trackedOrder.websiteTypeName || trackedOrder.websiteType} • Submitted on {new Date(trackedOrder.createdAt || trackedOrder.submittedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col sm:items-end gap-1.5">
-                      <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border ${STATUS_BADGES[trackedOrder.status] || STATUS_BADGES.Submitted}`}>
-                        {trackedOrder.status || 'Submitted'}
-                      </span>
-                      <span className="text-[11px] font-bold text-slate-400">
-                        Target Delivery: <strong className="text-purple-600 dark:text-purple-400">{trackedOrder.timeline || '48 Hours'}</strong>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Visual Progress Bar */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-slate-600 dark:text-slate-300">Sprint Roadmap Completion</span>
-                      <span className="text-purple-600 dark:text-purple-400 font-mono text-sm">{currentTrackProgress}% Complete</span>
-                    </div>
-                    <div className="w-full h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-700">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-500 shadow-md transition-all duration-700"
-                        style={{ width: `${currentTrackProgress}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* 6-Stage Stepper Roadmap */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
-                    {TRACKING_STAGES.map((stage, idx) => {
-                      const isPast = idx < currentStageIdx;
-                      const isCurrent = idx === currentStageIdx;
-                      const isFuture = idx > currentStageIdx;
-
-                      return (
-                        <div
-                          key={stage.id}
-                          className={`p-3.5 rounded-2xl border transition-all ${
-                            isCurrent
-                              ? 'bg-purple-50/90 dark:bg-purple-950/60 border-purple-400 dark:border-purple-600 shadow-sm scale-[1.02]'
-                              : isPast
-                              ? 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80'
-                              : 'bg-white/40 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800/60 opacity-60'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-1.5">
-                            <span className={`w-6 h-6 rounded-full flex items-center justify-center font-black text-xs ${
-                              isPast
-                                ? 'bg-emerald-500 text-white'
-                                : isCurrent
-                                ? 'bg-purple-600 text-white animate-pulse'
-                                : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
-                            }`}>
-                              {isPast ? <Check className="w-3.5 h-3.5" /> : stage.id}
-                            </span>
-                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                              isPast
-                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
-                                : isCurrent
-                                ? 'bg-purple-200 dark:bg-purple-900 text-purple-900 dark:text-purple-200 animate-pulse'
-                                : 'text-slate-400'
-                            }`}>
-                              {isPast ? 'Done' : isCurrent ? 'Active Phase' : 'Upcoming'}
-                            </span>
-                          </div>
-                          <h4 className="text-xs font-black text-slate-900 dark:text-white leading-tight">
-                            {stage.name}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
-                            {stage.desc}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Engineer Notes if available */}
-                  {trackedOrder.internalNotes && (
-                    <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs space-y-1">
-                      <strong className="text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5">
-                        <FileText className="w-4 h-4 text-indigo-600" />
-                        <span>Engineering Team Status Note:</span>
-                      </strong>
-                      <p className="text-indigo-950 dark:text-indigo-300 leading-relaxed font-medium">
-                        {trackedOrder.internalNotes}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Quoted Price if set */}
-                  {trackedOrder.quotedAmount && (
-                    <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 flex items-center justify-between text-xs">
-                      <div>
-                        <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase block">
-                          Official Quoted Investment
-                        </span>
-                        <strong className="text-base sm:text-lg font-black text-emerald-700 dark:text-emerald-300">
-                          {trackedOrder.quotedAmount}
-                        </strong>
-                      </div>
-                      <span className="px-3 py-1 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200">
-                        Quotation Locked
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Quick Consultant Communication CTAs */}
-                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-                    <a
-                      href={`https://wa.me/919876543210?text=${encodeURIComponent(`Hi LOCAL2BRAND, I want a live status update on my project Order ${trackedOrder.requirementId} (${trackedOrder.clientInfo?.businessName || ''}).`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      <span>WhatsApp Live Update</span>
-                    </a>
-
-                    <button
-                      onClick={() => openCallbackModal({ topic: `Status Discussion for Order ${trackedOrder.requirementId}` })}
-                      className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center gap-2 cursor-pointer transition-all"
-                    >
-                      <PhoneCall className="w-4 h-4 text-purple-600" />
-                      <span>Request Founder Call</span>
-                    </button>
-                  </div>
-                </div>
-
-              </div>
-            ) : (
-              <div className="glass-panel p-12 rounded-3xl text-center space-y-3 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
-                <Compass className="w-12 h-12 text-purple-400 mx-auto animate-pulse" />
-                <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">No project order selected for tracking</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Submit your custom website requirements via the Get Started form or enter an Order ID above to see live sprint milestones.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 2: ALL WEBSITE SPECIFICATIONS */}
-        {activeTab === 'requirements' && (
-          <div className="space-y-4">
             {requirements.length === 0 ? (
-              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
-                <Layers className="w-12 h-12 text-purple-500 mx-auto animate-pulse" />
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No website specifications yet</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Submit your custom website requirements, pick features, select turnaround time & get instant proposals.
-                </p>
+              <div className="glass-panel p-8 sm:p-14 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
+                <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 flex items-center justify-center mx-auto text-purple-600 shadow-sm">
+                  <Layers className="w-8 h-8 animate-pulse" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No active website orders yet</h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Configure your website features, choose design style, select pages, and get instant proposals.
+                  </p>
+                </div>
                 <button
                   onClick={() => openOrderModal()}
-                  className="px-6 py-3 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-md cursor-pointer"
+                  className="px-6 py-3 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-md hover:opacity-95 cursor-pointer"
                 >
-                  Launch Requirement Wizard
+                  🚀 Launch Requirement Form
                 </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {requirements.map((req) => (
                   <div
-                    key={req._id}
-                    className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-glass space-y-4 bg-white/80 dark:bg-slate-900/80 hover:border-purple-400 transition-all"
+                    key={req._id || req.requirementId}
+                    className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-glass space-y-4 bg-white/90 dark:bg-slate-900/90 hover:border-purple-400 transition-all flex flex-col justify-between"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <span className="font-mono text-[10px] font-bold text-purple-600 dark:text-purple-400 block">
-                          {req.requirementId}
+                    <div className="space-y-3">
+                      {/* Top Header */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-xs font-black text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/80 px-2.5 py-0.5 rounded-md border border-purple-200 dark:border-purple-800">
+                              {req.requirementId}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(req.requirementId);
+                                toast.success(`Order ID ${req.requirementId} copied!`);
+                              }}
+                              className="p-1 rounded-md text-slate-400 hover:text-purple-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                              title="Copy Order ID"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1.5 break-words">
+                            {req.clientInfo?.businessName || req.websiteTypeName || 'Custom Website Build'}
+                          </h3>
+                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{req.websiteTypeName || req.websiteType}</p>
+                        </div>
+
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${STATUS_BADGES[req.status] || STATUS_BADGES.Submitted}`}>
+                          {req.status || 'Submitted'}
                         </span>
-                        <h3 className="text-base font-extrabold text-slate-900 dark:text-white mt-0.5 break-words">
-                          {req.clientInfo?.businessName || req.websiteTypeName}
-                        </h3>
-                        <p className="text-xs text-slate-500">{req.websiteTypeName || req.websiteType}</p>
                       </div>
 
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${STATUS_BADGES[req.status] || STATUS_BADGES.Submitted}`}>
-                        {req.status || 'Submitted'}
-                      </span>
+                      {/* Spec Key Metrics */}
+                      <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-3 sm:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <div>
+                          <span className="text-slate-400 block text-[10px] font-bold">Budget Tier</span>
+                          <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">{req.budget || 'Standard Commercial'}</strong>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block text-[10px] font-bold">Delivery Speed</span>
+                          <strong className="text-slate-900 dark:text-white font-extrabold">{req.timeline || 'Express 48h'}</strong>
+                        </div>
+                        <div className="mt-1">
+                          <span className="text-slate-400 block text-[10px] font-bold">Pages Included</span>
+                          <strong className="text-slate-700 dark:text-slate-300 font-extrabold">{req.selectedPages?.length || 0} Pages</strong>
+                        </div>
+                        <div className="mt-1">
+                          <span className="text-slate-400 block text-[10px] font-bold">Admin Engine</span>
+                          <strong className="text-purple-600 dark:text-purple-400 font-extrabold truncate block">{req.adminPanelType || 'Dynamic CMS'}</strong>
+                        </div>
+                      </div>
+
+                      {/* Quoted Price if set by Admin */}
+                      {req.quotedAmount && (
+                        <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase text-emerald-800 dark:text-emerald-400 block">Official Price Quote</span>
+                            <span className="font-black text-sm text-emerald-700 dark:text-emerald-300">{req.quotedAmount}</span>
+                          </div>
+                          <span className="text-[10px] font-black bg-emerald-200/80 dark:bg-emerald-900 px-2 py-0.5 rounded-md text-emerald-800 dark:text-emerald-200">
+                            Approved Scope
+                          </span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Spec Key Metrics */}
-                    <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
-                      <div>
-                        <span className="text-slate-400 block text-[10px]">Budget</span>
-                        <strong className="text-emerald-600 dark:text-emerald-400">{req.budget}</strong>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block text-[10px]">Delivery Speed</span>
-                        <strong className="text-slate-900 dark:text-white">{req.timeline}</strong>
-                      </div>
-                      <div className="mt-1">
-                        <span className="text-slate-400 block text-[10px]">Pages</span>
-                        <strong className="text-slate-700 dark:text-slate-300">{req.selectedPages?.length || 0} Pages</strong>
-                      </div>
-                      <div className="mt-1">
-                        <span className="text-slate-400 block text-[10px]">Admin Panel</span>
-                        <strong className="text-purple-600 dark:text-purple-400">{req.adminPanelType}</strong>
-                      </div>
-                    </div>
-
-                    {/* Quoted Price if set by Admin */}
-                    {req.quotedAmount && (
-                      <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs">
-                        <span className="font-bold text-emerald-800 dark:text-emerald-300">Official Quoted Price:</span>
-                        <span className="font-black text-sm text-emerald-700 dark:text-emerald-300">{req.quotedAmount}</span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-xs">
-                      <span className="text-[11px] text-slate-400">
+                    {/* Bottom Actions Bar */}
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                      <div className="text-[11px] text-slate-400 font-medium">
                         Submitted: {new Date(req.createdAt).toLocaleDateString()}
-                      </span>
-                      <button
-                        onClick={() => {
-                          setTrackedOrder(req);
-                          setTrackSearchId(req.requirementId);
-                          setActiveTab('track');
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-xs font-bold border border-purple-200 dark:border-purple-800 hover:bg-purple-100 flex items-center gap-1 cursor-pointer"
-                      >
-                        <Compass className="w-3.5 h-3.5" />
-                        <span>Track Order &rarr;</span>
-                      </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setViewingReqSpec(req)}
+                          className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                          title="Inspect full answers"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Specs</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setTrackedOrder(req);
+                            setTrackSearchId(req.requirementId);
+                            setActiveTab('track');
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
+                        >
+                          <Compass className="w-3.5 h-3.5" />
+                          <span>Track Milestone &rarr;</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1105,6 +936,182 @@ export default function UserDashboard() {
             setEditingReview(null);
           }}
         />
+      )}
+
+      {/* Client Specs Detail Modal */}
+      {viewingReqSpec && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="glass-panel w-full max-w-2xl max-h-[88vh] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900 flex flex-col overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-black text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-md border border-purple-200 dark:border-purple-800">
+                    {viewingReqSpec.requirementId}
+                  </span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${STATUS_BADGES[viewingReqSpec.status] || STATUS_BADGES.Submitted}`}>
+                    {viewingReqSpec.status || 'Submitted'}
+                  </span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">
+                  {viewingReqSpec.clientInfo?.businessName || viewingReqSpec.websiteTypeName}
+                </h3>
+              </div>
+
+              <button
+                onClick={() => setViewingReqSpec(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Content */}
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-xs">
+              {/* Client Info Grid */}
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-bold">Client / Owner</span>
+                  <strong className="text-slate-900 dark:text-white">{viewingReqSpec.clientInfo?.ownerName || 'Valued Client'}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-bold">Contact Mobile</span>
+                  <strong className="text-slate-900 dark:text-white">{viewingReqSpec.clientInfo?.mobile || 'Not specified'}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-bold">Email Address</span>
+                  <strong className="text-slate-900 dark:text-white break-all">{viewingReqSpec.clientInfo?.email || user?.email}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-bold">City / Location</span>
+                  <strong className="text-slate-900 dark:text-white">{viewingReqSpec.clientInfo?.city || 'India'}</strong>
+                </div>
+              </div>
+
+              {/* Scope & Delivery */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800">
+                  <span className="text-[10px] text-purple-700 dark:text-purple-300 font-bold block">Budget</span>
+                  <span className="font-extrabold text-xs text-purple-900 dark:text-purple-200">{viewingReqSpec.budget}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold block">Timeline</span>
+                  <span className="font-extrabold text-xs text-emerald-900 dark:text-emerald-200">{viewingReqSpec.timeline}</span>
+                </div>
+                <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
+                  <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold block">Pages</span>
+                  <span className="font-extrabold text-xs text-blue-900 dark:text-blue-200">{viewingReqSpec.selectedPages?.length || 0} Included</span>
+                </div>
+                <div className="p-3 rounded-xl bg-pink-50/70 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-800">
+                  <span className="text-[10px] text-pink-700 dark:text-pink-300 font-bold block">CMS Type</span>
+                  <span className="font-extrabold text-xs text-pink-900 dark:text-pink-200 truncate block">{viewingReqSpec.adminPanelType}</span>
+                </div>
+              </div>
+
+              {/* Selected Pages */}
+              {viewingReqSpec.selectedPages?.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2">Selected Pages:</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewingReqSpec.selectedPages.map((p, idx) => (
+                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[11px] font-medium border border-slate-200 dark:border-slate-700">
+                        {p}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Selected Features */}
+              {viewingReqSpec.selectedFeatures?.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2">Selected Features:</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewingReqSpec.selectedFeatures.map((f, idx) => (
+                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[11px] font-bold border border-purple-200 dark:border-purple-800">
+                        ✨ {f}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Methods */}
+              {viewingReqSpec.paymentMethods?.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2">Payment Integration:</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewingReqSpec.paymentMethods.map((pm, idx) => (
+                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800">
+                        💳 {pm}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step Questions & Answers (if present) */}
+              {viewingReqSpec.answers && Object.keys(viewingReqSpec.answers).length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200">Specification Answers:</h4>
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                    {Object.entries(viewingReqSpec.answers).map(([k, val]) => (
+                      <div key={k} className="text-[11px] pb-1 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                        <span className="text-slate-400 capitalize font-medium">{k.replace(/([A-Z])/g, ' $1')}: </span>
+                        <strong className="text-slate-800 dark:text-slate-200">
+                          {Array.isArray(val) ? val.join(', ') : typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Uploaded Images Gallery */}
+              {(viewingReqSpec.images?.length > 0 || viewingReqSpec.uploadedImages?.length > 0) && (
+                <div>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2">Attached Assets & References:</h4>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {(viewingReqSpec.images || viewingReqSpec.uploadedImages || []).map((img, i) => (
+                      <a key={i} href={img} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 aspect-video hover:opacity-90">
+                        <img src={img} alt={`Asset ${i}`} className="w-full h-full object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-900/50">
+              <a
+                href={`https://wa.me/919876543210?text=${encodeURIComponent(`Hi LOCAL2BRAND, I want to discuss specs for Order ${viewingReqSpec.requirementId} (${viewingReqSpec.clientInfo?.businessName || ''}).`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm flex items-center gap-1.5 cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>WhatsApp Consultant</span>
+              </a>
+
+              <button
+                onClick={() => {
+                  const req = viewingReqSpec;
+                  setViewingReqSpec(null);
+                  setTrackedOrder(req);
+                  setTrackSearchId(req.requirementId);
+                  setActiveTab('track');
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm flex items-center gap-1.5 cursor-pointer"
+              >
+                <Compass className="w-4 h-4" />
+                <span>Open Live Roadmap &rarr;</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
     </>
   );

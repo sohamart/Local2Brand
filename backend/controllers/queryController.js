@@ -77,7 +77,12 @@ export const createQueryLead = async (req, res) => {
 
 export const getUserQueries = async (req, res) => {
   try {
-    const leads = await dataStore.getUserLeads(req.user.id, req.user.email);
+    const userId = req.user?._id?.toString() || req.user?.id;
+    const userEmail = (req.user?.email || req.query.email || '').toLowerCase().trim();
+    if (!userId && !userEmail) {
+      return res.status(200).json({ success: true, count: 0, leads: [] });
+    }
+    const leads = await dataStore.getUserLeads(userId, userEmail);
     return res.status(200).json({
       success: true,
       count: leads.length,

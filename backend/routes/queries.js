@@ -16,7 +16,7 @@ const router = express.Router();
 router.post('/', optionalAuth, createQueryLead);
 
 // User view their own inquiries
-router.get('/my', protect, getUserQueries);
+router.get('/my', optionalAuth, getUserQueries);
 
 // Admin export to CSV
 router.get('/export/csv', protect, adminOnly, exportQueriesCsv);

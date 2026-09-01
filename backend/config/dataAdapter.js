@@ -399,14 +399,28 @@ export const dataStore = {
   async getAllLeads(filter = {}) {
     if (isDbConnected()) {
       const { QueryLead } = await import('../models/QueryLead.js');
-      return await QueryLead.find(filter).sort({ createdAt: -1 });
+      const query = {};
+      if (filter.status && filter.status !== 'all') {
+        query.status = filter.status;
+      }
+      if (filter.search && String(filter.search).trim()) {
+        const s = String(filter.search).trim();
+        query.$or = [
+          { name: { $regex: s, $options: 'i' } },
+          { email: { $regex: s, $options: 'i' } },
+          { phone: { $regex: s, $options: 'i' } },
+          { businessName: { $regex: s, $options: 'i' } },
+          { websiteType: { $regex: s, $options: 'i' } }
+        ];
+      }
+      return await QueryLead.find(query).sort({ createdAt: -1 });
     }
-    let leads = readLocalStore('leads');
+    let leads = readLocalStore('leads') || [];
     if (filter.status && filter.status !== 'all') {
       leads = leads.filter((l) => l.status === filter.status);
     }
-    if (filter.search) {
-      const s = filter.search.toLowerCase();
+    if (filter.search && String(filter.search).trim()) {
+      const s = String(filter.search).toLowerCase().trim();
       leads = leads.filter(
         (l) =>
           l.name?.toLowerCase().includes(s) ||
@@ -488,11 +502,30 @@ export const dataStore = {
       if (filter.status && filter.status !== 'all') {
         query.status = filter.status;
       }
+      if (filter.search && String(filter.search).trim()) {
+        const s = String(filter.search).trim();
+        query.$or = [
+          { name: { $regex: s, $options: 'i' } },
+          { email: { $regex: s, $options: 'i' } },
+          { phone: { $regex: s, $options: 'i' } },
+          { topic: { $regex: s, $options: 'i' } }
+        ];
+      }
       return await CallbackRequest.find(query).sort({ createdAt: -1 });
     }
     let cbs = readLocalStore('callbacks') || [];
     if (filter.status && filter.status !== 'all') {
       cbs = cbs.filter((c) => c.status === filter.status);
+    }
+    if (filter.search && String(filter.search).trim()) {
+      const s = String(filter.search).toLowerCase().trim();
+      cbs = cbs.filter(
+        (c) =>
+          c.name?.toLowerCase().includes(s) ||
+          c.email?.toLowerCase().includes(s) ||
+          c.phone?.includes(s) ||
+          c.topic?.toLowerCase().includes(s)
+      );
     }
     return cbs;
   },
