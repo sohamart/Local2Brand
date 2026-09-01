@@ -46,7 +46,8 @@ import {
   Lightbulb,
   BookOpen,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -559,13 +560,39 @@ export default function GetStarted() {
 
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [maxReachedStep, setMaxReachedStep] = useState(0);
+  // Step index persisted across page reloads
+  const [currentStepIndex, setCurrentStepIndex] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedStep = localStorage.getItem('l2b_get_started_step');
+      if (savedStep !== null) {
+        const parsed = parseInt(savedStep, 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 11) {
+          return parsed;
+        }
+      }
+    }
+    return 0;
+  });
+
+  const [maxReachedStep, setMaxReachedStep] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedMax = localStorage.getItem('l2b_get_started_max_step');
+      if (savedMax !== null) {
+        const parsed = parseInt(savedMax, 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 11) {
+          return parsed;
+        }
+      }
+    }
+    return 0;
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedData, setSubmittedData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [copiedId, setCopiedId] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [lastSavedTime, setLastSavedTime] = useState('');
 
   // AI Summary State with progressive typewriter stream & multi-stage analysis
   const [aiSummary, setAiSummary] = useState('');
@@ -582,79 +609,120 @@ export default function GetStarted() {
 
   const stepScrollContainerRef = useRef(null);
 
-  const [formData, setFormData] = useState({
-    requirementId: '',
-    websiteType: 'restaurant',
-    websiteTypeName: 'Restaurant & Dining',
-    clientInfo: {
-      businessName: '',
-      ownerName: user?.name || '',
-      mobile: user?.phone || '',
-      email: user?.email || '',
-      city: '',
-      existingWebsite: '',
-      hasLogo: 'yes',
-      contentReady: 'yes'
-    },
-    businessDetails: {
-      selectedCuisines: [],
-      specialties: '',
-      operatingHours: '',
-      serviceArea: '',
-      seatingCapacity: '',
-      tableBookingSlots: [],
-      foodDelivery: [],
-      orderType: [],
-      instagramFeed: '',
-      numberOfStylists: '',
-      bookingStyle: [],
-      serviceDuration: '',
-      membershipTiers: [],
-      trialPass: '',
-      classSchedule: '',
-      roomBookingEngine: '',
-      amenities: [],
-      checkinPolicy: '',
-      propertyFilter: [],
-      virtualTours: '',
-      siteVisit: '',
-      catalogSize: '',
-      ecommerceFeatures: [],
-      customBusinessType: '',
-      customFeatures: ''
-    },
-    selectedPages: [
-      'Home Page (High-Converting Hero)',
-      'Services / Food Menu / Product Catalog',
-      'Online Booking / Reservation System',
-      'Contact Page & Google Map Integration',
-      'Customer Reviews & Testimonials'
-    ],
-    selectedFeatures: [
-      'User Registration / Customer Login',
-      'Online Table / Appointment Booking',
-      'Automated WhatsApp Lead Notifications'
-    ],
-    paymentMethods: ['Razorpay (Cards, Netbanking, UPI)', 'UPI (GPay / PhonePe / Paytm Instant QR)', 'Cash on Delivery (COD) / Pay at Venue'],
-    adminPanelType: 'Full Dynamic Admin Panel',
-    whatsappIntegration: true,
-    whatsappOptions: ['WhatsApp Floating Quick Chat Button', 'Direct Order / Booking to WhatsApp with Pre-filled Payload'],
-    emailIntegration: true,
-    emailOptions: ['Automated Customer Confirmation Email & Receipt', 'Instant Admin Email Alert for every submission'],
-    designStyle: 'Modern Glassmorphic & Vibrant',
-    preferredColors: 'Purple, Neon Blue & Luxury Gold',
-    referenceUrls: '',
-    uploadedImages: [],
-    domainStatus: 'Need New Domain (Free Included)',
-    hostingStatus: 'High-Speed Cloud Hosting (Free 1-Yr Included)',
-    budget: '₹12,999 – ₹24,999 (Standard Commercial)',
-    timeline: '⚡ Express Delivery (48 - 72 Hours)',
-    couponCode: searchParams.get('coupon') || '',
-    discountPercent: searchParams.get('coupon') ? 20 : 0,
-    additionalNotes: ''
+  const [formData, setFormData] = useState(() => {
+    const defaultData = {
+      requirementId: '',
+      websiteType: 'restaurant',
+      websiteTypeName: 'Restaurant & Dining',
+      clientInfo: {
+        businessName: '',
+        ownerName: '',
+        mobile: '',
+        email: '',
+        city: '',
+        existingWebsite: '',
+        hasLogo: 'yes',
+        contentReady: 'yes'
+      },
+      businessDetails: {
+        selectedCuisines: [],
+        specialties: '',
+        operatingHours: '',
+        serviceArea: '',
+        seatingCapacity: '',
+        tableBookingSlots: [],
+        foodDelivery: [],
+        orderType: [],
+        instagramFeed: '',
+        numberOfStylists: '',
+        bookingStyle: [],
+        serviceDuration: '',
+        membershipTiers: [],
+        trialPass: '',
+        classSchedule: '',
+        roomBookingEngine: '',
+        amenities: [],
+        checkinPolicy: '',
+        propertyFilter: [],
+        virtualTours: '',
+        siteVisit: '',
+        catalogSize: '',
+        ecommerceFeatures: [],
+        customBusinessType: '',
+        customFeatures: ''
+      },
+      selectedPages: [
+        'Home Page (High-Converting Hero)',
+        'Services / Food Menu / Product Catalog',
+        'Online Booking / Reservation System',
+        'Contact Page & Google Map Integration',
+        'Customer Reviews & Testimonials'
+      ],
+      selectedFeatures: [
+        'User Registration / Customer Login',
+        'Online Table / Appointment Booking',
+        'Automated WhatsApp Lead Notifications'
+      ],
+      paymentMethods: ['Razorpay (Cards, Netbanking, UPI)', 'UPI (GPay / PhonePe / Paytm Instant QR)', 'Cash on Delivery (COD) / Pay at Venue'],
+      adminPanelType: 'Full Dynamic Admin Panel',
+      whatsappIntegration: true,
+      whatsappOptions: ['WhatsApp Floating Quick Chat Button', 'Direct Order / Booking to WhatsApp with Pre-filled Payload'],
+      emailIntegration: true,
+      emailOptions: ['Automated Customer Confirmation Email & Receipt', 'Instant Admin Email Alert for every submission'],
+      designStyle: 'Modern Glassmorphic & Vibrant',
+      preferredColors: 'Purple, Neon Blue & Luxury Gold',
+      referenceUrls: '',
+      uploadedImages: [],
+      domainStatus: 'Need New Domain (Free Included)',
+      hostingStatus: 'High-Speed Cloud Hosting (Free 1-Yr Included)',
+      budget: '₹12,999 – ₹24,999 (Standard Commercial)',
+      timeline: '⚡ Express Delivery (48 - 72 Hours)',
+      couponCode: searchParams.get('coupon') || '',
+      discountPercent: searchParams.get('coupon') ? 20 : 0,
+      additionalNotes: ''
+    };
+
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('l2b_get_started_autosave_v2');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          return {
+            ...defaultData,
+            ...parsed,
+            clientInfo: {
+              ...defaultData.clientInfo,
+              ...(parsed.clientInfo || {})
+            },
+            businessDetails: {
+              ...defaultData.businessDetails,
+              ...(parsed.businessDetails || {})
+            }
+          };
+        } catch (e) {
+          console.warn('Autosave parse error:', e);
+        }
+      }
+    }
+    return defaultData;
   });
 
   const [selectedFileObjects, setSelectedFileObjects] = useState([]);
+
+  // Continuous real-time persistent autosave to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !submittedData) {
+      try {
+        localStorage.setItem('l2b_get_started_step', String(currentStepIndex));
+        localStorage.setItem('l2b_get_started_max_step', String(maxReachedStep));
+        localStorage.setItem('l2b_get_started_autosave_v2', JSON.stringify(formData));
+        const now = new Date();
+        setLastSavedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      } catch (err) {
+        console.warn('LocalStorage save error:', err);
+      }
+    }
+  }, [currentStepIndex, maxReachedStep, formData, submittedData]);
 
   // Auto scroll active step pill into view on mobile
   useEffect(() => {
@@ -683,7 +751,7 @@ export default function GetStarted() {
     }
   }, [searchParams]);
 
-  // If user logs in after mount, populate credentials
+  // If user logs in after mount, populate empty credentials
   useEffect(() => {
     if (user) {
       setFormData((prev) => ({
@@ -704,6 +772,16 @@ export default function GetStarted() {
       localStorage.setItem('l2b_form_lang', newLang);
     }
     toast.info(newLang === 'bn' ? 'বাংলা ভাষা সক্রিয় করা হয়েছে 🇮🇳' : newLang === 'hi' ? 'हिंदी भाषा सक्रिय की गई 🇮🇳' : 'English Language Active 🇬🇧');
+  };
+
+  const handleResetForm = () => {
+    if (window.confirm(lang === 'bn' ? 'আপনি কি ফর্মের সমস্ত তথ্য মুছে নতুন করে শুরু করতে চান?' : 'Are you sure you want to reset and clear all form progress?')) {
+      localStorage.removeItem('l2b_get_started_step');
+      localStorage.removeItem('l2b_get_started_max_step');
+      localStorage.removeItem('l2b_get_started_autosave_v2');
+      toast.info('Form progress reset.');
+      window.location.reload();
+    }
   };
 
   const validateStep = (stepIdx) => {
@@ -1058,6 +1136,11 @@ export default function GetStarted() {
         const submitRes = await api.post(`/requirements/${generatedId}/submit`, payload);
         if (submitRes && submitRes.success) {
           setSubmittedData(submitRes.requirement || res.requirement || { requirementId: generatedId });
+          try {
+            localStorage.removeItem('l2b_get_started_step');
+            localStorage.removeItem('l2b_get_started_max_step');
+            localStorage.removeItem('l2b_get_started_autosave_v2');
+          } catch (e) {}
           toast.success(lang === 'bn' ? 'প্রজেক্ট রিকোয়ারমেন্টস সফলভাবে জমা হয়েছে! 🚀' : lang === 'hi' ? 'आवश्यकताएं सफलतापूर्वक सबमिट की गईं! 🚀' : 'Project requirements submitted successfully! 🚀');
         } else {
           setErrorMessage(submitRes.message || 'Submission failed');
@@ -1109,7 +1192,7 @@ export default function GetStarted() {
           </Link>
         </div>
 
-        {/* Center: Live Step Progress Badge */}
+        {/* Center: Live Step Progress Badge & Live Autosave Status */}
         {!submittedData && (
           <div className="flex items-center gap-2 text-center">
             <span className="text-[11px] sm:text-xs font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-50/90 dark:bg-purple-950/80 px-2.5 py-1 rounded-full border border-purple-200/90 dark:border-purple-800 shadow-2xs">
@@ -1118,6 +1201,12 @@ export default function GetStarted() {
             <span className="text-xs font-black text-slate-800 dark:text-slate-200 hidden xs:inline truncate max-w-[130px] sm:max-w-none">
               {t.steps[currentStepIndex].title}
             </span>
+            {lastSavedTime && (
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hidden md:inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Autosaved {lastSavedTime}</span>
+              </span>
+            )}
           </div>
         )}
 
@@ -1163,6 +1252,18 @@ export default function GetStarted() {
               हिं
             </button>
           </div>
+
+          {/* Reset / Clear Form Button */}
+          {!submittedData && (
+            <button
+              type="button"
+              onClick={handleResetForm}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+              title={lang === 'bn' ? 'ফর্ম রিসেট করুন (নতুন করে শুরু করুন)' : 'Reset and clear form'}
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          )}
 
           {/* Share Link Button */}
           <button
