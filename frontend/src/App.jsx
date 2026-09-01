@@ -18,6 +18,7 @@ import { AuthProvider } from './context/AuthContext';
 import { SiteSettingsProvider, useSiteSettings } from './context/SiteSettingsContext';
 import PageTransition, { usePageTransition } from './components/common/PageTransition';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import useLivePresence from './hooks/useLivePresence';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -176,51 +177,8 @@ function MainAppContent() {
     return () => clearInterval(interval);
   }, [isMaintenanceOrComingSoon]);
 
-  // Real live telemetry tracking with complete exception isolation
-  useEffect(() => {
-    let sid = null;
-    try {
-      if (typeof window !== 'undefined') {
-        if (!window.__l2b_tab_id) {
-          window.__l2b_tab_id = 'tab_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
-        }
-        sid = window.__l2b_tab_id;
-      }
-    } catch (e) {
-      sid = 'tab_' + Date.now();
-    }
-
-    if (!sid) sid = 'tab_' + Date.now();
-
-    const sendPing = (type = 'heartbeat') => {
-      try {
-        api.post(`/telemetry/${type}`, {
-          sessionId: sid,
-          tabId: sid,
-          path: location?.pathname || '/'
-        }).catch(() => {});
-      } catch (e) {}
-    };
-
-    // Ping page view on navigation
-    sendPing('view');
-
-    // Periodic heartbeat every 10s for real-time online tracking
-    const hbInterval = setInterval(() => {
-      sendPing('heartbeat');
-    }, 10000);
-
-    // Instant heartbeat on tab focus / visibility
-    const handleFocus = () => sendPing('heartbeat');
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('visibilitychange', handleFocus);
-
-    return () => {
-      clearInterval(hbInterval);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('visibilitychange', handleFocus);
-    };
-  }, [location?.pathname]);
+  // High-Precision Real-time Live Presence Engine
+  useLivePresence();
 
   const handleManualLock = () => {
     try {

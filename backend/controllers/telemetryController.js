@@ -1,83 +1,109 @@
 import { dataStore } from '../config/dataAdapter.js';
 
-// In-memory active sessions tracker (SessionId / IP -> Timestamp & Path)
-const activeSessions = new Map();
-let memoryPageViews = Math.max(2, (dataStore.read('requirements') || []).length * 4); // Persistent base + dynamic
+// High-Precision Real-Time Presence & Visitor Hub
+class PresenceEngine {
+  constructor() {
+    this.sessions = new Map();
+    this.totalPageViews = 15; // Baseline seed
+    this.SESSION_TIMEOUT_MS = 15 * 1000; // 15 seconds real-time timeout
 
-const CLEANUP_WINDOW_MS = 5 * 60 * 1000; // 5 minutes active presence window
+    // Continuous auto-cleanup every 2 seconds
+    setInterval(() => {
+      this.cleanup();
+    }, 2000);
+  }
 
-// Helper to clean expired sessions
-const cleanupExpiredSessions = () => {
-  const now = Date.now();
-  for (const [key, session] of activeSessions.entries()) {
-    if (now - session.lastSeen > CLEANUP_WINDOW_MS) {
-      activeSessions.delete(key);
+  cleanup() {
+    const now = Date.now();
+    for (const [key, session] of this.sessions.entries()) {
+      if (now - session.lastSeen > this.SESSION_TIMEOUT_MS) {
+        this.sessions.delete(key);
+      }
     }
   }
-};
 
-export const recordPageView = async (req, res) => {
-  try {
-    const { sessionId, path = '/', tabId } = req.body || {};
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown_ip';
-    const key = sessionId || (tabId ? `${clientIp}_${tabId}` : clientIp);
-
-    activeSessions.set(key, {
-      ip: clientIp,
-      path,
+  ping(tabId, ip, path) {
+    const key = tabId || ip || 'session_' + Math.random();
+    this.sessions.set(key, {
+      tabId: key,
+      ip: ip || '',
+      path: path || '/',
       lastSeen: Date.now(),
-      userAgent: req.headers['user-agent'] || '',
     });
+    this.cleanup();
+    return this.getStats();
+  }
 
-    memoryPageViews += 1;
-    cleanupExpiredSessions();
+  recordView(tabId, ip, path) {
+    this.totalPageViews += 1;
+    return this.ping(tabId, ip, path);
+  }
 
-    const activeCount = Math.max(1, activeSessions.size);
-    return res.status(200).json({
-      success: true,
-      liveOnlineUsers: activeCount,
-      totalPageViews: Math.max(activeCount, memoryPageViews),
-    });
+  remove(tabId, ip) {
+    const key = tabId || ip;
+    if (key) {
+      this.sessions.delete(key);
+    }
+    this.cleanup();
+  }
+
+  getStats() {
+    this.cleanup();
+    const count = this.sessions.size;
+    return {
+      liveOnlineUsers: Math.max(1, count),
+      totalPageViews: Math.max(count, this.totalPageViews),
+    };
+  }
+}
+
+export const presenceHub = new PresenceEngine();
+
+export const recordPageView = (req, res) => {
+  try {
+    const { tabId, sessionId, path = '/' } = req.body || {};
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    const key = tabId || sessionId || clientIp;
+
+    const stats = presenceHub.recordView(key, clientIp, path);
+    return res.status(200).json({ success: true, ...stats });
   } catch (err) {
-    return res.status(200).json({
-      success: true,
-      liveOnlineUsers: Math.max(1, activeSessions.size),
-      totalPageViews: memoryPageViews,
-    });
+    return res.status(200).json({ success: true, ...presenceHub.getStats() });
   }
 };
 
-export const recordHeartbeat = async (req, res) => {
+export const recordHeartbeat = (req, res) => {
   try {
-    const { sessionId, path = '/', tabId } = req.body || {};
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown_ip';
-    const key = sessionId || (tabId ? `${clientIp}_${tabId}` : clientIp);
+    const { tabId, sessionId, path = '/' } = req.body || {};
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    const key = tabId || sessionId || clientIp;
 
-    activeSessions.set(key, {
-      ip: clientIp,
-      path,
-      lastSeen: Date.now(),
-      userAgent: req.headers['user-agent'] || '',
-    });
-
-    cleanupExpiredSessions();
-
-    const activeCount = Math.max(1, activeSessions.size);
-    return res.status(200).json({
-      success: true,
-      liveOnlineUsers: activeCount,
-      totalPageViews: Math.max(activeCount, memoryPageViews),
-    });
+    const stats = presenceHub.ping(key, clientIp, path);
+    return res.status(200).json({ success: true, ...stats });
   } catch (err) {
-    return res.status(200).json({ success: true, liveOnlineUsers: Math.max(1, activeSessions.size) });
+    return res.status(200).json({ success: true, ...presenceHub.getStats() });
+  }
+};
+
+export const recordLeave = (req, res) => {
+  try {
+    let body = req.body;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch(e) {}
+    }
+    const { tabId, sessionId } = body || {};
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    presenceHub.remove(tabId || sessionId, clientIp);
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    return res.status(200).json({ success: true });
   }
 };
 
 export const getLiveTelemetryStats = () => {
-  cleanupExpiredSessions();
-  const activeCount = Math.max(1, activeSessions.size);
-  return {
-    liveOnlineUsers: activeCount,
-    totalPageViews: Math.max(activeCount, memoryPageViews),
-  };
+  return presenceHub.getStats();
+};
+
+export const getLiveTelemetry = (req, res) => {
+  return res.status(200).json({ success: true, ...presenceHub.getStats() });
 };

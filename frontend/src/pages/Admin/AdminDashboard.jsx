@@ -84,12 +84,13 @@ export default function AdminDashboard() {
     if (!silent) setLoading(true);
     setIsRefreshing(true);
     try {
-      // Parallel resilient fetching across all core pipelines
-      const [statsRes, reqsRes, leadsRes, callbacksRes] = await Promise.all([
+      // Parallel resilient fetching across all core pipelines & telemetry hub
+      const [statsRes, reqsRes, leadsRes, callbacksRes, telRes] = await Promise.all([
         api.get('/admin/stats').catch(() => null),
         api.get('/requirements/admin/all').catch(() => null),
         api.get('/queries').catch(() => null),
-        api.get('/callbacks').catch(() => null)
+        api.get('/callbacks').catch(() => null),
+        api.get('/telemetry/stats').catch(() => null)
       ]);
 
       const allReqs = (reqsRes?.requirements && reqsRes.requirements.length > 0)
@@ -195,9 +196,10 @@ export default function AdminDashboard() {
       }
       setTypeDistribution(calculatedTypes);
 
-      if (statsRes?.telemetry) {
-        setLiveVisitors(statsRes.telemetry.liveOnlineUsers || 1);
-        setTodayViews(statsRes.telemetry.totalPageViews || 1);
+      const telData = telRes || statsRes?.telemetry;
+      if (telData) {
+        setLiveVisitors(telData.liveOnlineUsers || 1);
+        setTodayViews(telData.totalPageViews || 1);
       }
     } catch (err) {
       console.warn('Error fetching admin dashboard stats:', err);
