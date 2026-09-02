@@ -63,26 +63,27 @@ CURRENT CONVERSATION PARTNER:
   const foundersList = Array.isArray(adminDetails.founders) ? adminDetails.founders : [];
   const founderCount = adminDetails.founderCount || foundersList.length || 1;
   const showFounders = adminDetails.showFoundersToAi ?? true;
+  const officialSupportEmail = adminDetails.contactEmail || settings.supportEmail || 'stackaddacontact@gmail.com';
 
   if (showFounders && foundersList.length > 0) {
     const formattedFounders = foundersList
       .filter((f) => f && f.name)
       .map((f, i) => {
-        const parts = [`  ${i + 1}. ${f.name}`];
-        if (f.role) parts.push(`Role: ${f.role}`);
+        const parts = [`  ${i + 1}. ${f.name} (${f.role || (i === 0 ? 'Founder & Lead Architect / Boss' : 'Co-Founder')})`];
         if (f.bio) parts.push(`Bio: ${f.bio}`);
         if (f.instagram) parts.push(`Instagram: ${f.instagram}`);
         if (f.linkedin) parts.push(`LinkedIn: ${f.linkedin}`);
-        if (f.email) parts.push(`Email: ${f.email}`);
+        if (f.email) parts.push(`Direct Email: ${f.email}`);
+        if (f.phone) parts.push(`Phone: ${f.phone}`);
         return parts.join(' | ');
       })
       .join('\n');
 
-    foundersBlock = `- Total Founders: ${founderCount}
-- Founder Profiles & Handles:
-${formattedFounders || `  - ${adminDetails.founderName || 'Soham Dutta & Core Team'}`}`;
+    foundersBlock = `- Total Founders / Leadership Count: ${founderCount}
+- Founders & Co-Founders Directory:
+${formattedFounders}`;
   } else {
-    foundersBlock = `- Core Leadership: ${adminDetails.founderName || 'LOCAL2BRAND Founders & Core Team'}`;
+    foundersBlock = `- Core Leadership / Boss: ${adminDetails.founderName || 'Soham Dutta (Founder & Lead Architect) & Core Engineering Team'}`;
   }
 
   // Build Admin & Company Showable Details block
@@ -92,7 +93,8 @@ OFFICIAL COMPANY, FOUNDERS & CONTACT DETAILS:
 - Brand Name: ${brandName} (${domain})
 - Tagline: ${tagline}
 ${foundersBlock}
-- Official Support Email: ${adminDetails.contactEmail || settings.supportEmail || 'stackaddacontact@gmail.com'}
+- Official Verified Support Email: ${officialSupportEmail}
+- Direct Founder Email: sohamduttabwn@gmail.com
 - Official Public Phone: ${adminDetails.contactPhone || settings.displayPhone || '+91 98765 43210'}
 - Official Public WhatsApp: ${adminDetails.whatsappSupport || '+91 98765 43210'}
 - Official Instagram: ${adminDetails.instagramHandle || settings.socialLinks?.instagramHandle || '@local2brand'} (${adminDetails.instagram || settings.socialLinks?.instagram || 'https://instagram.com/local2brand'})
@@ -132,18 +134,20 @@ CORE OFFERINGS & PACKAGES:
 4. Direct Actions You Can Perform:
    - "Instant Callback": If the user provides a phone number or asks for a call, our backend auto-registers an instant callback request and alerts the founders (sohamduttabwn@gmail.com & stackaddacontact@gmail.com).
    - "Project Requirement Submission": If the user describes their project (business name, features, website type, budget) and provides phone/email, reassure them that their project order is recorded and can be tracked anytime with their Order ID in the Client Portal!
-   - Contact Email: stackaddacontact@gmail.com${servicesBlock}${demosBlock}
+   - Official Verified Email: ${officialSupportEmail} (DO NOT use fake or obsolete emails like hello@local2brand.com)${servicesBlock}${demosBlock}
 ========================================
 
 ${businessKnowledge ? `========================================\nADMIN CUSTOM BUSINESS KNOWLEDGE BASE:\n${businessKnowledge}\n========================================\n` : ''}
 ${customInstructions ? `========================================\nADMIN CUSTOM INSTRUCTIONS & DIRECTIVES:\n${customInstructions}\n========================================\n` : ''}
 
 CRITICAL OPERATIONAL & COMMUNICATION RULES:
-1. Complete, Crisp & Structured (পরিপূর্ণ, স্পষ্ট ও পরিপাটি): Always provide complete responses. Never stop midway. Use 2-4 clean bullet points and bold key details.
-2. User Awareness: If the user is logged in, you MUST know and acknowledge their details (name, email, role) when asked.
-3. Multilingual Fluency: If the user communicates in Bengali (বাংলা / বাংলিশ), reply in sweet, clean, and concise Bengali. If in English, reply in crisp, professional English.
-4. Privacy & Security: NEVER reveal internal database connection strings, JWT secrets, passwords, or server environment variables.
-5. Action-Oriented: Always offer clear next steps (e.g. promo code INDIA2025, 15-minute callback request, or viewing live demo templates).`;
+1. Founders & Boss Identity: When anyone asks "who is your boss?", "who is the owner?", "founder ke?", "founder details ki?", "co-founder ke?", or requests Instagram/emails, introduce our founder(s) and co-founders proudly with their exact names, roles, and verified email (${officialSupportEmail} / sohamduttabwn@gmail.com).
+2. Email Integrity: NEVER output or hallucinate non-existent emails (such as hello@local2brand.com). ONLY use "${officialSupportEmail}" or "sohamduttabwn@gmail.com".
+3. Complete, Crisp & Structured (পরিপূর্ণ, স্পষ্ট ও পরিপাটি): Always provide complete responses. Never stop midway. Use 2-4 clean bullet points and bold key details.
+4. User Awareness: If the user is logged in, you MUST know and acknowledge their details (name, email, role) when asked.
+5. Multilingual Fluency: If the user communicates in Bengali (বাংলা / বাংলিশ), reply in sweet, clean, and concise Bengali. If in English, reply in crisp, professional English.
+6. Privacy & Security: NEVER reveal internal database connection strings, JWT secrets, passwords, or server environment variables.
+7. Action-Oriented: Always offer clear next steps (e.g. promo code INDIA2025, 15-minute callback request, or viewing live demo templates).`;
 }
 
 // Fetch helper with timeout
@@ -481,10 +485,37 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
   const lowerMsg = lastUserMsg.toLowerCase();
   const userName = contextOptions.currentUser?.name ? ` ${contextOptions.currentUser.name}` : '';
 
+  const adminDetails = contextOptions.settings?.aiSettings?.adminShowableDetails || {};
+  const supportEmail = adminDetails.contactEmail || contextOptions.settings?.supportEmail || 'stackaddacontact@gmail.com';
+  const phone = adminDetails.contactPhone || contextOptions.settings?.displayPhone || '+91 98765 43210';
+  const whatsapp = adminDetails.whatsappSupport || '+91 98765 43210';
+  const founders = Array.isArray(adminDetails.founders) && adminDetails.founders.length > 0
+    ? adminDetails.founders
+    : [{ name: 'Soham Dutta', role: 'Founder & Lead Architect', email: 'sohamduttabwn@gmail.com', instagram: 'https://instagram.com/sohamart' }];
+
+  const formattedFoundersBn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder' : 'Co-Founder')}) • ✉️ Email: \`${f.email || supportEmail}\`${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}`).join('\n');
+  const formattedFoundersEn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder' : 'Co-Founder')}) • ✉️ Email: \`${f.email || supportEmail}\`${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}`).join('\n');
+
   // Bengali Detection
-  const isBengali = /[\u0980-\u09FF]/.test(lastUserMsg) || /kemon|ki|lagbe|koto|kore|hobe|dorkar|valo|bhalo|bhai|taka/i.test(lastUserMsg);
+  const isBengali = /[\u0980-\u09FF]/.test(lastUserMsg) || /kemon|ki|lagbe|koto|kore|hobe|dorkar|valo|bhalo|bhai|taka|ke|boss|founder|owner|naam|nam/i.test(lastUserMsg);
 
   if (isBengali) {
+    if (/boss|founder|owner|creator|malik|ke banieche|koto jon|soham|co-founder|founder der/i.test(lowerMsg)) {
+      return {
+        text: `নমস্কার${userName}! 🚀 **${brandName}**-এর প্রতিষ্ঠাতা ও লিডারশিপ টিম:\n\n${formattedFoundersBn}\n\n- 📧 **অফিশিয়াল সাপোর্ট ইমেইল**: \`${supportEmail}\`\n- 📞 **ফোন / WhatsApp**: \`${whatsapp}\`\n- 📍 **অফিস**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n\nআপনি চাইলে সরাসরি আমাদের ফাউন্ডারদের সাথে আলোচনা করতে ইনস্ট্যান্ট কল রিকোয়েস্ট দিতে পারেন!`,
+        provider: 'L2B Smart Consultant',
+        model: 'bengali-expert-v2'
+      };
+    }
+
+    if (/email|mail|contact|phone|number|jogajog|thikana|address/i.test(lowerMsg)) {
+      return {
+        text: `নমস্কার${userName}! 🚀 **${brandName}**-এর ভেরিফাইড যোগাযোগের মাধ্যম:\n\n- ✉️ **অফিশিয়াল সাপোর্ট ইমেইল**: \`${supportEmail}\`\n- ✉️ **ডিরেক্ট ফাউন্ডার ইমেইল**: \`sohamduttabwn@gmail.com\`\n- 📞 **কলিং ও WhatsApp**: \`${phone}\`\n- 📍 **অফিস / হাব**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n- ⏰ **কাজের সময়**: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}`,
+        provider: 'L2B Smart Consultant',
+        model: 'bengali-expert-v2'
+      };
+    }
+
     if (/pricing|price|cost|khoroch|taka|dam|package|প্যাকেজ|খরচ|দাম|টাকা/i.test(lowerMsg)) {
       return {
         text: `নমস্কার${userName}! 🚀 **${brandName}**-এ আপনাকে স্বাগতম।\n\nআমাদের ওয়েবসাইট প্যাকেজ ও মূল্য তালিকা:\n- ⚡ **Starter (৪৮ ঘণ্টা রেডি ওয়েবসাইট)**: **${contextOptions.settings?.startingPriceInr || '₹9,999'}** / **${contextOptions.settings?.startingPriceUsd || '$399'}**\n- 💼 **Professional (ফুল কাস্টম UI/UX + WhatsApp Shop)**: **₹24,999**\n- 💎 **Enterprise (কাস্টম ওয়েব অ্যাপ ও পোর্টাল)**: কাস্টম কোটেশন\n\n🎁 **স্পেশাল লঞ্চ অফার**: \`INDIA2025\` কোড ব্যবহার করলে পাবেন ফ্ল্যাট **20% ছাড়** + ফ্রি ডোমেন ও SSL!`,
@@ -492,6 +523,7 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
         model: 'bengali-expert-v2'
       };
     }
+
     return {
       text: `নমস্কার${userName}! 🚀 **${brandName}** এআই কনসালটেন্ট হিসেবে আমি আপনাকে সাহায্য করতে প্রস্তুত।\n\n- ⚡ **৪৮ ঘণ্টার দ্রুত ডেলিভারি**: ডেমো ওয়েবসাইট শুরু মাত্র **${contextOptions.settings?.startingPriceInr || '₹9,999'}** থেকে।\n- 🎁 **২০% ডিসকাউন্ট**: প্রোমোকোড \`INDIA2025\` ব্যবহার করুন।\n- 📞 **সরাসরি কল রিকোয়েস্ট**: আপনার ফোন নম্বর দিলে আমাদের ইঞ্জিনিয়াররা ১৫ মিনিটের মধ্যে যোগাযোগ করবেন।\n\nআপনার ব্যবসার ধরন বা চাহিদা সম্পর্কে জানান!`,
       provider: 'L2B Smart Consultant',
@@ -500,6 +532,22 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
   }
 
   // English Responses
+  if (/boss|founder|owner|creator|who made|how many founders|co-founder|soham/i.test(lowerMsg)) {
+    return {
+      text: `Hello${userName}! 🚀 Here are the founders & leadership team behind **${brandName}**:\n\n${formattedFoundersEn}\n\n- 📧 **Official Support Email**: \`${supportEmail}\`\n- 📞 **Phone / WhatsApp**: \`${whatsapp}\`\n- 📍 **HQ Location**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n\nFeel free to schedule a direct consultation call with our founders anytime!`,
+      provider: 'L2B Smart Consultant',
+      model: 'enterprise-v2'
+    };
+  }
+
+  if (/email|mail|contact|phone|number|reach|address|location/i.test(lowerMsg)) {
+    return {
+      text: `Hello${userName}! 🚀 Here are the official verified contact details for **${brandName}**:\n\n- ✉️ **Support Email**: \`${supportEmail}\`\n- ✉️ **Direct Founder Email**: \`sohamduttabwn@gmail.com\`\n- 📞 **Calling & WhatsApp**: \`${phone}\`\n- 📍 **HQ Hub**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n- ⏰ **Operating Hours**: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}`,
+      provider: 'L2B Smart Consultant',
+      model: 'enterprise-v2'
+    };
+  }
+
   if (/pricing|price|cost|how much|package|tier/i.test(lowerMsg)) {
     return {
       text: `Hello${userName}! 🚀 Here is an overview of **${brandName}** packages:\n\n- ⚡ **Starter Package**: Starting at **${contextOptions.settings?.startingPriceInr || '₹9,999'} / ${contextOptions.settings?.startingPriceUsd || '$399'}** (48-72h launch, mobile responsive, WhatsApp orders).\n- 💼 **Professional Package**: **₹24,999** (Bespoke Glassmorphic UI, dynamic CMS, SEO).\n- 💎 **Custom Enterprise**: Full-stack SaaS, e-commerce, and advanced logic.\n\n🎁 Use promo code \`INDIA2025\` for an instant **20% DISCOUNT** + Free SSL & Domain!`,

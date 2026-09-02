@@ -7,7 +7,7 @@ export const siteConfig = {
   whatsappNumber: "919876543210",
   displayWhatsApp: "+91 98765 43210",
   phone: "+91 98765 43210",
-  email: "hello@local2brand.com",
+  email: "stackaddacontact@gmail.com",
   
   turnaroundTime: "48 Hours",
   startingPrice: "$399",

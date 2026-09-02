@@ -19,7 +19,7 @@ const siteSettingsSchema = new mongoose.Schema(
     },
     supportEmail: {
       type: String,
-      default: 'hello@local2brand.com',
+      default: 'stackaddacontact@gmail.com',
       trim: true,
     },
     displayPhone: {

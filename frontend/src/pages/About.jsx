@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Globe2, ShieldCheck, Zap, Heart, CheckCircle2, ArrowRight, Instagram, Linkedin, Mail, Users } from 'lucide-react';
+import { Sparkles, Globe2, ShieldCheck, Zap, Heart, CheckCircle2, ArrowRight, Mail, Users } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
 import { siteConfig } from '../config/siteConfig';
@@ -9,6 +9,22 @@ import FinalCTA from '../components/home/FinalCTA';
 import { useOrderModal } from '../context/OrderModalContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import AshokaChakra from '../components/common/AshokaChakra';
+
+const InstagramIcon = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+  </svg>
+);
+
+const LinkedinIcon = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect width="4" height="12" x="2" y="9" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+);
 
 export default function About() {
   const { openOrderModal } = useOrderModal();
@@ -178,7 +194,7 @@ export default function About() {
                         className="p-2 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-600 hover:bg-pink-100 dark:hover:bg-pink-900/60 transition-colors"
                         title="Instagram Profile"
                       >
-                        <Instagram className="w-4 h-4" />
+                        <InstagramIcon className="w-4 h-4" />
                       </a>
                     )}
                     {founder.linkedin && (
@@ -189,7 +205,7 @@ export default function About() {
                         className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
                         title="LinkedIn Profile"
                       >
-                        <Linkedin className="w-4 h-4" />
+                        <LinkedinIcon className="w-4 h-4" />
                       </a>
                     )}
                     {founder.email && (

@@ -4,8 +4,8 @@
     "brandName": "LOCAL2BRAND",
     "domain": "local2brand.com",
     "tagline": "Build Local. Think Global.",
-    "supportEmail": "hello@local2brand.com",
-    "displayPhone": "",
+    "supportEmail": "stackaddacontact@gmail.com",
+    "displayPhone": "+91 98765 43210",
     "turnaroundTime": "48 Hours",
     "startingPriceUsd": "$399",
     "startingPriceInr": "₹9,999",
@@ -37,15 +37,30 @@
     "updatedBy": "6a9551f5ef178dc4ce9260cf",
     "aiSettings": {
       "enabled": true,
-      "customInstructions": "",
-      "businessKnowledge": "",
+      "customInstructions": "Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount.",
+      "businessKnowledge": "LOCAL2BRAND builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.",
       "adminShowableDetails": {
-        "founderName": "",
-        "contactPhone": "",
-        "contactEmail": "",
-        "officeLocation": "",
-        "workingHours": "",
-        "whatsappSupport": ""
+        "founderName": "Soham Dutta (Founder & Lead Architect) & Founding Team",
+        "founderCount": 1,
+        "showFoundersToAi": true,
+        "founders": [
+          {
+            "name": "Soham Dutta",
+            "role": "Founder & Lead Architect",
+            "bio": "Full-Stack Engineer & Product Designer leading high-performance web systems.",
+            "instagram": "https://instagram.com/sohamart",
+            "linkedin": "",
+            "email": "sohamduttabwn@gmail.com",
+            "phone": "+91 98765 43210"
+          }
+        ],
+        "contactPhone": "+91 98765 43210",
+        "contactEmail": "stackaddacontact@gmail.com",
+        "officeLocation": "Kolkata & Bangalore, India",
+        "workingHours": "Monday - Saturday: 10:00 AM - 8:00 PM IST",
+        "whatsappSupport": "+91 98765 43210",
+        "instagram": "https://instagram.com/local2brand",
+        "instagramHandle": "@local2brand"
       }
     }
   }
