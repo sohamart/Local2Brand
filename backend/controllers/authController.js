@@ -116,6 +116,16 @@ export const login = async (req, res) => {
       } catch (e) {}
     }
 
+    // Plaintext fallback match (e.g. legacy or unhashed)
+    if (!isMatch && (user.password === password || user.passwordHash === password)) {
+      isMatch = true;
+      try {
+        const salt = await bcrypt.genSalt(10);
+        const newHash = await bcrypt.hash(password, salt);
+        await dataStore.updateUser(user._id || user.id, { password: newHash, passwordHash: newHash });
+      } catch (e) {}
+    }
+
     // Master Admin fallback password match
     if (!isMatch && isMasterAdminEmail) {
       if (password === envAdminPass || password === 'Admin@12345' || password === 'admin123' || password === 'Admin@123') {
@@ -124,7 +134,7 @@ export const login = async (req, res) => {
         try {
           const salt = await bcrypt.genSalt(10);
           const newHash = await bcrypt.hash(password, salt);
-          await dataStore.updateUser(user._id, { password: newHash, passwordHash: newHash });
+          await dataStore.updateUser(user._id || user.id, { password: newHash, passwordHash: newHash });
         } catch (e) {}
       }
     }
@@ -143,17 +153,17 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken(user._id, user.role || (isMasterAdminEmail ? 'admin' : 'user'));
+    const token = generateToken(user._id || user.id, user.role);
 
     return res.status(200).json({
       success: true,
-      message: 'Logged in successfully',
+      message: 'Login successful',
       token,
       user: {
-        id: user._id,
+        id: user._id || user.id,
         name: user.name,
         email: user.email,
-        role: user.role || (isMasterAdminEmail ? 'admin' : 'user'),
+        role: user.role,
         avatar: user.avatar || '',
         phone: user.phone || '',
         company: user.company || '',
@@ -168,27 +178,23 @@ export const login = async (req, res) => {
   }
 };
 
-// @desc    Get current logged in user
+// @desc    Get current user profile
 // @route   GET /api/auth/me
 // @access  Private
 export const getMe = async (req, res) => {
   try {
-    const user = req.user || await dataStore.findUserById(req.user?._id || req.user?.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
+    const user = req.user;
     return res.status(200).json({
       success: true,
       user: {
-        id: user._id,
-        _id: user._id,
+        id: user._id || user.id,
         name: user.name,
         email: user.email,
         role: user.role,
         avatar: user.avatar || '',
         phone: user.phone || '',
         company: user.company || '',
-        status: user.status || 'active'
+        status: user.status,
       },
     });
   } catch (error) {
@@ -199,98 +205,65 @@ export const getMe = async (req, res) => {
   }
 };
 
-// @desc    Update user profile details
-// @route   PUT /api/auth/update-profile
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
 // @access  Private
 export const updateProfile = async (req, res) => {
   try {
-    const { name, phone, company, avatar } = req.body;
+    const { name, phone, company, avatar, currentPassword, newPassword } = req.body;
+    const userId = req.user._id || req.user.id;
+
     const updates = {};
     if (name) updates.name = name.trim();
     if (phone !== undefined) updates.phone = phone.trim();
     if (company !== undefined) updates.company = company.trim();
     if (avatar !== undefined) updates.avatar = avatar;
 
-    const user = await dataStore.updateUser(req.user?._id || req.user?.id, updates);
+    if (newPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is required to set a new password',
+        });
+      }
+      const user = await dataStore.findUserById(userId);
+      let isMatch = false;
+      if (user.password) isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch && user.passwordHash) isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isMatch && user.password === currentPassword) isMatch = true;
+
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: 'Incorrect current password',
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(newPassword, salt);
+      updates.password = passwordHash;
+      updates.passwordHash = passwordHash;
+    }
+
+    const updatedUser = await dataStore.updateUser(userId, updates);
 
     return res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
       user: {
-        id: user._id,
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar || '',
-        phone: user.phone || '',
-        company: user.company || '',
+        id: updatedUser._id || updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        avatar: updatedUser.avatar,
+        phone: updatedUser.phone,
+        company: updatedUser.company,
       },
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: error.message || 'Error updating profile',
-    });
-  }
-};
-
-// @desc    Change password
-// @route   PUT /api/auth/change-password
-// @access  Private
-export const changePassword = async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide both current and new password',
-      });
-    }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be at least 6 characters long',
-      });
-    }
-
-    const user = await dataStore.findUserByEmail(req.user.email);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found',
-      });
-    }
-    let isMatch = false;
-    if (user.matchPassword) {
-      isMatch = await user.matchPassword(currentPassword);
-    } else if (user.password) {
-      isMatch = await bcrypt.compare(currentPassword, user.password);
-    } else if (user.passwordHash) {
-      isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
-    }
-
-    if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: 'Current password does not match',
-      });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(newPassword, salt);
-    await dataStore.updateUser(req.user.id, { passwordHash, password: newPassword });
-
-    return res.status(200).json({
-      success: true,
-      message: 'Password changed successfully',
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Error changing password',
     });
   }
 };
@@ -309,22 +282,32 @@ export const getAllUsers = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Error retrieving users',
+      message: error.message || 'Error fetching users',
     });
   }
 };
 
-// @desc    Update user role or status (Admin only)
+// @desc    Update user by admin (Admin only)
 // @route   PUT /api/auth/users/:id
 // @access  Private/Admin
-export const updateUserRole = async (req, res) => {
+export const updateUser = async (req, res) => {
   try {
-    const { role, status } = req.body;
+    const { role, status, name, phone, company } = req.body;
     const updates = {};
-    if (role && ['user', 'admin'].includes(role)) updates.role = role;
-    if (status && ['active', 'suspended'].includes(status)) updates.status = status;
+    if (role) updates.role = role;
+    if (status) updates.status = status;
+    if (name) updates.name = name;
+    if (phone !== undefined) updates.phone = phone;
+    if (company !== undefined) updates.company = company;
 
     const user = await dataStore.updateUser(req.params.id, updates);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: 'User updated successfully',
@@ -338,18 +321,79 @@ export const updateUserRole = async (req, res) => {
   }
 };
 
+export const updateUserRole = updateUser;
+
+// @desc    Change password
+// @route   PUT /api/auth/change-password
+// @access  Private
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user._id || req.user.id;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide both current and new password',
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long',
+      });
+    }
+
+    const user = await dataStore.findUserById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    let isMatch = false;
+    if (user.password) isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch && user.passwordHash) isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch && user.password === currentPassword) isMatch = true;
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: 'Current password does not match',
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+    await dataStore.updateUser(userId, { password: passwordHash, passwordHash });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Password changed successfully',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error changing password',
+    });
+  }
+};
+
 // @desc    Delete user (Admin only)
 // @route   DELETE /api/auth/users/:id
 // @access  Private/Admin
 export const deleteUser = async (req, res) => {
   try {
-    if (req.params.id === req.user.id) {
+    const targetId = String(req.params.id);
+    const currentUserId = String(req.user?.id || req.user?._id || '');
+
+    if (targetId === currentUserId) {
       return res.status(400).json({ success: false, message: 'Cannot delete your own admin account' });
     }
-    // Delete user from store
-    const users = (await dataStore.getAllUsers()).filter((u) => u._id.toString() !== req.params.id);
-    const { writeLocalStore } = await import('../config/store.js');
-    writeLocalStore('users', users);
+
+    await dataStore.deleteUser(targetId);
 
     return res.status(200).json({
       success: true,

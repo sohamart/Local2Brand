@@ -217,11 +217,16 @@ export const dataStore = {
     if (!email) return null;
     const cleanEmail = email.toLowerCase().trim();
     if (isDbConnected()) {
-      const { User } = await import('../models/User.js');
-      const escaped = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return await User.findOne({
-        email: { $regex: new RegExp(`^${escaped}$`, 'i') }
-      }).select('+password');
+      try {
+        const { User } = await import('../models/User.js');
+        const escaped = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const dbUser = await User.findOne({
+          email: { $regex: new RegExp(`^${escaped}$`, 'i') }
+        }).select('+password');
+        if (dbUser) return dbUser;
+      } catch (err) {
+        console.warn('MongoDB findUserByEmail notice:', err.message);
+      }
     }
     const users = readLocalStore('users') || [];
     return users.find((u) => u && u.email && u.email.toLowerCase().trim() === cleanEmail) || null;
@@ -229,18 +234,20 @@ export const dataStore = {
 
   async findUserById(id) {
     if (!id) return null;
+    const cleanId = String(id).trim();
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
-        if (mongoose.Types.ObjectId.isValid(id)) {
-          const user = await User.findById(id).select('-password');
+        if (mongoose.Types.ObjectId.isValid(cleanId)) {
+          const user = await User.findById(cleanId).select('-password');
           if (user) return user;
         }
         // Fallback search by ID or email
         const userByQuery = await User.findOne({
           $or: [
+            { _id: cleanId },
+            { email: cleanId.toLowerCase() },
             { email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim() },
-            { role: 'admin' },
           ],
         }).select('-password');
         if (userByQuery) return userByQuery;
@@ -249,25 +256,65 @@ export const dataStore = {
       }
     }
     const users = readLocalStore('users') || [];
-    const user = users.find((u) => u && (String(u._id || u.id) === String(id) || (id === 'admin_default_id_001' && u.role === 'admin')));
+    const user = users.find((u) => u && (String(u._id || u.id) === cleanId || (cleanId === 'admin_default_id_001' && u.role === 'admin')));
     if (!user) return null;
     const { password, passwordHash, ...rest } = user;
     return rest;
   },
 
   async createUser(userData) {
-    if (isDbConnected()) {
-      const { User } = await import('../models/User.js');
-      return await User.create(userData);
-    }
-    const users = readLocalStore('users');
+    const cleanEmail = userData.email.toLowerCase().trim();
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(userData.password, salt);
+
+    if (isDbConnected()) {
+      try {
+        const { User } = await import('../models/User.js');
+        // Remove any old conflicting record with this email
+        await User.deleteMany({ email: cleanEmail });
+        const created = await User.create({
+          name: userData.name,
+          email: cleanEmail,
+          password: userData.password,
+          role: userData.role || 'user',
+          avatar: userData.avatar || '',
+          phone: userData.phone || '',
+          company: userData.company || '',
+          status: 'active',
+        });
+
+        // Sync local store
+        const users = readLocalStore('users') || [];
+        const filtered = users.filter((u) => u && u.email && u.email.toLowerCase().trim() !== cleanEmail);
+        filtered.push({
+          _id: created._id.toString(),
+          id: created._id.toString(),
+          name: userData.name,
+          email: cleanEmail,
+          password: passwordHash,
+          passwordHash,
+          role: userData.role || 'user',
+          avatar: userData.avatar || '',
+          phone: userData.phone || '',
+          company: userData.company || '',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+        });
+        writeLocalStore('users', filtered);
+        return created;
+      } catch (err) {
+        console.warn('MongoDB User.create notice, creating locally:', err.message);
+      }
+    }
+
+    const users = readLocalStore('users') || [];
+    const filtered = users.filter((u) => u && u.email && u.email.toLowerCase().trim() !== cleanEmail);
 
     const newUser = {
       _id: 'usr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
       name: userData.name,
-      email: userData.email.toLowerCase().trim(),
+      email: cleanEmail,
+      password: passwordHash,
       passwordHash,
       role: userData.role || 'user',
       avatar: userData.avatar || '',
@@ -276,19 +323,20 @@ export const dataStore = {
       status: 'active',
       createdAt: new Date().toISOString(),
     };
-    users.push(newUser);
-    writeLocalStore('users', users);
-    const { passwordHash: _, ...safeUser } = newUser;
+    filtered.push(newUser);
+    writeLocalStore('users', filtered);
+    const { passwordHash: _, password: __, ...safeUser } = newUser;
     return safeUser;
   },
 
   async updateUser(id, updates) {
+    const cleanId = String(id).trim();
     let mongoUpdated = null;
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
-        if (id && mongoose.Types.ObjectId.isValid(id)) {
-          mongoUpdated = await User.findByIdAndUpdate(id, { $set: updates }, { new: true });
+        if (mongoose.Types.ObjectId.isValid(cleanId)) {
+          mongoUpdated = await User.findByIdAndUpdate(cleanId, { $set: updates }, { new: true });
         }
         if (!mongoUpdated) {
           mongoUpdated = await User.findOneAndUpdate(
@@ -302,11 +350,11 @@ export const dataStore = {
       }
     }
     const users = readLocalStore('users') || [];
-    const index = users.findIndex((u) => u && (String(u._id || u.id) === String(id) || (u.role === 'admin' && (id === 'admin_master_001' || id === 'admin_default_id_001'))));
+    const index = users.findIndex((u) => u && (String(u._id || u.id) === cleanId || (u.role === 'admin' && (cleanId === 'admin_master_001' || cleanId === 'admin_default_id_001'))));
     if (index === -1) {
       const adminUser = {
-        _id: id || 'admin_master_001',
-        id: id || 'admin_master_001',
+        _id: cleanId || 'admin_master_001',
+        id: cleanId || 'admin_master_001',
         name: updates.name || 'LOCAL2BRAND Master Admin',
         email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim(),
         role: 'admin',
@@ -323,6 +371,45 @@ export const dataStore = {
     users[index] = { ...users[index], ...updates, updatedAt: new Date().toISOString() };
     writeLocalStore('users', users);
     return mongoUpdated || users[index];
+  },
+
+  async deleteUser(id) {
+    if (!id) return false;
+    const cleanId = String(id).trim();
+    let targetEmail = null;
+
+    // 1. Identify target email from local store or DB
+    const localUsers = readLocalStore('users') || [];
+    const localTarget = localUsers.find((u) => u && (String(u._id || u.id) === cleanId || (u.email && u.email.toLowerCase() === cleanId.toLowerCase())));
+    if (localTarget?.email) targetEmail = localTarget.email.toLowerCase().trim();
+
+    // 2. Delete from MongoDB
+    if (isDbConnected()) {
+      try {
+        const { User } = await import('../models/User.js');
+        if (mongoose.Types.ObjectId.isValid(cleanId)) {
+          const dbUser = await User.findById(cleanId);
+          if (dbUser?.email) targetEmail = dbUser.email.toLowerCase().trim();
+          await User.findByIdAndDelete(cleanId);
+        }
+        if (targetEmail) {
+          await User.deleteMany({ email: targetEmail });
+        }
+      } catch (err) {
+        console.warn('MongoDB deleteUser notice:', err.message);
+      }
+    }
+
+    // 3. Delete from Local Store
+    const remainingUsers = localUsers.filter((u) => {
+      if (!u) return false;
+      const matchId = String(u._id || u.id) === cleanId;
+      const matchEmail = targetEmail && u.email && u.email.toLowerCase().trim() === targetEmail;
+      return !matchId && !matchEmail;
+    });
+    writeLocalStore('users', remainingUsers);
+
+    return true;
   },
 
   async getAllUsers() {
@@ -342,37 +429,18 @@ export const dataStore = {
       baseUsers = users.map(({ password, passwordHash, ...safe }) => safe);
     }
 
-    // Consolidate verified clients who submitted order requirements
-    try {
-      let requirements = [];
-      if (isDbConnected()) {
-        const { default: Requirement } = await import('../models/Requirement.js');
-        requirements = await Requirement.find().sort({ createdAt: -1 });
-      } else {
-        requirements = readLocalStore('requirements') || [];
-      }
-
-      const existingEmails = new Set(baseUsers.map((u) => (u.email || '').toLowerCase().trim()));
-
-      requirements.forEach((reqDoc) => {
-        const clientEmail = (reqDoc.clientInfo?.email || '').toLowerCase().trim();
-        if (clientEmail && !existingEmails.has(clientEmail)) {
-          existingEmails.add(clientEmail);
-          baseUsers.push({
-            _id: `client_${reqDoc._id || reqDoc.requirementId}`,
-            name: reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Client / Lead',
-            email: clientEmail,
-            role: 'client',
-            phone: reqDoc.clientInfo?.mobile || '',
-            company: reqDoc.clientInfo?.businessName || '',
-            status: 'active',
-            source: 'Order Submission',
-            createdAt: reqDoc.createdAt || new Date().toISOString(),
-          });
-        }
+    // Ensure Master Admin exists in list
+    const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
+    const hasAdmin = baseUsers.some((u) => u.email && u.email.toLowerCase().trim() === adminEmail);
+    if (!hasAdmin) {
+      baseUsers.unshift({
+        _id: 'admin_master_001',
+        name: 'LOCAL2BRAND Master Admin',
+        email: adminEmail,
+        role: 'admin',
+        status: 'active',
+        createdAt: new Date().toISOString(),
       });
-    } catch (e) {
-      console.warn('Client consolidation notice:', e.message);
     }
 
     return baseUsers;
