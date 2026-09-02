@@ -81,6 +81,7 @@ export default function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [isAnnouncementDismissed, setIsAnnouncementDismissed] = useState(false);
+  const [hoveredMoreItem, setHoveredMoreItem] = useState(null);
 
   const dropdownTimerRef = useRef(null);
   const moreDropdownTimerRef = useRef(null);
@@ -198,28 +199,34 @@ export default function Navbar() {
       }
 
       const targetElement = targetKey ? linkRefs.current[targetKey] : null;
+      const dockElement = navContainerRef.current;
 
-      if (targetElement) {
+      if (targetElement && dockElement) {
+        // Measure against the dock with rects, not offsetLeft/offsetTop: the
+        // "More" trigger lives inside a `relative` wrapper, so its offsets are
+        // 0 and would snap the pill back onto "Home".
+        const dock = dockElement.getBoundingClientRect();
+        const target = targetElement.getBoundingClientRect();
         setPillStyle({
-          left: targetElement.offsetLeft,
-          top: targetElement.offsetTop,
-          width: targetElement.offsetWidth,
-          height: targetElement.offsetHeight,
+          left: target.left - dock.left,
+          top: target.top - dock.top,
+          width: target.width,
+          height: target.height,
           opacity: 1,
         });
-      } else {
-        if (hoveredPath === null) {
-          setPillStyle((prev) => ({ ...prev, opacity: 0 }));
-        }
+      } else if (hoveredPath === null) {
+        setPillStyle((prev) => ({ ...prev, opacity: 0 }));
       }
     };
 
     updatePill();
     const frameId = requestAnimationFrame(updatePill);
     const timeoutId = setTimeout(updatePill, 250);
+    window.addEventListener('resize', updatePill);
     return () => {
       cancelAnimationFrame(frameId);
       clearTimeout(timeoutId);
+      window.removeEventListener('resize', updatePill);
     };
   }, [location.pathname, hoveredPath, isScrolled, isMoreActive, moreDropdownOpen]);
 
@@ -380,8 +387,8 @@ export default function Navbar() {
                 {/* MORE DROPDOWN FLOATING CARD */}
                 {moreDropdownOpen && (
                   <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2.5 w-80 z-[9999999] animate-in fade-in zoom-in-95 duration-150">
-                                                            <div className="bg-white dark:bg-zinc-900 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 space-y-1 z-[9999999]">
-                      
+                    <div className="glass-waterdrop-menu rounded-2xl p-2 space-y-1">
+
                       <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 mb-1">
                         <span>Explore Platform</span>
                         <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold">Quick Access</span>
@@ -392,28 +399,49 @@ export default function Navbar() {
                         const isCurrent =
                           location.pathname === item.href ||
                           (item.href !== '/' && location.pathname.startsWith(item.href));
+                        const isHoveredItem = hoveredMoreItem === item.label;
 
                         return (
                           <Link
                             key={item.label}
                             to={item.href}
                             onClick={() => setMoreDropdownOpen(false)}
-                            className={`flex items-start gap-3 p-2.5 rounded-xl transition-all group ${
+                            onMouseEnter={() => setHoveredMoreItem(item.label)}
+                            onMouseLeave={() => setHoveredMoreItem(null)}
+                            className={`relative flex items-start gap-3 p-2.5 rounded-xl transition-all duration-200 group overflow-hidden ${
                               isCurrent
-                                ? 'bg-purple-50/90 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800'
-                                : 'hover:bg-slate-100/80 dark:hover:bg-slate-800/80'
+                                ? 'border border-purple-200 dark:border-purple-800'
+                                : ''
                             }`}
                           >
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-2xs ${item.iconBg}`}>
+                            {/* Liquid pill highlight background */}
+                            <div
+                              className={`absolute inset-0 rounded-xl transition-all duration-200 ease-out ${
+                                isCurrent
+                                  ? 'bg-purple-50/90 dark:bg-purple-950/70'
+                                  : isHoveredItem
+                                  ? 'bg-slate-100 dark:bg-slate-800 scale-100 opacity-100'
+                                  : 'opacity-0 scale-95'
+                              }`}
+                            >
+                              {/* Top gloss line like iOS pill */}
+                              {isHoveredItem && !isCurrent && (
+                                <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent" />
+                              )}
+                            </div>
+
+                            <div className={`relative w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 shadow-2xs ${item.iconBg} ${isHoveredItem ? 'scale-110' : 'scale-100'}`}>
                               <Icon className="w-4 h-4" />
                             </div>
 
-                            <div className="flex-1 min-w-0">
+                            <div className="relative flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-1">
-                                <span className={`text-xs font-bold truncate ${
+                                <span className={`text-xs font-bold truncate transition-colors duration-200 ${
                                   isCurrent
                                     ? 'text-purple-700 dark:text-purple-300'
-                                    : 'text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400'
+                                    : isHoveredItem
+                                    ? 'text-purple-600 dark:text-purple-400'
+                                    : 'text-slate-900 dark:text-white'
                                 }`}>
                                   {item.label}
                                 </span>
