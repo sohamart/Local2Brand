@@ -97,6 +97,8 @@ export default function Navbar() {
   const navContainerRef = useRef(null);
   const dropdownRef = useRef(null);
   const moreRef = useRef(null);
+  const moreListContainerRef = useRef(null);
+  const moreItemRefs = useRef({});
   const headerRef = useRef(null);
   const linkRefs = useRef({});
   const [hoveredPath, setHoveredPath] = useState(null);
@@ -107,10 +109,65 @@ export default function Navbar() {
     height: 0,
     opacity: 0,
   });
+  const [morePillStyle, setMorePillStyle] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+    opacity: 0,
+  });
 
   const isMoreActive = MORE_NAV_LINKS.some(
     (item) => location.pathname === item.href || (item.href !== '/' && location.pathname.startsWith(item.href))
   );
+
+  // Dynamic Liquid Waterdrop Indicator for More Submenu
+  useEffect(() => {
+    if (!moreDropdownOpen) {
+      setMorePillStyle((prev) => (prev.opacity === 0 ? prev : { ...prev, opacity: 0 }));
+      return;
+    }
+
+    const updateMorePill = () => {
+      let targetKey = hoveredMoreItem;
+      if (!targetKey) {
+        const activeLink = MORE_NAV_LINKS.find(
+          (item) =>
+            location.pathname === item.href ||
+            (item.href !== '/' && location.pathname.startsWith(item.href))
+        );
+        if (activeLink) targetKey = activeLink.label;
+      }
+
+      const targetEl = targetKey ? moreItemRefs.current[targetKey] : null;
+      const container = moreListContainerRef.current?.getBoundingClientRect();
+      const target = targetEl?.getBoundingClientRect();
+
+      if (!container || !target || !target.width) {
+        if (!hoveredMoreItem) {
+          setMorePillStyle((prev) => (prev.opacity === 0 ? prev : { ...prev, opacity: 0 }));
+        }
+        return;
+      }
+
+      setMorePillStyle({
+        top: target.top - container.top,
+        left: target.left - container.left,
+        width: target.width,
+        height: target.height,
+        opacity: 1,
+      });
+    };
+
+    updateMorePill();
+    const frameId = requestAnimationFrame(updateMorePill);
+    const timeoutId = setTimeout(updateMorePill, 60);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      clearTimeout(timeoutId);
+    };
+  }, [moreDropdownOpen, hoveredMoreItem, location.pathname]);
 
   // Sync body class for zero-overhead, pure hardware-accelerated CSS page offset
   useEffect(() => {
@@ -397,96 +454,133 @@ export default function Navbar() {
 
                 {/* MORE DROPDOWN FLOATING CARD */}
                 {moreDropdownOpen && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-7 w-80 z-[9999999] animate-in fade-in zoom-in-95 duration-150">
-                    <div className="glass-waterdrop-menu rounded-2xl p-2 space-y-1">
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-5.5 w-84 sm:w-88 z-[9999999] animate-in fade-in zoom-in-95 duration-150">
+                    <div className="glass-waterdrop-menu rounded-2xl p-2 sm:p-2.5 shadow-2xl relative overflow-hidden mt-1">
+                      
+                      {/* Ambient Waterdrop Glow Aura */}
+                      <div className="pointer-events-none absolute -top-12 -left-12 w-36 h-36 bg-purple-500/15 dark:bg-purple-500/25 rounded-full blur-2xl" />
+                      <div className="pointer-events-none absolute -bottom-12 -right-12 w-36 h-36 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-2xl" />
+                      
+                      {/* Top Specular Gloss Reflection Line */}
+                      <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white dark:via-white/60 to-transparent pointer-events-none z-20" />
 
-                      <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 mb-1">
-                        <span>Explore Platform</span>
-                        <span className="text-[9px] text-purple-600 dark:text-purple-400 font-bold">Quick Access</span>
+                      {/* Header */}
+                      <div className="relative z-10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-400 flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 mb-1.5">
+                        <span className="flex items-center gap-1.5">
+                          <Layers className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                          <span>Platform Modules</span>
+                        </span>
+                        <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200/60 dark:border-purple-800/60">
+                          Direct Access
+                        </span>
                       </div>
 
-                      {MORE_NAV_LINKS.map((item) => {
-                        const Icon = item.icon;
-                        const isCurrent =
-                          location.pathname === item.href ||
-                          (item.href !== '/' && location.pathname.startsWith(item.href));
-                        const isHoveredItem = hoveredMoreItem === item.label;
+                      {/* Items Container with Liquid Waterdrop Pill Indicator */}
+                      <div
+                        ref={moreListContainerRef}
+                        onMouseLeave={() => setHoveredMoreItem(null)}
+                        className="relative space-y-1"
+                      >
+                        {/* Dynamic Liquid Waterdrop Moving Pill Indicator */}
+                        <div
+                          className="waterdrop-item-pill waterdrop-item-glass absolute top-0 left-0 z-0 pointer-events-none"
+                          style={{
+                            transform: `translate3d(${morePillStyle.left}px, ${morePillStyle.top}px, 0)`,
+                            width: `${morePillStyle.width}px`,
+                            height: `${morePillStyle.height}px`,
+                            opacity: morePillStyle.opacity,
+                          }}
+                        >
+                          {/* Top gloss line on the moving liquid waterdrop pill */}
+                          <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white dark:via-white/70 to-transparent" />
+                        </div>
 
-                        return (
-                          <Link
-                            key={item.label}
-                            to={item.href}
-                            onClick={() => setMoreDropdownOpen(false)}
-                            onMouseEnter={() => setHoveredMoreItem(item.label)}
-                            onMouseLeave={() => setHoveredMoreItem(null)}
-                            className={`relative flex items-start gap-3 p-2.5 rounded-xl transition-all duration-200 group overflow-hidden ${
-                              isCurrent
-                                ? 'border border-purple-200 dark:border-purple-800'
-                                : ''
-                            }`}
-                          >
-                            {/* Liquid pill highlight background */}
-                            <div
-                              className={`absolute inset-0 rounded-xl transition-all duration-200 ease-out ${
-                                isCurrent
-                                  ? isHoveredItem
-                                    ? 'bg-purple-100/95 dark:bg-purple-900/55'
-                                    : 'bg-purple-50/90 dark:bg-purple-950/70'
-                                  : isHoveredItem
-                                  ? 'bg-slate-900/8 dark:bg-white/10 scale-100 opacity-100'
-                                  : 'opacity-0 scale-95'
+                        {MORE_NAV_LINKS.map((item) => {
+                          const Icon = item.icon;
+                          const isCurrent =
+                            location.pathname === item.href ||
+                            (item.href !== '/' && location.pathname.startsWith(item.href));
+                          const isHoveredItem = hoveredMoreItem === item.label;
+
+                          return (
+                            <Link
+                              key={item.label}
+                              ref={(el) => (moreItemRefs.current[item.label] = el)}
+                              to={item.href}
+                              onClick={() => setMoreDropdownOpen(false)}
+                              onMouseEnter={() => setHoveredMoreItem(item.label)}
+                              className={`relative z-10 flex items-start gap-3 p-2.5 rounded-xl transition-all duration-200 group ${
+                                isCurrent && !hoveredMoreItem
+                                  ? 'border border-purple-300/80 dark:border-purple-600/70 bg-purple-50/70 dark:bg-purple-950/40 shadow-xs'
+                                  : 'border border-transparent'
                               }`}
                             >
-                              {/* Top gloss line like iOS pill */}
-                              {isHoveredItem && !isCurrent && (
-                                <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent" />
-                              )}
-                            </div>
-
-                            <div className={`relative w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-200 shadow-2xs ${item.iconBg} ${isHoveredItem ? 'scale-110' : 'scale-100'}`}>
-                              <Icon className="w-4 h-4" />
-                            </div>
-
-                            <div className="relative flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-1">
-                                <span className={`text-xs font-bold truncate transition-colors duration-200 ${
-                                  isCurrent
-                                    ? 'text-purple-700 dark:text-purple-300'
-                                    : isHoveredItem
-                                    ? 'text-purple-600 dark:text-purple-400'
-                                    : 'text-slate-900 dark:text-white'
-                                }`}>
-                                  {item.label}
-                                </span>
-                                {item.badge && (
-                                  <span className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded-full border shrink-0 ${item.badgeColor}`}>
-                                    {item.badge}
-                                  </span>
-                                )}
+                              <div
+                                className={`relative w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-sm border border-white/80 dark:border-white/10 ${
+                                  item.iconBg
+                                } ${isHoveredItem ? 'scale-110 rotate-3 shadow-md' : 'scale-100'}`}
+                              >
+                                <Icon className="w-4 h-4 transition-transform group-hover:scale-110" />
                               </div>
-                              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate">
-                                {item.desc}
-                              </p>
-                            </div>
-                          </Link>
-                        );
-                      })}
+
+                              <div className="relative flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <span
+                                    className={`text-xs font-bold truncate transition-colors duration-200 ${
+                                      isCurrent
+                                        ? 'text-purple-700 dark:text-purple-300 font-extrabold'
+                                        : isHoveredItem
+                                        ? 'text-purple-600 dark:text-purple-400 font-bold'
+                                        : 'text-slate-800 dark:text-slate-100'
+                                    }`}
+                                  >
+                                    {item.label}
+                                  </span>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    {item.badge && (
+                                      <span
+                                        className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full border shadow-2xs ${item.badgeColor}`}
+                                      >
+                                        {item.badge}
+                                      </span>
+                                    )}
+                                    <ChevronRight
+                                      className={`w-3.5 h-3.5 text-purple-600 dark:text-purple-400 transition-all duration-200 ${
+                                        isHoveredItem
+                                          ? 'opacity-100 translate-x-0'
+                                          : 'opacity-0 -translate-x-1.5'
+                                      }`}
+                                    />
+                                  </div>
+                                </div>
+                                <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate">
+                                  {item.desc}
+                                </p>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
 
                       {/* Bottom Quick Call Consultation Banner */}
-                      <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+                      <div className="pt-2 mt-1.5 border-t border-slate-200/60 dark:border-white/10 relative z-10">
                         <button
                           type="button"
                           onClick={() => {
                             setMoreDropdownOpen(false);
                             openCallbackModal({ topic: 'Direct Founder Strategy Call' });
                           }}
-                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 border border-purple-200/60 dark:border-purple-800/60 text-xs font-bold text-purple-700 dark:text-purple-300 transition-all cursor-pointer group"
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/12 via-indigo-500/12 to-pink-500/12 hover:from-purple-500/22 hover:to-pink-500/22 border border-purple-200/80 dark:border-purple-700/60 text-xs font-bold text-purple-700 dark:text-purple-300 transition-all cursor-pointer group shadow-2xs hover:shadow-xs"
                         >
-                          <span className="flex items-center gap-1.5">
-                            <PhoneCall className="w-3.5 h-3.5 text-emerald-500 animate-pulse" />
+                          <span className="flex items-center gap-2">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <PhoneCall className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                             <span>Request Strategy Call</span>
                           </span>
-                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 text-purple-600 dark:text-purple-400 transition-transform" />
                         </button>
                       </div>
 
@@ -528,11 +622,14 @@ export default function Navbar() {
 
                   {/* Glassmorphic Dropdown Submenu */}
                   {userDropdownOpen && (
-                    <div className="absolute right-0 top-full pt-2 w-56 z-[9999999] animate-in fade-in zoom-in-95 duration-150">
-                      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-200/90 dark:border-slate-800 p-2 space-y-1">
+                    <div className="absolute right-0 top-full pt-5.5 w-56 z-[9999999] animate-in fade-in zoom-in-95 duration-150">
+                      <div className="glass-waterdrop-menu rounded-2xl p-2 space-y-1 relative overflow-hidden shadow-2xl mt-1">
                         
+                        {/* Top Specular Gloss Reflection Line */}
+                        <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white dark:via-white/60 to-transparent pointer-events-none z-20" />
+
                         {/* User Bio Header */}
-                        <div className="p-2.5 border-b border-slate-100 dark:border-slate-800/80">
+                        <div className="p-2.5 border-b border-slate-200/60 dark:border-white/10 relative z-10">
                           <div className="flex items-center justify-between gap-1">
                             <span className="font-extrabold text-xs text-slate-900 dark:text-white truncate block">
                               {user.name}
@@ -555,7 +652,7 @@ export default function Navbar() {
                           <Link
                             to="/admin"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 p-2 rounded-xl text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/60 font-bold text-xs transition-colors"
+                            className="flex items-center gap-2.5 p-2 rounded-xl text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/60 font-bold text-xs transition-colors relative z-10"
                           >
                             <Shield className="w-4 h-4 text-purple-600" />
                             <span>Master Admin Panel</span>
@@ -566,7 +663,7 @@ export default function Navbar() {
                         <Link
                           to="/dashboard"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 text-xs font-semibold transition-colors"
+                          className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 text-xs font-semibold transition-colors relative z-10"
                         >
                           <LayoutDashboard className="w-4 h-4 text-purple-500" />
                           <span>Client Dashboard</span>
@@ -576,7 +673,7 @@ export default function Navbar() {
                         <Link
                           to="/track-order"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 text-xs font-semibold transition-colors"
+                          className="flex items-center gap-2.5 p-2 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 text-xs font-semibold transition-colors relative z-10"
                         >
                           <Compass className="w-4 h-4 text-purple-500" />
                           <span>Track Live Order</span>
@@ -588,7 +685,7 @@ export default function Navbar() {
                             setUserDropdownOpen(false);
                             logout();
                           }}
-                          className="w-full flex items-center gap-2.5 p-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 text-xs font-semibold cursor-pointer transition-colors"
+                          className="w-full flex items-center gap-2.5 p-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 text-xs font-semibold cursor-pointer transition-colors relative z-10"
                         >
                           <LogOut className="w-4 h-4" />
                           <span>Sign Out</span>

@@ -49,8 +49,14 @@ class ApiClient {
 
     const controller = new AbortController();
     const isLongRunning = endpoint.includes('/chat') || endpoint.includes('broadcast') || endpoint.includes('email');
-    const timeoutDuration = options.timeout || (isLongRunning ? 60000 : 15000);
-    const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
+    const timeoutDuration = options.timeout || (isLongRunning ? 60000 : 30000);
+    const timeoutId = setTimeout(() => {
+      try {
+        controller.abort(new Error('Network request timed out. Please check your connection.'));
+      } catch (e) {
+        controller.abort();
+      }
+    }, timeoutDuration);
 
     const config = {
       ...options,
@@ -73,6 +79,11 @@ class ApiClient {
       return data;
     } catch (err) {
       clearTimeout(timeoutId);
+      if (err.name === 'AbortError' || err.message?.includes('aborted')) {
+        const timeoutErr = new Error('Request timed out or was interrupted. Please retry.');
+        timeoutErr.status = 408;
+        throw timeoutErr;
+      }
       console.error(`API Error on [${options.method || 'GET'}] ${endpoint}:`, err.message);
       throw err;
     }
