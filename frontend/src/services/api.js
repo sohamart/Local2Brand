@@ -70,6 +70,12 @@ class ApiClient {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
+        if (res.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+          this.setToken(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('l2b_cached_user');
+          }
+        }
         const error = new Error(data.message || `Request failed with status ${res.status}`);
         error.status = res.status;
         error.data = data;

@@ -39,7 +39,11 @@ export function AuthProvider({ children }) {
             logout(false);
           }
         } catch (err) {
-          console.warn('Session check notice, using cached profile:', err.message);
+          if (err.status === 401 || err.message?.includes('no longer exists') || err.message?.includes('token')) {
+            logout(false);
+          } else {
+            console.warn('Session check notice, using cached profile:', err.message);
+          }
         }
       }
       setLoading(false);

@@ -24,7 +24,13 @@ export const protect = async (req, res, next) => {
       process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026_ultra_safe'
     );
 
-    const user = await dataStore.findUserById(decoded.id);
+    let user = await dataStore.findUserById(decoded.id);
+
+    // If user not found by ID but token has admin role, fallback to master admin
+    if (!user && decoded.role === 'admin') {
+      const adminEmail = (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim();
+      user = await dataStore.findUserByEmail(adminEmail) || await dataStore.findUserByEmail('admin@local2brand.com');
+    }
 
     if (!user) {
       return res.status(401).json({
