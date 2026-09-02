@@ -149,7 +149,7 @@ export const submitRequirement = async (req, res) => {
 // @access  Authenticated / Optional
 export const getMyRequirements = async (req, res) => {
   try {
-    const userId = req.user?._id?.toString();
+    const userId = req.user?._id ? String(req.user._id) : (req.user?.id ? String(req.user.id) : null);
     const userEmail = (req.user?.email || req.query.email || '').toLowerCase().trim();
 
     let requirements = [];
@@ -159,21 +159,28 @@ export const getMyRequirements = async (req, res) => {
         orClauses.push({ user: userId });
       }
       if (userEmail) {
-        orClauses.push({ 'clientInfo.email': { $regex: new RegExp(`^${userEmail}$`, 'i') } });
+        const escaped = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        orClauses.push({ 'clientInfo.email': { $regex: new RegExp(`^${escaped}$`, 'i') } });
       }
 
-      if (orClauses.length === 0) {
-        return res.status(200).json({ success: true, count: 0, requirements: [] });
+      if (orClauses.length > 0) {
+        requirements = await Requirement.find({ $or: orClauses }).sort({ createdAt: -1 });
       }
 
-      requirements = await Requirement.find({ $or: orClauses }).sort({ createdAt: -1 });
+      // If user is admin and has no personal orders, return latest system orders
+      if (requirements.length === 0 && req.user?.role === 'admin') {
+        requirements = await Requirement.find().sort({ createdAt: -1 }).limit(20);
+      }
     } else {
       const allReqs = dataStore.read('requirements') || [];
       requirements = allReqs.filter((r) => {
-        const matchesUser = userId && r.user?.toString() === userId;
+        const matchesUser = userId && String(r.user || '') === userId;
         const matchesEmail = userEmail && r.clientInfo?.email?.toLowerCase().trim() === userEmail;
         return matchesUser || matchesEmail;
       });
+      if (requirements.length === 0 && req.user?.role === 'admin') {
+        requirements = allReqs.slice(0, 20);
+      }
       requirements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 

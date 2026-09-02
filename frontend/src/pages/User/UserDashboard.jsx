@@ -181,7 +181,7 @@ export default function UserDashboard() {
           setTrackedOrder(liveMatch);
         } else if (trackedOrder.requirementId) {
           // If tracked by external ID, fetch single update silently
-          api.get(`/requirements/${trackedOrder.requirementId}`)
+          api.get(`/requirements/${encodeURIComponent(trackedOrder.requirementId)}`)
             .then((res) => {
               if (res?.success && res.requirement) {
                 setTrackedOrder(res.requirement);
@@ -189,9 +189,13 @@ export default function UserDashboard() {
             })
             .catch(() => {});
         }
-      } else if (reqList.length > 0 && !searchParams.get('track')) {
-        // Default to latest requirement
-        setTrackedOrder(reqList[0]);
+      } else if (reqList.length > 0) {
+        const urlTrackId = searchParams.get('track');
+        const match = urlTrackId
+          ? reqList.find((r) => r.requirementId?.toLowerCase() === urlTrackId.toLowerCase() || r._id === urlTrackId) || reqList[0]
+          : reqList[0];
+        setTrackedOrder(match);
+        if (!trackSearchId) setTrackSearchId(match.requirementId);
       }
 
       setLastSyncTime(new Date());
@@ -225,7 +229,7 @@ export default function UserDashboard() {
       }
 
       // Fetch from API
-      const res = await api.get(`/requirements/${id}`);
+      const res = await api.get(`/requirements/${encodeURIComponent(id)}`);
       if (res?.success && res.requirement) {
         setTrackedOrder(res.requirement);
         toast.success(`Order ${res.requirement.requirementId || id} loaded! 📦`);

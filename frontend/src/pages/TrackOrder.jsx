@@ -110,6 +110,8 @@ export default function TrackOrder() {
           }
         })
         .catch(() => {});
+    } else {
+      setUserOrders([]);
     }
   }, [user]);
 
@@ -147,8 +149,14 @@ export default function TrackOrder() {
       if (res?.success && res.requirement) {
         setTrackedOrder(res.requirement);
         setLastSyncTime(new Date());
-        // Update URL search query cleanly
-        setSearchParams({ id: res.requirement.requirementId || cleanId }, { replace: true });
+        // Update URL search query cleanly only when explicit user fetch
+        if (!silent) {
+          const currentParam = searchParams.get('id') || searchParams.get('order') || searchParams.get('track');
+          const targetId = res.requirement.requirementId || cleanId;
+          if (currentParam !== targetId) {
+            setSearchParams({ id: targetId }, { replace: true });
+          }
+        }
       } else {
         throw new Error(res?.message || 'Order not found');
       }
@@ -159,6 +167,22 @@ export default function TrackOrder() {
       }
     } finally {
       if (!silent) setLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    try {
+      if (window.history.length > 1 && window.history.state?.idx > 0) {
+        navigate(-1);
+      } else if (user?.role === 'admin') {
+        navigate('/admin');
+      } else if (user) {
+        navigate('/dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (e) {
+      navigate('/');
     }
   };
 
@@ -198,11 +222,12 @@ export default function TrackOrder() {
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <button
                 type="button"
-                onClick={() => navigate(user ? '/dashboard' : '/')}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center transition-all cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs shrink-0"
-                title={user ? 'Back to Dashboard' : 'Back to Home'}
+                onClick={handleBack}
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all cursor-pointer border border-slate-200 dark:border-slate-700 shadow-2xs shrink-0 text-xs font-bold"
+                title="Go Back"
               >
                 <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Back</span>
               </button>
 
               <Link to="/" className="flex items-center gap-2 group min-w-0">

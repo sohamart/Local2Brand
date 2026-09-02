@@ -9,7 +9,7 @@ const DEFAULT_ADMIN = {
   _id: 'admin_default_id_001',
   name: 'LOCAL2BRAND Master Admin',
   email: 'admin@local2brand.com',
-  passwordHash: '$2a$10$w3/sX8aA2c7v4N8u2q5G6.U2xVj6fIu4qVpP.Qx7yPzQ7yPzQ7yPz', // Admin@12345
+  passwordHash: '$2b$10$PW8Q2cMv0bHMFwu1nNbCDugHy2RxmvNXCjQH/fhJzWRsSzRNS7twm', // Admin@12345
   role: 'admin',
   phone: '+91 98765 43210',
   company: 'LOCAL2BRAND HQ',
@@ -214,12 +214,17 @@ export const dataStore = {
 
   // Users
   async findUserByEmail(email) {
+    if (!email) return null;
+    const cleanEmail = email.toLowerCase().trim();
     if (isDbConnected()) {
       const { User } = await import('../models/User.js');
-      return await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+      const escaped = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return await User.findOne({
+        email: { $regex: new RegExp(`^${escaped}$`, 'i') }
+      }).select('+password');
     }
-    const users = readLocalStore('users');
-    return users.find((u) => u.email.toLowerCase() === email.toLowerCase().trim()) || null;
+    const users = readLocalStore('users') || [];
+    return users.find((u) => u && u.email && u.email.toLowerCase().trim() === cleanEmail) || null;
   },
 
   async findUserById(id) {
@@ -645,43 +650,51 @@ export const dataStore = {
   },
 
   async seedDefaultAdmin() {
-    const adminEmail = (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim();
+    const adminEmails = [
+      (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim(),
+      'admin@local2brand.com'
+    ].filter(Boolean);
     const adminPassword = process.env.ADMIN_PASSWORD || 'Admin@12345';
     
     if (isDbConnected()) {
       const { User } = await import('../models/User.js');
-      const exists = await User.findOne({ email: adminEmail });
-      if (!exists) {
-        await User.create({
-          name: 'LOCAL2BRAND Master Admin',
-          email: adminEmail,
-          password: adminPassword,
-          role: 'admin',
-          phone: '+91 98765 43210',
-          company: 'LOCAL2BRAND HQ',
-        });
-        console.log(`👑 Admin Account Created (MongoDB): ${adminEmail} / ${adminPassword}`);
+      for (const email of adminEmails) {
+        const exists = await User.findOne({ email });
+        if (!exists) {
+          await User.create({
+            name: 'LOCAL2BRAND Master Admin',
+            email,
+            password: adminPassword,
+            role: 'admin',
+            phone: '+91 98765 43210',
+            company: 'LOCAL2BRAND HQ',
+          });
+          console.log(`👑 Admin Account Created (MongoDB): ${email} / ${adminPassword}`);
+        }
       }
     } else {
-      const users = readLocalStore('users');
-      const exists = users.find((u) => u.email.toLowerCase() === adminEmail);
-      if (!exists) {
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(adminPassword, salt);
-        users.push({
-          _id: 'admin_master_001',
-          name: 'LOCAL2BRAND Master Admin',
-          email: adminEmail,
-          passwordHash,
-          role: 'admin',
-          phone: '+91 98765 43210',
-          company: 'LOCAL2BRAND HQ',
-          status: 'active',
-          createdAt: new Date().toISOString(),
-        });
-        writeLocalStore('users', users);
-        console.log(`👑 Admin Account Created (Resilient Store): ${adminEmail} / ${adminPassword}`);
+      const users = readLocalStore('users') || [];
+      const salt = await bcrypt.genSalt(10);
+      const passwordHash = await bcrypt.hash(adminPassword, salt);
+
+      for (const email of adminEmails) {
+        const existingIdx = users.findIndex((u) => u.email?.toLowerCase() === email);
+        if (existingIdx === -1) {
+          users.push({
+            _id: `admin_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+            name: 'LOCAL2BRAND Master Admin',
+            email,
+            passwordHash,
+            role: 'admin',
+            phone: '+91 98765 43210',
+            company: 'LOCAL2BRAND HQ',
+            status: 'active',
+            createdAt: new Date().toISOString(),
+          });
+          console.log(`👑 Admin Account Created (Resilient Store): ${email} / ${adminPassword}`);
+        }
       }
+      writeLocalStore('users', users);
     }
   },
 

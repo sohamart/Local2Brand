@@ -92,6 +92,8 @@ export const login = async (req, res) => {
     let isMatch = false;
     if (user.matchPassword) {
       isMatch = await user.matchPassword(password);
+    } else if (user.password) {
+      isMatch = await bcrypt.compare(password, user.password);
     } else if (user.passwordHash) {
       isMatch = await bcrypt.compare(password, user.passwordHash);
     }
@@ -224,9 +226,17 @@ export const changePassword = async (req, res) => {
     }
 
     const user = await dataStore.findUserByEmail(req.user.email);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
     let isMatch = false;
     if (user.matchPassword) {
       isMatch = await user.matchPassword(currentPassword);
+    } else if (user.password) {
+      isMatch = await bcrypt.compare(currentPassword, user.password);
     } else if (user.passwordHash) {
       isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
     }

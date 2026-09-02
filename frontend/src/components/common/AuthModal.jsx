@@ -40,9 +40,15 @@ export default function AuthModal() {
     setLoading(true);
     setError('');
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = password;
+
     try {
       if (mode === 'login') {
-        const loggedUser = await login(email, password);
+        if (!cleanEmail || !cleanPass) {
+          throw new Error('Please enter both email and password.');
+        }
+        const loggedUser = await login(cleanEmail, cleanPass);
         closeAuthModal();
         if (typeof authSuccessCallback === 'function') {
           authSuccessCallback(loggedUser);
@@ -54,7 +60,7 @@ export default function AuthModal() {
           }
         }
       } else {
-        if (!name.trim() || !email.trim() || !password) {
+        if (!name.trim() || !cleanEmail || !cleanPass) {
           throw new Error('Please fill in Name, Email and Password.');
         }
 

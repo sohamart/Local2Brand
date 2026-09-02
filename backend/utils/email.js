@@ -3,20 +3,19 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Universal Base URL Resolver (Guarantees email buttons open the correct working application)
+// Universal Base URL Resolver (Always respects CLIENT_URL / FRONTEND_URL from .env)
 export const getClientUrl = () => {
   if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL.replace(/\/$/, '');
-  const rawUrls = (process.env.CLIENT_URL || '').split(',').map(u => u.trim().replace(/\/$/, '')).filter(Boolean);
-
-  if (process.env.NODE_ENV === 'development') {
-    // In development mode, prioritize local Vite dev port 5173
-    const local = rawUrls.find(u => u.includes('localhost:5173') || u.includes('127.0.0.1:5173') || u.includes('5173'));
-    if (local) return local;
-    return 'http://localhost:5173';
+  
+  if (process.env.CLIENT_URL) {
+    const rawUrls = process.env.CLIENT_URL.split(',').map((u) => u.trim().replace(/\/$/, '')).filter(Boolean);
+    // Prioritize production / public domains if configured in CLIENT_URL
+    const publicUrl = rawUrls.find((u) => !u.includes('localhost') && !u.includes('127.0.0.1'));
+    if (publicUrl) return publicUrl;
+    if (rawUrls.length > 0) return rawUrls[0];
   }
 
-  if (rawUrls.length > 0) return rawUrls[0];
-  return 'http://localhost:5173';
+  return 'https://local2brand.vercel.app';
 };
 
 // Create transporter

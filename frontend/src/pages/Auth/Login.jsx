@@ -22,7 +22,9 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = password;
+    if (!cleanEmail || !cleanPass) {
       setError('Please fill in both email and password.');
       return;
     }
@@ -31,7 +33,7 @@ export default function Login() {
     setError('');
 
     try {
-      const user = await login(email, password);
+      const user = await login(cleanEmail, cleanPass);
       if (user.role === 'admin') {
         navigate('/admin');
       } else {
