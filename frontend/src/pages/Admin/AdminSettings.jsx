@@ -16,7 +16,16 @@ import {
   Image as ImageIcon,
   Bot,
   Brain,
-  MessageSquare
+  MessageSquare,
+  Users,
+  User,
+  Plus,
+  Trash2,
+  Instagram,
+  Linkedin,
+  Phone,
+  MapPin,
+  Building
 } from 'lucide-react';
 
 import { toast } from 'react-toastify';
@@ -61,12 +70,27 @@ export default function AdminSettings() {
       customInstructions: 'Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount.',
       businessKnowledge: 'LOCAL2BRAND builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.',
       adminShowableDetails: {
-        founderName: 'LOCAL2BRAND Founders & Core Team',
+        founderName: 'Soham Dutta & Core Team',
+        founderCount: 1,
+        showFoundersToAi: true,
+        founders: [
+          {
+            name: 'Soham Dutta',
+            role: 'Founder & Lead Architect',
+            bio: 'Full-Stack Engineer & Designer leading high-performance digital products.',
+            instagram: 'https://instagram.com/sohamart',
+            linkedin: '',
+            email: 'sohamduttabwn@gmail.com',
+            phone: '+91 98765 43210',
+          },
+        ],
         contactPhone: '+91 98765 43210',
-        contactEmail: 'contact@local2brand.com',
+        contactEmail: 'stackaddacontact@gmail.com',
         officeLocation: 'Kolkata & Bangalore, India',
         workingHours: 'Monday - Saturday: 10:00 AM - 8:00 PM IST',
         whatsappSupport: '+91 98765 43210',
+        instagram: 'https://instagram.com/local2brand',
+        instagramHandle: '@local2brand',
       },
     },
   });
@@ -78,6 +102,24 @@ export default function AdminSettings() {
 
   useEffect(() => {
     if (settings) {
+      const defaultFounders = [
+        {
+          name: 'Soham Dutta',
+          role: 'Founder & Lead Architect',
+          bio: 'Full-Stack Engineer & Designer leading high-performance digital products.',
+          instagram: 'https://instagram.com/sohamart',
+          linkedin: '',
+          email: 'sohamduttabwn@gmail.com',
+          phone: '+91 98765 43210',
+        },
+      ];
+
+      const loadedFounders =
+        Array.isArray(settings.aiSettings?.adminShowableDetails?.founders) &&
+        settings.aiSettings.adminShowableDetails.founders.length > 0
+          ? settings.aiSettings.adminShowableDetails.founders
+          : defaultFounders;
+
       setFormData((prev) => ({
         ...prev,
         ...settings,
@@ -86,12 +128,17 @@ export default function AdminSettings() {
           customInstructions: settings.aiSettings?.customInstructions || '',
           businessKnowledge: settings.aiSettings?.businessKnowledge || '',
           adminShowableDetails: {
-            founderName: settings.aiSettings?.adminShowableDetails?.founderName || '',
+            founderName: settings.aiSettings?.adminShowableDetails?.founderName || 'Soham Dutta & Core Team',
+            founderCount: settings.aiSettings?.adminShowableDetails?.founderCount || loadedFounders.length,
+            showFoundersToAi: settings.aiSettings?.adminShowableDetails?.showFoundersToAi ?? true,
+            founders: loadedFounders,
             contactPhone: settings.aiSettings?.adminShowableDetails?.contactPhone || '',
             contactEmail: settings.aiSettings?.adminShowableDetails?.contactEmail || '',
             officeLocation: settings.aiSettings?.adminShowableDetails?.officeLocation || '',
             workingHours: settings.aiSettings?.adminShowableDetails?.workingHours || '',
             whatsappSupport: settings.aiSettings?.adminShowableDetails?.whatsappSupport || '',
+            instagram: settings.aiSettings?.adminShowableDetails?.instagram || settings.socialLinks?.instagram || '',
+            instagramHandle: settings.aiSettings?.adminShowableDetails?.instagramHandle || settings.socialLinks?.instagramHandle || '',
           },
         },
       }));
@@ -123,6 +170,73 @@ export default function AdminSettings() {
         },
       },
     }));
+  };
+
+  const handleAddFounder = () => {
+    setFormData((prev) => {
+      const currentFounders = prev.aiSettings?.adminShowableDetails?.founders || [];
+      const updatedFounders = [
+        ...currentFounders,
+        {
+          name: '',
+          role: 'Co-Founder',
+          bio: '',
+          instagram: '',
+          linkedin: '',
+          email: '',
+          phone: '',
+        },
+      ];
+      return {
+        ...prev,
+        aiSettings: {
+          ...(prev.aiSettings || {}),
+          adminShowableDetails: {
+            ...(prev.aiSettings?.adminShowableDetails || {}),
+            founders: updatedFounders,
+            founderCount: updatedFounders.length,
+          },
+        },
+      };
+    });
+  };
+
+  const handleRemoveFounder = (index) => {
+    setFormData((prev) => {
+      const currentFounders = prev.aiSettings?.adminShowableDetails?.founders || [];
+      const updatedFounders = currentFounders.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        aiSettings: {
+          ...(prev.aiSettings || {}),
+          adminShowableDetails: {
+            ...(prev.aiSettings?.adminShowableDetails || {}),
+            founders: updatedFounders,
+            founderCount: updatedFounders.length,
+          },
+        },
+      };
+    });
+  };
+
+  const handleFounderFieldChange = (index, field, value) => {
+    setFormData((prev) => {
+      const currentFounders = [...(prev.aiSettings?.adminShowableDetails?.founders || [])];
+      if (!currentFounders[index]) {
+        currentFounders[index] = {};
+      }
+      currentFounders[index] = { ...currentFounders[index], [field]: value };
+      return {
+        ...prev,
+        aiSettings: {
+          ...(prev.aiSettings || {}),
+          adminShowableDetails: {
+            ...(prev.aiSettings?.adminShowableDetails || {}),
+            founders: currentFounders,
+          },
+        },
+      };
+    });
   };
 
 
@@ -629,107 +743,230 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          {/* Section 7: AI Assistant Knowledge Base & Showable Details */}
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
-                <Bot className="w-4 h-4" />
-                <span>AI Assistant Knowledge Base & Brand Details</span>
-              </h2>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.aiSettings?.enabled ?? true}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      aiSettings: { ...(prev.aiSettings || {}), enabled: e.target.checked },
-                    }))
-                  }
-                  className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
-                />
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  AI Chatbot Active
-                </span>
-              </label>
+          {/* Section 7: AI Assistant, Founders & Brand Details */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-4">
+              <div>
+                <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
+                  <Bot className="w-4 h-4" />
+                  <span>AI Assistant, Founders & Business Configuration</span>
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Configure founder identities, Instagram handles, contact channels & AI business intelligence.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 cursor-pointer bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={formData.aiSettings?.enabled ?? true}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        aiSettings: { ...(prev.aiSettings || {}), enabled: e.target.checked },
+                      }))
+                    }
+                    className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    AI Chatbot Active
+                  </span>
+                </label>
+              </div>
             </div>
 
+            {/* Smart Context & Privacy Architecture Banner */}
             <div className="p-3.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 text-xs text-purple-900 dark:text-purple-200 space-y-1">
               <div className="font-bold flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-                <span>Smart Context & Privacy Architecture</span>
+                <span>Smart AI Knowledge Synchronization</span>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                The AI dynamically knows the currently logged-in user's name, company, and email to provide personalized support. Private admin passwords, API keys, and database tokens are completely isolated and never exposed.
+                Whenever users or clients ask the AI about <strong>Founders, Leadership, Instagram accounts, Phone, Email, or Office Address</strong>, the AI dynamically uses the exact details configured below.
               </p>
             </div>
 
-            {/* Business Knowledge Textarea */}
-            <div>
-              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center gap-1.5">
-                <Brain className="w-3.5 h-3.5 text-purple-600" />
-                <span>Custom Business Knowledge & Facts (What AI should know about your business)</span>
-              </label>
-              <textarea
-                rows={4}
-                value={formData.aiSettings?.businessKnowledge || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    aiSettings: { ...(prev.aiSettings || {}), businessKnowledge: e.target.value },
-                  }))
-                }
-                placeholder="Enter custom details, service packages, turnaround time, refund policies, FAQs, tech stack advantages, and business USPs..."
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
-              />
-              <span className="text-[10px] text-slate-400 block mt-1">
-                The AI will use this knowledge base to answer client inquiries accurately.
-              </span>
-            </div>
-
-            {/* Custom AI Instructions */}
-            <div>
-              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center gap-1.5">
-                <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Custom AI Directives & Response Tone</span>
-              </label>
-              <textarea
-                rows={3}
-                value={formData.aiSettings?.customInstructions || ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    aiSettings: { ...(prev.aiSettings || {}), customInstructions: e.target.value },
-                  }))
-                }
-                placeholder="e.g. Always be warm and polite. Encourage clients to book 48h demo templates. Recommend coupon code INDIA2025 for 20% discount..."
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
-              />
-            </div>
-
-            {/* Showable Brand & Admin Details Grid */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-              <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">
-                Official Showable Details (Shareable by AI with Users)
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Leadership / Team Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.aiSettings?.adminShowableDetails?.founderName || ''}
-                    onChange={(e) => handleAiAdminDetailsChange('founderName', e.target.value)}
-                    placeholder="LOCAL2BRAND Founders & Core Team"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                  />
+            {/* --- SUBSECTION A: FOUNDERS & LEADERSHIP TEAM --- */}
+            <div className="space-y-4 pt-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-purple-600" />
+                  <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    Founders & Leadership Team Profiles ({formData.aiSettings?.adminShowableDetails?.founders?.length || 0})
+                  </span>
                 </div>
 
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer mr-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.aiSettings?.adminShowableDetails?.showFoundersToAi ?? true}
+                      onChange={(e) => handleAiAdminDetailsChange('showFoundersToAi', e.target.checked)}
+                      className="w-3.5 h-3.5 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+                    />
+                    <span>Share with AI & Clients</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleAddFounder}
+                    className="px-3 py-1.5 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center gap-1.5 hover:bg-purple-200 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800 cursor-pointer transition-colors shadow-2xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Founder</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Founder Dynamic Cards */}
+              <div className="space-y-3.5">
+                {(formData.aiSettings?.adminShowableDetails?.founders || []).map((founder, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3 relative group"
+                  >
+                    <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-black">
+                          {idx + 1}
+                        </div>
+                        <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
+                          {founder.name ? founder.name : `Founder #${idx + 1}`}
+                        </span>
+                        {founder.role && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 font-semibold border border-purple-200 dark:border-purple-800">
+                            {founder.role}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFounder(idx)}
+                        disabled={(formData.aiSettings?.adminShowableDetails?.founders || []).length <= 1}
+                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/60 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        title="Remove Founder"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                          Founder Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={founder.name || ''}
+                          onChange={(e) => handleFounderFieldChange(idx, 'name', e.target.value)}
+                          placeholder="e.g. Soham Dutta"
+                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                          Role / Title *
+                        </label>
+                        <input
+                          type="text"
+                          value={founder.role || ''}
+                          onChange={(e) => handleFounderFieldChange(idx, 'role', e.target.value)}
+                          placeholder="e.g. Founder & Lead Architect"
+                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                          <Instagram className="w-3.5 h-3.5 text-pink-500" />
+                          <span>Instagram Profile / Handle</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={founder.instagram || ''}
+                          onChange={(e) => handleFounderFieldChange(idx, 'instagram', e.target.value)}
+                          placeholder="https://instagram.com/sohamart or @sohamart"
+                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                          <Linkedin className="w-3.5 h-3.5 text-blue-500" />
+                          <span>LinkedIn Profile URL</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={founder.linkedin || ''}
+                          onChange={(e) => handleFounderFieldChange(idx, 'linkedin', e.target.value)}
+                          placeholder="https://linkedin.com/in/username"
+                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                          <Mail className="w-3.5 h-3.5 text-purple-500" />
+                          <span>Direct Email</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={founder.email || ''}
+                          onChange={(e) => handleFounderFieldChange(idx, 'email', e.target.value)}
+                          placeholder="sohamduttabwn@gmail.com"
+                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                          <Phone className="w-3.5 h-3.5 text-emerald-500" />
+                          <span>Direct Phone</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={founder.phone || ''}
+                          onChange={(e) => handleFounderFieldChange(idx, 'phone', e.target.value)}
+                          placeholder="+91 98765 43210"
+                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2 lg:col-span-3">
+                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                          Bio / Vision / Details (Told by AI when asked about founder)
+                        </label>
+                        <input
+                          type="text"
+                          value={founder.bio || ''}
+                          onChange={(e) => handleFounderFieldChange(idx, 'bio', e.target.value)}
+                          placeholder="Full-Stack Engineer & Product Designer leading high-performance digital systems."
+                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* --- SUBSECTION B: OFFICIAL BUSINESS & CONTACT CHANNELS --- */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+              <div className="flex items-center gap-2">
+                <Building className="w-4 h-4 text-purple-600" />
+                <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Official Brand Contact Channels & Operations
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Public Contact Phone
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5 text-purple-500" />
+                    <span>Public Calling Phone</span>
                   </label>
                   <input
                     type="text"
@@ -741,8 +978,9 @@ export default function AdminSettings() {
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Public WhatsApp Support Number
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                    <Phone className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>WhatsApp Support Number</span>
                   </label>
                   <input
                     type="text"
@@ -754,21 +992,37 @@ export default function AdminSettings() {
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Public Support Email
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                    <Mail className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Public Support Email</span>
                   </label>
                   <input
                     type="email"
                     value={formData.aiSettings?.adminShowableDetails?.contactEmail || ''}
                     onChange={(e) => handleAiAdminDetailsChange('contactEmail', e.target.value)}
-                    placeholder="contact@local2brand.com"
+                    placeholder="stackaddacontact@gmail.com"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                   />
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Office / Operating Location
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                    <Instagram className="w-3.5 h-3.5 text-pink-500" />
+                    <span>Official Brand Instagram Link</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.aiSettings?.adminShowableDetails?.instagram || ''}
+                    onChange={(e) => handleAiAdminDetailsChange('instagram', e.target.value)}
+                    placeholder="https://instagram.com/local2brand"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Office / Operating Location</span>
                   </label>
                   <input
                     type="text"
@@ -780,8 +1034,9 @@ export default function AdminSettings() {
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Support Working Hours
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Support Working Hours</span>
                   </label>
                   <input
                     type="text"
@@ -791,6 +1046,53 @@ export default function AdminSettings() {
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* --- SUBSECTION C: BUSINESS KNOWLEDGE & AI DIRECTIVES --- */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4 text-purple-600" />
+                <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  Custom AI Knowledge Base & Directives
+                </span>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs">
+                  Business Knowledge & Policies (What AI should know about packages, pricing, timeline)
+                </label>
+                <textarea
+                  rows={4}
+                  value={formData.aiSettings?.businessKnowledge || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      aiSettings: { ...(prev.aiSettings || {}), businessKnowledge: e.target.value },
+                    }))
+                  }
+                  placeholder="Enter custom details, service packages, turnaround time, refund policies, FAQs, tech stack advantages, and business USPs..."
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Custom AI Directives & Response Tone</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.aiSettings?.customInstructions || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      aiSettings: { ...(prev.aiSettings || {}), customInstructions: e.target.value },
+                    }))
+                  }
+                  placeholder="e.g. Always be warm and polite. Encourage clients to book 48h demo templates. Recommend coupon code INDIA2025 for 20% discount..."
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
+                />
               </div>
             </div>
           </div>

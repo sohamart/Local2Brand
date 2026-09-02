@@ -88,11 +88,39 @@ const siteSettingsSchema = new mongoose.Schema(
       },
       adminShowableDetails: {
         founderName: { type: String, default: 'LOCAL2BRAND Founders & Core Team' },
+        founderCount: { type: Number, default: 1 },
+        showFoundersToAi: { type: Boolean, default: true },
+        founders: {
+          type: [
+            {
+              name: { type: String, default: '' },
+              role: { type: String, default: '' },
+              bio: { type: String, default: '' },
+              instagram: { type: String, default: '' },
+              linkedin: { type: String, default: '' },
+              email: { type: String, default: '' },
+              phone: { type: String, default: '' },
+            },
+          ],
+          default: [
+            {
+              name: 'Soham Dutta',
+              role: 'Founder & Lead Architect',
+              bio: 'Full-Stack Engineer & Designer leading fast-track digital products.',
+              instagram: 'https://instagram.com/sohamart',
+              linkedin: '',
+              email: 'sohamduttabwn@gmail.com',
+              phone: '+91 98765 43210',
+            }
+          ],
+        },
         contactPhone: { type: String, default: '+91 98765 43210' },
-        contactEmail: { type: String, default: 'contact@local2brand.com' },
+        contactEmail: { type: String, default: 'stackaddacontact@gmail.com' },
         officeLocation: { type: String, default: 'Kolkata & Bangalore, India' },
         workingHours: { type: String, default: 'Monday - Saturday: 10:00 AM - 8:00 PM IST' },
         whatsappSupport: { type: String, default: '+91 98765 43210' },
+        instagram: { type: String, default: 'https://instagram.com/local2brand' },
+        instagramHandle: { type: String, default: '@local2brand' },
       },
     },
     pricingPlans: {

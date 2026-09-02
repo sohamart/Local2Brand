@@ -9,7 +9,10 @@ import {
   AlertCircle,
   ArrowRight,
   User,
-  Building
+  Building,
+  MapPin,
+  Instagram,
+  MessageSquare
 } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
@@ -127,24 +130,63 @@ export default function Contact() {
                 </button>
               </div>
 
-              {/* Email Support Card */}
-              <div className="glass-panel p-6 rounded-card border border-white dark:border-slate-800 space-y-3">
+              {/* Direct Channels Card */}
+              <div className="glass-panel p-6 rounded-card border border-white dark:border-slate-800 space-y-3.5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-purple-600 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 flex items-center justify-center shrink-0">
                     <Mail className="w-5 h-5" />
                   </div>
-                  <div>
-                    <span className="text-xs text-slate-400 font-bold block">Support Email</span>
-                    <span className="text-sm font-extrabold text-slate-900 dark:text-white">{settings.supportEmail}</span>
+                  <div className="min-w-0">
+                    <span className="text-[11px] text-slate-400 font-bold block">Support & Inquiries Email</span>
+                    <a
+                      href={`mailto:${settings.aiSettings?.adminShowableDetails?.contactEmail || settings.supportEmail || 'stackaddacontact@gmail.com'}`}
+                      className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white hover:text-purple-600 truncate block transition-colors"
+                    >
+                      {settings.aiSettings?.adminShowableDetails?.contactEmail || settings.supportEmail || 'stackaddacontact@gmail.com'}
+                    </a>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-amber-600 flex items-center justify-center">
+
+                {(settings.aiSettings?.adminShowableDetails?.contactPhone || settings.displayPhone) && (
+                  <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 flex items-center justify-center shrink-0">
+                      <PhoneCall className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-400 font-bold block">Direct Founder Calling</span>
+                      <a
+                        href={`tel:${settings.aiSettings?.adminShowableDetails?.contactPhone || settings.displayPhone}`}
+                        className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white hover:text-emerald-600 transition-colors"
+                      >
+                        {settings.aiSettings?.adminShowableDetails?.contactPhone || settings.displayPhone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {settings.aiSettings?.adminShowableDetails?.officeLocation && (
+                  <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                    <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-600 flex items-center justify-center shrink-0">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] text-slate-400 font-bold block">Operating Hubs / Address</span>
+                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                        {settings.aiSettings.adminShowableDetails.officeLocation}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 flex items-center justify-center shrink-0">
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-xs text-slate-400 font-bold block">Working Hours</span>
-                    <span className="text-sm font-extrabold text-slate-900 dark:text-white">Monday – Saturday: 9 AM to 9 PM IST</span>
+                    <span className="text-[11px] text-slate-400 font-bold block">Support & Consultation Hours</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                      {settings.aiSettings?.adminShowableDetails?.workingHours || 'Monday – Saturday: 10:00 AM to 8:00 PM IST'}
+                    </span>
                   </div>
                 </div>
               </div>

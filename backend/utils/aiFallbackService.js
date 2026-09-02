@@ -58,16 +58,45 @@ CURRENT CONVERSATION PARTNER:
 ========================================`;
   }
 
+  // Build Dynamic Founders Information
+  let foundersBlock = '';
+  const foundersList = Array.isArray(adminDetails.founders) ? adminDetails.founders : [];
+  const founderCount = adminDetails.founderCount || foundersList.length || 1;
+  const showFounders = adminDetails.showFoundersToAi ?? true;
+
+  if (showFounders && foundersList.length > 0) {
+    const formattedFounders = foundersList
+      .filter((f) => f && f.name)
+      .map((f, i) => {
+        const parts = [`  ${i + 1}. ${f.name}`];
+        if (f.role) parts.push(`Role: ${f.role}`);
+        if (f.bio) parts.push(`Bio: ${f.bio}`);
+        if (f.instagram) parts.push(`Instagram: ${f.instagram}`);
+        if (f.linkedin) parts.push(`LinkedIn: ${f.linkedin}`);
+        if (f.email) parts.push(`Email: ${f.email}`);
+        return parts.join(' | ');
+      })
+      .join('\n');
+
+    foundersBlock = `- Total Founders: ${founderCount}
+- Founder Profiles & Handles:
+${formattedFounders || `  - ${adminDetails.founderName || 'Soham Dutta & Core Team'}`}`;
+  } else {
+    foundersBlock = `- Core Leadership: ${adminDetails.founderName || 'LOCAL2BRAND Founders & Core Team'}`;
+  }
+
   // Build Admin & Company Showable Details block
   const adminShowableBlock = `
 ========================================
-OFFICIAL COMPANY & SHOWABLE ADMIN DETAILS:
+OFFICIAL COMPANY, FOUNDERS & CONTACT DETAILS:
 - Brand Name: ${brandName} (${domain})
 - Tagline: ${tagline}
-- Core Leadership / Founders: ${adminDetails.founderName || 'LOCAL2BRAND Founding Engineering Team (Soham Dutta & Team)'}
+${foundersBlock}
+- Official Support Email: ${adminDetails.contactEmail || settings.supportEmail || 'stackaddacontact@gmail.com'}
 - Official Public Phone: ${adminDetails.contactPhone || settings.displayPhone || '+91 98765 43210'}
 - Official Public WhatsApp: ${adminDetails.whatsappSupport || '+91 98765 43210'}
-- Official Support Email: ${adminDetails.contactEmail || settings.supportEmail || 'stackaddacontact@gmail.com'}
+- Official Instagram: ${adminDetails.instagramHandle || settings.socialLinks?.instagramHandle || '@local2brand'} (${adminDetails.instagram || settings.socialLinks?.instagram || 'https://instagram.com/local2brand'})
+- Official LinkedIn: ${settings.socialLinks?.linkedin || 'https://linkedin.com/company/local2brand'}
 - Office / HQ: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}
 - Working Hours: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}
 ========================================`;
