@@ -199,33 +199,44 @@ export default function Navbar() {
       }
 
       const targetElement = targetKey ? linkRefs.current[targetKey] : null;
-      const dockElement = navContainerRef.current;
+      const dock = navContainerRef.current?.getBoundingClientRect();
+      const target = targetElement?.getBoundingClientRect();
 
-      if (targetElement && dockElement) {
-        // Measure against the dock with rects, not offsetLeft/offsetTop: the
-        // "More" trigger lives inside a `relative` wrapper, so its offsets are
-        // 0 and would snap the pill back onto "Home".
-        const dock = dockElement.getBoundingClientRect();
-        const target = targetElement.getBoundingClientRect();
-        setPillStyle({
-          left: target.left - dock.left,
-          top: target.top - dock.top,
-          width: target.width,
-          height: target.height,
-          opacity: 1,
-        });
-      } else if (hoveredPath === null) {
-        setPillStyle((prev) => ({ ...prev, opacity: 0 }));
+      // Bail out while the dock is unmounted or laid out at zero size (below the
+      // `lg` breakpoint) instead of pinning a collapsed 0x0 pill at its corner.
+      if (!dock?.width || !target?.width) {
+        if (hoveredPath === null) {
+          setPillStyle((prev) => (prev.opacity === 0 ? prev : { ...prev, opacity: 0 }));
+        }
+        return;
       }
+
+      // Measure with rects, not offsetLeft/offsetTop: the "More" trigger sits
+      // inside a `relative` wrapper, so its offsets are 0 relative to *that*
+      // wrapper and would snap the pill back onto "Home".
+      setPillStyle({
+        left: target.left - dock.left,
+        top: target.top - dock.top,
+        width: target.width,
+        height: target.height,
+        opacity: 1,
+      });
     };
 
     updatePill();
     const frameId = requestAnimationFrame(updatePill);
     const timeoutId = setTimeout(updatePill, 250);
+
+    // Keeps the pill glued to its target across breakpoint changes, font swaps
+    // and window resizes.
+    const observer = new ResizeObserver(updatePill);
+    if (navContainerRef.current) observer.observe(navContainerRef.current);
     window.addEventListener('resize', updatePill);
+
     return () => {
       cancelAnimationFrame(frameId);
       clearTimeout(timeoutId);
+      observer.disconnect();
       window.removeEventListener('resize', updatePill);
     };
   }, [location.pathname, hoveredPath, isScrolled, isMoreActive, moreDropdownOpen]);
@@ -386,7 +397,7 @@ export default function Navbar() {
 
                 {/* MORE DROPDOWN FLOATING CARD */}
                 {moreDropdownOpen && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2.5 w-80 z-[9999999] animate-in fade-in zoom-in-95 duration-150">
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-7 w-80 z-[9999999] animate-in fade-in zoom-in-95 duration-150">
                     <div className="glass-waterdrop-menu rounded-2xl p-2 space-y-1">
 
                       <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 mb-1">
@@ -418,9 +429,11 @@ export default function Navbar() {
                             <div
                               className={`absolute inset-0 rounded-xl transition-all duration-200 ease-out ${
                                 isCurrent
-                                  ? 'bg-purple-50/90 dark:bg-purple-950/70'
+                                  ? isHoveredItem
+                                    ? 'bg-purple-100/95 dark:bg-purple-900/55'
+                                    : 'bg-purple-50/90 dark:bg-purple-950/70'
                                   : isHoveredItem
-                                  ? 'bg-slate-100 dark:bg-slate-800 scale-100 opacity-100'
+                                  ? 'bg-slate-900/8 dark:bg-white/10 scale-100 opacity-100'
                                   : 'opacity-0 scale-95'
                               }`}
                             >
@@ -652,7 +665,11 @@ export default function Navbar() {
 
       {/* 5. MOBILE DRAWER (Full Smooth Scroll) */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[9999999] md:hidden flex flex-col bg-white/98 dark:bg-[#07090e]/98 backdrop-blur-3xl animate-in fade-in duration-200 overflow-y-auto overscroll-contain">
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-x-0 top-0 h-dvh z-[9999999] md:hidden flex flex-col bg-white/98 dark:bg-[#07090e]/98 backdrop-blur-3xl animate-in fade-in duration-200 overflow-y-auto modal-touch-scroll"
+        >
           
           {/* Top Fixed Header with Logo, Theme Toggle & Close (X) Button */}
           <div className="sticky top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-b border-slate-200/80 dark:border-slate-800/90 px-4 py-3 flex items-center justify-between shadow-xs shrink-0">
