@@ -93,19 +93,26 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
   const totalSlices = PRIZES.length;
   const sliceDeg = 360 / totalSlices;
 
-  // Check if user has already spun the wheel
+  // Check if user has already spun the wheel for the current campaign version
   useEffect(() => {
     if (!isOpen) return;
     try {
-      const alreadySpun = localStorage.getItem('l2b_wheel_spun');
+      const currentCampaign = settings?.luckyWheel?.campaignVersion || 1;
+      const spunCampaign = parseInt(localStorage.getItem('l2b_wheel_spun_version') || '0', 10);
       const savedPrize = localStorage.getItem('l2b_won_voucher');
-      if (alreadySpun === 'true' && savedPrize) {
+
+      if (spunCampaign >= currentCampaign && savedPrize) {
         const parsed = JSON.parse(savedPrize);
         setWinningPrize(parsed);
         setHasSpun(true);
+      } else {
+        // Admin launched a new campaign or user hasn't spun yet
+        setHasSpun(false);
+        setWinningPrize(null);
       }
     } catch (e) {}
-  }, [isOpen]);
+  }, [isOpen, settings?.luckyWheel?.campaignVersion]);
+
 
   // Draw the wheel on canvas
   useEffect(() => {
@@ -198,11 +205,14 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
       setWinningPrize(selected);
       setHasSpun(true);
 
-      // Save won voucher and mark as spun permanently
+      // Save won voucher and mark current campaign version as spun permanently
       try {
+        const currentCampaign = settings?.luckyWheel?.campaignVersion || 1;
+        localStorage.setItem('l2b_wheel_spun_version', String(currentCampaign));
         localStorage.setItem('l2b_wheel_spun', 'true');
         localStorage.setItem('l2b_won_voucher', JSON.stringify(selected));
       } catch (e) {}
+
 
       toast.success(`🎉 Congratulations! You won: ${selected.label} (${selected.code})`, {
         icon: '🎁',

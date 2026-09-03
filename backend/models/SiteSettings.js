@@ -79,7 +79,10 @@ const siteSettingsSchema = new mongoose.Schema(
       btnText: { type: String, default: 'Spin & Win Prize' },
       rewardVoucher: { type: String, default: 'INDIA2025' },
       rewardDiscount: { type: Number, default: 20 },
+      campaignVersion: { type: Number, default: 1 },
+      lastResetDate: { type: Date, default: Date.now },
     },
+
     bannerImage: {
       type: String,
       default: '',

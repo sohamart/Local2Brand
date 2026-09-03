@@ -796,13 +796,52 @@ export default function AdminSettings() {
                 />
               </div>
 
-              <div className="flex items-end">
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 block">
+              <div className="sm:col-span-3 p-4 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full bg-purple-600 text-white text-[10px] font-black uppercase">
+                      Active Campaign: Round #{formData.luckyWheel?.campaignVersion || 1}
+                    </span>
+                    {formData.luckyWheel?.lastResetDate && (
+                      <span className="text-[10px] text-slate-500 font-medium">
+                        Last started: {new Date(formData.luckyWheel.lastResetDate).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
+                    Visitors can only spin once per campaign round. Launch a new round whenever you want everyone to be able to spin again!
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextVersion = (formData.luckyWheel?.campaignVersion || 1) + 1;
+                    setFormData((prev) => ({
+                      ...prev,
+                      luckyWheel: {
+                        ...(prev.luckyWheel || {}),
+                        campaignVersion: nextVersion,
+                        lastResetDate: new Date().toISOString()
+                      }
+                    }));
+                    toast.success(`🎉 New Lucky Wheel Round #${nextVersion} initiated! Click "Save Settings" to publish live.`);
+                  }}
+                  className="px-4 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 transition-all"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Start New Spin Round 🚀</span>
+                </button>
+              </div>
+
+              <div className="sm:col-span-3 flex items-end">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 block w-full">
                   ✨ Users can trigger this from the AI Chatbot launcher, Announcement card, and direct links.
                 </span>
               </div>
             </div>
           </div>
+
 
           {/* Section 4: Maintenance & Coming Soon Gates */}
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">

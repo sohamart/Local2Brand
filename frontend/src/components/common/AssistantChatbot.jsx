@@ -318,16 +318,41 @@ export default function AssistantChatbot() {
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const [savedVoucher, setSavedVoucher] = useState(() => {
+
+    try {
+      const v = localStorage.getItem('l2b_won_voucher');
+      return v ? JSON.parse(v) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  // Check if bubble was dismissed in this session or recently
+  useEffect(() => {
+    try {
+      const isDismissedSession = sessionStorage.getItem('l2b_bubble_dismissed') === 'true';
+      const dismissedAt = parseInt(localStorage.getItem('l2b_bubble_dismissed_at') || '0', 10);
+      const twelveHours = 12 * 60 * 60 * 1000;
+      if (isDismissedSession || (Date.now() - dismissedAt < twelveHours)) {
+        setIsBubbleDismissed(true);
+        setHasPrompted(false);
+      }
+    } catch (e) {}
+  }, []);
 
   // Listen for Lucky Wheel spin win event or direct chatbot open triggers
-
   useEffect(() => {
     const handlePrizeAwarded = (e) => {
       const prize = e.detail;
       if (!prize) return;
 
+      setSavedVoucher(prize);
       setIsOpen(true);
       setIsBubbleDismissed(true);
+      try {
+        sessionStorage.setItem('l2b_bubble_dismissed', 'true');
+      } catch (err) {}
 
       const prizeBotMsg = {
         role: 'assistant',
@@ -355,7 +380,7 @@ export default function AssistantChatbot() {
     return () => window.removeEventListener('l2b_open_chatbot_prize', handlePrizeAwarded);
   }, []);
 
-  // Emerge the dynamic liquid announcement bubble from chatbot after 2.5s
+  // Emerge the dynamic liquid announcement bubble from chatbot after 2.5s if not dismissed
   useEffect(() => {
     if (isBubbleDismissed) return;
     const timer = setTimeout(() => {
@@ -364,16 +389,20 @@ export default function AssistantChatbot() {
     return () => clearTimeout(timer);
   }, [isBubbleDismissed]);
 
-
   const handleDismissBubble = (e) => {
     if (e) e.stopPropagation();
     setIsBubbleClosing(true);
+    try {
+      sessionStorage.setItem('l2b_bubble_dismissed', 'true');
+      localStorage.setItem('l2b_bubble_dismissed_at', Date.now().toString());
+    } catch (err) {}
     setTimeout(() => {
       setIsBubbleDismissed(true);
       setIsBubbleClosing(false);
       setHasPrompted(false);
     }, 320);
   };
+
 
   const handleClaimPromoCoupon = (e) => {
     if (e) e.stopPropagation();
@@ -904,6 +933,26 @@ export default function AssistantChatbot() {
 
             {/* Quick Action Shortcuts */}
             <div className="px-3 py-2 bg-slate-50/80 dark:bg-slate-950/40 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 text-[11px]">
+              {savedVoucher && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    openOrderModal({
+                      promoCode: savedVoucher.code,
+                      discountPercent: savedVoucher.discountPercent || 20,
+                      autoApplyOffer: true,
+                      websiteType: `Won Prize: ${savedVoucher.label} (Code: ${savedVoucher.code})`,
+                      initialRequirements: `I have won the ${savedVoucher.label} reward with code "${savedVoucher.code}". Please apply this discount to my website project!`,
+                    });
+                  }}
+                  className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 to-pink-500 text-slate-950 font-black flex items-center gap-1 shrink-0 hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+                >
+                  <Sparkles className="w-3 h-3 text-slate-950" />
+                  <span>🎁 Won: {savedVoucher.code}</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => triggerInChatMessageCallback('15-Minute Instant Callback Request')}
@@ -912,6 +961,7 @@ export default function AssistantChatbot() {
                 <PhoneCall className="w-3 h-3 text-purple-600 dark:text-purple-400" />
                 <span>📞 Instant Callback</span>
               </button>
+
 
               <button
                 type="button"

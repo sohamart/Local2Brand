@@ -63,7 +63,18 @@ const DEFAULT_SETTINGS = {
     discountPercent: 20,
     btnText: 'Claim Offer',
   },
+  luckyWheel: {
+    enabled: true,
+    title: '🎡 Spin & Win Exclusive Launch Rewards',
+    subtitle: 'Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!',
+    btnText: 'Spin & Win Prize',
+    rewardVoucher: 'INDIA2025',
+    rewardDiscount: 20,
+    campaignVersion: 1,
+    lastResetDate: new Date().toISOString(),
+  },
   bannerImage: '',
+
   pricingPlans: [
     {
       id: "starter",
