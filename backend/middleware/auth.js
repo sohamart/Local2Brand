@@ -3,7 +3,7 @@ import { dataStore } from '../config/dataAdapter.js';
 import { connectDB } from '../config/db.js';
 import mongoose from 'mongoose';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026';
+const getJwtSecret = () => process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -18,13 +18,14 @@ export const protect = async (req, res, next) => {
   if (!token) {
     return res.status(401).json({
       success: false,
+      isAuthError: true,
       message: 'Authentication token missing. Access denied.',
     });
   }
 
   let decoded;
   try {
-    decoded = jwt.verify(token, JWT_SECRET);
+    decoded = jwt.verify(token, getJwtSecret());
   } catch (error) {
     return res.status(401).json({
       success: false,
@@ -49,7 +50,7 @@ export const protect = async (req, res, next) => {
     // If user not found by ID but token has admin role, fallback to master admin
     if (!user && decoded.role === 'admin') {
       const adminEmail = (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim();
-      user = await dataStore.findUserByEmail(adminEmail) || await dataStore.findUserByEmail('admin@local2brand.com');
+      user = (await dataStore.findUserByEmail(adminEmail)) || (await dataStore.findUserByEmail('admin@local2brand.com'));
     }
 
     if (!user) {
@@ -59,7 +60,6 @@ export const protect = async (req, res, next) => {
         message: 'The user belonging to this session was not found.',
       });
     }
-
 
     if (user.status === 'suspended') {
       return res.status(403).json({
@@ -71,23 +71,15 @@ export const protect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (dbErr) {
-    console.warn('Protect middleware database lookup notice (applying resilient session fallback):', dbErr.message);
-    if (decoded && decoded.id) {
-      req.user = {
-        _id: decoded.id,
-        id: decoded.id,
-        role: decoded.role || 'user',
-        email: decoded.email || 'user@local2brand.com',
-        name: decoded.name || 'User',
-      };
-      return next();
-    }
-    return res.status(500).json({
+    console.error('Protect middleware database lookup failure:', dbErr.message);
+    return res.status(503).json({
       success: false,
-      message: 'Server error during authentication verification',
+      isAuthError: false,
+      message: 'Database service is temporarily unavailable. Please retry shortly.',
     });
   }
 };
+
 
 export const optionalAuth = async (req, res, next) => {
   let token;
@@ -104,11 +96,12 @@ export const optionalAuth = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, getJwtSecret());
 
     if (mongoose.connection.readyState !== 1) {
       await connectDB();
     }
+
 
 
     const user = await dataStore.findUserById(decoded.id);

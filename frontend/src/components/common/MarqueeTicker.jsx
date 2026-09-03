@@ -9,8 +9,14 @@ export default function MarqueeTicker({ className = '' }) {
   const { user } = useAuth();
   const [isDismissed, setIsDismissed] = useState(false);
 
-  const config = settings?.importantUpdates;
-  const isEnabled = Boolean(config && config.enabled !== false && !isDismissed && !(config.showForLoggedInOnly && !user));
+  const config = settings?.importantUpdates || {
+    enabled: true,
+    speed: 'normal',
+    showForLoggedInOnly: false,
+    items: []
+  };
+  const isEnabled = Boolean(config.enabled !== false && !isDismissed && !(config.showForLoggedInOnly && !user));
+
 
   // Dynamically attach body class so public page sections adjust top offset smoothly
   useEffect(() => {

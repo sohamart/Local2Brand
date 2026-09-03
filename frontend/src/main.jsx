@@ -11,8 +11,14 @@ gsap.registerPlugin(ScrollTrigger);
 
 function Root() {
   useEffect(() => {
+    // Disable browser default scroll restoration so routes always start at top
+    if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
     // 144Hz Ultra High-Refresh Rate ProMotion Glide Engine
     const lenis = new Lenis({
+
       duration: 0.85, // Snappy, punchy 144Hz response without lag
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // High-refresh exponential deceleration
       orientation: 'vertical',

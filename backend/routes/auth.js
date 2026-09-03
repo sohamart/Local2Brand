@@ -27,8 +27,10 @@ router.post('/verify-otp', verifyEmailOtp);
 // Authenticated user routes
 router.get('/me', protect, getMe);
 router.put('/update-profile', protect, updateProfile);
+router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
 router.post('/claim-reward-email', protect, sendRewardEmail);
+
 
 
 // Admin-only user management routes

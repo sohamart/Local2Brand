@@ -118,60 +118,38 @@ export const login = async (req, res) => {
 
 
     let isMatch = false;
+    const storedHash = user.password || user.passwordHash;
+
     if (user.matchPassword) {
       try {
-        isMatch = await user.matchPassword(password) || await user.matchPassword(cleanPassword);
-      } catch (e) {}
-    }
-    if (!isMatch && user.password) {
-      try {
-        isMatch = (await bcrypt.compare(password, user.password)) || (await bcrypt.compare(cleanPassword, user.password));
-      } catch (e) {}
-    }
-    if (!isMatch && user.passwordHash) {
-      try {
-        isMatch = (await bcrypt.compare(password, user.passwordHash)) || (await bcrypt.compare(cleanPassword, user.passwordHash));
+        isMatch = await user.matchPassword(cleanPassword) || await user.matchPassword(password);
       } catch (e) {}
     }
 
-    // Plaintext fallback match (e.g. legacy or unhashed)
-    if (!isMatch && (user.password === password || user.password === cleanPassword || user.passwordHash === password || user.passwordHash === cleanPassword)) {
+    if (!isMatch && storedHash) {
+      try {
+        isMatch = (await bcrypt.compare(cleanPassword, storedHash)) || (await bcrypt.compare(password, storedHash));
+      } catch (e) {}
+    }
+
+    // Secure one-time migration for legacy plain passwords in database
+    if (!isMatch && storedHash && (storedHash === cleanPassword || storedHash === password)) {
       isMatch = true;
       try {
         const salt = await bcrypt.genSalt(10);
-        const newHash = await bcrypt.hash(cleanPassword, salt);
-        await dataStore.updateUser(user._id || user.id, { password: newHash, passwordHash: newHash });
+        const secureHash = await bcrypt.hash(cleanPassword, salt);
+        await dataStore.updateUser(user._id || user.id, { password: secureHash, passwordHash: secureHash });
       } catch (e) {}
     }
 
-    // Master Admin fallback password match
-    if (!isMatch && (isMasterAdminEmail || user.role === 'admin')) {
-      if (
-        cleanPassword === envAdminPass ||
-        cleanPassword === 'Admin@12345' ||
-        cleanPassword === 'admin123' ||
-        cleanPassword === 'Admin@123' ||
-        cleanPassword === 'Admin@1234' ||
-        cleanPassword === 'admin' ||
-        password === envAdminPass
-      ) {
-        isMatch = true;
-        // Update user password to this hash so future logins succeed instantly
-        try {
-          const salt = await bcrypt.genSalt(10);
-          const newHash = await bcrypt.hash(cleanPassword, salt);
-          await dataStore.updateUser(user._id || user.id, { password: newHash, passwordHash: newHash });
-        } catch (e) {}
-      }
-    }
-
     if (!isMatch) {
-      console.warn(`Login failed: Incorrect password entered for account '${cleanEmail}'.`);
+      console.warn(`Login failed: Incorrect password entered for account '${cleanIdentifier}'.`);
       return res.status(401).json({
         success: false,
         message: 'Incorrect password. Please try again.',
       });
     }
+
 
 
     if (user.status === 'suspended') {

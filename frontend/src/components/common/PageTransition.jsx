@@ -23,7 +23,11 @@ export default function PageTransition({ children }) {
       // 1. SWAP PAGE CONTENT WHEN DOORS ARE 100% CLOSED (420ms)
       const timerSwap = setTimeout(() => {
         setDisplayLocation(location);
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        if (window.lenis) {
+          window.lenis.scrollTo(0, { immediate: true });
+        }
+
       }, 420);
 
       // 2. COMPLETE TRANSITION & REMOVE OVERLAY AFTER DOORS FULLY OPEN (1150ms)

@@ -143,25 +143,68 @@ export default function Demos() {
               )}
             </div>
 
-            {/* Horizontal Filter Bar */}
-            <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 pt-1 no-scrollbar justify-start sm:justify-center">
-              {dynamicCategories.map((cat) => {
-                const isActive = activeCategory === cat;
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
-                      isActive
-                        ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md'
-                        : 'bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-slate-700/80 shadow-sm'
+            {/* Glassmorphic Category Filter Control Bar (Anti-Clipping & Pro Styling) */}
+            <div className="p-1.5 sm:p-2 rounded-2xl sm:rounded-full bg-white/70 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 shadow-glass-sm relative">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar px-1.5 scroll-smooth">
+                {/* 1. Dedicated Master "All Templates" Button */}
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory('All')}
+                  className={`px-4 py-2 rounded-full text-xs font-extrabold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                    activeCategory === 'All'
+                      ? 'l2b-gradient-bg text-white shadow-md shadow-purple-500/30 ring-2 ring-purple-400/40'
+                      : 'bg-slate-100/90 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs'
+                  }`}
+                >
+                  <Sparkles className={`w-3.5 h-3.5 ${activeCategory === 'All' ? 'text-amber-300' : 'text-purple-500 dark:text-purple-400'}`} />
+                  <span>All Templates</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      activeCategory === 'All'
+                        ? 'bg-white/20 text-white'
+                        : 'bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 border border-purple-200/50 dark:border-purple-800/50'
                     }`}
                   >
-                    {cat}
-                  </button>
-                );
-              })}
+                    {demosList.length}
+                  </span>
+                </button>
+
+                {/* 2. Individual Categories List */}
+                {dynamicCategories
+                  .filter((cat) => cat && cat !== 'All')
+                  .map((cat) => {
+                    const isActive = activeCategory === cat;
+                    const count = demosList.filter((d) => d.category === cat).length;
+                    return (
+                      <button
+                        type="button"
+                        key={cat}
+                        onClick={() => setActiveCategory(cat)}
+                        className={`px-3.5 sm:px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                          isActive
+                            ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md border border-purple-500/60 ring-2 ring-purple-500/30'
+                            : 'bg-white/90 dark:bg-slate-950/70 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white border border-slate-200/80 dark:border-slate-800 shadow-2xs'
+                        }`}
+                      >
+                        <span>{cat}</span>
+                        {count > 0 && (
+                          <span
+                            className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+                              isActive
+                                ? 'bg-white/20 text-white'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+              </div>
             </div>
+
+
 
           </div>
         </div>

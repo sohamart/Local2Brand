@@ -6,6 +6,10 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
+
+// Load environment variables immediately before any route modules
+dotenv.config();
 
 // Protect process from uncaught rejections
 process.on('uncaughtException', (err) => {
@@ -35,8 +39,6 @@ import chatRoutes from './routes/chat.js';
 import telemetryRoutes from './routes/telemetry.js';
 import analyticsRoutes from './routes/analytics.js';
 
-
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

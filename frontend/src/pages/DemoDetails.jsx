@@ -30,6 +30,12 @@ export default function DemoDetails() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Strictly keep user at the top of the page on route load
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (window.lenis) {
+      window.lenis.scrollTo(0, { immediate: true });
+    }
+
     let isMounted = true;
     const fetchDemo = async () => {
       if (!slug) {
@@ -62,6 +68,34 @@ export default function DemoDetails() {
       isMounted = false;
     };
   }, [slug]);
+
+  // Robust multi-tick scroll guard: Prevents embedded live demo iframe from dragging parent window down
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (window.lenis) {
+      window.lenis.scrollTo(0, { immediate: true });
+    }
+
+    let count = 0;
+    const scrollGuardTimer = setInterval(() => {
+      count++;
+      // If parent window was pulled down unexpectedly by child iframe autofocus or layout shifts, reset to 0
+      if (window.scrollY > 0 && window.scrollY < 1200) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        if (window.lenis) {
+          window.lenis.scrollTo(0, { immediate: true });
+        }
+      }
+      if (count > 25) { // 2.5 seconds total coverage
+        clearInterval(scrollGuardTimer);
+      }
+    }, 100);
+
+    return () => clearInterval(scrollGuardTimer);
+  }, [slug, loading]);
+
+
+
 
   if (loading) {
     return (
@@ -176,15 +210,16 @@ export default function DemoDetails() {
 
                   {demo.status !== 'coming_soon' && demo.liveUrl ? (
                     <a
-                      href={`/preview/${demo.templateId || demo.slug}`}
+                      href={demo.liveUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
                     >
-                      <span>Launch Live Demo</span>
+                      <span>Launch Live Website ↗</span>
                       <ExternalLink className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     </a>
                   ) : demo.status !== 'coming_soon' ? (
+
                     <span className="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 flex items-center justify-center gap-2">
                       <Sparkles className="w-4 h-4 text-emerald-600" />
                       <span>Live Preview Coming Soon</span>

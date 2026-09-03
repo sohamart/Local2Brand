@@ -120,9 +120,16 @@ export function SiteSettingsProvider({ children }) {
           const merged = {
             ...prev,
             ...res.settings,
+            importantUpdates: {
+              ...prev.importantUpdates,
+              ...(res.settings.importantUpdates || {}),
+              enabled: res.settings.importantUpdates?.enabled !== false,
+            },
             navLinks: prev.navLinks,
           };
-          localStorage.setItem('l2b_cached_settings', JSON.stringify(merged));
+          try {
+            localStorage.setItem('l2b_cached_settings', JSON.stringify(merged));
+          } catch (e) {}
           return merged;
         });
       }
@@ -132,6 +139,12 @@ export function SiteSettingsProvider({ children }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+
 
   const updateLocalSettingsState = (newSettings) => {
     if (!newSettings) return;

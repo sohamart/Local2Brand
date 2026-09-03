@@ -7,7 +7,9 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
   const [deviceMode, setDeviceMode] = useState('desktop'); // 'desktop' | 'tablet' | 'mobile'
   const [iframeKey, setIframeKey] = useState(0);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isInteractive, setIsInteractive] = useState(false);
   const { openOrderModal } = useOrderModal();
+
 
   const stageRef = useRef(null);
   const [scale, setScale] = useState(1);
@@ -185,12 +187,14 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
 
           {/* Scaled Responsive Viewport Container */}
           <div
-            className="bg-slate-950 relative overflow-hidden"
+            className="bg-slate-950 relative overflow-hidden group/simulator"
             style={{
               width: `${scaledWrapperWidth}px`,
               height: `${scaledWrapperHeight}px`
             }}
             data-lenis-prevent="true"
+            onMouseEnter={() => setIsInteractive(true)}
+            onClick={() => setIsInteractive(true)}
           >
             <div
               style={{
@@ -205,16 +209,42 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
                 key={`${activeSlug}-${deviceMode}-${iframeKey}`}
                 src={previewUrl}
                 title={`${activeTitle} Live Interactive Preview`}
-                className="w-full h-full border-0 bg-slate-950 block"
+                className={`w-full h-full border-0 bg-slate-950 block transition-opacity duration-300 ${
+                  isInteractive ? 'pointer-events-auto' : 'pointer-events-none'
+                }`}
                 scrolling="yes"
                 loading="lazy"
+                tabIndex="-1"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
+                onLoad={() => {
+                  // Prevent live demo's autofocus/scrollTrigger from pulling parent window down
+                  requestAnimationFrame(() => {
+                    if (window.scrollY > 0 && window.scrollY < 800) {
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                      if (window.lenis) {
+                        window.lenis.scrollTo(0, { immediate: true });
+                      }
+                    }
+                  });
+                }}
               />
             </div>
+
+            {/* Subtle Interactive Veil on initial boot */}
+            {!isInteractive && (
+              <div
+                onClick={() => setIsInteractive(true)}
+                className="absolute inset-0 bg-transparent flex items-center justify-center cursor-pointer z-20"
+                title="Click or hover to interact with live simulator"
+              />
+            )}
           </div>
         </div>
       </div>
     </div>
+
   );
 }
+
 
 
