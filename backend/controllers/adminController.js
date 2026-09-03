@@ -87,6 +87,13 @@ export const getAdminStats = async (req, res) => {
       { label: 'Cancelled', count: cancelledRequirements, color: '#f43f5e' }
     ];
 
+    const toDateString = (val) => {
+      if (!val) return '';
+      if (typeof val === 'string') return val.slice(0, 10);
+      if (val instanceof Date) return val.toISOString().slice(0, 10);
+      try { return new Date(val).toISOString().slice(0, 10); } catch (e) { return ''; }
+    };
+
     // Weekly day-by-day activity trend (Last 7 Days)
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const now = new Date();
@@ -97,8 +104,8 @@ export const getAdminStats = async (req, res) => {
       const dayName = daysOfWeek[d.getDay()];
       const dateStr = d.toISOString().slice(0, 10);
       
-      const reqsCount = requirements.filter(r => (r.createdAt || '').slice(0, 10) === dateStr).length;
-      const leadsCount = leads.filter(l => (l.createdAt || '').slice(0, 10) === dateStr).length;
+      const reqsCount = requirements.filter(r => toDateString(r.createdAt) === dateStr).length;
+      const leadsCount = leads.filter(l => toDateString(l.createdAt) === dateStr).length;
       
       weeklyTrends.push({
         day: dayName,

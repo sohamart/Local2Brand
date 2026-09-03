@@ -15,7 +15,12 @@ import mongoose from 'mongoose';
  */
 export const handleChatMessage = async (req, res) => {
   try {
-    const { message, sessionId: clientSessionId } = req.body;
+    let { message, messages: messagesArray, sessionId: clientSessionId } = req.body;
+
+    if (!message && Array.isArray(messagesArray) && messagesArray.length > 0) {
+      const lastUser = [...messagesArray].reverse().find(m => m.role === 'user');
+      message = lastUser?.content || messagesArray[messagesArray.length - 1]?.content;
+    }
 
     if (!message || typeof message !== 'string' || !message.trim()) {
       return res.status(400).json({

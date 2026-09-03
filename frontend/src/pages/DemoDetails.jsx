@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -12,36 +12,105 @@ import {
   Share2,
   MessageCircle
 } from 'lucide-react';
-import { getDemoBySlug, demoWebsites } from '../data/demos';
 import { SEO } from '../components/common/CommonUI';
 import DevicePreview from '../components/demos/DevicePreview';
 import ShareDemoModal from '../components/demos/ShareDemoModal';
+import DashboardLoader from '../components/common/DashboardLoader';
 import { useOrderModal } from '../context/OrderModalContext';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../utils/whatsapp';
 import AshokaChakra from '../components/common/AshokaChakra';
+import api from '../services/api';
 
 export default function DemoDetails() {
   const { slug } = useParams();
-  const { openOrderModal } = useOrderModal();
+  const { openOrderModal, openCallbackModal } = useOrderModal();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const demo = getDemoBySlug(slug);
+  const [demo, setDemo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  if (!demo) {
-    return <Navigate to="/demos" replace />;
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDemo = async () => {
+      if (!slug) {
+        setError('No demo specified');
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      setError('');
+      try {
+        const res = await api.get(`/demos/${slug}`);
+        if (isMounted) {
+          if (res.success && res.demo) {
+            setDemo(res.demo);
+          } else {
+            setError(`Template '${slug}' was not found in the database.`);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message || `Unable to load template '${slug}' from database.`);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchDemo();
+    return () => {
+      isMounted = false;
+    };
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-36 pb-20 flex items-center justify-center">
+        <DashboardLoader title="Fetching Template Specifications from Database..." role="client" />
+      </div>
+    );
+  }
+
+  if (error || !demo) {
+    return (
+      <div className="min-h-screen pt-36 pb-20 px-4 text-center max-w-md mx-auto space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800 text-amber-600 flex items-center justify-center mx-auto">
+          <Sparkles className="w-7 h-7" />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Template Not Found</h2>
+        <p className="text-xs text-slate-500">
+          {error || `The template '${slug}' is not present in the database.`}
+        </p>
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+          <Link to="/demos" className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm">
+            Browse All Templates
+          </Link>
+          <Link to="/" className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800">
+            Back to Home
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   const handleOrder = () => {
     openOrderModal({
       selectedDemo: demo.title,
       websiteType: `Template Order: ${demo.title}`,
-      initialRequirements: `I want to order and customize the "${demo.title}" (${demo.category}) website template for my business.`,
+      initialRequirements: `I want to order and customize the "${demo.title}" (${demo.category || 'Website'}) website template for my business.`,
       price: demo.priceInr || demo.price
     });
   };
 
   const handleAskQuestions = () => {
-    openCallbackModal({ topic: `Questions regarding ${demo.title}` });
+    if (openCallbackModal) {
+      openCallbackModal({ topic: `Questions regarding ${demo.title}` });
+    } else {
+      const msg = `Hi LOCAL2BRAND! 👋 I have some questions regarding the "${demo.title}" template.`;
+      openWhatsAppChat(msg);
+    }
   };
+
 
   return (
     <>

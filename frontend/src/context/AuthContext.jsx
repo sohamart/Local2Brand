@@ -27,30 +27,44 @@ export function AuthProvider({ children }) {
 
   // Load user profile on mount if token exists
   useEffect(() => {
+    let isMounted = true;
+
     const initAuth = async () => {
       const savedToken = localStorage.getItem('l2b_auth_token');
       if (savedToken) {
+        api.setToken(savedToken);
         try {
           const res = await api.get('/auth/me');
-          if (res.success && res.user) {
+          if (isMounted && res.success && res.user) {
             setUser(res.user);
+            setToken(savedToken);
             localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
-          } else {
-            logout(false);
           }
         } catch (err) {
-          if (err.status === 401 || err.message?.includes('no longer exists') || err.message?.includes('token')) {
-            logout(false);
+          if (err.isAuthError || (err.status === 401 && (err.message?.includes('token') || err.message?.includes('expired') || err.message?.includes('no longer exists')))) {
+            if (isMounted) logout(false);
           } else {
-            console.warn('Session check notice, using cached profile:', err.message);
+            console.warn('Session check notice (offline or cold start, retaining session):', err.message);
           }
         }
+      } else {
+        if (isMounted) {
+          setUser(null);
+          setToken(null);
+        }
       }
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     };
 
     initAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
 
   const openAuthModal = (callback = null) => {
     setAuthSuccessCallback(() => callback);

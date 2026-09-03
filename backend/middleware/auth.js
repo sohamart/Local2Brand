@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { dataStore } from '../config/dataAdapter.js';
+import { connectDB } from '../config/db.js';
+import mongoose from 'mongoose';
 
 export const protect = async (req, res, next) => {
   let token;
@@ -18,11 +20,24 @@ export const protect = async (req, res, next) => {
     });
   }
 
+  let decoded;
   try {
-    const decoded = jwt.verify(
+    decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026_ultra_safe'
     );
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      isAuthError: true,
+      message: 'Invalid or expired token. Please log in again.',
+    });
+  }
+
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
 
     let user = await dataStore.findUserById(decoded.id);
 
@@ -35,6 +50,7 @@ export const protect = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({
         success: false,
+        isAuthError: true,
         message: 'The user belonging to this token no longer exists.',
       });
     }
@@ -48,10 +64,11 @@ export const protect = async (req, res, next) => {
 
     req.user = user;
     next();
-  } catch (error) {
-    return res.status(401).json({
+  } catch (dbErr) {
+    console.error('Protect middleware database lookup error:', dbErr.message);
+    return res.status(500).json({
       success: false,
-      message: 'Invalid or expired token. Please log in again.',
+      message: 'Temporary server error verifying credentials. Please try again.',
     });
   }
 };
@@ -75,6 +92,11 @@ export const optionalAuth = async (req, res, next) => {
       token,
       process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026_ultra_safe'
     );
+
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+
     const user = await dataStore.findUserById(decoded.id);
     if (user && user.status !== 'suspended') {
       req.user = user;
@@ -94,3 +116,4 @@ export const adminOnly = (req, res, next) => {
   }
   next();
 };
+

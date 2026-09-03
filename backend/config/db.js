@@ -8,42 +8,58 @@ try {
   // Ignored if custom DNS is not permitted
 }
 
-// Prevent Mongoose from throwing unhandled error events on failed background retries
+// Global cached connection for Vercel Serverless environment
+let cached = global.mongoose;
 
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+// Prevent unhandled error crashes
 mongoose.connection.on('error', (err) => {
-  // Gracefully handle connection error events without crashing the process
+  console.warn('⚠️ MongoDB connection event error:', err.message);
 });
 
-mongoose.set('bufferCommands', false);
+// Enable buffer commands so Mongoose queues operations during initial connection rather than throwing
+mongoose.set('bufferCommands', true);
 
 export const connectDB = async () => {
-  const mongoUri = process.env.MONGODB_URI;
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
+  }
 
-  if (!mongoUri || mongoUri.includes('127.0.0.1:27017')) {
-    // Try connecting once with short timeout, if unavailable run in resilient mode
-    try {
-      const conn = await mongoose.connect(mongoUri || 'mongodb://127.0.0.1:27017/local2brand', {
-        serverSelectionTimeoutMS: 2000,
-        connectTimeoutMS: 2000,
-      });
-      console.log(`✅ MongoDB Connected Successfully: ${conn.connection.host}`);
-      return true;
-    } catch (error) {
-      console.log(`ℹ️ MongoDB local service not active. Running in resilient persistent storage mode.`);
-      return false;
-    }
+  const mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri) {
+    console.warn('⚠️ MONGODB_URI is not set in environment variables.');
+  }
+
+  const connectionString = mongoUri || 'mongodb://127.0.0.1:27017/local2brand';
+
+  if (!cached.promise) {
+    const opts = {
+      bufferCommands: true,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    };
+
+    cached.promise = mongoose.connect(connectionString, opts).then((mongooseInstance) => {
+      console.log(`✅ MongoDB Connected Successfully: ${mongooseInstance.connection.host}`);
+      return mongooseInstance;
+    }).catch((err) => {
+      cached.promise = null;
+      console.error(`❌ MongoDB Connection Error: ${err.message}`);
+      throw err;
+    });
   }
 
   try {
-    const conn = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 5000,
-    });
-    console.log(`✅ MongoDB Connected Successfully: ${conn.connection.host}`);
-    return true;
+    cached.conn = await cached.promise;
+    return cached.conn;
   } catch (error) {
-    console.warn(`⚠️ MongoDB Atlas connection notice: ${error.message}`);
-    console.log(`ℹ️ Running in resilient persistent storage mode.`);
-    return false;
+    cached.promise = null;
+    console.warn(`⚠️ MongoDB connection attempt failed: ${error.message}`);
+    return null;
   }
 };
+

@@ -393,10 +393,14 @@ export default function UserDashboard() {
                     src={avatarUrl}
                     alt={user?.name}
                     className={`w-full h-full object-cover transition-opacity duration-300 ${uploadingAvatar ? 'opacity-40 scale-105' : 'opacity-100 scale-100'}`}
+                    onError={(e) => {
+                      setAvatarUrl('');
+                    }}
                   />
                 ) : (
                   user?.name?.[0]?.toUpperCase() || 'U'
                 )}
+
 
                 {uploadingAvatar && (
                   <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-xs flex flex-col items-center justify-center gap-1.5 p-1">

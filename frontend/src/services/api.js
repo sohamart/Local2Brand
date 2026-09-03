@@ -61,6 +61,7 @@ class ApiClient {
     const config = {
       ...options,
       headers,
+      credentials: 'include',
       signal: options.signal || controller.signal,
     };
 
@@ -70,15 +71,21 @@ class ApiClient {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        if (res.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+        // Only clear auth token if confirmed authentication invalidity from /auth/me or explicit isAuthError
+        const isAuthCheckEndpoint = endpoint === '/auth/me' || endpoint.startsWith('/auth/me');
+        const isExplicitAuthFailure = data.isAuthError === true || (res.status === 401 && isAuthCheckEndpoint);
+
+        if (isExplicitAuthFailure && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
           this.setToken(null);
           if (typeof window !== 'undefined') {
             localStorage.removeItem('l2b_cached_user');
           }
         }
+
         const error = new Error(data.message || `Request failed with status ${res.status}`);
         error.status = res.status;
         error.data = data;
+        error.isAuthError = isExplicitAuthFailure;
         throw error;
       }
 
@@ -90,7 +97,7 @@ class ApiClient {
         timeoutErr.status = 408;
         throw timeoutErr;
       }
-      console.error(`API Error on [${options.method || 'GET'}] ${endpoint}:`, err.message);
+      console.warn(`API [${options.method || 'GET'}] ${endpoint} notice:`, err.message);
       throw err;
     }
   }

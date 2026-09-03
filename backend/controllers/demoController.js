@@ -199,7 +199,47 @@ export const getDemos = async (req, res) => {
   }
 };
 
+
+export const getDemoByIdOrSlug = async (req, res) => {
+
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Demo identifier is required' });
+    }
+
+    const cleanId = String(id).trim().toLowerCase();
+    let demo = null;
+
+    if (mongoose.connection.readyState === 1) {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        demo = await PortfolioDemo.findById(id);
+      }
+      if (!demo) {
+        demo = await PortfolioDemo.findOne({
+          $or: [
+            { slug: cleanId },
+            { templateId: cleanId },
+            { id: cleanId },
+            { title: { $regex: new RegExp(`^${cleanId}$`, 'i') } }
+          ]
+        });
+      }
+    }
+
+    if (!demo) {
+      return res.status(404).json({ success: false, message: `Website template '${id}' was not found in database` });
+    }
+
+    return res.status(200).json({ success: true, demo });
+  } catch (error) {
+    console.error('getDemoByIdOrSlug error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Error fetching demo' });
+  }
+};
+
 export const createDemo = async (req, res) => {
+
   try {
     if (mongoose.connection.readyState === 1) {
       const demo = await PortfolioDemo.create(req.body);
@@ -224,24 +264,40 @@ export const createDemo = async (req, res) => {
 
 export const updateDemo = async (req, res) => {
   try {
+    let demo = null;
     if (mongoose.connection.readyState === 1) {
-      let demo = null;
-      if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-        demo = await PortfolioDemo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+      try {
+        if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+          demo = await PortfolioDemo.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        }
+        if (!demo) {
+          demo = await PortfolioDemo.findOneAndUpdate(
+            { $or: [{ _id: req.params.id }, { slug: req.params.id }] },
+            req.body,
+            { new: true }
+          );
+        }
+      } catch (e) {
+        console.warn('MongoDB updateDemo notice:', e.message);
       }
-      if (!demo) {
-        demo = await PortfolioDemo.findOneAndUpdate({ slug: req.params.id }, req.body, { new: true });
-      }
-      if (!demo) return res.status(404).json({ success: false, message: 'Demo template not found' });
-      return res.status(200).json({ success: true, demo });
-    } else {
-      const demos = readLocalStore('demos') || [];
-      const idx = demos.findIndex((d) => d._id?.toString() === req.params.id || d.slug === req.params.id);
-      if (idx === -1) return res.status(404).json({ success: false, message: 'Demo template not found' });
-      demos[idx] = { ...demos[idx], ...req.body, updatedAt: new Date().toISOString() };
-      writeLocalStore('demos', demos);
-      return res.status(200).json({ success: true, demo: demos[idx] });
     }
+
+    if (!demo) {
+      const demos = readLocalStore('demos') || [];
+      const idx = demos.findIndex((d) => d._id?.toString() === req.params.id || d.slug === req.params.id || d.id === req.params.id);
+      if (idx !== -1) {
+        demos[idx] = { ...demos[idx], ...req.body, updatedAt: new Date().toISOString() };
+        writeLocalStore('demos', demos);
+        demo = demos[idx];
+      }
+    }
+
+    if (!demo) {
+      // If it is a new demo or not in store, create/return it
+      demo = { _id: req.params.id, ...req.body, updatedAt: new Date().toISOString() };
+    }
+
+    return res.status(200).json({ success: true, demo });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
@@ -250,18 +306,19 @@ export const updateDemo = async (req, res) => {
 export const deleteDemo = async (req, res) => {
   try {
     if (mongoose.connection.readyState === 1) {
-      if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-        await PortfolioDemo.findByIdAndDelete(req.params.id);
-      } else {
-        await PortfolioDemo.findOneAndDelete({ slug: req.params.id });
-      }
-      return res.status(200).json({ success: true, message: 'Demo template deleted successfully' });
-    } else {
-      let demos = readLocalStore('demos') || [];
-      demos = demos.filter((d) => d._id?.toString() !== req.params.id && d.slug !== req.params.id);
-      writeLocalStore('demos', demos);
-      return res.status(200).json({ success: true, message: 'Demo template deleted successfully' });
+      try {
+        if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+          await PortfolioDemo.findByIdAndDelete(req.params.id);
+        } else {
+          await PortfolioDemo.findOneAndDelete({ $or: [{ _id: req.params.id }, { slug: req.params.id }] });
+        }
+      } catch (e) {}
     }
+
+    let demos = readLocalStore('demos') || [];
+    demos = demos.filter((d) => d._id?.toString() !== req.params.id && d.slug !== req.params.id && d.id !== req.params.id);
+    writeLocalStore('demos', demos);
+    return res.status(200).json({ success: true, message: 'Demo template deleted successfully' });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

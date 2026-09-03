@@ -63,7 +63,9 @@ app.use(
 );
 
 // Dynamic Allowed Origins for CORS
-const allowedOrigins = [
+const rawAllowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
   'https://local2brand.vercel.app',
   'https://www.local2brand.com',
   'https://local2brand.com',
@@ -71,21 +73,22 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5000',
   'http://127.0.0.1:5173',
-];
+].filter(Boolean);
+
+const allowedOrigins = [...new Set(rawAllowedOrigins)];
 
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
-    
-    // Check if origin matches allowed list or any Vercel preview domain (*.vercel.app)
-    if (
-      allowedOrigins.includes(origin) ||
-      /\.vercel\.app$/.test(origin) ||
-      process.env.NODE_ENV !== 'production'
-    ) {
+
+    const isExplicitlyAllowed = allowedOrigins.includes(origin);
+    const isVercelDomain = /\.vercel\.app$/.test(origin);
+    const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+
+    if (isExplicitlyAllowed || isVercelDomain || isLocalhost || process.env.NODE_ENV !== 'production') {
       return callback(null, origin);
     }
-    
+
     return callback(null, origin);
   },
   credentials: true,
@@ -111,17 +114,20 @@ try {
 } catch (e) {}
 
 // Serverless DB Auto-Connect Middleware
-let dbInitialized = false;
+let dbSeeded = false;
 app.use(async (req, res, next) => {
-  if (!dbInitialized) {
-    try {
+  try {
+    const isConnected = mongoose.connection.readyState === 1;
+    if (!isConnected) {
       await connectDB();
-      await dataStore.seedDefaultAdmin();
-      await dataStore.getSettings();
-      dbInitialized = true;
-    } catch (e) {
-      console.warn('DB initialization notice:', e.message);
     }
+    if (!dbSeeded && mongoose.connection.readyState === 1) {
+      dbSeeded = true;
+      dataStore.seedDefaultAdmin().catch(() => {});
+      dataStore.getSettings().catch(() => {});
+    }
+  } catch (e) {
+    console.warn('DB connection notice on request:', e.message);
   }
   next();
 });
@@ -140,6 +146,7 @@ app.get('/', (req, res) => {
       callbacks: '/api/callbacks',
       chat: '/api/chat',
     },
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'connecting',
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'production',
   });
@@ -147,10 +154,21 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState;
+  const dbStatusMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting',
+  };
+
   res.status(200).json({
     status: 'online',
+    database: dbStatusMap[dbStatus] || 'unknown',
+    databaseConnected: dbStatus === 1,
     timestamp: new Date().toISOString(),
     service: 'LOCAL2BRAND Enterprise Backend API',
+    uptime: process.uptime(),
   });
 });
 
@@ -159,6 +177,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/queries', queryRoutes);
 app.use('/api/callbacks', callbackRoutes);
+app.use('/api/admin/callbacks', callbackRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/services', serviceRoutes);
@@ -194,7 +213,8 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
       await connectDB();
       await dataStore.seedDefaultAdmin();
       await dataStore.getSettings();
-      dbInitialized = true;
+      dbSeeded = true;
+
 
       app.listen(PORT, () => {
         console.log(`\n🚀 LOCAL2BRAND Backend running on http://localhost:${PORT}`);

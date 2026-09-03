@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getDemos,
+  getDemoByIdOrSlug,
   createDemo,
   updateDemo,
   deleteDemo,
@@ -10,8 +11,9 @@ import { protect, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Public: Get all demos
+// Public: Get all demos or single demo by slug/ID
 router.get('/', getDemos);
+router.get('/:id', getDemoByIdOrSlug);
 
 // Admin: Reorder demos
 router.put('/reorder', protect, adminOnly, reorderDemos);
@@ -22,3 +24,4 @@ router.put('/:id', protect, adminOnly, updateDemo);
 router.delete('/:id', protect, adminOnly, deleteDemo);
 
 export default router;
+

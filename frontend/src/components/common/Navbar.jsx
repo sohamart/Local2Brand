@@ -609,11 +609,20 @@ export default function Navbar() {
                   >
                     <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm overflow-hidden border border-white/40 dark:border-slate-700">
                       {user?.avatar ? (
-                        <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                        <img
+                          key={user.avatar}
+                          src={user.avatar}
+                          alt={user.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
                       ) : (
                         user?.name?.[0]?.toUpperCase() || 'U'
                       )}
                     </div>
+
                     <span className="max-w-[80px] truncate text-xs font-bold text-slate-800 dark:text-slate-200">
                       {user?.name ? user.name.split(' ')[0] : 'User'}
                     </span>
@@ -732,7 +741,15 @@ export default function Navbar() {
                   aria-label="User Profile"
                 >
                   {user?.avatar ? (
-                    <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    <img
+                      key={user.avatar}
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
                   ) : (
                     user?.name?.[0]?.toUpperCase() || 'U'
                   )}
@@ -819,7 +836,15 @@ export default function Navbar() {
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 text-white flex items-center justify-center font-black text-base shadow-md overflow-hidden border-2 border-white/60 dark:border-slate-700 shrink-0">
                         {user?.avatar ? (
-                          <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                          <img
+                            key={user.avatar}
+                            src={user.avatar}
+                            alt={user.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
                         ) : (
                           user?.name?.[0]?.toUpperCase() || 'U'
                         )}
@@ -829,6 +854,7 @@ export default function Navbar() {
                         <span className="text-[11px] text-slate-500 block truncate">{user.email}</span>
                       </div>
                     </div>
+
                     <button
                       onClick={() => {
                         logout();

@@ -1,31 +1,7 @@
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 
-// Ensure uploads folder exists for local fallback
-const uploadDir = process.env.VERCEL
-  ? path.join('/tmp', 'uploads')
-  : path.join(process.cwd(), 'uploads');
-
-try {
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-} catch (e) {
-  // Ignored in read-only environments
-}
-
-// Multer disk storage for local handling
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  },
-});
+// Memory storage for serverless environments (handles buffer in memory without relying on ephemeral disk)
+const storage = multer.memoryStorage();
 
 // File filter (images only)
 const fileFilter = (req, file, cb) => {
@@ -44,3 +20,4 @@ export const upload = multer({
     fileSize: (Number(process.env.MAX_FILE_SIZE_MB) || 10) * 1024 * 1024, // default 10MB
   },
 });
+

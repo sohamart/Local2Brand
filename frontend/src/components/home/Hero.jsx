@@ -24,10 +24,9 @@ import {
   Compass
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
-import { useAuth } from '../../context/AuthContext';
 import AshokaChakra from '../common/AshokaChakra';
-import { getDemoBySlug } from '../../data/demos';
 import api from '../../services/api';
+
 
 const ICON_MAP = {
   GraduationCap,
@@ -187,27 +186,27 @@ export default function Hero() {
           const sourceList = featured.length > 0 ? featured : res.demos.slice(0, 4);
 
           const formatted = sourceList.map((d, idx) => {
-            const staticMeta = getDemoBySlug(d.slug) || {};
             const defFallback = defaultHeroShowcases[idx % defaultHeroShowcases.length];
 
             return {
               id: d.slug || d._id || `demo_${idx}`,
-              slug: d.slug,
-              title: d.title,
-              shortName: d.shortName || staticMeta.shortName || (d.title.split(' ')[0] + ' ' + (d.category?.split(' ')[0] || 'Demo')),
-              category: d.category || staticMeta.category || 'Bespoke Website',
-              image: d.thumbnail || d.heroImage || staticMeta.heroImage || defFallback.image,
-              stat: d.heroStat || d.badge || staticMeta.badge || 'PRO READY',
+              slug: d.slug || `demo_${idx}`,
+              title: d.title || defFallback.title,
+              shortName: d.shortName || (d.title ? d.title.split(' ')[0] + ' ' + (d.category?.split(' ')[0] || 'Demo') : defFallback.shortName),
+              category: d.category || 'Bespoke Website',
+              image: d.thumbnail || d.heroImage || d.image || defFallback.image,
+              stat: d.heroStat || d.badge || 'PRO READY',
               accentColor: d.accentColor || ACCENT_COLORS[idx % ACCENT_COLORS.length],
               glowColor: d.glowColor || GLOW_COLORS[idx % GLOW_COLORS.length],
-              tag: d.heroTag || d.description || staticMeta.shortDescription || 'Interactive Demo Experience',
-              rating: d.rating || `${staticMeta.rating || '5.0'} ★ (${staticMeta.reviewsCount || '50'}+ Reviews)`,
+              tag: d.heroTag || d.description || 'Interactive Demo Experience',
+              rating: d.rating || '5.0 ★ (50+ Reviews)',
               icon: getDynamicIcon(d.iconName, d.category),
               iconName: d.iconName,
-              liveUrl: d.liveUrl || staticMeta.liveUrl || '',
-              isPublished: d.status === 'published' || staticMeta.isPublished
+              liveUrl: d.liveUrl || '',
+              isPublished: Boolean(d.status === 'published' && d.liveUrl)
             };
           });
+
 
           setShowcases(formatted);
           localStorage.setItem('l2b_cached_hero_demos', JSON.stringify(formatted));
@@ -525,10 +524,9 @@ export default function Hero() {
                     local2brand.com/demos/{current.slug}
                   </span>
                   {(() => {
-                    const currentDemoMeta = getDemoBySlug(current.slug) || getDemoBySlug(current.id);
                     const isLive = Boolean(
                       (current.isPublished || current.status === 'published') &&
-                      (current.liveUrl || currentDemoMeta?.liveUrl)
+                      current.liveUrl
                     );
                     return isLive ? (
                       <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold border border-emerald-200/70 dark:border-emerald-700/50">
@@ -570,10 +568,9 @@ export default function Hero() {
 
                 {/* Dynamic Showcase Visual Display */}
                 {(() => {
-                  const currentDemoMeta = getDemoBySlug(current.slug) || getDemoBySlug(current.id);
                   const isLiveReady = Boolean(
                     (current.isPublished || current.status === 'published') &&
-                    (current.liveUrl || currentDemoMeta?.liveUrl)
+                    current.liveUrl
                   );
 
                   return (
@@ -656,10 +653,9 @@ export default function Hero() {
 
                     <div className="flex items-center gap-2.5 shrink-0 pointer-events-auto">
                       {(() => {
-                        const currentDemoMeta = getDemoBySlug(current.slug) || getDemoBySlug(current.id);
                         const isLiveReady = Boolean(
                           (current.isPublished || current.status === 'published') &&
-                          (current.liveUrl || currentDemoMeta?.liveUrl)
+                          current.liveUrl
                         );
 
                         return isLiveReady ? (
@@ -694,6 +690,7 @@ export default function Hero() {
                   </div>
                 </div>
               </div>
+
 
               {/* 3. Bottom Showcase Bar with Dot Indicators & Navigation */}
               <div className="px-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200/70 dark:border-slate-800/80 flex items-center justify-between">

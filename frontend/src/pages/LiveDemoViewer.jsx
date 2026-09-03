@@ -24,12 +24,13 @@ import ThemeToggle from '../components/common/ThemeToggle';
 import { useOrderModal } from '../context/OrderModalContext';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../utils/whatsapp';
 import ShareDemoModal from '../components/demos/ShareDemoModal';
-import { demoWebsites, getDemoBySlug } from '../data/demos';
+import DashboardLoader from '../components/common/DashboardLoader';
+import api from '../services/api';
 
 export default function LiveDemoViewer() {
   const params = useParams();
-  const rawId = params.slug || params.templateId || 'restaurant';
-  const cleanId = rawId.toLowerCase().trim();
+  const rawId = params.slug || params.templateId || '';
+  const cleanId = (rawId || '').toLowerCase().trim();
   const [searchParams] = useSearchParams();
   const { openOrderModal } = useOrderModal();
   const [deviceMode, setDeviceMode] = useState('full'); // 'full', 'desktop', 'tablet', 'mobile'
@@ -37,29 +38,113 @@ export default function LiveDemoViewer() {
   const [iframeKey, setIframeKey] = useState(0);
   const [isLoadingIframe, setIsLoadingIframe] = useState(true);
 
-  const activeDemo = getDemoBySlug(cleanId) || demoWebsites[0];
+  const [activeDemo, setActiveDemo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDemoData = async () => {
+      if (!cleanId) {
+        setFetchError('No template specified');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setFetchError('');
+      try {
+        const res = await api.get(`/demos/${cleanId}`);
+        if (isMounted) {
+          if (res.success && res.demo) {
+            setActiveDemo(res.demo);
+          } else {
+            setFetchError(`Website template '${cleanId}' was not found in the database.`);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setFetchError(err.message || `Unable to load template '${cleanId}' from database.`);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchDemoData();
+    return () => {
+      isMounted = false;
+    };
+  }, [cleanId]);
 
   const handleOrder = () => {
+    if (!activeDemo) return;
     openOrderModal({
       selectedDemo: activeDemo.title,
       websiteType: `Live Website Project: ${activeDemo.title}`,
-      initialRequirements: `I want to order and deploy a complete live website for my business based on the "${activeDemo.title}" (${activeDemo.category}) demo.`,
+      initialRequirements: `I want to order and deploy a complete live website for my business based on the "${activeDemo.title}" (${activeDemo.category || 'Website'}) demo.`,
       price: activeDemo.priceInr || activeDemo.price
     });
   };
 
   const handleOrderClick = () => {
+    if (!activeDemo) return;
     openOrderModal({
       selectedDemo: activeDemo.title,
       price: activeDemo.priceInr || activeDemo.price,
-      initialRequirements: `I want to customize the "${activeDemo.title}" (${activeDemo.category}) website template for my brand.`
+      initialRequirements: `I want to customize the "${activeDemo.title}" (${activeDemo.category || 'Website'}) website template for my brand.`
     });
+  };
+
+  const handleDirectWhatsApp = () => {
+    if (!activeDemo) return;
+    const msg = `Hi LOCAL2BRAND team! 👋 I am interested in pre-ordering the "${activeDemo.title}" (${activeDemo.category || 'Website'}) template for my business with 20% launch offer.`;
+    openWhatsAppChat(msg);
   };
 
   const handleReload = () => {
     setIsLoadingIframe(true);
     setIframeKey((prev) => prev + 1);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center pt-24 pb-20">
+        <DashboardLoader title="Fetching Live Website from Database..." role="client" />
+      </div>
+    );
+  }
+
+  if (fetchError || !activeDemo) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
+        <div className="max-w-md p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800 text-amber-600 flex items-center justify-center mx-auto">
+            <Sparkles className="w-7 h-7" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Template Not Found in Database</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {fetchError || `The demo '${cleanId}' could not be retrieved from the database.`}
+          </p>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2">
+            <Link
+              to="/demos"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm"
+            >
+              Browse All Demos
+            </Link>
+            <Link
+              to="/"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800"
+            >
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col overflow-x-hidden transition-colors duration-300">

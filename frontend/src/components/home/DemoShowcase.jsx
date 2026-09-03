@@ -4,8 +4,8 @@ import { Sparkles, ArrowRight, Grid, Search } from 'lucide-react';
 import SectionHeading from '../common/SectionHeading';
 import ScrollReveal from '../common/ScrollReveal';
 import DemoCard from '../demos/DemoCard';
-import { demoCategories, demoWebsites } from '../../data/demos';
 import api from '../../services/api';
+
 
 export default function DemoShowcase() {
   const [demosList, setDemosList] = useState(() => {

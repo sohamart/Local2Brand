@@ -165,7 +165,15 @@ export default function AdminLayout() {
             <div className="flex items-center gap-2 overflow-hidden">
               <div className="w-8 h-8 rounded-xl overflow-hidden shadow-xs shrink-0 border border-slate-200 dark:border-slate-700 bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
                 {user?.avatar ? (
-                  <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  <img
+                    key={user.avatar}
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 ) : (
                   <span>{user?.name ? user.name[0].toUpperCase() : 'A'}</span>
                 )}
@@ -218,7 +226,15 @@ export default function AdminLayout() {
             <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
               <div className="w-8 h-8 rounded-xl overflow-hidden shadow-xs border border-purple-500/40 bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
                 {user?.avatar ? (
-                  <img key={user.avatar} src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                  <img
+                    key={user.avatar}
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 ) : (
                   <span>{user?.name ? user.name[0].toUpperCase() : 'A'}</span>
                 )}
@@ -230,6 +246,7 @@ export default function AdminLayout() {
             </div>
           </div>
         </header>
+
 
         {/* Viewport Render Outlet */}
         <main className="p-4 sm:p-6 lg:p-8 flex-1">
