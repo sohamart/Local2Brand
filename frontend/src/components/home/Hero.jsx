@@ -24,8 +24,10 @@ import {
   Compass
 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
+import { useAuth } from '../../context/AuthContext';
 import AshokaChakra from '../common/AshokaChakra';
 import api from '../../services/api';
+
 
 
 const ICON_MAP = {
