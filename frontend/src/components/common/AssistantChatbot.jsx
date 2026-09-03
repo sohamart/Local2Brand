@@ -317,7 +317,10 @@ export default function AssistantChatbot() {
   };
 
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+
   // Listen for Lucky Wheel spin win event or direct chatbot open triggers
+
   useEffect(() => {
     const handlePrizeAwarded = (e) => {
       const prize = e.detail;
