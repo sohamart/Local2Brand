@@ -20,5 +20,18 @@
     "company": "LOCAL2BRAND HQ",
     "status": "active",
     "createdAt": "2026-08-31T06:57:02.503Z"
+  },
+  {
+    "_id": "6a95d3798cd0de29be2399db",
+    "id": "6a95d3798cd0de29be2399db",
+    "name": "LOCAL2BRAND Master Admin",
+    "email": "sohamduttabwn@gmail.com",
+    "role": "admin",
+    "avatar": "",
+    "phone": "",
+    "company": "",
+    "status": "active",
+    "password": "$2b$10$29uMUu7xSPyzf38JMEYlU.JuQr2aa.tAw3irtEglf9nnSJwOzQ5.2",
+    "passwordHash": "$2b$10$29uMUu7xSPyzf38JMEYlU.JuQr2aa.tAw3irtEglf9nnSJwOzQ5.2"
   }
 ]
