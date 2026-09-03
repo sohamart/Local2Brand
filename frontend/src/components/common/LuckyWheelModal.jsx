@@ -93,6 +93,20 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
   const totalSlices = PRIZES.length;
   const sliceDeg = 360 / totalSlices;
 
+  // Check if user has already spun the wheel
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      const alreadySpun = localStorage.getItem('l2b_wheel_spun');
+      const savedPrize = localStorage.getItem('l2b_won_voucher');
+      if (alreadySpun === 'true' && savedPrize) {
+        const parsed = JSON.parse(savedPrize);
+        setWinningPrize(parsed);
+        setHasSpun(true);
+      }
+    } catch (e) {}
+  }, [isOpen]);
+
   // Draw the wheel on canvas
   useEffect(() => {
     if (!isOpen) return;
@@ -159,11 +173,16 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
 
   const handleSpin = () => {
     if (isSpinning) return;
+    if (hasSpun && winningPrize) {
+      toast.info(`You have already claimed your prize: ${winningPrize.label} (${winningPrize.code})!`);
+      return;
+    }
+
     setIsSpinning(true);
     setWinningPrize(null);
     setCopied(false);
 
-    // Pick winning slice (weighted towards high conversion launch offer INDIA2025)
+    // Pick winning slice
     const winningIndex = Math.floor(Math.random() * PRIZES.length);
     const selected = PRIZES[winningIndex];
 
@@ -179,15 +198,22 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
       setWinningPrize(selected);
       setHasSpun(true);
 
-      // Save won voucher
+      // Save won voucher and mark as spun permanently
       try {
+        localStorage.setItem('l2b_wheel_spun', 'true');
         localStorage.setItem('l2b_won_voucher', JSON.stringify(selected));
       } catch (e) {}
 
       toast.success(`🎉 Congratulations! You won: ${selected.label} (${selected.code})`, {
         icon: '🎁',
-        autoClose: 4000
+        autoClose: 3500
       });
+
+      // Automatically transition directly into AI Chatbot after 2.5 seconds
+      setTimeout(() => {
+        onClose();
+        window.dispatchEvent(new CustomEvent('l2b_open_chatbot_prize', { detail: selected }));
+      }, 2500);
     }, 4500);
   };
 
@@ -206,14 +232,9 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
   const handleClaimNow = () => {
     if (!winningPrize) return;
     onClose();
-    openOrderModal({
-      promoCode: winningPrize.code,
-      discountPercent: winningPrize.discountPercent,
-      autoApplyOffer: true,
-      websiteType: `Spin & Win Prize: ${winningPrize.label} (Code: ${winningPrize.code})`,
-      initialRequirements: `I won the Spin & Win prize "${winningPrize.label}" with promo code "${winningPrize.code}". Please apply this discount to my website project!`,
-    });
+    window.dispatchEvent(new CustomEvent('l2b_open_chatbot_prize', { detail: winningPrize }));
   };
+
 
   return (
     <div
@@ -280,14 +301,19 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
             {/* Center Cap Button */}
             <button
               onClick={handleSpin}
-              disabled={isSpinning}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-slate-900 text-white font-black text-[11px] uppercase tracking-wider flex flex-col items-center justify-center shadow-lg border-2 border-amber-400 cursor-pointer hover:scale-105 active:scale-95 transition-all z-20 disabled:cursor-not-allowed group"
+              disabled={isSpinning || (hasSpun && !!winningPrize)}
+              className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full text-white font-black text-[11px] uppercase tracking-wider flex flex-col items-center justify-center shadow-lg border-2 border-amber-400 transition-all z-20 ${
+                hasSpun && winningPrize
+                  ? 'bg-emerald-700 cursor-default opacity-90'
+                  : 'bg-slate-900 cursor-pointer hover:scale-105 active:scale-95'
+              }`}
             >
-              <RotateCw className={`w-4 h-4 text-amber-400 mb-0.5 ${isSpinning ? 'animate-spin' : 'group-hover:rotate-45 transition-transform'}`} />
-              <span>{isSpinning ? '...' : 'SPIN'}</span>
+              <RotateCw className={`w-4 h-4 text-amber-400 mb-0.5 ${isSpinning ? 'animate-spin' : ''}`} />
+              <span>{isSpinning ? '...' : hasSpun && winningPrize ? 'WON 🎁' : 'SPIN'}</span>
             </button>
           </div>
         </div>
+
 
         {/* Prize Winner Card Banner */}
         {winningPrize && (

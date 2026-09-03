@@ -317,7 +317,40 @@ export default function AssistantChatbot() {
   };
 
   const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
+  // Listen for Lucky Wheel spin win event or direct chatbot open triggers
+  useEffect(() => {
+    const handlePrizeAwarded = (e) => {
+      const prize = e.detail;
+      if (!prize) return;
+
+      setIsOpen(true);
+      setIsBubbleDismissed(true);
+
+      const prizeBotMsg = {
+        role: 'assistant',
+        content: `🎉 **Woohoo! Congratulations!**\n\nYou just won **${prize.label}** (${prize.subLabel || 'Launch Special'}) on the Lucky Wheel!\n\nYour exclusive coupon code is **${prize.code}**.\n\nI can apply this voucher immediately to your website specifications, explore live demos, or schedule a founder consultation!`,
+        timestamp: new Date().toISOString(),
+        prizeCard: {
+          label: prize.label,
+          subLabel: prize.subLabel,
+          code: prize.code,
+          discountPercent: prize.discountPercent || 20,
+        },
+      };
+
+      setMessages((prev) => {
+        const next = [...prev, prizeBotMsg];
+        try {
+          localStorage.setItem('l2b_chat_messages', JSON.stringify(next));
+          localStorage.setItem('l2b_chat_session_time', Date.now().toString());
+        } catch (err) {}
+        return next;
+      });
+    };
+
+    window.addEventListener('l2b_open_chatbot_prize', handlePrizeAwarded);
+    return () => window.removeEventListener('l2b_open_chatbot_prize', handlePrizeAwarded);
+  }, []);
 
   // Emerge the dynamic liquid announcement bubble from chatbot after 2.5s
   useEffect(() => {
@@ -327,6 +360,7 @@ export default function AssistantChatbot() {
     }, 2500);
     return () => clearTimeout(timer);
   }, [isBubbleDismissed]);
+
 
   const handleDismissBubble = (e) => {
     if (e) e.stopPropagation();
@@ -962,6 +996,50 @@ export default function AssistantChatbot() {
                           }}
                         />
 
+                        {/* Interactive Prize Winner Card from Lucky Wheel */}
+                        {msg.prizeCard && (
+                          <div className="mt-3 p-3 rounded-2xl bg-gradient-to-r from-purple-500/15 via-pink-500/15 to-amber-500/15 border border-purple-400/40 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 text-[10px] font-black uppercase">
+                                🎉 {msg.prizeCard.label}
+                              </span>
+                              <span className="font-mono text-xs font-black text-purple-600 dark:text-purple-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-lg border border-purple-300 dark:border-purple-700">
+                                {msg.prizeCard.code}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-1.5 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  openOrderModal({
+                                    promoCode: msg.prizeCard.code,
+                                    discountPercent: msg.prizeCard.discountPercent,
+                                    autoApplyOffer: true,
+                                    websiteType: `Spin & Win: ${msg.prizeCard.label} (Code: ${msg.prizeCard.code})`,
+                                    initialRequirements: `I won the Lucky Wheel reward "${msg.prizeCard.label}" with promo code "${msg.prizeCard.code}". Please apply this discount to my website project!`,
+                                  });
+                                }}
+                                className="py-2 px-2.5 rounded-xl text-[11px] font-black text-white l2b-gradient-bg shadow-xs hover:opacity-95 flex items-center justify-center gap-1 cursor-pointer transition-all"
+                              >
+                                <span>🚀 Apply Voucher</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  navigate('/demos');
+                                }}
+                                className="py-2 px-2.5 rounded-xl text-[11px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                              >
+                                <span>🎨 View Demos</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Interactive Order Action Card if requirement was created */}
                         {msg.requirementId && (
                           <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/30 space-y-2">
@@ -982,6 +1060,7 @@ export default function AssistantChatbot() {
                             </a>
                           </div>
                         )}
+
 
                         {/* AI Provider attribution tag */}
                         {msg.provider && msg.provider !== 'unknown' && (

@@ -716,3 +716,214 @@ export const sendAdminCallbackAlert = async (callback) => {
 
   return await sendEmail({ to: recipients, subject, html, text: `Instant callback request from ${callback.name} (${callback.phone}) for ${callback.topic}` });
 };
+
+// 9. Email Verification OTP Email
+export const sendVerificationOtpEmail = async ({ user, otp }) => {
+  const clientUrl = getClientUrl();
+  const subject = `🔐 Your Verification Code: ${otp} — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
+        Hi ${user.name || 'Client'},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Please use the following 6-digit One-Time Password (OTP) to verify your registered email address on <strong>LOCAL2BRAND</strong>:
+      </p>
+
+      <!-- Giant OTP Display Box -->
+      <div class="bg-box border-theme" style="background-color: #f5f3ff; border: 2px dashed #8b5cf6; border-radius: 16px; padding: 22px; text-align: center; margin: 18px 0; box-sizing: border-box;">
+        <div style="font-size: 11px; color: #6d28d9; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px;">
+          Your 6-Digit Email Verification Code
+        </div>
+        <div style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #7c3aed; font-family: monospace;">
+          ${otp}
+        </div>
+        <div style="font-size: 11px; color: #8b5cf6; font-weight: 600; margin-top: 6px;">
+          ⏳ Valid for 15 minutes. Do not share this code with anyone.
+        </div>
+      </div>
+
+      <p class="text-muted" style="margin: 14px 0 0 0; color: #64748b; font-size: 12px; line-height: 1.5;">
+        If you did not request this verification code, please ignore this email or reach out to our security desk.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Your verification OTP is ${otp}. Valid for 15 minutes.`,
+    headerBadge: '🔐 EMAIL VERIFICATION SECURITY',
+    title: `Verify Your Account ✉️`,
+    subtitle: `Use the one-time security code below to complete verification.`,
+    contentHtml,
+    ctaText: 'Enter Code in Client Dashboard',
+    ctaUrl: `${clientUrl}/dashboard`,
+  });
+
+  return await sendEmail({ to: user.email, subject, html, text: `Your LOCAL2BRAND verification code is: ${otp}` });
+};
+
+// 10. Order Completed / VIP Delivery Handover Email
+export const sendOrderDeliveredEmail = async (reqDoc) => {
+  const clientUrl = getClientUrl();
+  const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Your Business';
+  const clientEmail = reqDoc.clientInfo?.email;
+  const liveUrl = reqDoc.liveUrl || reqDoc.domain || clientUrl;
+
+  if (!clientEmail) return;
+
+  const subject = `🚀 Project Delivered & Published Live: ${businessName} (${reqId}) — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
+        Congratulations ${clientName}! 🎉
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Your high-performance custom website for <strong>${businessName}</strong> has passed all architecture, SEO, and sub-second speed audits. It is now officially <strong>DELIVERED &amp; LIVE</strong>!
+      </p>
+
+      <!-- VIP Handover Card -->
+      <div class="bg-box border-theme" style="background-color: #f0fdf4; border: 2px solid #86efac; border-radius: 16px; padding: 20px; margin: 18px 0; text-align: center; box-sizing: border-box;">
+        <div style="font-size: 11px; color: #166534; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; margin-bottom: 4px;">
+          🚀 VIP Handover Completed
+        </div>
+        <div style="font-size: 22px; font-weight: 900; color: #15803d; letter-spacing: 0.5px; margin-bottom: 8px;">
+          ${businessName} IS LIVE WORLDWIDE
+        </div>
+        <div style="font-size: 12px; color: #166534; font-weight: 600;">
+          ⚡ 98+ Google Lighthouse Performance Score &bull; SSL Secured &bull; WhatsApp Funnel Integrated
+        </div>
+      </div>
+
+      <!-- Spec & Credential Summary -->
+      <table class="bg-box border-theme" style="width: 100% !important; max-width: 100%; table-layout: fixed; border-collapse: collapse; background-color: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; margin: 14px 0; box-sizing: border-box;">
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; width: 34%; font-size: 12px; font-weight: 600; vertical-align: top;">Order ID:</td>
+          <td style="padding: 11px 12px; font-weight: 900; color: #4338ca; font-family: monospace; font-size: 14px; width: 66%; vertical-align: top;">${reqId}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Live Website:</td>
+          <td style="padding: 11px 12px; font-weight: 800; color: #2563eb; font-size: 13px; vertical-align: top; word-break: break-all;">
+            <a href="${liveUrl}" target="_blank" style="color: #2563eb; text-decoration: underline;">${liveUrl}</a>
+          </td>
+        </tr>
+        <tr>
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">VIP Support:</td>
+          <td style="padding: 11px 12px; font-weight: 700; color: #059669; font-size: 13px; vertical-align: top;">30 Days Hypercare &amp; Priority Channel Active</td>
+        </tr>
+      </table>
+
+      ${reqDoc.internalNotes ? `
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border-radius: 12px; padding: 12px 16px; border: 1px solid #e2e8f0; margin-top: 14px; box-sizing: border-box;">
+          <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Engineer Final Handover Notes:</div>
+          <div class="text-body" style="font-size: 13px; color: #334155; word-break: break-word;">${reqDoc.internalNotes}</div>
+        </div>
+      ` : ''}
+
+      <div style="background-color: #eef2ff; border: 1px solid #c7d2fe; border-radius: 12px; padding: 14px 16px; margin-top: 16px;">
+        <p style="margin: 0; font-size: 12px; color: #3730a3; font-weight: 600; line-height: 1.5;">
+          ⭐ <strong>Your Feedback Matters:</strong> Please log in to your Client Console to share a review or request any post-launch fine-tuning.
+        </p>
+      </div>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Congratulations! ${businessName} is officially delivered and published live.`,
+    headerBadge: '🏆 VIP PROJECT DELIVERY HANDOVER',
+    title: `Your Website is Live! 🚀`,
+    subtitle: `Project ${reqId} has been successfully completed and deployed.`,
+    orderId: reqId,
+    contentHtml,
+    ctaText: 'Open Client Console',
+    ctaUrl: `${clientUrl}/dashboard`,
+  });
+
+  return await sendEmail({ to: clientEmail, subject, html, text: `Project ${reqId} for ${businessName} is now live and completed!` });
+};
+
+// 11. Callback Completed / Resolution Follow-Up Email (to Client)
+export const sendCallbackResolutionEmail = async (callback) => {
+  if (!callback.email) return;
+  const clientUrl = getClientUrl();
+  const cbId = (callback._id || '').toString().slice(-6).toUpperCase();
+  const subject = `Founder Consultation Follow-up — LOCAL2BRAND 📞`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
+        Hi ${callback.name},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Thank you for taking the time to speak with our senior engineering desk regarding <strong>${callback.topic || 'your website strategy'}</strong>.
+      </p>
+
+      ${callback.adminNotes ? `
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin: 14px 0; box-sizing: border-box;">
+          <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Call Summary &amp; Recommendations:</div>
+          <div class="text-body" style="font-size: 13px; color: #334155; line-height: 1.6; word-break: break-word;">${callback.adminNotes}</div>
+        </div>
+      ` : ''}
+
+      <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.5;">
+        Whenever you are ready to kick off your project, you can submit your specifications directly through our interactive intake engine with coupon code <strong>INDIA2025</strong> for a 20% discount.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Thank you for speaking with our founding team regarding ${callback.topic}.`,
+    headerBadge: '📞 FOUNDER CONSULTATION SUMMARY',
+    title: `Strategy Call Follow-Up 📞`,
+    subtitle: `Reference: #${cbId} &bull; Next Steps`,
+    contentHtml,
+    ctaText: 'Start Your Website with 20% OFF',
+    ctaUrl: `${clientUrl}/get-started`,
+  });
+
+  return await sendEmail({ to: callback.email, subject, html, text: `Thank you for consulting with LOCAL2BRAND, ${callback.name}!` });
+};
+
+// 12. Direct Contact Form Submission Email (to Client)
+export const sendContactFormConfirmationEmail = async (contact) => {
+  if (!contact.email) return;
+  const clientUrl = getClientUrl();
+  const subject = `Message Received: We're reviewing your inquiry — LOCAL2BRAND ✉️`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
+        Hi ${contact.name},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Thank you for reaching out to <strong>LOCAL2BRAND</strong>. We have received your message regarding <strong>${contact.businessName || contact.websiteType || 'your website'}</strong>.
+      </p>
+
+      <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin: 14px 0; box-sizing: border-box;">
+        <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Your Message:</div>
+        <div class="text-body" style="font-size: 13px; color: #475569; font-style: italic; line-height: 1.5; word-break: break-word;">"${contact.requirements || contact.message || 'General project inquiry'}"</div>
+      </div>
+
+      <p class="text-muted" style="margin: 12px 0 0 0; color: #64748b; font-size: 12px; line-height: 1.5;">
+        ⚡ Our team responds to all inquiries within <strong>15–30 minutes</strong> during standard business hours.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `We have received your message and assigned an engineer to review your requirements.`,
+    headerBadge: '✉️ DIRECT INQUIRY CONFIRMATION',
+    title: `Message Received! 👋`,
+    subtitle: `Our team will get back to you shortly.`,
+    contentHtml,
+    ctaText: 'Explore Ready Website Demos',
+    ctaUrl: `${clientUrl}/demos`,
+  });
+
+  return await sendEmail({ to: contact.email, subject, html, text: `Thank you for contacting LOCAL2BRAND, ${contact.name}!` });
+};
+
+

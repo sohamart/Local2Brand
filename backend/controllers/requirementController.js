@@ -3,8 +3,10 @@ import { dataStore } from '../config/dataAdapter.js';
 import {
   sendRequirementConfirmationEmail,
   sendAdminRequirementAlert,
-  sendRequirementStatusUpdateEmail
+  sendRequirementStatusUpdateEmail,
+  sendOrderDeliveredEmail
 } from '../utils/email.js';
+
 import mongoose from 'mongoose';
 
 // Generate clean unique human-readable ID e.g. REQ-2026-98214
@@ -348,10 +350,15 @@ export const updateRequirementStatus = async (req, res) => {
       });
     }
 
-    // Automatically send status update email to client
+    // Automatically send appropriate status/delivery email to client
     if (updated.clientInfo?.email) {
-      sendRequirementStatusUpdateEmail(updated).catch((err) => console.warn('Status email update notice:', err.message));
+      if (status === 'Completed' || status === 'Delivered') {
+        sendOrderDeliveredEmail(updated).catch((err) => console.warn('Delivery handover email notice:', err.message));
+      } else {
+        sendRequirementStatusUpdateEmail(updated).catch((err) => console.warn('Status email update notice:', err.message));
+      }
     }
+
 
     res.status(200).json({
       success: true,

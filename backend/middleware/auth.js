@@ -3,6 +3,8 @@ import { dataStore } from '../config/dataAdapter.js';
 import { connectDB } from '../config/db.js';
 import mongoose from 'mongoose';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026';
+
 export const protect = async (req, res, next) => {
   let token;
 
@@ -22,15 +24,12 @@ export const protect = async (req, res, next) => {
 
   let decoded;
   try {
-    decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026_ultra_safe'
-    );
+    decoded = jwt.verify(token, JWT_SECRET);
   } catch (error) {
     return res.status(401).json({
       success: false,
       isAuthError: true,
-      message: 'Invalid or expired token. Please log in again.',
+      message: 'Invalid or expired session token. Please log in again.',
     });
   }
 
@@ -40,6 +39,12 @@ export const protect = async (req, res, next) => {
     }
 
     let user = await dataStore.findUserById(decoded.id);
+
+    // If cold start query returned null, retry once with explicit connectDB
+    if (!user) {
+      await connectDB();
+      user = await dataStore.findUserById(decoded.id);
+    }
 
     // If user not found by ID but token has admin role, fallback to master admin
     if (!user && decoded.role === 'admin') {
@@ -51,9 +56,10 @@ export const protect = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         isAuthError: true,
-        message: 'The user belonging to this token no longer exists.',
+        message: 'The user belonging to this session was not found.',
       });
     }
+
 
     if (user.status === 'suspended') {
       return res.status(403).json({
@@ -88,14 +94,12 @@ export const optionalAuth = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026_ultra_safe'
-    );
+    const decoded = jwt.verify(token, JWT_SECRET);
 
     if (mongoose.connection.readyState !== 1) {
       await connectDB();
     }
+
 
     const user = await dataStore.findUserById(decoded.id);
     if (user && user.status !== 'suspended') {

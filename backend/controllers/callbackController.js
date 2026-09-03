@@ -1,6 +1,7 @@
 import { dataStore } from '../config/dataAdapter.js';
-import { sendCallbackConfirmationEmail, sendAdminCallbackAlert } from '../utils/email.js';
+import { sendCallbackConfirmationEmail, sendAdminCallbackAlert, sendCallbackResolutionEmail } from '../utils/email.js';
 import mongoose from 'mongoose';
+
 
 export const createCallback = async (req, res) => {
   try {
@@ -103,11 +104,16 @@ export const updateCallbackStatus = async (req, res) => {
     const callback = await dataStore.updateCallback(req.params.id, updates);
     if (!callback) return res.status(404).json({ success: false, message: 'Callback request not found' });
 
+    if (callback.email && (status === 'completed' || status === 'contacted' || adminNotes)) {
+      sendCallbackResolutionEmail(callback).catch((err) => console.warn('Callback resolution email notice:', err.message));
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Callback request updated successfully',
       callback,
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,

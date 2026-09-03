@@ -1,5 +1,11 @@
 import { dataStore } from '../config/dataAdapter.js';
-import { sendLeadConfirmationEmail, sendAdminNewLeadAlert, sendLeadStatusUpdateEmail } from '../utils/email.js';
+import {
+  sendLeadConfirmationEmail,
+  sendAdminNewLeadAlert,
+  sendLeadStatusUpdateEmail,
+  sendContactFormConfirmationEmail
+} from '../utils/email.js';
+
 
 export const createQueryLead = async (req, res) => {
   try {
@@ -57,8 +63,13 @@ export const createQueryLead = async (req, res) => {
       link: `/admin/leads`,
     }).catch((err) => console.warn('Admin notification error:', err.message));
 
-    sendLeadConfirmationEmail(lead).catch((err) => console.warn('Client lead email error:', err.message));
+    if (lead.industry === 'Direct Contact Form' || lead.websiteType?.includes('Contact Form')) {
+      sendContactFormConfirmationEmail(lead).catch((err) => console.warn('Client contact email error:', err.message));
+    } else {
+      sendLeadConfirmationEmail(lead).catch((err) => console.warn('Client lead email error:', err.message));
+    }
     sendAdminNewLeadAlert(lead).catch((err) => console.warn('Admin lead alert error:', err.message));
+
 
     return res.status(201).json({
       success: true,

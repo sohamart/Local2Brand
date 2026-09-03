@@ -135,12 +135,39 @@ class ApiClient {
   }
 
   async uploadFile(file) {
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('file', file);
-    return this.post('/upload', formData);
+    // 1. Try Multipart FormData
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('file', file);
+      const res = await this.post('/upload', formData);
+      if (res?.url || res?.urls?.length) {
+        return res;
+      }
+    } catch (formErr) {
+      console.warn('Multipart upload error, attempting Base64 upload fallback:', formErr?.message);
+    }
+
+    // 2. Base64 fallback if file is a Blob/File
+    if (file instanceof Blob || file instanceof File) {
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      return this.post('/upload', { image: base64Data });
+    }
+
+    // 3. If file is already a base64 string
+    if (typeof file === 'string' && file.startsWith('data:image')) {
+      return this.post('/upload', { image: file });
+    }
+
+    throw new Error('Unable to upload image file. Please try again.');
   }
 }
 
 export const api = new ApiClient(API_BASE_URL);
 export default api;
+

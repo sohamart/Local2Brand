@@ -50,6 +50,20 @@ const userSchema = new mongoose.Schema(
       enum: ['active', 'suspended'],
       default: 'active',
     },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailOtp: {
+      type: String,
+      default: '',
+      select: false,
+    },
+    emailOtpExpires: {
+      type: Date,
+      default: null,
+      select: false,
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
   },
@@ -57,6 +71,7 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {

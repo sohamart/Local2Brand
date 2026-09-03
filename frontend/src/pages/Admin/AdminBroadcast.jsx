@@ -21,8 +21,8 @@ import { toast } from 'react-toastify';
 const TEMPLATE_PRESETS = [
   {
     id: 'launch',
-    name: '🚀 New Demos & 48h Delivery',
-    subject: '🎉 Exciting Launch: New Website Templates & 48h Delivery on LOCAL2BRAND!',
+    name: '🚀 48h Website Launch Showcase',
+    subject: '🎉 Exciting Launch: New Website Templates & 48h Fast Delivery on LOCAL2BRAND!',
     heading: 'Supercharge Your Digital Brand Today!',
     message: `We are thrilled to announce new premium website templates, lightning-fast 48-hour delivery, and enterprise-grade cloud hosting for all new client projects.\n\nExplore our latest high-converting live demos and request your customized quote in just 2 minutes.`,
     actionText: 'Explore New Website Demos',
@@ -30,12 +30,30 @@ const TEMPLATE_PRESETS = [
   },
   {
     id: 'discount',
-    name: '🎁 20% Festive Discount Promo',
+    name: '🎁 20% Discount Flash Offer',
     subject: '🎁 Exclusive 20% OFF on Custom Website Development — Promo: INDIA2025',
     heading: 'Claim 20% Savings on Your Next Website Project!',
     message: `Upgrade your business with a brand-new website tailored to your domain. For a limited time, use promo code INDIA2025 at checkout to enjoy a flat 20% discount on any standard or pro package.\n\nOur team handles design, copywriting, domain connection, and launch within 48 hours.`,
     actionText: 'Claim 20% Discount Now',
     actionUrl: 'https://local2brand.vercel.app/get-started',
+  },
+  {
+    id: 'newsletter',
+    name: '📰 Monthly Agency Tech Newsletter',
+    subject: '📰 LOCAL2BRAND Insights: How Sub-Second Load Speed Doubles Your Inquiries',
+    heading: 'Engineering Secrets for High-Converting Business Websites',
+    message: `Did you know that 53% of mobile visitors abandon a website that takes over 3 seconds to load?\n\nIn this monthly digest, we break down how our custom React + Next.js architecture scores 98+ on Google Lighthouse, giving your business higher organic search rankings and instant WhatsApp lead conversion.\n\nRead our latest architecture breakdown or book an audit for your existing site!`,
+    actionText: 'Explore Engineering Features',
+    actionUrl: 'https://local2brand.vercel.app/pricing',
+  },
+  {
+    id: 'whatsapp_store',
+    name: '🛍️ WhatsApp Store & Lead Funnels',
+    subject: '🛍️ Turn Browsers into Buyers: Instant WhatsApp Commerce Funnels Now Live!',
+    heading: 'Automate Your Sales with WhatsApp Direct Lead Engines',
+    message: `We have introduced 1-Click WhatsApp Ordering & Direct Inquiries across all e-commerce and catalog demo websites.\n\nClients receive instant ping notifications on their phone as soon as a customer selects a service, resulting in a 3x higher closing rate.`,
+    actionText: 'Preview WhatsApp Demo',
+    actionUrl: 'https://local2brand.vercel.app/demos',
   },
   {
     id: 'callback',
@@ -46,7 +64,26 @@ const TEMPLATE_PRESETS = [
     actionText: 'Request Instant Callback',
     actionUrl: 'https://local2brand.vercel.app/contact',
   },
+  {
+    id: 'spin_wheel',
+    name: '🎡 Spin & Win Rewards Announcement',
+    subject: '🎡 Spin the LOCAL2BRAND Lucky Wheel to Win Instant ₹1,000+ Vouchers!',
+    heading: 'Claim Your Exclusive Launch Reward on Our Wheel!',
+    message: `Visit our platform today and try our interactive Spin & Win wheel. Every participant wins an instant prize — including up to 20% OFF vouchers, free .IN domain registration, and VIP 48h priority queue access!`,
+    actionText: 'Spin the Wheel on Homepage',
+    actionUrl: 'https://local2brand.vercel.app/',
+  },
+  {
+    id: 'security_update',
+    name: '🛡️ Cloud Infrastructure & SSL Upgrade',
+    subject: '🛡️ Platform Notice: Enterprise SSL, Global CDN & Sub-Second Edge Routing Active',
+    heading: 'Your Web Infrastructure is Now Faster & More Secure',
+    message: `All client websites hosted under LOCAL2BRAND now feature automatic Tier-4 Cloudflare SSL encryption, DDoS mitigation, and global edge cache replication.\n\nYour customers enjoy zero downtime, instantaneous asset delivery, and maximum trust.`,
+    actionText: 'View Platform Status',
+    actionUrl: 'https://local2brand.vercel.app/track-order',
+  },
 ];
+
 
 export default function AdminBroadcast() {
   const [targetAudience, setTargetAudience] = useState('all');

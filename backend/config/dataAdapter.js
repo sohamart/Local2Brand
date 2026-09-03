@@ -1,8 +1,21 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { readLocalStore, writeLocalStore } from './store.js';
+import { connectDB } from './db.js';
 
 export const isDbConnected = () => mongoose.connection.readyState === 1;
+
+export const ensureDb = async () => {
+  if (mongoose.connection.readyState !== 1) {
+    try {
+      await connectDB();
+    } catch (e) {
+      console.warn('⚠️ ensureDb notice:', e.message);
+    }
+  }
+  return mongoose.connection.readyState === 1;
+};
+
 
 // Default initial admin & settings
 const DEFAULT_ADMIN = {
@@ -228,21 +241,53 @@ export const dataStore = {
   },
 
   // Users
+  async getAllUsers() {
+    await ensureDb();
+    if (isDbConnected()) {
+      try {
+        const { User } = await import('../models/User.js');
+        const dbUsers = await User.find().select('-password').sort({ createdAt: -1 });
+        if (dbUsers && dbUsers.length > 0) {
+          return dbUsers.map((u) => ({
+            _id: u._id.toString(),
+            id: u._id.toString(),
+            name: u.name,
+            email: u.email,
+            role: u.role,
+            avatar: u.avatar || '',
+            phone: u.phone || '',
+            company: u.company || '',
+            status: u.status || 'active',
+            isEmailVerified: Boolean(u.isEmailVerified),
+            createdAt: u.createdAt,
+            updatedAt: u.updatedAt,
+          }));
+        }
+      } catch (err) {
+        console.warn('MongoDB getAllUsers notice:', err.message);
+      }
+    }
+    const users = readLocalStore('users') || [];
+    return users.map((u) => {
+      const { password, passwordHash, ...rest } = u;
+      return {
+        ...rest,
+        isEmailVerified: Boolean(u.isEmailVerified),
+      };
+    });
+  },
+
   async findUserByEmail(email) {
     if (!email) return null;
     const cleanEmail = String(email).toLowerCase().trim();
-    if (mongoose.connection.readyState !== 1) {
-      try {
-        await connectDB();
-      } catch (e) {}
-    }
+    await ensureDb();
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
         const escaped = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const dbUser = await User.findOne({
           email: { $regex: new RegExp(`^${escaped}$`, 'i') }
-        }).select('+password');
+        }).select('+password +emailOtp +emailOtpExpires');
         if (dbUser) return dbUser;
       } catch (err) {
         console.warn('MongoDB findUserByEmail notice:', err.message);
@@ -255,11 +300,7 @@ export const dataStore = {
   async findUserById(id) {
     if (!id) return null;
     const cleanId = String(id).trim();
-    if (mongoose.connection.readyState !== 1) {
-      try {
-        await connectDB();
-      } catch (e) {}
-    }
+    await ensureDb();
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
@@ -287,12 +328,12 @@ export const dataStore = {
     return rest;
   },
 
-
   async createUser(userData) {
     const cleanEmail = userData.email.toLowerCase().trim();
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(userData.password, salt);
 
+    await ensureDb();
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
@@ -307,6 +348,9 @@ export const dataStore = {
           phone: userData.phone || '',
           company: userData.company || '',
           status: 'active',
+          isEmailVerified: Boolean(userData.isEmailVerified),
+          emailOtp: userData.emailOtp || '',
+          emailOtpExpires: userData.emailOtpExpires || null,
         });
 
         // Sync local store
@@ -324,6 +368,7 @@ export const dataStore = {
           phone: userData.phone || '',
           company: userData.company || '',
           status: 'active',
+          isEmailVerified: Boolean(userData.isEmailVerified),
           createdAt: new Date().toISOString(),
         });
         writeLocalStore('users', filtered);
@@ -347,6 +392,7 @@ export const dataStore = {
       phone: userData.phone || '',
       company: userData.company || '',
       status: 'active',
+      isEmailVerified: Boolean(userData.isEmailVerified),
       createdAt: new Date().toISOString(),
     };
     filtered.push(newUser);
@@ -358,6 +404,7 @@ export const dataStore = {
   async updateUser(id, updates) {
     const cleanId = String(id).trim();
     let mongoUpdated = null;
+    await ensureDb();
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
@@ -400,6 +447,7 @@ export const dataStore = {
   },
 
   async deleteUser(id) {
+
     if (!id) return false;
     const cleanId = String(id).trim();
     let targetEmail = null;

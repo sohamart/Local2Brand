@@ -135,6 +135,15 @@ export function AuthProvider({ children }) {
     return res;
   };
 
+  const updateUserSession = (updatedUser) => {
+    if (!updatedUser) return;
+    setUser((prev) => {
+      const merged = { ...prev, ...updatedUser };
+      localStorage.setItem('l2b_cached_user', JSON.stringify(merged));
+      return merged;
+    });
+  };
+
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -153,11 +162,13 @@ export function AuthProvider({ children }) {
         logout,
         updateProfile,
         changePassword,
+        updateUserSession,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+
 }
 
 export function useAuth() {

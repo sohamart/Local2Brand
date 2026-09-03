@@ -127,6 +127,64 @@ export default function UserDashboard() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState(new Date());
 
+  // OTP Verification State
+  const [otpCode, setOtpCode] = useState('');
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otpResendCooldown, setOtpResendCooldown] = useState(0);
+  const { updateUserSession } = useAuth();
+
+  // Resend OTP countdown timer
+  useEffect(() => {
+    let timer;
+    if (otpResendCooldown > 0) {
+      timer = setInterval(() => {
+        setOtpResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [otpResendCooldown]);
+
+  const handleSendVerificationOtp = async () => {
+    if (!user?.email) return;
+    setIsSendingOtp(true);
+    try {
+      const res = await api.post('/auth/send-otp', { email: user.email });
+      if (res.success) {
+        toast.success(res.message || 'Verification code sent to your email!');
+        setOtpResendCooldown(60);
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to dispatch verification code');
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!otpCode || otpCode.trim().length < 6) {
+      toast.warn('Please enter the 6-digit verification code');
+      return;
+    }
+    setIsVerifyingOtp(true);
+    try {
+      const res = await api.post('/auth/verify-otp', {
+        otp: otpCode.trim(),
+        email: user?.email,
+      });
+      if (res.success && res.user) {
+        toast.success('🎉 Email verified successfully! Your account is fully active.');
+        updateUserSession({ isEmailVerified: true });
+        setOtpCode('');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Invalid or expired OTP code');
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       setProfileName(user.name || '');
@@ -144,6 +202,7 @@ export default function UserDashboard() {
       setLoading(false);
     }
   }, [user, authLoading]);
+
 
   // Handle URL track query parameter
   useEffect(() => {
@@ -455,10 +514,25 @@ export default function UserDashboard() {
             </div>
 
             <div className="space-y-1 min-w-0">
-              <div className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-200/80 dark:border-amber-500/40">
-                <AshokaChakra size={11} />
-                <span>Verified Client Console</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/70 px-2.5 py-0.5 rounded-full border border-amber-200/80 dark:border-amber-500/40">
+                  <AshokaChakra size={11} />
+                  <span>Client Console</span>
+                </div>
+
+                {user?.isEmailVerified ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/70 px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-600/40">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    <span>Email Verified</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/70 px-2.5 py-0.5 rounded-full border border-rose-300 dark:border-rose-600/40">
+                    <AlertCircle className="w-3 h-3 text-rose-500 animate-pulse" />
+                    <span>Email Unverified</span>
+                  </span>
+                )}
               </div>
+
               <h1 className="text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight truncate">
                 Welcome, {user?.name || 'Client'}! 👋
               </h1>
@@ -487,6 +561,76 @@ export default function UserDashboard() {
             </button>
           </div>
         </div>
+
+        {/* Email Verification Required Alert Card */}
+        {user && !user.isEmailVerified && (
+          <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-50/95 via-rose-50/95 to-purple-50/95 dark:from-[#1c1208] dark:via-[#1c0a15] dark:to-[#140824] border-2 border-amber-400/60 dark:border-amber-500/40 shadow-glass mb-6">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <Mail className="w-5 h-5 animate-bounce" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950 shadow-2xs">
+                      ACTION REQUIRED
+                    </span>
+                    <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
+                      Verify Your Email Address
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-xl">
+                    We sent a 6-digit OTP code to <strong className="text-purple-600 dark:text-purple-400 font-mono">{user.email}</strong> when you registered. Enter it below to unlock instant roadmap dispatches.
+                  </p>
+                </div>
+              </div>
+
+              {/* OTP Form Controls */}
+              <form onSubmit={handleVerifyOtp} className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="6-Digit OTP"
+                  className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-600 text-sm font-mono font-bold tracking-widest text-center w-36 focus:outline-purple-500 text-slate-900 dark:text-white shadow-xs"
+                />
+
+                <button
+                  type="submit"
+                  disabled={isVerifyingOtp || otpCode.length < 6}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 disabled:opacity-50 cursor-pointer flex items-center gap-1.5 transition-all active:scale-95"
+                >
+                  {isVerifyingOtp ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Verify Code</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSendVerificationOtp}
+                  disabled={isSendingOtp || otpResendCooldown > 0}
+                  className="px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 cursor-pointer transition-all shrink-0"
+                >
+                  {isSendingOtp
+                    ? 'Sending...'
+                    : otpResendCooldown > 0
+                    ? `Resend in ${otpResendCooldown}s`
+                    : 'Resend OTP ✉️'}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
 
         {/* Tab Navigation Segmented Bar (5-Column Clean Grid) */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 sm:gap-2 mb-6 p-1 sm:p-1.5 bg-slate-200/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 w-full">
