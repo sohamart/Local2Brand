@@ -371,6 +371,7 @@ export default function AdminDemos() {
   };
 
   // Add new category
+
   const handleAddCategory = (name) => {
     const trimmed = name?.trim();
     if (!trimmed) return;
@@ -816,8 +817,16 @@ export default function AdminDemos() {
       {/* EDIT / CREATE TEMPLATE MODAL WITH HERO SPECIFIC FIELDS                    */}
       {/* ========================================================================= */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-xl overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto max-h-[92vh] flex flex-col">
+        <div
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-xl overflow-y-auto"
+        >
+          <div
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto max-h-[88vh] flex flex-col"
+          >
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/60 shrink-0">
               <div>
                 <h3 className="text-base font-black text-slate-900 dark:text-white">
@@ -828,6 +837,7 @@ export default function AdminDemos() {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer"
               >
@@ -835,7 +845,13 @@ export default function AdminDemos() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveDemo} className="p-6 overflow-y-auto space-y-4 flex-1 text-xs">
+            <form
+              onSubmit={handleSaveDemo}
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
+              className="p-6 overflow-y-auto space-y-4 flex-1 text-xs overscroll-contain modal-touch-scroll"
+            >
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Full Title *</label>

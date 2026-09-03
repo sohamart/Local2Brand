@@ -350,15 +350,16 @@ export default function AssistantChatbot() {
       const currentCampaign = settings?.luckyWheel?.campaignVersion || 1;
       const spunCampaign = parseInt(localStorage.getItem('l2b_wheel_spun_version') || '0', 10);
 
-      // If user hasn't played current round, pop up the reward game!
+      // If user hasn't played current round, pop up the reward game after initial page load animation
       if (spunCampaign < currentCampaign) {
         const timer = setTimeout(() => {
           setIsLuckyWheelOpen(true);
-        }, 1500);
+        }, 2800);
         return () => clearTimeout(timer);
       }
     } catch (e) {}
   }, [settings?.luckyWheel?.campaignVersion, settings?.luckyWheel?.enabled]);
+
 
   // Listen for Admin "Start New Round" live trigger
   useEffect(() => {

@@ -22,6 +22,23 @@ const portfolioDemoSchema = new mongoose.Schema(
       type: String,
       default: 'PRO READY',
     },
+    status: {
+      type: String,
+      enum: ['published', 'coming_soon', 'draft'],
+      default: 'published',
+    },
+    price: {
+      type: String,
+      default: '₹4,999',
+    },
+    priceInr: {
+      type: String,
+      default: '₹4,999',
+    },
+    turnaround: {
+      type: String,
+      default: '2 - 4 Days',
+    },
     liveUrl: {
       type: String,
       default: '',
@@ -43,6 +60,7 @@ const portfolioDemoSchema = new mongoose.Schema(
       default: ['React', 'TailwindCSS', 'Framer Motion'],
     },
     isFeatured: {
+
       type: Boolean,
       default: false,
     },

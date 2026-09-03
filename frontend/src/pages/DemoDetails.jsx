@@ -119,61 +119,62 @@ export default function DemoDetails() {
         description={`Interactive preview of ${demo.title}. Features ${demo.features.slice(0, 2).join(', ')}. Order via WhatsApp with 3 - 7 days turnaround.`}
       />
 
-      <div className="page-header-offset pb-20">
+      <div className="page-header-offset pb-12 sm:pb-16">
 
         {/* Navigation Breadcrumb */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mb-3 sm:mb-4">
           <Link
             to="/demos"
-            className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to All Templates</span>
           </Link>
         </div>
 
         {/* Header Summary Card */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-12">
-          <div className="glass-panel rounded-card sm:rounded-hero p-5 sm:p-8 lg:p-10 border border-white dark:border-slate-700/80 shadow-floating relative overflow-hidden">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 mb-4 sm:mb-6">
+          <div className="glass-panel rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-6 border border-white dark:border-slate-700/80 shadow-glass relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
 
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-2xs">
-                    <AshokaChakra size={12} />
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-[11px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-2xs">
+                    <AshokaChakra size={11} />
                     <span>{demo.category}</span>
                   </span>
-                  <span className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
-                    {demo.turnaround}
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold">
+                    {demo.turnaround || '2 - 4 Days'}
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-amber-500 font-bold bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-                    <Star className="w-3.5 h-3.5 fill-amber-400" />
-                    <span>{demo.rating} (Verified)</span>
+                  <span className="flex items-center gap-1 text-[11px] text-amber-500 font-bold bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                    <Star className="w-3 h-3 fill-amber-400" />
+                    <span>{demo.rating || '5.0 ★'}</span>
                   </span>
                 </div>
 
-                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
                   {demo.title}
                 </h1>
 
-                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-base max-w-2xl leading-relaxed">
-                  {demo.shortDescription}
+                <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm max-w-2xl line-clamp-2 leading-relaxed">
+                  {demo.description || demo.shortDescription}
                 </p>
               </div>
 
               {/* Price & Primary CTA Block */}
-              <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-700/80 shadow-sm shrink-0">
+              <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-2.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-700/80 shadow-xs shrink-0">
                 <div className="text-left lg:text-right">
-                  <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                    {demo.priceInr || '₹9,999'} / {demo.price}
+                  <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                    {demo.priceInr || '₹4,999'} <span className="text-xs font-normal text-slate-400">/ {demo.price || '$99'}</span>
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                    One-time fee • Complete setup & customization
+                    One-time investment • Full launch
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                  {demo.status === 'published' && (demo.liveUrl || demo.isPublished) ? (
+
+                  {demo.status !== 'coming_soon' && demo.liveUrl ? (
                     <a
                       href={`/preview/${demo.templateId || demo.slug}`}
                       target="_blank"
@@ -183,9 +184,14 @@ export default function DemoDetails() {
                       <span>Launch Live Demo</span>
                       <ExternalLink className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     </a>
+                  ) : demo.status !== 'coming_soon' ? (
+                    <span className="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 flex items-center justify-center gap-2">
+                      <Sparkles className="w-4 h-4 text-emerald-600" />
+                      <span>Live Preview Coming Soon</span>
+                    </span>
                   ) : (
                     <span className="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/60 flex items-center justify-center gap-2">
-                      <span>⏳ Live Demo Coming Soon</span>
+                      <span>⏳ Coming Soon</span>
                     </span>
                   )}
 
@@ -193,9 +199,10 @@ export default function DemoDetails() {
                     onClick={handleOrder}
                     className="flex-1 sm:flex-none px-6 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white l2b-gradient-bg shadow-glass-highlight hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer hover:opacity-95"
                   >
-                    <span>Get This Website</span>
+                    <span>{demo.status === 'coming_soon' ? 'Pre-Order Website' : 'Get This Website'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
+
 
                   <button
                     onClick={() => setIsShareModalOpen(true)}

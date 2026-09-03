@@ -10,11 +10,17 @@ function DemoCardComponent({ demo, onShare }) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [showComingSoonPopup, setShowComingSoonPopup] = useState(false);
 
-  // Respect status from Database ('published' vs 'coming_soon')
-  const isLive = demo.status === 'published';
+  // Unified Status Evaluation:
+  // 1. isLive: Published in Admin AND has a working Live URL
+  // 2. isPublishedNoLiveUrl: Published in Admin BUT Live URL is pending (can still be ordered directly!)
+  // 3. isComingSoon: Explicitly marked as Coming Soon in Admin (Pre-Order only)
+  const isComingSoon = demo.status === 'coming_soon';
+  const hasLiveUrl = Boolean(demo.liveUrl && demo.liveUrl.trim().length > 0);
+  const isLive = !isComingSoon && hasLiveUrl;
+  const isPublishedNoLiveUrl = !isComingSoon && !hasLiveUrl;
 
   const handleCardClick = (e) => {
-    if (!isLive) {
+    if (isComingSoon || isPublishedNoLiveUrl) {
       e.preventDefault();
       e.stopPropagation();
       setShowComingSoonPopup(true);
@@ -33,9 +39,9 @@ function DemoCardComponent({ demo, onShare }) {
       selectedDemo: demo.title,
       templateId: demo.templateId || demo.slug || demo._id,
       category: demo.category,
-      flow: isLive ? 'template' : 'pre-order',
-      websiteType: isLive ? `Template Customization: ${demo.title}` : `Pre-Order Template: ${demo.title}`,
-      initialRequirements: `I want to ${isLive ? 'order and customize' : 'pre-order'} the "${demo.title}" (${demo.category}) template.`,
+      flow: isComingSoon ? 'pre-order' : 'template',
+      websiteType: isComingSoon ? `Pre-Order Template: ${demo.title}` : `Template Customization: ${demo.title}`,
+      initialRequirements: `I want to ${isComingSoon ? 'pre-order' : 'order and customize'} the "${demo.title}" (${demo.category}) template.`,
       price: demo.priceInr || demo.price
     });
   };
@@ -65,6 +71,11 @@ function DemoCardComponent({ demo, onShare }) {
               <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black shadow-xs flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-pulse" />
                 <span>{demo.badge || 'LIVE'}</span>
+              </span>
+            ) : isPublishedNoLiveUrl ? (
+              <span className="px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black shadow-xs flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-200" />
+                <span>{demo.badge || 'READY TO BUILD'}</span>
               </span>
             ) : (
               <button
@@ -105,9 +116,21 @@ function DemoCardComponent({ demo, onShare }) {
               onClick={(e) => e.stopPropagation()}
               className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold text-xs shadow-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5"
             >
-              <span>📱 Device Preview & Specs</span>
+              <span>📱 Device Preview &amp; Specs</span>
               <ExternalLink className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
             </Link>
+          ) : isPublishedNoLiveUrl ? (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowComingSoonPopup(true);
+              }}
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-lg hover:bg-emerald-500 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Live Preview Soon</span>
+            </button>
           ) : (
             <button
               onClick={(e) => {
@@ -126,7 +149,7 @@ function DemoCardComponent({ demo, onShare }) {
             onClick={handleGetWebsite}
             className="px-4 py-2 rounded-xl l2b-gradient-bg text-white font-bold text-xs shadow-lg hover:opacity-95 transition-all flex items-center gap-1 cursor-pointer"
           >
-            <span>{isLive ? 'Get Website' : 'Pre-Order Now'}</span>
+            <span>{isComingSoon ? 'Pre-Order Now' : 'Get Website'}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -139,11 +162,11 @@ function DemoCardComponent({ demo, onShare }) {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                <span className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 ${isPublishedNoLiveUrl ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
                   <Rocket className="w-3 h-3" />
                 </span>
-                <span className="font-extrabold text-[11px] text-amber-400">
-                  Live Preview in Testing
+                <span className={`font-extrabold text-[11px] ${isPublishedNoLiveUrl ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  {isPublishedNoLiveUrl ? 'Catalog Ready to Order' : 'Live Preview in Testing'}
                 </span>
               </div>
               <button
@@ -151,21 +174,27 @@ function DemoCardComponent({ demo, onShare }) {
                   e.stopPropagation();
                   setShowComingSoonPopup(false);
                 }}
-                className="w-5 h-5 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs"
+                className="w-5 h-5 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-xs cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
 
             <p className="text-[10px] text-slate-300 leading-snug">
-              Interactive preview will be live shortly. You can pre-order this template today with express priority delivery!
+              {isPublishedNoLiveUrl
+                ? 'This website template is ready for immediate custom build & launch. Delivery in 48–72 hours!'
+                : 'Interactive preview will be live shortly. You can pre-order this template today with express priority delivery!'}
             </p>
 
             <button
               onClick={handleGetWebsite}
-              className="w-full py-1.5 rounded-xl text-[11px] font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:opacity-95 text-center shadow-xs cursor-pointer flex items-center justify-center gap-1"
+              className={`w-full py-1.5 rounded-xl text-[11px] font-bold text-center shadow-xs cursor-pointer flex items-center justify-center gap-1 ${
+                isPublishedNoLiveUrl
+                  ? 'text-white l2b-gradient-bg'
+                  : 'text-slate-950 bg-gradient-to-r from-amber-400 to-amber-500 hover:opacity-95'
+              }`}
             >
-              <span>Pre-Order Template ({demo.priceInr || '₹4,999'})</span>
+              <span>{isComingSoon ? 'Pre-Order Template' : 'Get This Website'} ({demo.priceInr || '₹4,999'})</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -222,11 +251,11 @@ function DemoCardComponent({ demo, onShare }) {
             </div>
 
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-              isLive
+              !isComingSoon
                 ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
                 : 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800'
             }`}>
-              {isLive ? 'Live Ready' : 'Pre-Order Ready'}
+              {!isComingSoon ? (isLive ? 'Live Ready' : 'Ready to Order') : 'Pre-Order Ready'}
             </span>
           </div>
 
@@ -241,8 +270,22 @@ function DemoCardComponent({ demo, onShare }) {
                 <span>📱 Device Preview</span>
                 <ExternalLink className="w-3 h-3 text-purple-600 dark:text-purple-400" />
               </Link>
+            ) : isPublishedNoLiveUrl ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowComingSoonPopup((prev) => !prev);
+                }}
+                className="py-2.5 px-3 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 hover:bg-emerald-100 dark:hover:bg-emerald-900 border border-emerald-300 dark:border-emerald-700/60 text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>Live Soon</span>
+              </button>
             ) : (
               <button
+                type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -256,15 +299,17 @@ function DemoCardComponent({ demo, onShare }) {
             )}
 
             <button
+              type="button"
               onClick={handleGetWebsite}
               className="py-2.5 px-3 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 text-center transition-all cursor-pointer flex items-center justify-center gap-1"
             >
-              <span>{isLive ? 'Get Website' : 'Pre-Order'}</span>
+              <span>{isComingSoon ? 'Pre-Order' : 'Get Website'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
+
 
       {/* Lazy Share Modal */}
       {isShareModalOpen && (

@@ -28,10 +28,11 @@ export default function Preloader() {
 
   return (
     <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/95 dark:bg-slate-950/98 backdrop-blur-2xl transition-all duration-700 ease-out ${
+      className={`fixed inset-0 z-[2147483646] flex flex-col items-center justify-center bg-white/95 dark:bg-slate-950/98 backdrop-blur-2xl transition-all duration-700 ease-out ${
         isLoaded ? 'opacity-0 scale-105 pointer-events-none' : 'opacity-100 scale-100'
       }`}
     >
+
       {/* Ambient Liquid Gradient Glows behind preloader */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] sm:w-[500px] h-[380px] sm:h-[500px] bg-gradient-to-tr from-cyan-400/20 via-purple-500/20 to-pink-500/25 dark:from-cyan-500/15 dark:via-purple-600/15 dark:to-pink-600/15 rounded-full blur-[90px] animate-pulse pointer-events-none" />
 

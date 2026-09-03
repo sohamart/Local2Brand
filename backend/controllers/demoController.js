@@ -179,7 +179,12 @@ export const getDemos = async (req, res) => {
       }
       const filter = {};
       if (category && category !== 'all') filter.category = category;
-      const demos = await PortfolioDemo.find(filter).sort({ order: 1, createdAt: -1 });
+      const rawDemos = await PortfolioDemo.find(filter).sort({ order: 1, createdAt: -1 });
+      const demos = rawDemos.map((d) => {
+        const obj = d.toObject ? d.toObject() : d;
+        if (!obj.status) obj.status = 'published';
+        return obj;
+      });
       return res.status(200).json({ success: true, count: demos.length, demos });
     } else {
       let demos = readLocalStore('demos');
@@ -187,12 +192,17 @@ export const getDemos = async (req, res) => {
         demos = [...DEFAULT_DEMOS];
         writeLocalStore('demos', demos);
       }
+      demos = demos.map((d) => ({
+        ...d,
+        status: d.status || 'published'
+      }));
       if (category && category !== 'all') {
         demos = demos.filter((d) => d.category?.toLowerCase() === category.toLowerCase());
       }
       demos.sort((a, b) => (a.order || 1) - (b.order || 1));
       return res.status(200).json({ success: true, count: demos.length, demos });
     }
+
   } catch (error) {
     console.error('getDemos error:', error);
     return res.status(500).json({ success: false, message: error.message || 'Error fetching demos' });

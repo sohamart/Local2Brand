@@ -507,16 +507,27 @@ export default function Hero() {
                     local2brand.com/demos/{current.slug}
                   </span>
                   {(() => {
-                    const isLive = Boolean(
-                      (current.isPublished || current.status === 'published') &&
-                      current.liveUrl
-                    );
-                    return isLive ? (
-                      <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold border border-emerald-200/70 dark:border-emerald-700/50">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                        LIVE
-                      </span>
-                    ) : (
+                    const isComingSoon = current.status === 'coming_soon';
+                    const hasLive = Boolean(current.liveUrl && current.liveUrl.trim().length > 0);
+                    const isLive = !isComingSoon && hasLive;
+                    const isReadyToOrder = !isComingSoon && !hasLive;
+
+                    if (isLive) {
+                      return (
+                        <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold border border-emerald-200/70 dark:border-emerald-700/50">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                          LIVE
+                        </span>
+                      );
+                    }
+                    if (isReadyToOrder) {
+                      return (
+                        <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold border border-emerald-200/70 dark:border-emerald-700/50">
+                          READY TO ORDER
+                        </span>
+                      );
+                    }
+                    return (
                       <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 text-[9px] font-bold border border-amber-200/70 dark:border-amber-700/50">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                         COMING SOON
@@ -551,10 +562,10 @@ export default function Hero() {
 
                 {/* Dynamic Showcase Visual Display */}
                 {(() => {
-                  const isLiveReady = Boolean(
-                    (current.isPublished || current.status === 'published') &&
-                    current.liveUrl
-                  );
+                  const isComingSoon = current.status === 'coming_soon';
+                  const hasLive = Boolean(current.liveUrl && current.liveUrl.trim().length > 0);
+                  const isLiveReady = !isComingSoon && hasLive;
+                  const isReadyToOrder = !isComingSoon && !hasLive;
 
                   return (
                     <div className="w-full h-full relative overflow-hidden select-none bg-slate-950">
@@ -566,11 +577,16 @@ export default function Hero() {
                         className="w-full h-full object-cover object-top transition-transform duration-1000 ease-out group-hover:scale-105 animate-in fade-in pointer-events-none select-none"
                       />
 
-                      {/* Status Indicator Badge (Live vs Coming Soon) */}
+                      {/* Status Indicator Badge (Live vs Ready vs Coming Soon) */}
                       {isLiveReady ? (
                         <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 border border-emerald-300">
                           <span className="w-2 h-2 rounded-full bg-slate-950 animate-ping" />
                           <span>🟢 LIVE DEMO ONLINE</span>
+                        </div>
+                      ) : isReadyToOrder ? (
+                        <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-600 text-white font-black text-xs shadow-lg shadow-emerald-600/30 border border-emerald-400">
+                          <span className="w-2 h-2 rounded-full bg-emerald-200" />
+                          <span>⚡ READY TO ORDER</span>
                         </div>
                       ) : (
                         <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-black text-[11px] shadow-lg shadow-amber-500/20 border border-amber-300 animate-pulse">
@@ -636,21 +652,63 @@ export default function Hero() {
 
                     <div className="flex items-center gap-2.5 shrink-0 pointer-events-auto">
                       {(() => {
-                        const isLiveReady = Boolean(
-                          (current.isPublished || current.status === 'published') &&
-                          current.liveUrl
-                        );
+                        const isComingSoon = current.status === 'coming_soon';
+                        const hasLive = Boolean(current.liveUrl && current.liveUrl.trim().length > 0);
+                        const isLiveReady = !isComingSoon && hasLive;
+                        const isReadyToOrder = !isComingSoon && !hasLive;
 
-                        return isLiveReady ? (
-                          <Link
-                            to={`/demos/${current.slug}`}
-                            className="px-4 py-2 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-2 group/btn hover:scale-102 cursor-pointer"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-purple-600" />
-                            <span>View Live Demo</span>
-                            <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover/btn:translate-x-0.5 transition-transform" />
-                          </Link>
-                        ) : (
+                        if (isLiveReady) {
+                          return (
+                            <>
+                              <Link
+                                to={`/demos/${current.slug}`}
+                                className="px-3.5 sm:px-4 py-2 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-1.5 group/btn hover:scale-102 cursor-pointer"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-purple-600" />
+                                <span>View Live Demo</span>
+                                <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover/btn:translate-x-0.5 transition-transform" />
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  openOrderModal({
+                                    selectedDemo: current.title,
+                                    websiteType: `Template Customization: ${current.title}`,
+                                    category: current.category,
+                                    initialRequirements: `I want to order and build the "${current.title}" (${current.category}) website.`
+                                  })
+                                }
+                                className="px-3.5 sm:px-4 py-2 rounded-xl l2b-gradient-bg text-white font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-1.5 group/btn hover:scale-102 cursor-pointer"
+                              >
+                                <span>Get Website</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          );
+                        }
+
+                        if (isReadyToOrder) {
+                          return (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                openOrderModal({
+                                  selectedDemo: current.title,
+                                  websiteType: `Template Order: ${current.title}`,
+                                  category: current.category,
+                                  initialRequirements: `I want to order and build the "${current.title}" (${current.category}) website.`
+                                })
+                              }
+                              className="px-4 py-2 rounded-xl l2b-gradient-bg text-white font-black text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-2 group/btn hover:scale-102 cursor-pointer"
+                            >
+                              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                              <span>Order This Website (48h Launch)</span>
+                              <ArrowRight className="w-3.5 h-3.5 text-white group-hover/btn:translate-x-0.5 transition-transform" />
+                            </button>
+                          );
+                        }
+
+                        return (
                           <button
                             type="button"
                             onClick={() =>
@@ -674,8 +732,10 @@ export default function Hero() {
                 </div>
               </div>
 
+            {/* 3. Bottom Showcase Bar with Dot Indicators & Navigation */}
 
-              {/* 3. Bottom Showcase Bar with Dot Indicators & Navigation */}
+
+
               <div className="px-4 py-2.5 sm:py-3 bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200/70 dark:border-slate-800/80 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {/* Mini bottom Prev/Next controls */}
