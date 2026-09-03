@@ -926,4 +926,58 @@ export const sendContactFormConfirmationEmail = async (contact) => {
   return await sendEmail({ to: contact.email, subject, html, text: `Thank you for contacting LOCAL2BRAND, ${contact.name}!` });
 };
 
+// 13. Game Reward Won Email (Automatic Notification to Logged-in Users)
+export const sendGameRewardWinEmail = async ({ user, prize }) => {
+  if (!user || !user.email || !prize) return;
+  const clientUrl = getClientUrl();
+  const subject = `🎉 Congratulations! You won ${prize.label} — Claim Your Discount!`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Hi ${user.name || 'Valued Partner'},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Woohoo! You just played the interactive reward game on <strong>LOCAL2BRAND</strong> and unlocked an exclusive launch discount:
+      </p>
+
+      <!-- Golden Voucher Box -->
+      <div class="bg-box border-theme" style="background: linear-gradient(135deg, #2e1065 0%, #1e1b4b 100%); border: 2px solid #a855f7; border-radius: 16px; padding: 20px; margin: 16px 0; text-align: center; color: #ffffff; box-shadow: 0 10px 25px rgba(124, 58, 237, 0.25);">
+        <div style="font-size: 28px; margin-bottom: 6px;">${prize.icon || '🎁'}</div>
+        <div style="font-size: 18px; font-weight: 900; color: #fef08a; letter-spacing: 0.5px;">${prize.label}</div>
+        <div style="font-size: 13px; color: #e9d5ff; margin: 4px 0 14px 0;">${prize.subLabel || 'Exclusive Client Launch Voucher'}</div>
+        
+        <div style="display: inline-block; background-color: #0f172a; border: 1px dashed #c084fc; border-radius: 10px; padding: 10px 20px; font-family: monospace; font-size: 18px; font-weight: 900; color: #34d399; letter-spacing: 2px;">
+          ${prize.code}
+        </div>
+        <div style="font-size: 11px; color: #a78bfa; margin-top: 8px;">
+          ⚡ Valid for the next 7 days on all website plans &amp; custom builds
+        </div>
+      </div>
+
+      <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">
+        You can use this coupon code immediately during project checkout or apply it directly with our AI Assistant to get your website delivered in as fast as <strong>48 hours</strong>!
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `You won ${prize.label} on LOCAL2BRAND! Use code ${prize.code} to save.`,
+    headerBadge: '🎁 REWARD GAME WINNER',
+    title: `You Won a Special Launch Reward! 🎉`,
+    subtitle: `Exclusive Voucher Code: ${prize.code}`,
+    contentHtml,
+    ctaText: '⚡ Claim Voucher & Start Website',
+    ctaUrl: `${clientUrl}/get-started?promo=${prize.code}`,
+  });
+
+  return await sendEmail({
+    to: user.email,
+    subject,
+    html,
+    text: `Congratulations ${user.name}! You won ${prize.label} (Code: ${prize.code}). Claim your reward at ${clientUrl}/get-started?promo=${prize.code}`
+  });
+};
+
+
 

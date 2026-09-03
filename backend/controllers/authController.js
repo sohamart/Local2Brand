@@ -647,3 +647,32 @@ export const deleteUser = async (req, res) => {
     });
   }
 };
+
+// @desc    Send Game Reward Won Notification Email to Logged-in User
+// @route   POST /api/auth/claim-reward-email
+// @access  Private
+export const sendRewardEmail = async (req, res) => {
+  try {
+    const { prize } = req.body;
+    if (!prize || !prize.code) {
+      return res.status(400).json({ success: false, message: 'Prize details are required' });
+    }
+
+    const user = req.user;
+    if (!user || !user.email) {
+      return res.status(400).json({ success: false, message: 'User email not found' });
+    }
+
+    const { sendGameRewardWinEmail } = await import('../utils/email.js');
+    await sendGameRewardWinEmail({ user, prize });
+
+    return res.status(200).json({
+      success: true,
+      message: `Reward voucher email sent to ${user.email} successfully! 📧`,
+    });
+  } catch (error) {
+    console.error('Send reward email error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Error sending reward email' });
+  }
+};
+

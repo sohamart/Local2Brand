@@ -344,14 +344,15 @@ export default function Navbar() {
 
           isScrolled
             ? 'pt-1 sm:pt-1.5'
-            : 'pt-2 sm:pt-3'
+            : 'pt-1.5 sm:pt-2.5'
         }`}>
           <nav
             className={`flex items-center justify-between glass-waterdrop rounded-full transition-all duration-300 relative border border-white/95 dark:border-slate-800/90 ${
               isScrolled
-                ? 'h-[58px] sm:h-[62px] px-3.5 sm:px-6 shadow-glass-lg'
-                : 'h-[62px] sm:h-[66px] px-4 sm:px-7 shadow-glass'
+                ? 'h-[52px] sm:h-[60px] px-3.5 sm:px-6 shadow-glass-lg'
+                : 'h-[56px] sm:h-[64px] px-4 sm:px-7 shadow-glass'
             }`}
+
 
             aria-label="Global Navigation"
           >

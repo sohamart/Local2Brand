@@ -34,7 +34,7 @@
       "btnText": "Claim Offer"
     },
     "bannerImage": "",
-    "updatedAt": "2026-09-03T16:48:18.901Z",
+    "updatedAt": "2026-09-03T16:53:49.066Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
     "updatedBy": "6a95d3798cd0de29be2399db",
@@ -179,9 +179,9 @@
       "btnText": "Spin & Win Prize",
       "rewardVoucher": "INDIA2025",
       "rewardDiscount": 20,
-      "activeGame": "boxes",
-      "campaignVersion": 5,
-      "lastResetDate": "2026-09-03T16:48:18.784Z",
+      "activeGame": "slots",
+      "campaignVersion": 7,
+      "lastResetDate": "2026-09-03T16:53:48.820Z",
       "prizes": [
         {
           "id": "prize-1788452637330",

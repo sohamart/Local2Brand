@@ -326,7 +326,8 @@ export default function Hero() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Top Unique Clean Indian Flag Luxury Badge */}
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4 sm:mb-6">
+
           <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full badge-tricolor-india text-xs font-semibold text-slate-800 dark:text-slate-200 animate-float relative overflow-hidden">
             <span className="flex items-center gap-1.5 font-black text-amber-900 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/40 shadow-xs">
               <AshokaChakra size={13} />

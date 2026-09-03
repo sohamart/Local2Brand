@@ -1060,41 +1060,42 @@ html[data-theme="dark"] body {
 
 /* Super-Smooth Hardware-Accelerated Page Header Offsets (Zero Reflow / 120 FPS) */
 .page-header-offset {
-  padding-top: 4.75rem; /* ~76px when announcement bar is off */
+  padding-top: 5rem; /* ~80px on mobile when announcement bar is off */
   transition: padding-top 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (min-width: 640px) {
   .page-header-offset {
-    padding-top: 5.25rem; /* ~84px */
+    padding-top: 5.75rem; /* ~92px on tablet */
   }
 }
 
 @media (min-width: 1024px) {
   .page-header-offset {
-    padding-top: 5.75rem; /* ~92px */
+    padding-top: 6.25rem; /* ~100px on desktop */
   }
 }
 
 /* When Announcement Bar is active */
 body.has-announcement-bar .page-header-offset,
 .has-announcement-bar .page-header-offset {
-  padding-top: 7rem; /* ~112px */
+  padding-top: 7.25rem; /* ~116px on mobile */
 }
 
 @media (min-width: 640px) {
   body.has-announcement-bar .page-header-offset,
   .has-announcement-bar .page-header-offset {
-    padding-top: 7.75rem; /* ~124px */
+    padding-top: 8rem; /* ~128px on tablet */
   }
 }
 
 @media (min-width: 1024px) {
   body.has-announcement-bar .page-header-offset,
   .has-announcement-bar .page-header-offset {
-    padding-top: 8.25rem; /* ~132px */
+    padding-top: 8.75rem; /* ~140px on desktop */
   }
 }
+
 
 
 /* Sleek Custom Scrollbar for Modals & Inspectors */

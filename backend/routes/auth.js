@@ -12,6 +12,7 @@ import {
   verifyEmailOtp,
   adminToggleVerifyUser,
   adminResendUserOtp,
+  sendRewardEmail,
 } from '../controllers/authController.js';
 import { protect, adminOnly } from '../middleware/auth.js';
 
@@ -27,6 +28,8 @@ router.post('/verify-otp', verifyEmailOtp);
 router.get('/me', protect, getMe);
 router.put('/update-profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
+router.post('/claim-reward-email', protect, sendRewardEmail);
+
 
 // Admin-only user management routes
 router.get('/users', protect, adminOnly, getAllUsers);

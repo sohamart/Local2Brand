@@ -12,13 +12,18 @@ import {
   RotateCw,
   Trophy,
   Dices,
-  Layers,
-  Crown
+  Crown,
+  Volume2,
+  VolumeX,
+  Star
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../services/api';
 import AshokaChakra from './AshokaChakra';
+
 
 const DEFAULT_PRIZES = [
   {
@@ -77,9 +82,96 @@ const DEFAULT_PRIZES = [
   },
 ];
 
+// High-Performance Web Audio Synthesizer for Arcade Sounds
+function playSound(type, soundEnabled = true) {
+  if (!soundEnabled) return;
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    if (type === 'tick') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(580, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.04);
+    } else if (type === 'lever') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } else if (type === 'slot_roll') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(220, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + 0.06);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.06);
+    } else if (type === 'unbox') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(320, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(950, ctx.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    } else if (type === 'scratch') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(600 + Math.random() * 500, ctx.currentTime);
+      gain.gain.setValueAtTime(0.03, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.04);
+    } else if (type === 'fanfare') {
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
+        gain.gain.setValueAtTime(0, ctx.currentTime + idx * 0.1);
+        gain.gain.linearRampToValueAtTime(0.22, ctx.currentTime + idx * 0.1 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.1 + 0.5);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + idx * 0.1);
+        osc.stop(ctx.currentTime + idx * 0.1 + 0.5);
+      });
+    }
+  } catch (e) {}
+}
+
 export default function LuckyWheelModal({ isOpen, onClose }) {
   const { settings } = useSiteSettings();
   const { openOrderModal } = useOrderModal();
+  const { user } = useAuth();
 
   const gameMode = settings?.luckyWheel?.activeGame || 'wheel'; // 'wheel' | 'slots' | 'boxes' | 'scratch'
   const prizes = Array.isArray(settings?.luckyWheel?.prizes) && settings.luckyWheel.prizes.length > 0
@@ -90,464 +182,689 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
   const [winningPrize, setWinningPrize] = useState(null);
   const [copied, setCopied] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // Wheel State
   const [rotation, setRotation] = useState(0);
-  const canvasRef = useRef(null);
+  const [pointerWiggle, setPointerWiggle] = useState(false);
+  const wheelCanvasRef = useRef(null);
 
   // Slots State
   const [slotReels, setSlotReels] = useState(['🎁', '⚡', '🎉']);
-  const [isSlotSpinning, setIsSlotSpinning] = useState(false);
+  const [leverPulled, setLeverPulled] = useState(false);
 
   // Boxes State
-  const [selectedBoxIdx, setSelectedBoxIdx] = useState(null);
+  const [openedBoxIdx, setOpenedBoxIdx] = useState(null);
 
   // Scratch State
   const scratchCanvasRef = useRef(null);
-  const [scratchPercent, setScratchPercent] = useState(0);
+  const [scratchedPercent, setScratchedPercent] = useState(0);
   const [isScratching, setIsScratching] = useState(false);
+  const isScratchRevealedRef = useRef(false);
 
-  // Check if user has already played for current campaign version
+  // Check storage on campaign version
   useEffect(() => {
     if (!isOpen) return;
     try {
       const currentCampaign = settings?.luckyWheel?.campaignVersion || 1;
       const spunCampaign = parseInt(localStorage.getItem('l2b_wheel_spun_version') || '0', 10);
-      const savedPrize = localStorage.getItem('l2b_won_voucher');
+      const wonData = localStorage.getItem('l2b_won_voucher');
 
-      if (spunCampaign >= currentCampaign && savedPrize) {
-        const parsed = JSON.parse(savedPrize);
-        setWinningPrize(parsed);
+      if (spunCampaign >= currentCampaign && wonData) {
         setHasPlayed(true);
+        setWinningPrize(JSON.parse(wonData));
       } else {
         setHasPlayed(false);
         setWinningPrize(null);
-        setSelectedBoxIdx(null);
-        setScratchPercent(0);
+        setOpenedBoxIdx(null);
+        setScratchedPercent(0);
+        isScratchRevealedRef.current = false;
       }
     } catch (e) {}
   }, [isOpen, settings?.luckyWheel?.campaignVersion]);
 
-  // Award prize and transition
-  const handleAwardPrize = (selected) => {
-    setWinningPrize(selected);
+  // Handle Win Completion
+  const handleAwardPrize = (prize) => {
+    setWinningPrize(prize);
     setHasPlayed(true);
+    setIsPlaying(false);
 
     try {
       const currentCampaign = settings?.luckyWheel?.campaignVersion || 1;
-      localStorage.setItem('l2b_wheel_spun_version', String(currentCampaign));
+      localStorage.setItem('l2b_wheel_spun_version', currentCampaign.toString());
       localStorage.setItem('l2b_wheel_spun', 'true');
-      localStorage.setItem('l2b_won_voucher', JSON.stringify(selected));
+      localStorage.setItem('l2b_won_voucher', JSON.stringify(prize));
     } catch (e) {}
 
-    toast.success(`🎉 Congratulations! You won: ${selected.label} (${selected.code})`, {
-      icon: '🎁',
-      autoClose: 3500
-    });
+    playSound('fanfare', soundEnabled);
 
-    setTimeout(() => {
-      onClose();
-      window.dispatchEvent(new CustomEvent('l2b_open_chatbot_prize', { detail: selected }));
-    }, 2800);
+    // If user is logged in, send win reward email notification!
+    if (user && user.email) {
+      api.post('/auth/claim-reward-email', { prize })
+        .then(() => {
+          toast.info(`🎉 A copy of your ${prize.code} voucher was emailed to ${user.email}!`, {
+            autoClose: 5000,
+          });
+        })
+        .catch((err) => {
+          console.warn('Could not send reward email notification:', err?.message);
+        });
+    }
+
+    // Broadcast win to Assistant Chatbot
+    try {
+      window.dispatchEvent(
+        new CustomEvent('l2b_open_chatbot_prize', {
+          detail: prize,
+        })
+      );
+    } catch (err) {}
   };
 
-  // --- GAME 1: WHEEL DRAWING & SPIN ---
-  const totalSlices = prizes.length;
-  const sliceDeg = 360 / totalSlices;
 
+  // ----------------------------------------------------
+  // GAME 1: 3D CASINO LUCKY PRIZE WHEEL
+  // ----------------------------------------------------
   useEffect(() => {
-    if (!isOpen || gameMode !== 'wheel') return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (gameMode !== 'wheel' || !isOpen || !wheelCanvasRef.current) return;
+    const canvas = wheelCanvasRef.current;
     const ctx = canvas.getContext('2d');
     const width = canvas.width;
     const height = canvas.height;
-    const radius = width / 2;
-    const sliceRad = (2 * Math.PI) / totalSlices;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const radius = width / 2 - 16;
+    const numSegments = prizes.length;
+    const anglePerSegment = (2 * Math.PI) / numSegments;
 
     ctx.clearRect(0, 0, width, height);
 
-    prizes.forEach((prize, i) => {
-      const angle = i * sliceRad;
+    // 1. Draw Outer Golden Bezel
+    const bezelGrad = ctx.createRadialGradient(centerX, centerY, radius - 4, centerX, centerY, radius + 14);
+    bezelGrad.addColorStop(0, '#78350f');
+    bezelGrad.addColorStop(0.3, '#fbbf24');
+    bezelGrad.addColorStop(0.7, '#fef08a');
+    bezelGrad.addColorStop(1, '#92400e');
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 12, 0, 2 * Math.PI);
+    ctx.fillStyle = bezelGrad;
+    ctx.shadowColor = 'rgba(245, 158, 11, 0.6)';
+    ctx.shadowBlur = 18;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // 2. Draw 16 Outer LED Studs
+    const numStuds = 16;
+    for (let i = 0; i < numStuds; i++) {
+      const studAngle = (i * (2 * Math.PI)) / numStuds;
+      const studX = centerX + (radius + 6) * Math.cos(studAngle);
+      const studY = centerY + (radius + 6) * Math.sin(studAngle);
+      ctx.beginPath();
+      ctx.arc(studX, studY, 3.5, 0, 2 * Math.PI);
+      ctx.fillStyle = i % 2 === 0 ? '#ffffff' : '#fef08a';
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // 3. Draw Colored Segments
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate((rotation * Math.PI) / 180);
+
+    prizes.forEach((prize, index) => {
+      const startAngle = index * anglePerSegment;
+      const endAngle = startAngle + anglePerSegment;
 
       ctx.beginPath();
-      ctx.fillStyle = prize.color || '#8b5cf6';
-      ctx.moveTo(radius, radius);
-      ctx.arc(radius, radius, radius - 8, angle, angle + sliceRad);
-      ctx.lineTo(radius, radius);
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, radius, startAngle, endAngle);
+      ctx.closePath();
+
+      // Metallic Radial Gradient on each slice
+      const sliceGrad = ctx.createRadialGradient(0, 0, 10, 0, 0, radius);
+      sliceGrad.addColorStop(0, '#ffffff');
+      sliceGrad.addColorStop(0.15, prize.color || '#8b5cf6');
+      sliceGrad.addColorStop(1, '#1e1035');
+      ctx.fillStyle = sliceGrad;
       ctx.fill();
 
-      ctx.beginPath();
-      ctx.strokeStyle = '#ffffff30';
-      ctx.lineWidth = 2;
-      ctx.moveTo(radius, radius);
-      ctx.arc(radius, radius, radius - 8, angle, angle + sliceRad);
+      // Slice Golden Divider Lines
+      ctx.strokeStyle = 'rgba(251, 191, 36, 0.7)';
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
+      // Draw Slice Text & Emoji
       ctx.save();
-      ctx.translate(radius, radius);
-      ctx.rotate(angle + sliceRad / 2);
+      ctx.rotate(startAngle + anglePerSegment / 2);
       ctx.textAlign = 'right';
       ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 13px system-ui, sans-serif';
+      ctx.shadowColor = 'rgba(0,0,0,0.9)';
+      ctx.shadowBlur = 4;
 
-      ctx.font = 'bold 12px Inter, system-ui, sans-serif';
-      ctx.fillText(prize.icon ? `${prize.icon} ${prize.label.slice(0, 14)}` : prize.label.slice(0, 14), radius - 24, 4);
-
+      const displayLabel = prize.label.length > 18 ? prize.label.substring(0, 17) + '…' : prize.label;
+      ctx.fillText(`${prize.icon || '🎁'} ${displayLabel}`, radius - 20, 4);
       ctx.restore();
     });
 
+    ctx.restore();
+
+    // 4. Draw Center 3D Gold Hub
+    const hubGrad = ctx.createRadialGradient(centerX - 4, centerY - 4, 2, centerX, centerY, 30);
+    hubGrad.addColorStop(0, '#fef08a');
+    hubGrad.addColorStop(0.5, '#f59e0b');
+    hubGrad.addColorStop(1, '#78350f');
     ctx.beginPath();
-    ctx.arc(radius, radius, 32, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, 28, 0, 2 * Math.PI);
+    ctx.fillStyle = hubGrad;
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 10;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
     ctx.fillStyle = '#1e1b4b';
     ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#f59e0b';
-    ctx.stroke();
-  }, [isOpen, gameMode, prizes, totalSlices]);
 
-  const handleSpinWheel = () => {
+    // Small Gold Star in Center
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '16px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✦', centerX, centerY + 1);
+
+  }, [rotation, prizes, gameMode, isOpen]);
+
+  const spinWheel = () => {
     if (isPlaying || hasPlayed) return;
     setIsPlaying(true);
 
-    const winIdx = Math.floor(Math.random() * prizes.length);
-    const selected = prizes[winIdx];
-    const sliceAngle = 360 / prizes.length;
-    const stopAngle = 360 - (winIdx * sliceAngle + sliceAngle / 2);
-    const totalSpins = 360 * 5;
-    const finalAngle = totalSpins + stopAngle;
+    const winningIndex = Math.floor(Math.random() * prizes.length);
+    const selectedPrize = prizes[winningIndex];
 
-    setRotation((prev) => prev + finalAngle);
+    const numSegments = prizes.length;
+    const segmentAngle = 360 / numSegments;
+    const targetSliceAngle = 270 - (winningIndex * segmentAngle + segmentAngle / 2);
+    const fullSpins = 360 * 6; // 6 dramatic full revolutions
+    const totalRotation = fullSpins + targetSliceAngle;
 
-    setTimeout(() => {
-      setIsPlaying(false);
-      handleAwardPrize(selected);
-    }, 4500);
+    const startTime = performance.now();
+    const duration = 4800; // 4.8s physics deceleration
+    let lastTickAngle = 0;
+
+    const animateWheel = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Quartic Deceleration Curve
+      const easeOut = 1 - Math.pow(1 - progress, 4);
+      const currentRotation = easeOut * totalRotation;
+      setRotation(currentRotation % 360);
+
+      // Play tick sound whenever crossing segment pin
+      if (Math.floor(currentRotation / segmentAngle) !== lastTickAngle) {
+        lastTickAngle = Math.floor(currentRotation / segmentAngle);
+        playSound('tick', soundEnabled);
+        setPointerWiggle(true);
+        setTimeout(() => setPointerWiggle(false), 50);
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animateWheel);
+      } else {
+        setTimeout(() => {
+          handleAwardPrize(selectedPrize);
+        }, 300);
+      }
+    };
+
+    requestAnimationFrame(animateWheel);
   };
 
-  // --- GAME 2: SLOTS PLAY ---
-  const handlePlaySlots = () => {
+  // ----------------------------------------------------
+  // GAME 2: 3D LAS VEGAS SLOTS MACHINE
+  // ----------------------------------------------------
+  const spinSlots = () => {
     if (isPlaying || hasPlayed) return;
     setIsPlaying(true);
-    setIsSlotSpinning(true);
+    setLeverPulled(true);
+    playSound('lever', soundEnabled);
+    setTimeout(() => setLeverPulled(false), 400);
 
-    const selected = prizes[Math.floor(Math.random() * prizes.length)];
-    const targetIcon = selected.icon || '🎉';
+    const winningIndex = Math.floor(Math.random() * prizes.length);
+    const selectedPrize = prizes[winningIndex];
+    const winningIcon = selectedPrize.icon || '🎉';
+
     const iconsPool = ['🎁', '⚡', '🎉', '🚀', '👑', '💎', '🔥', '✨'];
-
-    let count = 0;
-    const interval = setInterval(() => {
-      count++;
+    let counter = 0;
+    const rollInterval = setInterval(() => {
       setSlotReels([
         iconsPool[Math.floor(Math.random() * iconsPool.length)],
         iconsPool[Math.floor(Math.random() * iconsPool.length)],
         iconsPool[Math.floor(Math.random() * iconsPool.length)],
       ]);
+      playSound('slot_roll', soundEnabled);
+      counter++;
 
-      if (count > 25) {
-        clearInterval(interval);
-        setSlotReels([targetIcon, targetIcon, targetIcon]); // Jackpot Triple Match!
-        setIsSlotSpinning(false);
-        setIsPlaying(false);
-        handleAwardPrize(selected);
+      if (counter > 28) {
+        clearInterval(rollInterval);
+        setSlotReels([winningIcon, winningIcon, winningIcon]);
+        setTimeout(() => {
+          handleAwardPrize(selectedPrize);
+        }, 400);
       }
-    }, 100);
+    }, 90);
   };
 
-  // --- GAME 3: MYSTERY BOXES PICK ---
-  const handlePickBox = (boxIdx) => {
-    if (isPlaying || hasPlayed || selectedBoxIdx !== null) return;
-    setSelectedBoxIdx(boxIdx);
+  // ----------------------------------------------------
+  // GAME 3: 3D MYSTERY GIFT BOXES (UNBOXING)
+  // ----------------------------------------------------
+  const handleOpenBox = (idx) => {
+    if (isPlaying || hasPlayed || openedBoxIdx !== null) return;
     setIsPlaying(true);
+    setOpenedBoxIdx(idx);
+    playSound('unbox', soundEnabled);
 
-    const selected = prizes[boxIdx % prizes.length] || prizes[0];
+    const winningIndex = idx % prizes.length;
+    const selectedPrize = prizes[winningIndex];
 
     setTimeout(() => {
-      setIsPlaying(false);
-      handleAwardPrize(selected);
+      handleAwardPrize(selectedPrize);
     }, 1200);
   };
 
-  // --- GAME 4: SCRATCHCARD REVEAL ---
+  // ----------------------------------------------------
+  // GAME 4: VIP GOLDEN SCRATCHCARD
+  // ----------------------------------------------------
+  const targetScratchPrizeRef = useRef(prizes[Math.floor(Math.random() * prizes.length)]);
+
   useEffect(() => {
-    if (!isOpen || gameMode !== 'scratch' || hasPlayed) return;
+    if (gameMode !== 'scratch' || !isOpen || !scratchCanvasRef.current) return;
     const canvas = scratchCanvasRef.current;
-    if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const w = canvas.width;
-    const h = canvas.height;
+    const width = canvas.width;
+    const height = canvas.height;
 
-    // Draw gold foil overlay
-    const gradient = ctx.createLinearGradient(0, 0, w, h);
-    gradient.addColorStop(0, '#f59e0b');
-    gradient.addColorStop(0.5, '#fbbf24');
-    gradient.addColorStop(1, '#d97706');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, w, h);
+    // Draw Golden Foil Cover
+    const goldGrad = ctx.createLinearGradient(0, 0, width, height);
+    goldGrad.addColorStop(0, '#d97706');
+    goldGrad.addColorStop(0.25, '#fbbf24');
+    goldGrad.addColorStop(0.5, '#fef08a');
+    goldGrad.addColorStop(0.75, '#f59e0b');
+    goldGrad.addColorStop(1, '#b45309');
+    ctx.fillStyle = goldGrad;
+    ctx.fillRect(0, 0, width, height);
 
+    // Decorative Holographic Foil Pattern
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 1.5;
+    for (let i = -width; i < width * 2; i += 24) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.lineTo(i + height, height);
+      ctx.stroke();
+    }
+
+    // Centered Golden Foil Seal
     ctx.fillStyle = '#78350f';
-    ctx.font = 'bold 15px Inter, sans-serif';
+    ctx.font = 'bold 15px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('✨ Scratch to Reveal VIP Voucher ✨', w / 2, h / 2 + 5);
-  }, [isOpen, gameMode, hasPlayed]);
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(255,255,255,0.6)';
+    ctx.shadowBlur = 6;
+    ctx.fillText('✦ VIP GOLDEN REWARD ✦', width / 2, height / 2 - 10);
+    ctx.font = '11px system-ui, sans-serif';
+    ctx.fillText('Swipe / Scratch Foil to Reveal', width / 2, height / 2 + 12);
+    ctx.shadowBlur = 0;
+  }, [gameMode, isOpen]);
 
-  const handleScratchMove = (e) => {
-    if (hasPlayed || isPlaying) return;
+  const scratchAtPoint = (clientX, clientY) => {
+    if (hasPlayed || isScratchRevealedRef.current || !scratchCanvasRef.current) return;
     const canvas = scratchCanvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.clientX || (e.touches && e.touches[0]?.clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0]?.clientY);
-    if (!clientX || !clientY) return;
-
-    const x = ((clientX - rect.left) / rect.width) * canvas.width;
-    const y = ((clientY - rect.top) / rect.height) * canvas.height;
-
     const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    ctx.arc(x, y, 24, 0, Math.PI * 2);
+    ctx.arc(x, y, 22, 0, 2 * Math.PI);
     ctx.fill();
 
-    setScratchPercent((prev) => {
-      const next = prev + 4;
-      if (next >= 45 && !hasPlayed && !isPlaying) {
-        setIsPlaying(true);
-        const selected = prizes[Math.floor(Math.random() * prizes.length)];
+    playSound('scratch', soundEnabled);
+
+    // Estimate scratched percentage
+    setScratchedPercent((prev) => {
+      const next = Math.min(prev + 3.5, 100);
+      if (next >= 42 && !isScratchRevealedRef.current) {
+        isScratchRevealedRef.current = true;
+        // Clear all canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         setTimeout(() => {
-          setIsPlaying(false);
-          handleAwardPrize(selected);
-        }, 500);
+          handleAwardPrize(targetScratchPrizeRef.current);
+        }, 400);
       }
       return next;
     });
   };
 
-  const handleCopyCode = async () => {
+  const handleCopyCode = () => {
+    if (!winningPrize?.code) return;
+    navigator.clipboard.writeText(winningPrize.code);
+    setCopied(true);
+    toast.success(`Coupon code ${winningPrize.code} copied! 🚀`);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleApplyVoucher = () => {
     if (!winningPrize) return;
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(winningPrize.code);
-      }
-      setCopied(true);
-      toast.info(`Coupon code "${winningPrize.code}" copied!`);
-      setTimeout(() => setCopied(false), 2500);
-    } catch (e) {}
+    onClose();
+    openOrderModal({
+      promoCode: winningPrize.code,
+      discountPercent: winningPrize.discountPercent || 20,
+      autoApplyOffer: true,
+      websiteType: `Won Prize: ${winningPrize.label} (Code: ${winningPrize.code})`,
+      initialRequirements: `I have won the ${winningPrize.label} reward with code "${winningPrize.code}". Please apply this discount to my website project!`,
+    });
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-300">
-      <div className="relative w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border-2 border-purple-500/50 dark:border-cyan-500/50 shadow-2xl overflow-hidden p-5 sm:p-7 flex flex-col items-center text-center">
-        
-        {/* Ambient Top Glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-gradient-to-b from-purple-500/25 to-transparent rounded-full blur-2xl pointer-events-none" />
-
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer z-20"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Header Badge & Title */}
-        <div className="mb-4 space-y-1 relative z-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-sm">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Exclusive Launch Rewards</span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-            {settings?.luckyWheel?.title || 'Interactive Rewards & Launch Gifts'}
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-            {settings?.luckyWheel?.subtitle || 'Play our interactive launch game to win instant discounts, free domains, and launch vouchers!'}
-          </p>
-        </div>
-
-        {/* -------------------- GAME VIEWPORT -------------------- */}
-
-        {/* 1. WHEEL GAME */}
-        {gameMode === 'wheel' && (
-          <div className="relative my-2 w-[280px] h-[280px] sm:w-[320px] sm:h-[320px] flex items-center justify-center">
-            {/* Top Pointer Arrow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 -mt-2">
-              <div className="w-5 h-7 bg-gradient-to-b from-amber-400 to-amber-600 rounded-b-lg shadow-lg border-2 border-white dark:border-slate-900 flex items-end justify-center pb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-ping" />
-              </div>
-            </div>
-
-            {/* Canvas Wheel */}
-            <canvas
-              ref={canvasRef}
-              width={340}
-              height={340}
-              style={{
-                transform: `rotate(${rotation}deg)`,
-                transition: isPlaying ? 'transform 4.5s cubic-bezier(0.15, 0.9, 0.2, 1)' : 'none',
-              }}
-              className="w-full h-full rounded-full shadow-2xl border-4 border-amber-400"
-            />
-
-            {/* Center Spin Button */}
-            <button
-              type="button"
-              onClick={handleSpinWheel}
-              disabled={isPlaying || hasPlayed}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 font-black text-xs uppercase shadow-xl flex flex-col items-center justify-center gap-0.5 border-2 border-white hover:scale-105 active:scale-95 transition-transform disabled:opacity-80 z-20 cursor-pointer"
-            >
-              <RotateCw className={`w-4 h-4 ${isPlaying ? 'animate-spin' : ''}`} />
-              <span>{isPlaying ? 'Spinning' : 'SPIN'}</span>
-            </button>
-          </div>
-        )}
-
-        {/* 2. LAS VEGAS SLOTS GAME */}
-        {gameMode === 'slots' && (
-          <div className="my-4 w-full max-w-sm space-y-4">
-            <div className="p-4 rounded-3xl bg-slate-950 border-4 border-amber-400 shadow-2xl flex items-center justify-center gap-3">
-              {slotReels.map((icon, idx) => (
-                <div
-                  key={idx}
-                  className="w-20 h-24 sm:w-24 sm:h-28 rounded-2xl bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-amber-300/40 flex items-center justify-center text-4xl sm:text-5xl shadow-inner overflow-hidden"
-                >
-                  <span className={`transform ${isSlotSpinning ? 'animate-bounce' : 'scale-105 transition-transform'}`}>
-                    {icon}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={handlePlaySlots}
-              disabled={isPlaying || hasPlayed}
-              className="w-full py-3.5 rounded-2xl text-sm font-black text-slate-950 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:opacity-95 shadow-xl flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
-            >
-              <Dices className="w-5 h-5" />
-              <span>{isPlaying ? '🎰 Spinning Reels...' : 'Pull Lever & Spin Reels 🎰'}</span>
-            </button>
-          </div>
-        )}
-
-        {/* 3. MYSTERY GIFT BOXES GAME */}
-        {gameMode === 'boxes' && (
-          <div className="my-3 w-full max-w-sm space-y-3">
-            <p className="text-xs font-bold text-purple-600 dark:text-cyan-400 uppercase tracking-wider">
-              Pick Any 1 Mystery Gift Box to Reveal Your Prize!
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              {[0, 1, 2, 3, 4, 5].map((idx) => {
-                const isPicked = selectedBoxIdx === idx;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handlePickBox(idx)}
-                    disabled={isPlaying || hasPlayed}
-                    className={`h-24 rounded-2xl border-2 flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      isPicked
-                        ? 'bg-gradient-to-tr from-amber-400 to-pink-500 border-amber-300 text-white scale-105 shadow-xl animate-pulse'
-                        : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:scale-105 text-slate-700 dark:text-white'
-                    }`}
-                  >
-                    <Gift className={`w-8 h-8 ${isPicked ? 'animate-bounce text-white' : 'text-purple-600 dark:text-cyan-400'}`} />
-                    <span className="text-[10px] font-black uppercase">Box #{idx + 1}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* 4. GOLDEN SCRATCHCARD GAME */}
-        {gameMode === 'scratch' && (
-          <div className="my-3 w-full max-w-sm space-y-3">
-            <div className="relative w-full h-44 rounded-2xl overflow-hidden border-4 border-amber-400 shadow-2xl bg-gradient-to-r from-purple-600 to-pink-600 flex flex-col items-center justify-center text-white p-4 select-none">
-              <Trophy className="w-10 h-10 text-amber-300 animate-bounce mb-1" />
-              <span className="text-xs font-black uppercase tracking-wider">🎉 VIP LAUNCH REWARD</span>
-              <span className="text-xl font-black">{winningPrize?.label || '20% OFF Launch Voucher'}</span>
-              <span className="font-mono text-sm font-black bg-white/20 px-3 py-1 rounded-lg mt-1 border border-white/30">
-                {winningPrize?.code || 'INDIA2025'}
-              </span>
-
-              {/* Scratchable Canvas Foil */}
-              {!hasPlayed && (
-                <canvas
-                  ref={scratchCanvasRef}
-                  width={380}
-                  height={176}
-                  onMouseMove={handleScratchMove}
-                  onTouchMove={handleScratchMove}
-                  className="absolute inset-0 w-full h-full cursor-crosshair z-20 touch-none"
-                />
-              )}
-            </div>
-
-            <p className="text-[11px] text-slate-500">
-              💡 Move your cursor or swipe your finger across the golden card to scrape away the foil!
-            </p>
-          </div>
-        )}
-
-        {/* -------------------- WINNING REWARD CARD -------------------- */}
-        {winningPrize && (
-          <div className="w-full mt-3 p-4 rounded-2xl bg-gradient-to-r from-purple-500/15 via-pink-500/15 to-amber-500/15 border-2 border-purple-400/50 shadow-md space-y-3 animate-in zoom-in-95">
-            <div className="flex items-center justify-between">
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase">
-                🎉 Won Reward
-              </span>
-              <span className="font-mono text-xs font-black text-purple-600 dark:text-purple-400 bg-white dark:bg-slate-800 px-2.5 py-0.5 rounded-lg border border-purple-300 dark:border-purple-700">
-                {winningPrize.code}
-              </span>
-            </div>
-
-            <div className="text-left">
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                {winningPrize.label}
-              </h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300">
-                {winningPrize.subLabel || 'Use this promo voucher on your website proposal!'}
+    <div
+      className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-xl animate-in fade-in duration-200 select-none overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-md bg-gradient-to-b from-[#0e1628] via-[#090e1c] to-[#060913] text-white rounded-3xl border-2 border-purple-500/50 shadow-[0_0_80px_rgba(168,85,247,0.35)] overflow-hidden animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Top Header Bar */}
+        <div className="p-4 bg-gradient-to-r from-purple-900/60 via-indigo-900/60 to-purple-900/60 border-b border-purple-500/30 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="p-1.5 rounded-xl bg-purple-500/20 text-amber-300 border border-purple-400/40 shadow-xs">
+              <Trophy className="w-4 h-4 text-amber-300 animate-bounce" />
+            </span>
+            <div>
+              <h3 className="text-sm font-black tracking-wide text-white flex items-center gap-1.5">
+                <span>LOCAL2BRAND REWARDS</span>
+                <AshokaChakra size={12} />
+              </h3>
+              <p className="text-[10px] text-purple-300 font-bold">
+                {gameMode === 'wheel' && '🎡 Spin 3D Casino Wheel to Win'}
+                {gameMode === 'slots' && '🎰 Las Vegas 3D Jackpot Slots'}
+                {gameMode === 'boxes' && '🎁 Pick a 3D Mystery Gift Box'}
+                {gameMode === 'scratch' && '🃏 VIP Golden Scratchcard'}
               </p>
             </div>
-
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button
-                type="button"
-                onClick={handleCopyCode}
-                className="py-2.5 px-3 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Copied!' : 'Copy Code'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  openOrderModal({
-                    promoCode: winningPrize.code,
-                    discountPercent: winningPrize.discountPercent || 20,
-                    autoApplyOffer: true,
-                    websiteType: `Won Prize: ${winningPrize.label} (Code: ${winningPrize.code})`,
-                    initialRequirements: `I won the reward "${winningPrize.label}" with promo code "${winningPrize.code}". Please apply this discount to my website project!`,
-                  });
-                }}
-                className="py-2.5 px-3 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-sm hover:opacity-95 flex items-center justify-center gap-1.5 cursor-pointer transition-all"
-              >
-                <Zap className="w-3.5 h-3.5" />
-                <span>Apply Voucher</span>
-              </button>
-            </div>
           </div>
-        )}
 
-        {hasPlayed && !isPlaying && (
-          <span className="text-[10px] text-slate-400 mt-2 block">
-            🔒 You have claimed your reward for this campaign round.
-          </span>
-        )}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title={soundEnabled ? 'Mute Sound' : 'Enable Sound'}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-300" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content Body */}
+        <div className="p-5 flex flex-col items-center justify-center text-center">
+
+          {/* ==================================================== */}
+          {/* STATE A: GAME ACTIVE (NOT WON YET)                   */}
+          {/* ==================================================== */}
+          {!winningPrize && (
+            <div className="w-full flex flex-col items-center">
+
+              {/* GAME 1: 3D CASINO WHEEL */}
+              {gameMode === 'wheel' && (
+                <div className="relative my-2 flex flex-col items-center">
+                  {/* Glowing 3D Golden Pointer with ruby jewel tip */}
+                  <div
+                    className={`absolute -top-3 z-30 transition-transform duration-75 ${
+                      pointerWiggle ? '-rotate-12 scale-110' : 'rotate-0'
+                    }`}
+                  >
+                    <div className="w-6 h-8 bg-gradient-to-b from-amber-300 via-amber-500 to-rose-600 rounded-b-full shadow-[0_0_15px_rgba(245,158,11,0.9)] border-2 border-white flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-rose-200 shadow-xs" />
+                    </div>
+                  </div>
+
+                  {/* 3D Wheel Canvas */}
+                  <div className="relative p-1.5 rounded-full bg-gradient-to-tr from-amber-500 via-purple-600 to-pink-500 shadow-[0_0_35px_rgba(245,158,11,0.4)]">
+                    <canvas
+                      ref={wheelCanvasRef}
+                      width={310}
+                      height={310}
+                      className="rounded-full select-none"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={spinWheel}
+                    disabled={isPlaying}
+                    className="mt-5 w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-slate-950 font-black text-sm uppercase tracking-wider shadow-[0_0_25px_rgba(236,72,153,0.5)] hover:scale-103 active:scale-95 transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4 text-slate-950 animate-spin" />
+                    <span>{isPlaying ? 'Spinning Wheel...' : '🎡 SPIN TO WIN 100% PRIZE'}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* GAME 2: LAS VEGAS 3D SLOTS */}
+              {gameMode === 'slots' && (
+                <div className="w-full my-2 flex flex-col items-center">
+                  <div className="relative w-full max-w-[340px] p-4 rounded-3xl bg-gradient-to-b from-amber-500/30 via-slate-900 to-purple-950 border-3 border-amber-400/80 shadow-[0_0_40px_rgba(245,158,11,0.4)]">
+                    
+                    {/* Flashing Neon Marquee */}
+                    <div className="py-1 px-3 mb-4 rounded-xl bg-amber-400 text-slate-950 font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-md animate-pulse">
+                      <Zap className="w-3.5 h-3.5 fill-slate-950" />
+                      <span>★ 777 JACKPOT REWARD ★</span>
+                      <Zap className="w-3.5 h-3.5 fill-slate-950" />
+                    </div>
+
+                    {/* 3 Mechanical Reels */}
+                    <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-slate-950 border-2 border-amber-500/40 shadow-inner">
+                      {slotReels.map((icon, idx) => (
+                        <div
+                          key={idx}
+                          className="h-24 rounded-xl bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border border-slate-700/80 flex items-center justify-center text-4xl shadow-md transform transition-transform"
+                        >
+                          <span className={`${isPlaying ? 'animate-bounce blur-[0.5px]' : 'scale-110'} select-none`}>
+                            {icon}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 3D Side Pull Lever */}
+                    <div
+                      onClick={spinSlots}
+                      className={`mt-4 cursor-pointer py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg hover:scale-102 active:scale-95 transition-all ${
+                        leverPulled ? 'scale-90 bg-amber-600' : ''
+                      }`}
+                    >
+                      <RotateCw className={`w-4 h-4 ${isPlaying ? 'animate-spin' : ''}`} />
+                      <span>{isPlaying ? 'Rolling Reels...' : '🎰 PULL LEVER TO SPIN'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* GAME 3: 3D MYSTERY GIFT BOXES */}
+              {gameMode === 'boxes' && (
+                <div className="w-full my-2">
+                  <p className="text-xs text-purple-200 font-semibold mb-3">
+                    ✨ Tap any glowing 3D box below to unbox your secret reward!
+                  </p>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    {[0, 1, 2, 3, 4, 5].map((idx) => {
+                      const isOpened = openedBoxIdx === idx;
+                      const boxColors = [
+                        'from-purple-600 to-indigo-700',
+                        'from-pink-600 to-rose-700',
+                        'from-amber-500 to-yellow-600',
+                        'from-emerald-600 to-teal-700',
+                        'from-cyan-600 to-blue-700',
+                        'from-violet-600 to-purple-800',
+                      ];
+
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => handleOpenBox(idx)}
+                          className={`relative p-3.5 rounded-2xl bg-gradient-to-b ${boxColors[idx]} border-2 border-white/40 shadow-lg cursor-pointer transform hover:scale-108 hover:-translate-y-1 transition-all duration-200 flex flex-col items-center justify-center group ${
+                            isOpened ? 'scale-110 ring-4 ring-amber-300 animate-pulse' : ''
+                          }`}
+                        >
+                          <Gift className={`w-8 h-8 text-white drop-shadow-md group-hover:rotate-12 transition-transform ${isOpened ? 'animate-bounce' : ''}`} />
+                          <span className="mt-1 text-[10px] font-black uppercase tracking-wider text-white">
+                            {isOpened ? 'UNBOXED!' : `BOX #${idx + 1}`}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* GAME 4: VIP GOLDEN SCRATCHCARD */}
+              {gameMode === 'scratch' && (
+                <div className="w-full my-2 flex flex-col items-center">
+                  <p className="text-xs text-purple-200 font-semibold mb-2">
+                    🃏 Scratch the golden card below with your finger or mouse!
+                  </p>
+
+                  <div className="relative w-[300px] h-[160px] rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(245,158,11,0.5)] border-2 border-amber-400">
+                    
+                    {/* Underlying Prize Card */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-indigo-950 to-slate-900 flex flex-col items-center justify-center p-3 text-center">
+                      <span className="text-3xl">{targetScratchPrizeRef.current.icon || '🎉'}</span>
+                      <span className="text-xs font-black text-amber-300 mt-1">
+                        {targetScratchPrizeRef.current.label}
+                      </span>
+                      <span className="text-[10px] text-purple-200 font-bold">
+                        Code: {targetScratchPrizeRef.current.code}
+                      </span>
+                    </div>
+
+                    {/* Canvas Scratch Foil Layer */}
+                    <canvas
+                      ref={scratchCanvasRef}
+                      width={300}
+                      height={160}
+                      onMouseDown={() => setIsScratching(true)}
+                      onMouseUp={() => setIsScratching(false)}
+                      onMouseMove={(e) => {
+                        if (isScratching) scratchAtPoint(e.clientX, e.clientY);
+                      }}
+                      onTouchMove={(e) => {
+                        const touch = e.touches[0];
+                        if (touch) scratchAtPoint(touch.clientX, touch.clientY);
+                      }}
+                      className="absolute inset-0 cursor-crosshair touch-none"
+                    />
+                  </div>
+
+                  {/* Scratched Progress Meter */}
+                  <div className="mt-3 flex items-center gap-2 text-xs font-bold text-amber-300">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin" />
+                    <span>{Math.round(scratchedPercent)}% Scratched</span>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {/* ==================================================== */}
+          {/* STATE B: VICTORY REWARD SCREEN                       */}
+          {/* ==================================================== */}
+          {winningPrize && (
+            <div className="w-full flex flex-col items-center animate-in zoom-in-95 duration-300">
+              
+              {/* Golden Trophy Crown Badge */}
+              <div className="relative my-2">
+                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-400 via-yellow-300 to-amber-500 text-slate-950 flex items-center justify-center text-3xl shadow-[0_0_30px_rgba(245,158,11,0.8)] border-2 border-white animate-bounce">
+                  {winningPrize.icon || '🎉'}
+                </div>
+                <span className="absolute -top-2 -right-2 p-1 rounded-full bg-rose-500 text-white shadow-md">
+                  <Crown className="w-3.5 h-3.5" />
+                </span>
+              </div>
+
+              <h2 className="text-xl font-black text-white mt-1">
+                🎉 Congratulations!
+              </h2>
+              <p className="text-xs text-purple-200 font-semibold mt-0.5">
+                You just won the exclusive launch prize:
+              </p>
+
+              {/* Holographic Glowing Voucher Card */}
+              <div className="my-4 w-full p-4 rounded-2xl bg-gradient-to-r from-purple-950 via-indigo-900 to-purple-950 border-2 border-purple-400/60 shadow-xl flex flex-col items-center">
+                <span className="text-xs font-black uppercase tracking-wider text-amber-300">
+                  {winningPrize.label}
+                </span>
+                <span className="text-[11px] text-slate-300 mt-0.5">
+                  {winningPrize.subLabel || 'Exclusive Client Launch Reward'}
+                </span>
+
+                {/* Coupon Code Pill */}
+                <div className="mt-3 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/80 border border-purple-400/40 w-full justify-between">
+                  <span className="font-mono font-black text-sm text-emerald-400 tracking-wider">
+                    {winningPrize.code}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyCode}
+                    className="p-1.5 rounded-lg bg-purple-600/80 hover:bg-purple-600 text-white text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copied ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="w-full space-y-2">
+                <button
+                  type="button"
+                  onClick={handleApplyVoucher}
+                  className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg hover:scale-102 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>⚡ Apply Voucher to Website Specification</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Continue Browsing
+                </button>
+              </div>
+
+            </div>
+          )}
+
+        </div>
       </div>
     </div>
   );
