@@ -34,7 +34,7 @@
       "btnText": "Claim Offer"
     },
     "bannerImage": "",
-    "updatedAt": "2026-09-03T16:18:33.442Z",
+    "updatedAt": "2026-09-03T16:48:18.901Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
     "updatedBy": "6a95d3798cd0de29be2399db",
@@ -51,7 +51,7 @@
             "name": "Soham Dutta",
             "role": "Founder & Lead Architect",
             "bio": "Full-Stack Engineer & Product Designer leading high-performance web systems.",
-            "instagram": "https://instagram.com/sohamart",
+            "instagram": "https://instagram.com/@soham_dutta_offcial",
             "linkedin": "",
             "email": "sohamduttabwn@gmail.com",
             "phone": "+91 98765 43210",
@@ -178,20 +178,75 @@
       "subtitle": "Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!",
       "btnText": "Spin & Win Prize",
       "rewardVoucher": "INDIA2025",
-      "rewardDiscount": 20
+      "rewardDiscount": 20,
+      "activeGame": "boxes",
+      "campaignVersion": 5,
+      "lastResetDate": "2026-09-03T16:48:18.784Z",
+      "prizes": [
+        {
+          "id": "prize-1788452637330",
+          "label": "10% OFF Special Voucher",
+          "subLabel": "Exclusive Discount Voucher",
+          "code": "SPECIAL10",
+          "discountPercent": 10,
+          "color": "#8b5cf6",
+          "icon": "🎁",
+          "_id": "6a999f219f018b99e77b4bff"
+        },
+        {
+          "id": "prize-1788452637991",
+          "label": "10% OFF Special Voucher",
+          "subLabel": "Exclusive Discount Voucher",
+          "code": "SPECIAL10",
+          "discountPercent": 10,
+          "color": "#8b5cf6",
+          "icon": "🎁",
+          "_id": "6a999f219f018b99e77b4c00"
+        },
+        {
+          "id": "prize-1788452638395",
+          "label": "10% OFF Special Voucher",
+          "subLabel": "Exclusive Discount Voucher",
+          "code": "SPECIAL10",
+          "discountPercent": 10,
+          "color": "#8b5cf6",
+          "icon": "🎁",
+          "_id": "6a999f219f018b99e77b4c01"
+        },
+        {
+          "id": "prize-1788452638817",
+          "label": "10% OFF Special Voucher",
+          "subLabel": "Exclusive Discount Voucher",
+          "code": "SPECIAL10",
+          "discountPercent": 10,
+          "color": "#8b5cf6",
+          "icon": "🎁",
+          "_id": "6a999f219f018b99e77b4c02"
+        }
+      ]
     },
     "importantUpdates": {
       "items": [
         {
-          "id": "update-1788452305316",
+          "id": "update-1788452604457",
+          "text": "New platform update notification...mmm",
+          "badge": "UPDATE",
+          "badgeType": "purple",
+          "link": "/dashboard",
+          "isActive": true,
+          "_id": "6a999f1b9f018b99e77b4bef"
+        },
+        {
+          "id": "update-1788452611951",
           "text": "New platform update notification...",
           "badge": "UPDATE",
           "badgeType": "purple",
           "link": "/dashboard",
           "isActive": true,
-          "_id": "6a999dd99f018b99e77b495c"
+          "_id": "6a999f1b9f018b99e77b4bf0"
         }
-      ]
+      ],
+      "enabled": false
     }
   }
 ]

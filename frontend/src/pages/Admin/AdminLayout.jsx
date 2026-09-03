@@ -208,10 +208,12 @@ export default function AdminLayout() {
       </aside>
 
       {/* 2. Main Content Area */}
-      <div className="flex-1 lg:ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 min-w-0 max-w-full overflow-x-hidden lg:ml-64 flex flex-col min-h-screen">
+
         
         {/* Admin Topbar */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileSidebarOpen(true)}
@@ -261,7 +263,8 @@ export default function AdminLayout() {
         </header>
 
         {/* Important Updates & Live Sliding Marquee Ticker */}
-        <MarqueeTicker className="sticky top-16 z-30 shadow-xs" />
+        <MarqueeTicker className="w-full max-w-full shrink-0 sticky top-16 z-30 shadow-2xs" />
+
 
         {/* Viewport Render Outlet */}
 

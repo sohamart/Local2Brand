@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 export default function CustomCursor() {
   const dotRef = useRef(null);
   const ringRef = useRef(null);
-  const [isHovered, setIsHovered] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     // Only enable on desktop pointer devices
@@ -22,7 +21,10 @@ export default function CustomCursor() {
     const handleMouseMove = (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      if (!isVisible) setIsVisible(true);
+
+      if (containerRef.current && containerRef.current.style.opacity !== '1') {
+        containerRef.current.style.opacity = '1';
+      }
 
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
@@ -30,17 +32,17 @@ export default function CustomCursor() {
     };
 
     const handleMouseLeave = () => {
-      setIsVisible(false);
+      if (containerRef.current) containerRef.current.style.opacity = '0';
     };
 
     const handleMouseEnter = () => {
-      setIsVisible(true);
+      if (containerRef.current) containerRef.current.style.opacity = '1';
     };
 
     // Smooth inertia interpolation loop for the outer ring (lerp)
     const render = () => {
-      ringX += (mouseX - ringX) * 0.18;
-      ringY += (mouseY - ringY) * 0.18;
+      ringX += (mouseX - ringX) * 0.2;
+      ringY += (mouseY - ringY) * 0.2;
 
       if (ringRef.current) {
         ringRef.current.style.transform = `translate3d(${ringX}px, ${ringY}px, 0) translate(-50%, -50%)`;
@@ -49,12 +51,27 @@ export default function CustomCursor() {
       animationFrameId = requestAnimationFrame(render);
     };
 
-    // Detect clickable element hovers across the entire DOM tree
+    // Detect clickable element hovers via direct DOM update (Zero React Re-renders!)
     const handleElementHover = (e) => {
       const target = e.target;
       if (!target || typeof target.closest !== 'function') return;
-      const isClickable = target.closest('a, button, input, select, textarea, [role="button"], .glass-card, .cursor-pointer, [tabindex="0"]');
-      setIsHovered(!!isClickable);
+      const isClickable = Boolean(
+        target.closest('a, button, input, select, textarea, [role="button"], .glass-card, .cursor-pointer, [tabindex="0"]')
+      );
+
+      if (ringRef.current) {
+        if (isClickable) {
+          ringRef.current.style.width = '48px';
+          ringRef.current.style.height = '48px';
+          ringRef.current.style.borderColor = 'rgba(168, 85, 247, 0.9)';
+          ringRef.current.style.backgroundColor = 'rgba(168, 85, 247, 0.12)';
+        } else {
+          ringRef.current.style.width = '32px';
+          ringRef.current.style.height = '32px';
+          ringRef.current.style.borderColor = 'rgba(168, 85, 247, 0.4)';
+          ringRef.current.style.backgroundColor = 'transparent';
+        }
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
@@ -71,37 +88,26 @@ export default function CustomCursor() {
       document.removeEventListener('mouseenter', handleMouseEnter);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isVisible]);
+  }, []);
 
   if (typeof document === 'undefined') return null;
 
   return createPortal(
     <div
-      className={`pointer-events-none fixed inset-0 z-[2147483647] transition-opacity duration-300 hidden lg:block ${
-        isVisible ? 'opacity-100' : 'opacity-0'
-      }`}
+      ref={containerRef}
+      className="pointer-events-none fixed inset-0 z-[2147483647] opacity-0 transition-opacity duration-300 hidden lg:block"
       aria-hidden="true"
     >
       {/* Precision Center Dot */}
       <div
         ref={dotRef}
-        className={`pointer-events-none fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 rounded-full transition-transform duration-75 ease-out z-[2147483647] ${
-          isHovered
-            ? 'w-2 h-2 bg-gradient-to-r from-purple-500 to-pink-500 shadow-[0_0_12px_rgba(236,72,153,0.9)]'
-            : 'w-2 h-2 bg-purple-600 dark:bg-cyan-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]'
-        }`}
-        style={{ willChange: 'transform' }}
+        className="fixed top-0 left-0 w-2 h-2 -ml-1 -mt-1 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 pointer-events-none shadow-[0_0_10px_rgba(168,85,247,0.8)] will-change-transform"
       />
 
-      {/* Smooth Trailing Liquid Glass Ring */}
+      {/* Fluid Trailing Ambient Ring */}
       <div
         ref={ringRef}
-        className={`pointer-events-none fixed top-0 left-0 rounded-full border transition-all duration-300 ease-out z-[2147483647] ${
-          isHovered
-            ? 'w-14 h-14 bg-purple-500/15 dark:bg-purple-500/25 border-purple-500/70 dark:border-pink-400/80 backdrop-blur-[2px] scale-110 shadow-[0_0_20px_rgba(168,85,247,0.4)]'
-            : 'w-9 h-9 bg-purple-500/5 dark:bg-cyan-500/10 border-purple-500/30 dark:border-cyan-400/40'
-        }`}
-        style={{ willChange: 'transform' }}
+        className="fixed top-0 left-0 w-8 h-8 rounded-full border border-purple-500/40 pointer-events-none transition-[width,height,background-color,border-color] duration-200 ease-out will-change-transform"
       />
     </div>,
     document.body

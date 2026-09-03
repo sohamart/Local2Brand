@@ -24,6 +24,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useOrderModal } from '../../context/OrderModalContext';
 import AshokaChakra from './AshokaChakra';
 import ThemeToggle from './ThemeToggle';
+import MarqueeTicker from './MarqueeTicker';
+
 
 
 // Primary Direct Links in Navbar Dock (Visible on Desktop)
@@ -332,7 +334,14 @@ export default function Navbar() {
         ref={headerRef}
         className="fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col"
       >
+        {/* Top Live Sliding Important Announcement Ticker (Hidden on /dashboard to avoid duplicate) */}
+        {!location.pathname.startsWith('/dashboard') && (
+          <MarqueeTicker className="w-full shrink-0" />
+        )}
+
         <div className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full transition-all duration-300 ${
+
+
           isScrolled
             ? 'pt-1 sm:pt-1.5'
             : 'pt-2 sm:pt-3'

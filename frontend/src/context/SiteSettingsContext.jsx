@@ -52,24 +52,50 @@ export function SiteSettingsProvider({ children }) {
         title: 'Transform Your Local Business Into A Global Brand',
         subtitle: 'World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale.',
       },
-      announcementBar: {
+      importantUpdates: {
         enabled: true,
-        text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
-        link: '/pricing',
-        badge: 'FLASH OFFER',
-        promoCode: 'INDIA2025',
-        discountPercent: 20,
-        btnText: 'Claim Offer',
+        speed: 'normal',
+        showForLoggedInOnly: false,
+        items: [
+          {
+            id: 'update-1',
+            text: '🚀 Platform Upgrade: New AI Assistant, Instant Callback & 48-Hour Rapid Delivery are now active!',
+            badge: 'SYSTEM UPDATE',
+            badgeType: 'purple',
+            link: '/dashboard',
+            isActive: true,
+          },
+          {
+            id: 'update-2',
+            text: '🎁 Special Launch Incentive: Play Interactive Games for up to 20% OFF & free custom domain setup.',
+            badge: 'OFFER',
+            badgeType: 'amber',
+            link: '/pricing',
+            isActive: true,
+          },
+          {
+            id: 'update-3',
+            text: '⚡ Live Client Desk: 15-Minute Instant Founder Callback is now live for all project inquiries.',
+            badge: 'LIVE SUPPORT',
+            badgeType: 'emerald',
+            link: '/contact',
+            isActive: true,
+          }
+        ]
       },
       luckyWheel: {
         enabled: true,
-        title: '🎡 Spin & Win Launch Rewards',
-        subtitle: 'Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!',
-        btnText: 'Spin & Win Prize',
+        activeGame: 'wheel',
+        title: '🎡 Interactive Rewards & Launch Gifts',
+        subtitle: 'Play our interactive launch game to win instant discounts, free domains, and launch vouchers!',
+        btnText: 'Play & Win Prize',
         rewardVoucher: 'INDIA2025',
         rewardDiscount: 20,
+        campaignVersion: 1,
+        lastResetDate: new Date().toISOString(),
       },
       bannerImage: '',
+
 
       navLinks: staticFallback.navLinks || [
         { label: 'Home', href: '/' },

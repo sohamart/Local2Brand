@@ -1110,23 +1110,44 @@ export default function AdminSettings() {
 
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   const nextVersion = (formData.luckyWheel?.campaignVersion || 1) + 1;
-                  setFormData((prev) => ({
-                    ...prev,
+                  const updatedFormData = {
+                    ...formData,
                     luckyWheel: {
-                      ...(prev.luckyWheel || {}),
+                      ...(formData.luckyWheel || {}),
                       campaignVersion: nextVersion,
                       lastResetDate: new Date().toISOString()
                     }
-                  }));
-                  toast.success(`🎉 New Game Round #${nextVersion} initiated! Click "Save Settings" to publish live.`);
+                  };
+                  setFormData(updatedFormData);
+
+                  try {
+                    await api.put('/settings', updatedFormData);
+                    updateLocalSettingsState(updatedFormData);
+                    refreshSettings();
+                    try {
+                      localStorage.removeItem('l2b_wheel_spun_version');
+                      localStorage.removeItem('l2b_wheel_spun');
+                      localStorage.removeItem('l2b_won_voucher');
+                      sessionStorage.removeItem(`l2b_game_closed_round_${nextVersion}`);
+                    } catch (e) {}
+
+                    window.dispatchEvent(new CustomEvent('l2b_new_round_started', { detail: nextVersion }));
+                    toast.success(`🎉 Game Round #${nextVersion} launched LIVE! All visitors can now play again. 🚀`, {
+                      icon: '🎮',
+                      autoClose: 3500
+                    });
+                  } catch (err) {
+                    toast.error('Failed to launch new round: ' + (err.message || 'Server error'));
+                  }
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 transition-all"
+                className="px-4 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 transition-all"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Start New Round 🚀</span>
               </button>
+
             </div>
           </div>
 
@@ -1616,12 +1637,12 @@ export default function AdminSettings() {
 
         </form>
 
-        {/* Floating / Sticky Bottom Action Bar */}
-        <div className="sticky bottom-4 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-3 sm:p-4 rounded-2xl border-2 border-purple-500/40 shadow-2xl flex items-center justify-between gap-3 animate-in slide-in-from-bottom duration-200">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-              Live Customizer Active
+        {/* Guaranteed Fixed Floating Bottom Save Bar */}
+        <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-8 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-2.5 sm:p-3.5 rounded-2xl border-2 border-purple-500/60 shadow-[0_10px_40px_rgba(124,58,237,0.25)] flex items-center gap-3 animate-in slide-in-from-bottom duration-200">
+          <div className="hidden sm:flex items-center gap-2 pl-1 pr-2 border-r border-slate-200 dark:border-slate-800">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+            <span className="text-xs font-black text-slate-800 dark:text-slate-200">
+              Settings Ready
             </span>
           </div>
 
@@ -1629,28 +1650,29 @@ export default function AdminSettings() {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className={`px-6 py-2.5 rounded-xl text-xs font-bold text-white shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer disabled:opacity-50 transition-all hover:scale-102 ${
+            className={`px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white shadow-xl hover:shadow-2xl flex items-center gap-2 cursor-pointer disabled:opacity-50 transition-all hover:scale-105 active:scale-95 ${
               savedRecently ? 'bg-emerald-600' : 'l2b-gradient-bg'
             }`}
           >
             {loading ? (
               <>
-                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>Saving...</span>
               </>
             ) : savedRecently ? (
               <>
-                <Check className="w-3.5 h-3.5 text-white" />
-                <span>Saved! ✅</span>
+                <Check className="w-4 h-4 text-white" />
+                <span>Saved & Live! ✅</span>
               </>
             ) : (
               <>
-                <Save className="w-3.5 h-3.5" />
-                <span>Save Changes</span>
+                <Save className="w-4 h-4" />
+                <span>Save & Sync Live 🚀</span>
               </>
             )}
           </button>
         </div>
+
 
       </div>
     </>

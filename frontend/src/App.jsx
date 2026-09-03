@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Lock, Unlock } from 'lucide-react';
 import Navbar from './components/common/Navbar';
+import MarqueeTicker from './components/common/MarqueeTicker';
 import AnnouncementBar from './components/common/AnnouncementBar';
+
 import Footer from './components/common/Footer';
 import LiquidBackground from './components/common/LiquidBackground';
 import CustomCursor from './components/common/CustomCursor';
@@ -236,8 +238,10 @@ function MainAppContent() {
       {/* Ambient Liquid Background */}
       {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <LiquidBackground />}
 
-      {/* Global Navbar */}
+      {/* Global Navbar with integrated Marquee Announcement Header */}
       {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <Navbar />}
+
+
 
       {/* Route Views with Synchronized Page Transition */}
       <div className="flex-1 flex flex-col">

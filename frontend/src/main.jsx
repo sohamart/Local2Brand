@@ -11,32 +11,34 @@ gsap.registerPlugin(ScrollTrigger);
 
 function Root() {
   useEffect(() => {
-    // Ultra-optimized 120 FPS frictionless inertial scrolling (Zero Hitch, Zero Stutter)
+    // 144Hz Ultra High-Refresh Rate ProMotion Glide Engine
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      duration: 0.85, // Snappy, punchy 144Hz response without lag
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // High-refresh exponential deceleration
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
       wheelMultiplier: 1.0,
-      touchMultiplier: 1.0,
-      syncTouch: false, // Pure 120Hz native touch on mobile devices
+      touchMultiplier: 1.2,
+      syncTouch: false,
       infinite: false,
     });
 
     lenis.on('scroll', ScrollTrigger.update);
 
-    // Single unified GSAP RAF ticker to eliminate frame race conditions
-    const updateLenis = (time) => {
-      lenis.raf(time * 1000);
-    };
+    let rafId;
+    function raf(time) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
 
-    gsap.ticker.add(updateLenis);
-    gsap.ticker.lagSmoothing(0);
+    window.lenis = lenis;
 
     return () => {
-      gsap.ticker.remove(updateLenis);
+      cancelAnimationFrame(rafId);
       lenis.destroy();
+      delete window.lenis;
     };
   }, []);
 
