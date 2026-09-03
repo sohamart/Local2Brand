@@ -761,10 +761,11 @@ export default function AssistantChatbot() {
               isBubbleClosing ? 'animate-bubble-collapse' : 'animate-bubble-bloom'
             }`}
           >
-            <div className="p-4 rounded-3xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-2 border-purple-400/40 dark:border-purple-500/30 shadow-[0_12px_40px_rgba(121,40,202,0.25)] relative overflow-hidden group">
+            <div className="p-4 rounded-3xl bg-white/98 dark:bg-[#0a101f]/98 backdrop-blur-2xl border-2 border-purple-500/50 dark:border-cyan-400/70 shadow-[0_12px_40px_rgba(124,58,237,0.25)] dark:shadow-[0_0_40px_rgba(6,182,212,0.35)] relative overflow-hidden group">
               {/* Ambient Fluid Glow */}
               <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-bl from-pink-500/20 via-purple-500/15 to-transparent rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-cyan-500/20 via-blue-500/15 to-transparent rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-cyan-500/25 via-blue-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
+
 
               {/* Header Row: Badge & Dismiss */}
               <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
@@ -858,26 +859,25 @@ export default function AssistantChatbot() {
           }`}
           aria-label="Toggle L2B AI Assistant"
         >
-
-          {/* Rotating Laser Conic Border: Green in Light Mode, White in Dark Mode */}
+          {/* Rotating Laser Conic Border */}
           {!isOpen && (
-            <span className="absolute -inset-[150%] rounded-full chatbot-laser-border pointer-events-none" />
+            <span className="absolute -inset-[160%] rounded-full chatbot-laser-border pointer-events-none" />
           )}
 
-          {/* Frosted Glass High-Contrast Core */}
-          <div className="w-full h-full rounded-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-white dark:border-slate-800 shadow-sm flex flex-col items-center justify-center relative z-10 select-none">
+          {/* High-Contrast Distinct Core */}
+          <div className="w-full h-full rounded-full bg-white dark:bg-[#070d19] border-2 border-purple-500/60 dark:border-cyan-400/80 shadow-[0_10px_30px_rgba(124,58,237,0.3)] dark:shadow-[0_0_25px_rgba(6,182,212,0.5)] flex flex-col items-center justify-center relative z-10 select-none transition-all">
             {isOpen ? (
-              <X className="w-6 h-6 text-slate-800 dark:text-white" />
+              <X className="w-6 h-6 text-purple-700 dark:text-cyan-300" />
             ) : (
               <>
                 {/* Active Online Pulse Dot */}
                 <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse" />
 
-                {/* Direct Clean AI Sparkles Logo - Crisp in both light and dark */}
-                <Sparkles className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-emerald-600 dark:text-purple-400 drop-shadow-xs group-hover:scale-110 transition-transform" />
+                {/* Direct Clean AI Sparkles Logo */}
+                <Sparkles className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-purple-600 dark:text-cyan-400 drop-shadow-xs group-hover:scale-110 transition-transform" />
 
                 {/* Crisp Modern L2B AI Text */}
-                <span className="font-black text-[9px] sm:text-[10px] tracking-widest uppercase text-slate-900 dark:text-purple-300 leading-none mt-1 drop-shadow-2xs">
+                <span className="font-black text-[9px] sm:text-[10px] tracking-widest uppercase text-purple-900 dark:text-cyan-300 leading-none mt-1 drop-shadow-2xs">
                   L2B AI
                 </span>
               </>
@@ -891,24 +891,24 @@ export default function AssistantChatbot() {
         <div
           data-lenis-prevent="true"
           onWheel={(e) => e.stopPropagation()}
-          className="absolute bottom-16 sm:bottom-18 right-0 w-[92vw] sm:w-[420px] h-[600px] max-h-[85vh] p-[1.5px] rounded-3xl chatbot-drawer-border shadow-2xl shadow-emerald-500/25 dark:shadow-purple-500/35 animate-in slide-in-from-bottom-5 duration-200 z-[99999] pointer-events-auto"
+          className="absolute bottom-16 sm:bottom-18 right-0 w-[92vw] sm:w-[420px] h-[600px] max-h-[85vh] p-[2px] rounded-3xl chatbot-drawer-border shadow-2xl z-[99999] pointer-events-auto animate-in slide-in-from-bottom-5 duration-200"
         >
-          <div className="w-full h-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-[22.5px] overflow-hidden flex flex-col">
+          <div className="w-full h-full bg-white dark:bg-[#070b14] backdrop-blur-2xl rounded-[22px] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-purple-600/15 via-pink-600/15 to-indigo-600/15 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-700 dark:from-[#0b1329] dark:via-[#111c38] dark:to-[#170e2e] border-b border-purple-300/40 dark:border-cyan-500/40 text-white flex items-center justify-between shrink-0 shadow-xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl l2b-gradient-bg text-white flex items-center justify-center font-bold text-sm shadow-md">
+                <div className="w-9 h-9 rounded-2xl bg-white text-purple-700 dark:bg-cyan-500 dark:text-slate-950 flex items-center justify-center font-bold text-sm shadow-md">
                   <Sparkles className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <span className="l2b-gradient-text font-black">L2B AI</span>
-                    <span>Assistant</span>
+                  <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                    <span className="font-black">L2B AI</span>
+                    <span className="opacity-90">Assistant</span>
                     <AshokaChakra size={12} />
                   </h3>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Online • Multi-Tier Fallback</span>
+                  <span className="text-[10px] text-emerald-300 dark:text-cyan-300 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 dark:bg-cyan-400 animate-pulse" />
+                    <span>Online • Instant Intelligent Support</span>
                   </span>
                 </div>
               </div>
@@ -917,14 +917,14 @@ export default function AssistantChatbot() {
                 <button
                   onClick={handleClearChat}
                   title="Reset conversation"
-                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
                   title="Close chat"
-                  className="p-1.5 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors cursor-pointer"
+                  className="p-1.5 rounded-full text-white/80 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -932,7 +932,7 @@ export default function AssistantChatbot() {
             </div>
 
             {/* Quick Action Shortcuts */}
-            <div className="px-3 py-2 bg-slate-50/80 dark:bg-slate-950/40 border-b border-slate-100 dark:border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 text-[11px]">
+            <div className="px-3 py-2 bg-purple-50/80 dark:bg-[#090f1d] border-b border-purple-100 dark:border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 text-[11px]">
               {savedVoucher && (
                 <button
                   type="button"
@@ -956,12 +956,11 @@ export default function AssistantChatbot() {
               <button
                 type="button"
                 onClick={() => triggerInChatMessageCallback('15-Minute Instant Callback Request')}
-                className="px-2.5 py-1 rounded-xl bg-purple-100/90 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-800 text-purple-950 dark:text-purple-200 font-black flex items-center gap-1 shrink-0 hover:bg-purple-200/90 transition-colors cursor-pointer shadow-xs"
+                className="px-2.5 py-1 rounded-xl bg-purple-100 dark:bg-purple-950/80 border border-purple-300 dark:border-purple-800 text-purple-950 dark:text-purple-200 font-black flex items-center gap-1 shrink-0 hover:bg-purple-200/90 transition-colors cursor-pointer shadow-xs"
               >
                 <PhoneCall className="w-3 h-3 text-purple-600 dark:text-purple-400" />
                 <span>📞 Instant Callback</span>
               </button>
-
 
               <button
                 type="button"
@@ -969,7 +968,7 @@ export default function AssistantChatbot() {
                   setIsOpen(false);
                   openOrderModal();
                 }}
-                className="px-2.5 py-1 rounded-xl bg-amber-100/80 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 font-bold flex items-center gap-1 shrink-0 hover:bg-amber-200/80 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800/60 text-amber-950 dark:text-amber-200 font-bold flex items-center gap-1 shrink-0 hover:bg-amber-200/80 transition-colors cursor-pointer"
               >
                 <Zap className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                 <span>⚡ Get Proposal</span>
@@ -978,7 +977,7 @@ export default function AssistantChatbot() {
               <button
                 type="button"
                 onClick={() => handleSendMessage('How can I claim 20% discount with promo code INDIA2025?')}
-                className="px-2.5 py-1 rounded-xl bg-pink-100/80 dark:bg-pink-950/60 border border-pink-200 dark:border-pink-800/60 text-pink-900 dark:text-pink-200 font-bold flex items-center gap-1 shrink-0 hover:bg-pink-200/80 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-xl bg-pink-100 dark:bg-pink-950/60 border border-pink-300 dark:border-pink-800/60 text-pink-950 dark:text-pink-200 font-bold flex items-center gap-1 shrink-0 hover:bg-pink-200/80 transition-colors cursor-pointer"
               >
                 <Tag className="w-3 h-3 text-pink-600 dark:text-pink-400" />
                 <span>🎁 20% Discount</span>
@@ -989,7 +988,7 @@ export default function AssistantChatbot() {
             <div
               data-lenis-prevent="true"
               onWheel={(e) => e.stopPropagation()}
-              className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3.5 sm:p-4 space-y-3.5 text-xs text-slate-800 dark:text-slate-200 custom-chat-scrollbar"
+              className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3.5 sm:p-4 space-y-3.5 text-xs bg-slate-50 dark:bg-[#060911] custom-chat-scrollbar"
               style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
             >
               {messages.map((msg, index) => {
@@ -1024,21 +1023,21 @@ export default function AssistantChatbot() {
                     className={`flex items-start gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
                   >
                     {!isUser && (
-                      <div className="w-7 h-7 rounded-xl l2b-gradient-bg text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5">
+                      <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 dark:from-cyan-500 dark:to-purple-600 text-white dark:text-slate-950 flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5">
                         <Sparkles className="w-3.5 h-3.5" />
                       </div>
                     )}
 
                     {isUser ? (
-                      <div className="max-w-[86%] sm:max-w-[82%] rounded-2xl rounded-br-xs px-4 py-2.5 text-xs font-semibold bg-purple-600 dark:bg-purple-600 text-white shadow-md shadow-purple-500/25 leading-relaxed break-words">
+                      <div className="max-w-[86%] sm:max-w-[82%] rounded-2xl rounded-br-xs px-4 py-2.5 text-xs font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-cyan-600 dark:via-purple-600 dark:to-pink-600 text-white shadow-md leading-relaxed break-words">
                         {renderMessageContent(msg.content, true)}
                       </div>
                     ) : (
                       <div
-                        className={`max-w-[86%] sm:max-w-[82%] rounded-2xl rounded-bl-xs p-3 sm:p-3.5 text-xs transition-all shadow-xs ${
+                        className={`max-w-[86%] sm:max-w-[82%] rounded-2xl rounded-bl-xs p-3 sm:p-3.5 text-xs transition-all ${
                           msg.isError
-                            ? 'bg-rose-50/95 dark:bg-rose-950/90 text-rose-900 dark:text-rose-200 border border-rose-200 dark:border-rose-800'
-                            : 'bg-slate-100/95 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/80 text-slate-800 dark:text-slate-100'
+                            ? 'bg-rose-50 dark:bg-rose-950/90 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-800'
+                            : 'bg-white dark:bg-[#0e1628] border border-slate-200/90 dark:border-cyan-500/30 text-slate-900 dark:text-slate-100 shadow-sm dark:shadow-[0_4px_25px_rgba(0,0,0,0.5)]'
                         }`}
                       >
                         <TypewriterContent
@@ -1051,12 +1050,12 @@ export default function AssistantChatbot() {
 
                         {/* Interactive Prize Winner Card from Lucky Wheel */}
                         {msg.prizeCard && (
-                          <div className="mt-3 p-3 rounded-2xl bg-gradient-to-r from-purple-500/15 via-pink-500/15 to-amber-500/15 border border-purple-400/40 space-y-2.5">
+                          <div className="mt-3 p-3 rounded-2xl bg-gradient-to-r from-purple-500/15 via-pink-500/15 to-amber-500/15 border-2 border-purple-400/50 dark:border-cyan-400/40 space-y-2.5">
                             <div className="flex items-center justify-between">
                               <span className="px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 text-[10px] font-black uppercase">
                                 🎉 {msg.prizeCard.label}
                               </span>
-                              <span className="font-mono text-xs font-black text-purple-600 dark:text-purple-400 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-lg border border-purple-300 dark:border-purple-700">
+                              <span className="font-mono text-xs font-black text-purple-600 dark:text-cyan-300 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-lg border border-purple-300 dark:border-cyan-700">
                                 {msg.prizeCard.code}
                               </span>
                             </div>
@@ -1114,11 +1113,10 @@ export default function AssistantChatbot() {
                           </div>
                         )}
 
-
                         {/* AI Provider attribution tag */}
                         {msg.provider && msg.provider !== 'unknown' && (
                           <div className="mt-2.5 pt-1.5 border-t border-slate-200/60 dark:border-slate-700/50 text-[9px] text-slate-400 dark:text-slate-500 font-mono flex items-center justify-between">
-                            <span className="flex items-center gap-1 font-semibold text-purple-600 dark:text-purple-400">
+                            <span className="flex items-center gap-1 font-semibold text-purple-600 dark:text-cyan-400">
                               <span>⚡</span>
                               <span>{msg.provider}</span>
                               {msg.model && <span className="opacity-70">({msg.model})</span>}
@@ -1142,13 +1140,13 @@ export default function AssistantChatbot() {
               {/* Typing Animation */}
               {isTyping && (
                 <div className="flex items-start gap-2.5">
-                  <div className="w-7 h-7 rounded-xl l2b-gradient-bg text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5">
+                  <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-500 dark:from-cyan-500 dark:to-purple-600 text-white dark:text-slate-950 flex items-center justify-center font-bold text-xs shrink-0 shadow-xs mt-0.5">
                     <Sparkles className="w-3.5 h-3.5 animate-spin" />
                   </div>
-                  <div className="p-3 rounded-2xl rounded-bl-xs bg-slate-100/95 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700/70 flex items-center gap-1.5 shadow-xs">
-                    <span className="w-2 h-2 rounded-full bg-purple-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-pink-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="p-3 rounded-2xl rounded-bl-xs bg-white dark:bg-[#0e1628] border border-slate-200 dark:border-cyan-500/30 flex items-center gap-1.5 shadow-sm">
+                    <span className="w-2 h-2 rounded-full bg-purple-500 dark:bg-cyan-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-pink-500 dark:bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-pink-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                     <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium ml-1.5">
                       L2B AI is generating response...
                     </span>
@@ -1160,12 +1158,12 @@ export default function AssistantChatbot() {
           </div>
 
           {/* Chat Input Bar & Horizontal Sliding Suggestions */}
-          <div className="p-3 bg-white/95 dark:bg-slate-900/95 border-t border-slate-100 dark:border-slate-800 shrink-0 space-y-2">
+          <div className="p-3 bg-white dark:bg-[#070b14] border-t border-slate-200/90 dark:border-cyan-500/30 shrink-0 space-y-2">
             
             {/* Horizontal Sliding Quick Suggestion Chips (Docked above input) */}
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 scroll-smooth overscroll-x-contain">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 dark:text-purple-400 shrink-0 flex items-center gap-1 pl-0.5 select-none">
-                <Sparkles className="w-3 h-3 text-purple-500" />
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-600 dark:text-cyan-400 shrink-0 flex items-center gap-1 pl-0.5 select-none">
+                <Sparkles className="w-3 h-3 text-purple-500 dark:text-cyan-400" />
                 <span>Quick:</span>
               </span>
 
@@ -1180,7 +1178,7 @@ export default function AssistantChatbot() {
                       handleSendMessage(chip.prompt);
                     }
                   }}
-                  className="px-2.5 py-1 rounded-full bg-slate-100/90 dark:bg-slate-800/90 hover:bg-purple-100 dark:hover:bg-purple-950/70 border border-slate-200/80 dark:border-slate-700/80 hover:border-purple-300 dark:hover:border-purple-700 text-slate-700 dark:text-slate-300 hover:text-purple-700 dark:hover:text-purple-300 font-semibold text-[11px] shrink-0 transition-all cursor-pointer shadow-2xs flex items-center gap-1 active:scale-95"
+                  className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#0f172a] hover:bg-purple-100 dark:hover:bg-cyan-950/70 border border-slate-200 dark:border-slate-700/80 hover:border-purple-400 dark:hover:border-cyan-500 text-slate-700 dark:text-slate-300 hover:text-purple-700 dark:hover:text-cyan-300 font-semibold text-[11px] shrink-0 transition-all cursor-pointer shadow-2xs flex items-center gap-1 active:scale-95"
                 >
                   <span>{chip.icon}</span>
                   <span>{chip.label}</span>
@@ -1217,28 +1215,29 @@ export default function AssistantChatbot() {
                   onKeyDown={handleKeyDown}
                   placeholder="Ask anything (e.g. 48h website, pricing, custom)..."
                   disabled={isTyping}
-                  className="w-full pl-3.5 pr-8 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-60 font-medium"
+                  className="w-full pl-3.5 pr-8 py-2.5 rounded-2xl bg-slate-100 dark:bg-[#0c1424] border border-slate-300 dark:border-cyan-500/40 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-purple-600 dark:focus:border-cyan-400 dark:focus:shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all disabled:opacity-60 font-medium"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={!inputText.trim() || isTyping}
-                className="w-9 h-9 rounded-2xl l2b-gradient-bg text-white flex items-center justify-center transition-all transform active:scale-95 disabled:opacity-40 disabled:scale-100 shadow-md shadow-purple-500/20 cursor-pointer"
+                className="w-9 h-9 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 dark:from-cyan-500 dark:to-purple-600 text-white dark:text-slate-950 flex items-center justify-center transition-all transform active:scale-95 disabled:opacity-40 disabled:scale-100 shadow-md shadow-purple-500/20 dark:shadow-cyan-500/30 cursor-pointer"
                 aria-label="Send message"
               >
                 <Send className="w-4 h-4" />
               </button>
             </form>
 
-            <div className="flex items-center justify-between px-1 text-[10px] text-slate-400">
+            <div className="flex items-center justify-between px-1 text-[10px] text-slate-400 dark:text-slate-500">
               <span>Press Enter ↵ to send</span>
-              <span className="font-mono font-bold text-purple-600 dark:text-purple-400">L2B AI • Real-Time Desk</span>
+              <span className="font-mono font-bold text-purple-600 dark:text-cyan-400">L2B AI • Real-Time Desk</span>
             </div>
           </div>
         </div>
       </div>
       )}
+
 
       {/* Lucky Prize Wheel Mini-Game Modal */}
       <LuckyWheelModal

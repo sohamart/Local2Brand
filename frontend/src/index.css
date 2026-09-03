@@ -945,17 +945,19 @@ html[data-theme="dark"] body {
   animation: spinConic 3s linear infinite;
 }
 
-/* Animated Rotating Laser Conic Border: Green in Light Mode, Glowing White in Dark Mode */
+/* Animated Rotating Laser Conic Border: Vibrant Royal Violet in Light Mode, Glowing Neon Multi-Color Aurora in Dark Mode */
 .chatbot-laser-border {
-  animation: spinConic 3s linear infinite;
-  background: conic-gradient(from 0deg, transparent 0 240deg, #059669 280deg, #10b981 320deg, #34d399 360deg);
+  animation: spinConic 2.5s linear infinite;
+  background: conic-gradient(from 0deg, transparent 0 200deg, #8b5cf6 260deg, #ec4899 300deg, #06b6d4 340deg, #10b981 360deg);
 }
 
 .dark .chatbot-laser-border {
-  background: conic-gradient(from 0deg, transparent 0 240deg, rgba(255, 255, 255, 0.3) 275deg, rgba(255, 255, 255, 0.95) 325deg, #ffffff 360deg);
+  animation: spinConic 2.2s linear infinite;
+  background: conic-gradient(from 0deg, transparent 0 180deg, #00f0ff 230deg, #a855f7 280deg, #ff007a 320deg, #00ff88 360deg);
+  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.8));
 }
 
-/* Animated Moving Thin Border */
+/* Animated Moving High-Contrast Border */
 @keyframes movingBorderGradient {
   0% {
     background-position: 0% 50%;
@@ -969,16 +971,19 @@ html[data-theme="dark"] body {
 }
 
 .chatbot-drawer-border {
-  background: linear-gradient(135deg, #059669, #10b981, #34d399, #6ee7b7, #10b981, #059669);
+  background: linear-gradient(135deg, #7c3aed, #ec4899, #06b6d4, #10b981, #7c3aed);
   background-size: 300% 300%;
-  animation: movingBorderGradient 3.5s ease infinite;
+  animation: movingBorderGradient 3s ease infinite;
+  box-shadow: 0 20px 50px -10px rgba(124, 58, 237, 0.35), 0 0 0 1px rgba(124, 58, 237, 0.2);
 }
 
 .dark .chatbot-drawer-border {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), #a855f7, #ec4899, #3b82f6, rgba(255, 255, 255, 0.9));
+  background: linear-gradient(135deg, #00f0ff, #a855f7, #ff007a, #00ff88, #3b82f6, #00f0ff);
   background-size: 300% 300%;
-  animation: movingBorderGradient 3.5s ease infinite;
+  animation: movingBorderGradient 3s ease infinite;
+  box-shadow: 0 0 45px rgba(168, 85, 247, 0.45), 0 0 20px rgba(6, 182, 212, 0.35), inset 0 0 20px rgba(168, 85, 247, 0.15);
 }
+
 
 .moving-emerald-border {
   background: linear-gradient(135deg, #059669, #10b981, #34d399, #6ee7b7, #10b981, #059669);
