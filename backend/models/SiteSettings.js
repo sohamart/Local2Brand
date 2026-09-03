@@ -72,10 +72,19 @@ const siteSettingsSchema = new mongoose.Schema(
       discountPercent: { type: Number, default: 20 },
       btnText: { type: String, default: 'Claim Offer' },
     },
+    luckyWheel: {
+      enabled: { type: Boolean, default: true },
+      title: { type: String, default: '🎡 Spin & Win Exclusive Launch Rewards' },
+      subtitle: { type: String, default: 'Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!' },
+      btnText: { type: String, default: 'Spin & Win Prize' },
+      rewardVoucher: { type: String, default: 'INDIA2025' },
+      rewardDiscount: { type: Number, default: 20 },
+    },
     bannerImage: {
       type: String,
       default: '',
     },
+
     aiSettings: {
       enabled: { type: Boolean, default: true },
       customInstructions: {

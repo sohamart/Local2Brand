@@ -1048,3 +1048,144 @@ body.has-announcement-bar .page-header-offset,
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(147, 51, 234, 0.7);
 }
+
+/* ==========================================================================
+   LOCAL2BRAND SIGNATURE BRAND BUTTONS (Ultra-Modern, Tactile, Bespoke)
+   ========================================================================== */
+
+.btn-l2b-signature {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: linear-gradient(135deg, #7928ca 0%, #0072ff 50%, #00c6ff 100%);
+  background-size: 200% 200%;
+  color: #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 10px 25px -5px rgba(121, 40, 202, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.35) inset, 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.btn-l2b-signature::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: skewX(-20deg);
+  transition: all 0.6s ease;
+}
+
+.btn-l2b-signature:hover {
+  transform: translateY(-2px) scale(1.02);
+  background-position: 100% 100%;
+  box-shadow: 0 16px 36px -6px rgba(0, 114, 255, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+}
+
+.btn-l2b-signature:hover::before {
+  left: 140%;
+}
+
+.btn-l2b-signature:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+.btn-l2b-glass {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: rgba(255, 255, 255, 0.85);
+  color: #0f172a;
+  border-radius: 9999px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+  backdrop-filter: blur(16px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.dark .btn-l2b-glass {
+  background: rgba(15, 23, 42, 0.8);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.btn-l2b-glass:hover {
+  transform: translateY(-2px);
+  border-color: rgba(147, 51, 234, 0.4);
+  box-shadow: 0 10px 28px -4px rgba(121, 40, 202, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+}
+
+.dark .btn-l2b-glass:hover {
+  border-color: rgba(192, 132, 252, 0.4);
+  box-shadow: 0 12px 32px -4px rgba(121, 40, 202, 0.35);
+}
+
+.btn-l2b-glass:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+/* Indian Tri-Color Luxury Badge */
+.badge-tricolor-india {
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.15) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(19, 136, 8, 0.15) 100%);
+  border: 1px solid rgba(255, 153, 51, 0.35);
+  box-shadow: 0 4px 18px rgba(255, 153, 51, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.dark .badge-tricolor-india {
+  background: linear-gradient(135deg, rgba(255, 153, 51, 0.18) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(19, 136, 8, 0.18) 100%);
+  border: 1px solid rgba(255, 153, 51, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Chatbot Announcement Bubble Bloom / Collapse Animations */
+@keyframes bubbleBloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.15) translate(40px, 40px);
+    transform-origin: bottom right;
+  }
+  70% {
+    transform: scale(1.04) translate(-2px, -2px);
+    transform-origin: bottom right;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+    transform-origin: bottom right;
+  }
+}
+
+@keyframes bubbleCollapse {
+  0% {
+    opacity: 1;
+    transform: scale(1) translate(0, 0);
+    transform-origin: bottom right;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.1) translate(30px, 30px);
+    transform-origin: bottom right;
+  }
+}
+
+.animate-bubble-bloom {
+  animation: bubbleBloom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-bubble-collapse {
+  animation: bubbleCollapse 0.35s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}

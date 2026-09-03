@@ -24,7 +24,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useOrderModal } from '../../context/OrderModalContext';
 import AshokaChakra from './AshokaChakra';
 import ThemeToggle from './ThemeToggle';
-import AnnouncementBar from './AnnouncementBar';
+
 
 // Primary Direct Links in Navbar Dock (Visible on Desktop)
 const PRIMARY_NAV_LINKS = [
@@ -330,22 +330,12 @@ export default function Navbar() {
     <>
       <header
         ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col ${
-          isScrolled ? 'gap-0' : hasAnnouncement ? 'gap-1.5 sm:gap-2' : 'gap-0'
-        }`}
+        className="fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col"
       >
-        {/* Animated Top Announcement Bar */}
-        <AnnouncementBar
-          isScrolled={isScrolled}
-          onDismiss={() => setIsAnnouncementDismissed(true)}
-        />
-
         <div className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 w-full transition-all duration-300 ${
           isScrolled
             ? 'pt-1 sm:pt-1.5'
-            : hasAnnouncement
-            ? 'pt-0'
-            : 'pt-2.5 sm:pt-3.5'
+            : 'pt-2 sm:pt-3'
         }`}>
           <nav
             className={`flex items-center justify-between glass-waterdrop rounded-full transition-all duration-300 relative border border-white/95 dark:border-slate-800/90 ${
@@ -353,6 +343,7 @@ export default function Navbar() {
                 ? 'h-[58px] sm:h-[62px] px-3.5 sm:px-6 shadow-glass-lg'
                 : 'h-[62px] sm:h-[66px] px-4 sm:px-7 shadow-glass'
             }`}
+
             aria-label="Global Navigation"
           >
             {/* 1. BRAND LOGO & IDENTITY */}

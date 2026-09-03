@@ -56,8 +56,21 @@ export function SiteSettingsProvider({ children }) {
         enabled: true,
         text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
         link: '/pricing',
+        badge: 'FLASH OFFER',
+        promoCode: 'INDIA2025',
+        discountPercent: 20,
+        btnText: 'Claim Offer',
+      },
+      luckyWheel: {
+        enabled: true,
+        title: '🎡 Spin & Win Launch Rewards',
+        subtitle: 'Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!',
+        btnText: 'Spin & Win Prize',
+        rewardVoucher: 'INDIA2025',
+        rewardDiscount: 20,
       },
       bannerImage: '',
+
       navLinks: staticFallback.navLinks || [
         { label: 'Home', href: '/' },
         { label: 'Templates', href: '/demos' },

@@ -64,9 +64,22 @@ export default function AdminSettings() {
     announcementBar: settings.announcementBar || {
       enabled: true,
       text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
-      link: '/pricing'
+      link: '/pricing',
+      badge: 'FLASH OFFER',
+      promoCode: 'INDIA2025',
+      discountPercent: 20,
+      btnText: 'Claim Offer'
+    },
+    luckyWheel: settings.luckyWheel || {
+      enabled: true,
+      title: '🎡 Spin & Win Exclusive Launch Rewards',
+      subtitle: 'Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!',
+      btnText: 'Spin & Win Prize',
+      rewardVoucher: 'INDIA2025',
+      rewardDiscount: 20
     },
     socialLinks: settings.socialLinks || {
+
       instagram: 'https://instagram.com/local2brand',
       instagramHandle: '@local2brand',
       linkedin: 'https://linkedin.com/company/local2brand',
@@ -650,11 +663,143 @@ export default function AdminSettings() {
                     </span>
                   </div>
 
-                  <div className="px-3 py-1 rounded-full bg-white/85 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-700/60 text-purple-700 dark:text-amber-300 font-black text-[10px] flex items-center gap-1">
+                    <div className="px-3 py-1 rounded-full bg-white/85 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-700/60 text-purple-700 dark:text-amber-300 font-black text-[10px] flex items-center gap-1">
                     <span>{formData.announcementBar?.btnText || 'Claim Offer'}</span>
                     <span className="opacity-75">({formData.announcementBar?.promoCode || 'INDIA2025'})</span>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3.5: Interactive Spin & Win Lucky Wheel Game Settings */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
+                <RotateCw className="w-4 h-4 text-amber-500" />
+                <span>🎡 Spin &amp; Win Lucky Wheel Mini-Game</span>
+              </h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Enable Game</span>
+                <input
+                  type="checkbox"
+                  checked={formData.luckyWheel?.enabled ?? true}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      luckyWheel: {
+                        ...(prev.luckyWheel || {}),
+                        enabled: e.target.checked
+                      }
+                    }))
+                  }
+                  className="w-5 h-5 accent-purple-600 cursor-pointer"
+                />
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div className="sm:col-span-2">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Game Modal Title</label>
+                <input
+                  type="text"
+                  value={formData.luckyWheel?.title || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      luckyWheel: {
+                        ...(prev.luckyWheel || {}),
+                        title: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. 🎡 Spin & Win Exclusive Launch Rewards"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Spin Button Text</label>
+                <input
+                  type="text"
+                  value={formData.luckyWheel?.btnText || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      luckyWheel: {
+                        ...(prev.luckyWheel || {}),
+                        btnText: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. Spin & Win Prize"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+              <div className="sm:col-span-3">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Game Subtitle &amp; Value Proposition</label>
+                <input
+                  type="text"
+                  value={formData.luckyWheel?.subtitle || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      luckyWheel: {
+                        ...(prev.luckyWheel || {}),
+                        subtitle: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Top Prize Promo Voucher</label>
+                <input
+                  type="text"
+                  value={formData.luckyWheel?.rewardVoucher || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      luckyWheel: {
+                        ...(prev.luckyWheel || {}),
+                        rewardVoucher: e.target.value.toUpperCase()
+                      }
+                    }))
+                  }
+                  placeholder="e.g. INDIA2025"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono font-bold text-emerald-600 dark:text-emerald-400"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Top Prize Discount (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.luckyWheel?.rewardDiscount ?? 20}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      luckyWheel: {
+                        ...(prev.luckyWheel || {}),
+                        rewardDiscount: parseInt(e.target.value, 10) || 0
+                      }
+                    }))
+                  }
+                  placeholder="20"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+              <div className="flex items-end">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 block">
+                  ✨ Users can trigger this from the AI Chatbot launcher, Announcement card, and direct links.
+                </span>
               </div>
             </div>
           </div>
@@ -665,6 +810,7 @@ export default function AdminSettings() {
               <Shield className="w-4 h-4" />
               <span>Maintenance & Platform Modes</span>
             </h2>
+
 
             <div className="space-y-4 text-xs">
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800">

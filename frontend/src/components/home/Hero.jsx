@@ -325,24 +325,29 @@ export default function Hero() {
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Top Pill Badge with Animated Ashoka Chakra */}
+        {/* Top Unique Clean Indian Flag Luxury Badge */}
         <div className="flex justify-center mb-6">
-          <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-sm text-xs font-semibold text-slate-800 dark:text-slate-200 animate-float relative overflow-hidden">
-            <span className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 px-2 py-0.5 rounded-full border border-amber-200/80 dark:border-amber-500/40">
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full badge-tricolor-india text-xs font-semibold text-slate-800 dark:text-slate-200 animate-float relative overflow-hidden">
+            <span className="flex items-center gap-1.5 font-black text-amber-900 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/40 shadow-xs">
               <AshokaChakra size={13} />
               <span>Made in India</span>
             </span>
-            <span className="text-slate-300 dark:text-slate-700">|</span>
-            <span className="text-slate-600 dark:text-slate-400 font-medium">Turn Local Indian Brands into Global Giants</span>
+            <span className="text-slate-300 dark:text-slate-600">|</span>
+            <span className="text-slate-700 dark:text-slate-300 font-medium hidden sm:inline">
+              Scaling Local Brands Into Global Giants
+            </span>
+            <span className="text-slate-700 dark:text-slate-300 font-medium sm:hidden">
+              Scale Your Brand Globally
+            </span>
           </div>
         </div>
 
-        {/* Hero Headline & Ultra-Minimal Copy */}
-        <div className="text-center max-w-3xl mx-auto space-y-5 relative">
+        {/* Hero Headline & Ultra-Premium Copy */}
+        <div className="text-center max-w-3xl mx-auto space-y-6 relative">
           {/* Radiant Title Spotlight Glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] sm:w-[750px] h-[220px] sm:h-[300px] bg-gradient-to-r from-blue-500/20 via-purple-500/25 to-pink-500/20 dark:from-blue-500/30 dark:via-purple-500/40 dark:to-pink-500/30 rounded-full blur-[70px] pointer-events-none -z-10 animate-pulse-glow" />
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.08] relative z-10">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.06] relative z-10">
             We Build Websites That Turn{' '}
             <span className="l2b-gradient-text whitespace-nowrap">
               Local Brands
@@ -354,67 +359,42 @@ export default function Hero() {
             World-class UI/UX design, sub-second performance, and instant lead capture for ambitious Indian businesses ready to scale globally.
           </p>
 
-          {/* Minimal CTA Pair */}
+          {/* Signature Custom Action Buttons */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-sm sm:max-w-none mx-auto">
             <button
               onClick={handleStartWebsite}
-              className="w-full sm:w-auto px-8 py-3.5 rounded-btn text-sm sm:text-base font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer hover:opacity-95"
+              className="w-full sm:w-auto btn-l2b-signature px-8 py-4 text-sm sm:text-base font-black group cursor-pointer"
             >
               <span>Start Your Website</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
             </button>
 
             <Link
               to="/demos"
-              className="w-full sm:w-auto px-7 py-3.5 rounded-btn text-sm sm:text-base font-semibold text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-700/80 shadow-sm transition-all duration-200 flex items-center justify-center gap-2 group"
+              className="w-full sm:w-auto btn-l2b-glass px-7 py-4 text-sm sm:text-base font-bold group"
             >
               <span>Explore Demos</span>
               <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform" />
             </Link>
           </div>
 
-          {/* Micro Indian Trust Points */}
-          <div className="pt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-            <span className="flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/90 px-3 py-1 rounded-full border border-slate-200/70 dark:border-slate-700/80 shadow-sm">
-              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              Instant Callback & Proposal
+          {/* Clean Tri-Color Micro Trust Bar */}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            <span className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Instant Proposal &amp; Callback</span>
             </span>
-            <span className="flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/90 px-3 py-1 rounded-full border border-slate-200/70 dark:border-slate-700/80 shadow-sm">
-              <CheckCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              INR (₹) & UPI Supported
+            <span className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              <CheckCircle className="w-3.5 h-3.5 text-amber-500" />
+              <span>INR (₹) &amp; UPI Supported</span>
             </span>
-            <span className="flex items-center gap-1.5 bg-white/90 dark:bg-slate-900/90 px-3 py-1 rounded-full border border-slate-200/70 dark:border-slate-700/80 shadow-sm">
-              <CheckCircle className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-              48h Superfast Delivery
+            <span className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              <CheckCircle className="w-3.5 h-3.5 text-purple-500" />
+              <span>48h Superfast Delivery</span>
             </span>
-          </div>
-
-          {/* Animated Glowing 20% OFF Launch Offer Box */}
-          <div className="pt-6">
-            <div className="inline-flex flex-col sm:flex-row items-center gap-3 p-3 sm:py-2.5 sm:px-5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-2 border-amber-400/50 dark:border-amber-500/40 shadow-glass-highlight relative overflow-hidden group">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 rounded-lg bg-amber-500 text-slate-900 text-[10px] font-extrabold uppercase tracking-wider shadow-xs">
-                  🔥 Launch Offer
-                </span>
-                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                  Flat <strong className="text-amber-600 dark:text-amber-400">20% OFF</strong> + Free 1-Yr SSL & Domain
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-slate-500 dark:text-slate-300 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-bold">
-                  CODE: INDIA2025
-                </span>
-                <button
-                  onClick={() => openOrderModal({ websiteType: 'Offer Code: INDIA2025 (20% OFF)' })}
-                  className="px-3.5 py-1 rounded-lg text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 cursor-pointer"
-                >
-                  Claim ₹2,000 OFF
-                </button>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-blue-500 to-emerald-500" />
-            </div>
           </div>
         </div>
+
 
         {/* Sleek Ultra-Modern Showcase Frame with Dynamic Liquid Dock */}
         <div
