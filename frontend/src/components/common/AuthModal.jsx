@@ -182,19 +182,22 @@ export default function AuthModal() {
           )}
 
           <div>
-            <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Email Address *</label>
+            <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+              {mode === 'login' ? 'Email Address or Phone Number *' : 'Email Address *'}
+            </label>
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
               <input
-                type="email"
+                type={mode === 'login' ? 'text' : 'email'}
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
+                placeholder={mode === 'login' ? 'you@company.com or 9876543210' : 'you@company.com'}
                 className="w-full pl-9 pr-3 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 text-slate-900 dark:text-white text-xs font-semibold"
               />
             </div>
           </div>
+
 
           {/* REQUIRED Country-Aware Phone Number */}
           {mode === 'register' && (

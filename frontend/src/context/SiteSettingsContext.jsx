@@ -107,9 +107,20 @@ export function SiteSettingsProvider({ children }) {
     }
   };
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
+  const updateLocalSettingsState = (newSettings) => {
+    if (!newSettings) return;
+    setSettings((prev) => {
+      const merged = {
+        ...prev,
+        ...newSettings,
+        navLinks: prev.navLinks,
+      };
+      try {
+        localStorage.setItem('l2b_cached_settings', JSON.stringify(merged));
+      } catch (e) {}
+      return merged;
+    });
+  };
 
   return (
     <SiteSettingsContext.Provider
@@ -117,12 +128,14 @@ export function SiteSettingsProvider({ children }) {
         settings,
         loading,
         refreshSettings: fetchSettings,
+        updateLocalSettingsState,
       }}
     >
       {children}
     </SiteSettingsContext.Provider>
   );
 }
+
 
 export function useSiteSettings() {
   const context = useContext(SiteSettingsContext);

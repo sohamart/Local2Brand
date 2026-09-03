@@ -45,7 +45,9 @@ import { useSiteSettings } from '../../context/SiteSettingsContext';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import DashboardLoader from '../../components/common/DashboardLoader';
+import MarqueeTicker from '../../components/common/MarqueeTicker';
 import { SEO } from '../../components/common/CommonUI';
+
 
 const STATUS_BADGES = {
   'Draft': 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300',
@@ -459,8 +461,11 @@ export default function UserDashboard() {
       <SEO title="Client Portal & Track Orders — LOCAL2BRAND" description="Manage your website specifications, track project milestones in realtime, and view progress." />
 
       <div className="page-header-offset pb-20 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 overflow-x-hidden">
-        
+        {/* Important Updates & Live Sliding Marquee Ticker */}
+        <MarqueeTicker className="rounded-2xl mb-6 shadow-sm" />
+
         {/* Admin Switcher Notice Bar */}
+
         {(isAdmin || user?.role === 'admin') && (
           <div className="mb-6 p-3 sm:p-4 rounded-2xl bg-amber-500/10 border border-amber-400/40 text-amber-900 dark:text-amber-300 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs w-full">
             <div className="flex items-center gap-2.5 text-xs font-bold text-center sm:text-left">

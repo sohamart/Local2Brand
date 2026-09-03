@@ -84,36 +84,38 @@ export const register = async (req, res) => {
 // @access  Public
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, identifier, phone, password } = req.body;
+    const loginIdentifier = (email || identifier || phone || '').trim();
 
-    if (!email || !password) {
+    if (!loginIdentifier || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please enter both email and password',
+        message: 'Please enter your email/phone number and password',
       });
     }
 
-    const cleanEmail = email.toLowerCase().trim();
+    const cleanIdentifier = loginIdentifier.toLowerCase().trim();
     const cleanPassword = password.trim();
-    let user = await dataStore.findUserByEmail(cleanEmail);
+    let user = await dataStore.findUserByEmail(loginIdentifier);
 
     const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
     const envAdminPass = (process.env.ADMIN_PASSWORD || 'Admin@12345').trim();
-    const isMasterAdminEmail = cleanEmail === adminEmail || cleanEmail === 'admin@local2brand.com';
+    const isMasterAdminEmail = cleanIdentifier === adminEmail || cleanIdentifier === 'admin@local2brand.com';
 
     // If master admin email not found in DB yet, seed it immediately
     if (!user && isMasterAdminEmail) {
       await dataStore.seedDefaultAdmin();
-      user = await dataStore.findUserByEmail(cleanEmail);
+      user = await dataStore.findUserByEmail(cleanIdentifier);
     }
 
     if (!user) {
-      console.warn(`Login failed: Account '${cleanEmail}' does not exist.`);
+      console.warn(`Login failed: Account '${loginIdentifier}' does not exist.`);
       return res.status(401).json({
         success: false,
-        message: 'No account found with this email. Please check your email or register.',
+        message: 'No account found with this email or phone number. Please verify your credentials or register.',
       });
     }
+
 
     let isMatch = false;
     if (user.matchPassword) {

@@ -25,8 +25,13 @@ import {
   MapPin,
   Building,
   RefreshCw,
-  RotateCw
+  RotateCw,
+  Bell,
+  ArrowRight,
+  Flame,
+  Zap
 } from 'lucide-react';
+
 
 
 const InstagramIcon = ({ className = 'w-4 h-4' }) => (
@@ -51,7 +56,8 @@ import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { SEO } from '../../components/common/CommonUI';
 
 export default function AdminSettings() {
-  const { settings, refreshSettings } = useSiteSettings();
+  const { settings, refreshSettings, updateLocalSettingsState } = useSiteSettings();
+
 
   const [formData, setFormData] = useState({
     brandName: settings.brandName || 'LOCAL2BRAND',
@@ -341,8 +347,8 @@ export default function AdminSettings() {
       if (res && (res.success || res.settings)) {
         const newSettings = res.settings || formData;
         setSuccessMessage('Site customizations updated & synced live across the frontend!');
+        updateLocalSettingsState(newSettings);
         refreshSettings();
-        localStorage.setItem('l2b_cached_settings', JSON.stringify(newSettings));
         setSavedRecently(true);
         setTimeout(() => setSavedRecently(false), 2500);
         toast.update(toastId, {
@@ -357,8 +363,8 @@ export default function AdminSettings() {
       }
     } catch (err) {
       console.warn('Backend update notice, applying instant local sync:', err.message);
+      updateLocalSettingsState(formData);
       refreshSettings();
-      localStorage.setItem('l2b_cached_settings', JSON.stringify(formData));
       setSuccessMessage('Site customizations updated locally and synced live!');
       setSavedRecently(true);
       setTimeout(() => setSavedRecently(false), 2500);
@@ -372,6 +378,7 @@ export default function AdminSettings() {
     } finally {
       setLoading(false);
     }
+
   };
 
   return (
@@ -524,23 +531,23 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          {/* Section 3: Top Announcement Bar Customizer */}
+          {/* Section 3: Important Updates & Live Marquee Ticker Broadcast Manager */}
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-purple-600" />
-                <span>Top Announcement Bar & Flash Offer</span>
+                <Bell className="w-4 h-4 text-purple-600" />
+                <span>Important Updates &amp; Live Marquee Ticker Broadcast</span>
               </h2>
               <label className="flex items-center gap-2 cursor-pointer">
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Show Bar</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Enable Ticker</span>
                 <input
                   type="checkbox"
-                  checked={formData.announcementBar?.enabled ?? true}
+                  checked={formData.importantUpdates?.enabled ?? true}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      announcementBar: {
-                        ...(prev.announcementBar || {}),
+                      importantUpdates: {
+                        ...(prev.importantUpdates || {}),
                         enabled: e.target.checked
                       }
                     }))
@@ -550,140 +557,246 @@ export default function AdminSettings() {
               </label>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              <div className="sm:col-span-2">
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Announcement Headline Message</label>
-                <input
-                  type="text"
-                  value={formData.announcementBar?.text || ''}
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Broadcast sliding news, platform updates, emergency notices, or special incentives in real-time across user dashboards, admin consoles, and website headers.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Scroll Speed</label>
+                <select
+                  value={formData.importantUpdates?.speed || 'normal'}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      announcementBar: {
-                        ...(prev.announcementBar || {}),
-                        text: e.target.value
+                      importantUpdates: {
+                        ...(prev.importantUpdates || {}),
+                        speed: e.target.value
                       }
                     }))
                   }
-                  placeholder="e.g. 🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025"
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                />
+                >
+                  <option value="slow">Slow &amp; Relaxed (48s cycle)</option>
+                  <option value="normal">Normal (30s cycle - Recommended)</option>
+                  <option value="fast">Fast &amp; Dynamic (18s cycle)</option>
+                </select>
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Highlight Badge Tag</label>
-                <input
-                  type="text"
-                  value={formData.announcementBar?.badge || ''}
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Audience Visibility</label>
+                <select
+                  value={formData.importantUpdates?.showForLoggedInOnly ? 'auth' : 'all'}
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      announcementBar: {
-                        ...(prev.announcementBar || {}),
-                        badge: e.target.value
+                      importantUpdates: {
+                        ...(prev.importantUpdates || {}),
+                        showForLoggedInOnly: e.target.value === 'auth'
                       }
                     }))
                   }
-                  placeholder="e.g. FLASH OFFER / PROMO"
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                />
+                >
+                  <option value="all">🌐 All Visitors &amp; Clients (Public + Logged-In)</option>
+                  <option value="auth">🔒 Logged-In Clients &amp; Admins Only</option>
+                </select>
               </div>
+            </div>
 
-              <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">🎁 Promo Coupon Code</label>
-                <input
-                  type="text"
-                  value={formData.announcementBar?.promoCode || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      announcementBar: {
-                        ...(prev.announcementBar || {}),
-                        promoCode: e.target.value.toUpperCase()
-                      }
-                    }))
-                  }
-                  placeholder="e.g. INDIA2025"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono font-bold text-purple-600 dark:text-purple-400"
-                />
-                <span className="text-[10px] text-slate-400 block mt-0.5">
-                  Copied to user's clipboard & applied in the order form on click.
+            {/* List of Ticker Items */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Sliding Announcement Items ({formData.importantUpdates?.items?.length || 0})</span>
                 </span>
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Discount Percentage (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.announcementBar?.discountPercent ?? 20}
-                  onChange={(e) =>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newItem = {
+                      id: `update-${Date.now()}`,
+                      text: 'New platform update notification...',
+                      badge: 'UPDATE',
+                      badgeType: 'purple',
+                      link: '/dashboard',
+                      isActive: true
+                    };
                     setFormData((prev) => ({
                       ...prev,
-                      announcementBar: {
-                        ...(prev.announcementBar || {}),
-                        discountPercent: parseInt(e.target.value, 10) || 0
+                      importantUpdates: {
+                        ...(prev.importantUpdates || {}),
+                        items: [...(prev.importantUpdates?.items || []), newItem]
                       }
-                    }))
-                  }
-                  placeholder="20"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                />
+                    }));
+                  }}
+                  className="px-3 py-1.5 rounded-xl text-[11px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 cursor-pointer flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Item</span>
+                </button>
               </div>
 
-              <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Action Button Text</label>
-                <input
-                  type="text"
-                  value={formData.announcementBar?.btnText || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      announcementBar: {
-                        ...(prev.announcementBar || {}),
-                        btnText: e.target.value
-                      }
-                    }))
-                  }
-                  placeholder="e.g. Claim Offer / Claim 20% OFF"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                />
-              </div>
+              {(formData.importantUpdates?.items || []).map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                    <div>
+                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">Badge Text</label>
+                      <input
+                        type="text"
+                        value={item.badge || ''}
+                        onChange={(e) => {
+                          const updated = [...(formData.importantUpdates?.items || [])];
+                          updated[idx] = { ...updated[idx], badge: e.target.value.toUpperCase() };
+                          setFormData((prev) => ({
+                            ...prev,
+                            importantUpdates: { ...(prev.importantUpdates || {}), items: updated }
+                          }));
+                        }}
+                        placeholder="e.g. UPDATE / OFFER"
+                        className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold"
+                      />
+                    </div>
 
-              {/* Live Preview Box */}
-              <div className="sm:col-span-3 pt-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1.5">
-                  Live Bar Preview
-                </span>
-                <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-100/90 via-pink-50/90 to-sky-100/90 dark:from-[#0a0518] dark:via-[#19082d] dark:to-[#070d1e] border border-purple-300/60 dark:border-purple-500/30 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-2 truncate">
-                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-xs">
-                      {formData.announcementBar?.badge || 'FLASH OFFER'}
-                    </span>
-                    <span className="font-extrabold text-slate-800 dark:text-slate-200 text-[11px] truncate">
-                      {formData.announcementBar?.text || '🔥 Special Launch Offer: Get 20% OFF with code INDIA2025'}
-                    </span>
+                    <div>
+                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">Badge Color</label>
+                      <select
+                        value={item.badgeType || 'purple'}
+                        onChange={(e) => {
+                          const updated = [...(formData.importantUpdates?.items || [])];
+                          updated[idx] = { ...updated[idx], badgeType: e.target.value };
+                          setFormData((prev) => ({
+                            ...prev,
+                            importantUpdates: { ...(prev.importantUpdates || {}), items: updated }
+                          }));
+                        }}
+                        className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold"
+                      >
+                        <option value="purple">💜 Purple (Standard)</option>
+                        <option value="emerald">💚 Emerald (Live / Online)</option>
+                        <option value="amber">💛 Amber (Special Offer)</option>
+                        <option value="rose">❤️ Rose (Urgent Alert)</option>
+                        <option value="cyan">🩵 Cyan (Tech / System)</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">Click Action Link (Optional)</label>
+                      <input
+                        type="text"
+                        value={item.link || ''}
+                        onChange={(e) => {
+                          const updated = [...(formData.importantUpdates?.items || [])];
+                          updated[idx] = { ...updated[idx], link: e.target.value };
+                          setFormData((prev) => ({
+                            ...prev,
+                            importantUpdates: { ...(prev.importantUpdates || {}), items: updated }
+                          }));
+                        }}
+                        placeholder="e.g. /dashboard or /pricing or https://..."
+                        className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono text-xs"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-3">
+                      <label className="font-bold text-slate-600 dark:text-slate-400 block mb-1">Headline Announcement Text</label>
+                      <input
+                        type="text"
+                        value={item.text || ''}
+                        onChange={(e) => {
+                          const updated = [...(formData.importantUpdates?.items || [])];
+                          updated[idx] = { ...updated[idx], text: e.target.value };
+                          setFormData((prev) => ({
+                            ...prev,
+                            importantUpdates: { ...(prev.importantUpdates || {}), items: updated }
+                          }));
+                        }}
+                        placeholder="e.g. 🚀 Platform Upgrade: New AI Assistant is now live!"
+                        className="w-full p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-medium"
+                      />
+                    </div>
+
+                    <div className="flex items-end justify-between gap-2">
+                      <label className="flex items-center gap-1.5 cursor-pointer pb-2">
+                        <input
+                          type="checkbox"
+                          checked={item.isActive !== false}
+                          onChange={(e) => {
+                            const updated = [...(formData.importantUpdates?.items || [])];
+                            updated[idx] = { ...updated[idx], isActive: e.target.checked };
+                            setFormData((prev) => ({
+                              ...prev,
+                              importantUpdates: { ...(prev.importantUpdates || {}), items: updated }
+                            }));
+                          }}
+                          className="w-4 h-4 accent-purple-600"
+                        />
+                        <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">Active</span>
+                      </label>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = (formData.importantUpdates?.items || []).filter((_, i) => i !== idx);
+                          setFormData((prev) => ({
+                            ...prev,
+                            importantUpdates: { ...(prev.importantUpdates || {}), items: updated }
+                          }));
+                        }}
+                        className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer mb-0.5"
+                        title="Delete Update Item"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
+                </div>
+              ))}
+            </div>
 
-                    <div className="px-3 py-1 rounded-full bg-white/85 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-700/60 text-purple-700 dark:text-amber-300 font-black text-[10px] flex items-center gap-1">
-                    <span>{formData.announcementBar?.btnText || 'Claim Offer'}</span>
-                    <span className="opacity-75">({formData.announcementBar?.promoCode || 'INDIA2025'})</span>
+            {/* Live Sliding Marquee Preview Box */}
+            <div className="pt-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1.5">
+                Live Marquee Ticker Preview
+              </span>
+              <div className="relative w-full overflow-hidden bg-gradient-to-r from-purple-900/90 via-indigo-950/95 to-slate-950 text-white border border-purple-500/30 rounded-2xl p-2.5 flex items-center gap-3 shadow-md">
+                <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/15 border border-purple-400/40 text-purple-200 text-[9px] font-black uppercase shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>UPDATES</span>
+                </div>
+                <div className="relative flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)]">
+                  <div className="animate-marquee-smooth whitespace-nowrap flex gap-4">
+                    {(formData.importantUpdates?.items || [])
+                      .filter((i) => i && i.isActive !== false)
+                      .map((item, idx) => (
+                        <div key={idx} className="inline-flex items-center gap-2 text-xs font-semibold mx-3">
+                          {item.badge && (
+                            <span className="px-1.5 py-0.5 rounded-full text-[8px] font-black bg-purple-500/20 text-purple-300 border border-purple-400/30 uppercase">
+                              {item.badge}
+                            </span>
+                          )}
+                          <span className="text-slate-100">{item.text}</span>
+                          <span className="text-purple-500/60 font-bold ml-2">✦</span>
+                        </div>
+                      ))}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Section 3.5: Interactive Spin & Win Lucky Wheel Game Settings */}
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          {/* Section 3.5: Interactive Rewards Mini-Games & Custom Prize Pool Manager */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
-                <RotateCw className="w-4 h-4 text-amber-500" />
-                <span>🎡 Spin &amp; Win Lucky Wheel Mini-Game</span>
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <span>🎮 Interactive Launch Games &amp; Reward Pool</span>
               </h2>
               <label className="flex items-center gap-2 cursor-pointer">
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Enable Game</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Enable Games</span>
                 <input
                   type="checkbox"
                   checked={formData.luckyWheel?.enabled ?? true}
@@ -701,6 +814,51 @@ export default function AdminSettings() {
               </label>
             </div>
 
+            {/* Active Game Selector (4 Visual Options) */}
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                Select Active Interactive Mini-Game
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  { id: 'wheel', name: '🎡 Lucky Wheel', desc: 'Classic Spin & Win Wheel' },
+                  { id: 'slots', name: '🎰 Las Vegas Slots', desc: '3-Reel Jackpot Matcher' },
+                  { id: 'boxes', name: '🎁 Mystery Gift Boxes', desc: 'Pick & Unbox Lucky Gift' },
+                  { id: 'scratch', name: '🃏 Golden Scratchcard', desc: 'Scratch to Reveal Voucher' }
+                ].map((game) => {
+                  const isSelected = (formData.luckyWheel?.activeGame || 'wheel') === game.id;
+                  return (
+                    <button
+                      key={game.id}
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          luckyWheel: {
+                            ...(prev.luckyWheel || {}),
+                            activeGame: game.id
+                          }
+                        }))
+                      }
+                      className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-purple-600 dark:border-purple-400 bg-purple-50/80 dark:bg-purple-950/50 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 hover:border-purple-300'
+                      }`}
+                    >
+                      <div className="font-extrabold text-xs text-slate-900 dark:text-white flex items-center justify-between">
+                        <span>{game.name}</span>
+                        {isSelected && <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse" />}
+                      </div>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        {game.desc}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div className="sm:col-span-2">
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Game Modal Title</label>
@@ -716,13 +874,13 @@ export default function AdminSettings() {
                       }
                     }))
                   }
-                  placeholder="e.g. 🎡 Spin & Win Exclusive Launch Rewards"
+                  placeholder="e.g. 🎡 Interactive Rewards & Launch Gifts"
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                 />
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Spin Button Text</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Action Button Text</label>
                 <input
                   type="text"
                   value={formData.luckyWheel?.btnText || ''}
@@ -735,7 +893,7 @@ export default function AdminSettings() {
                       }
                     }))
                   }
-                  placeholder="e.g. Spin & Win Prize"
+                  placeholder="e.g. Play & Win Prize"
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                 />
               </div>
@@ -754,96 +912,224 @@ export default function AdminSettings() {
                       }
                     }))
                   }
-                  placeholder="e.g. Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!"
+                  placeholder="e.g. Play our interactive launch game to win instant discounts, free domains, and launch vouchers!"
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Top Prize Promo Voucher</label>
-                <input
-                  type="text"
-                  value={formData.luckyWheel?.rewardVoucher || ''}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      luckyWheel: {
-                        ...(prev.luckyWheel || {}),
-                        rewardVoucher: e.target.value.toUpperCase()
-                      }
-                    }))
-                  }
-                  placeholder="e.g. INDIA2025"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono font-bold text-emerald-600 dark:text-emerald-400"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Top Prize Discount (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.luckyWheel?.rewardDiscount ?? 20}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      luckyWheel: {
-                        ...(prev.luckyWheel || {}),
-                        rewardDiscount: parseInt(e.target.value, 10) || 0
-                      }
-                    }))
-                  }
-                  placeholder="20"
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                />
-              </div>
-
-              <div className="sm:col-span-3 p-4 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Custom Prize Pool Manager */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full bg-purple-600 text-white text-[10px] font-black uppercase">
-                      Active Campaign: Round #{formData.luckyWheel?.campaignVersion || 1}
-                    </span>
-                    {formData.luckyWheel?.lastResetDate && (
-                      <span className="text-[10px] text-slate-500 font-medium">
-                        Last started: {new Date(formData.luckyWheel.lastResetDate).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
-                    Visitors can only spin once per campaign round. Launch a new round whenever you want everyone to be able to spin again!
-                  </p>
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Reward Prize Pool ({formData.luckyWheel?.prizes?.length || 0} Prizes)</span>
+                  </span>
+                  <span className="text-[10px] text-slate-500">Prizes are randomly awarded in wheel slices, slot reels, mystery boxes &amp; scratchcards.</span>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => {
-                    const nextVersion = (formData.luckyWheel?.campaignVersion || 1) + 1;
+                    const newPrize = {
+                      id: `prize-${Date.now()}`,
+                      label: '10% OFF Special Voucher',
+                      subLabel: 'Exclusive Discount Voucher',
+                      code: 'SPECIAL10',
+                      discountPercent: 10,
+                      color: '#8b5cf6',
+                      icon: '🎁'
+                    };
                     setFormData((prev) => ({
                       ...prev,
                       luckyWheel: {
                         ...(prev.luckyWheel || {}),
-                        campaignVersion: nextVersion,
-                        lastResetDate: new Date().toISOString()
+                        prizes: [...(prev.luckyWheel?.prizes || []), newPrize]
                       }
                     }));
-                    toast.success(`🎉 New Lucky Wheel Round #${nextVersion} initiated! Click "Save Settings" to publish live.`);
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 transition-all"
+                  className="px-3 py-1.5 rounded-xl text-[11px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 cursor-pointer flex items-center gap-1"
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
-                  <span>Start New Spin Round 🚀</span>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Prize</span>
                 </button>
               </div>
 
-              <div className="sm:col-span-3 flex items-end">
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 block w-full">
-                  ✨ Users can trigger this from the AI Chatbot launcher, Announcement card, and direct links.
-                </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {(formData.luckyWheel?.prizes || []).map((prize, idx) => (
+                  <div
+                    key={prize.id || idx}
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={prize.icon || '🎁'}
+                          onChange={(e) => {
+                            const updated = [...(formData.luckyWheel?.prizes || [])];
+                            updated[idx] = { ...updated[idx], icon: e.target.value };
+                            setFormData((prev) => ({
+                              ...prev,
+                              luckyWheel: { ...(prev.luckyWheel || {}), prizes: updated }
+                            }));
+                          }}
+                          className="w-9 h-9 text-center text-base rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                          title="Prize Emoji Icon"
+                        />
+                        <div className="min-w-0">
+                          <input
+                            type="text"
+                            value={prize.label || ''}
+                            onChange={(e) => {
+                              const updated = [...(formData.luckyWheel?.prizes || [])];
+                              updated[idx] = { ...updated[idx], label: e.target.value };
+                              setFormData((prev) => ({
+                                ...prev,
+                                luckyWheel: { ...(prev.luckyWheel || {}), prizes: updated }
+                              }));
+                            }}
+                            placeholder="Prize Name"
+                            className="w-full p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold text-xs"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = (formData.luckyWheel?.prizes || []).filter((_, i) => i !== idx);
+                          setFormData((prev) => ({
+                            ...prev,
+                            luckyWheel: { ...(prev.luckyWheel || {}), prizes: updated }
+                          }));
+                        }}
+                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                        title="Delete Prize"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="col-span-2">
+                        <label className="text-[10px] font-bold text-slate-500 block mb-0.5">Coupon Code</label>
+                        <input
+                          type="text"
+                          value={prize.code || ''}
+                          onChange={(e) => {
+                            const updated = [...(formData.luckyWheel?.prizes || [])];
+                            updated[idx] = { ...updated[idx], code: e.target.value.toUpperCase() };
+                            setFormData((prev) => ({
+                              ...prev,
+                              luckyWheel: { ...(prev.luckyWheel || {}), prizes: updated }
+                            }));
+                          }}
+                          placeholder="e.g. INDIA2025"
+                          className="w-full p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-mono font-bold text-purple-600 dark:text-purple-400 text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 block mb-0.5">Discount %</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          value={prize.discountPercent ?? 15}
+                          onChange={(e) => {
+                            const updated = [...(formData.luckyWheel?.prizes || [])];
+                            updated[idx] = { ...updated[idx], discountPercent: parseInt(e.target.value, 10) || 0 };
+                            setFormData((prev) => ({
+                              ...prev,
+                              luckyWheel: { ...(prev.luckyWheel || {}), prizes: updated }
+                            }));
+                          }}
+                          className="w-full p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 font-bold text-xs"
+                        />
+                      </div>
+
+                      <div className="col-span-2">
+                        <label className="text-[10px] font-bold text-slate-500 block mb-0.5">Subtitle Description</label>
+                        <input
+                          type="text"
+                          value={prize.subLabel || ''}
+                          onChange={(e) => {
+                            const updated = [...(formData.luckyWheel?.prizes || [])];
+                            updated[idx] = { ...updated[idx], subLabel: e.target.value };
+                            setFormData((prev) => ({
+                              ...prev,
+                              luckyWheel: { ...(prev.luckyWheel || {}), prizes: updated }
+                            }));
+                          }}
+                          placeholder="e.g. Flat 20% Discount"
+                          className="w-full p-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 block mb-0.5">Theme Color</label>
+                        <input
+                          type="color"
+                          value={prize.color || '#8b5cf6'}
+                          onChange={(e) => {
+                            const updated = [...(formData.luckyWheel?.prizes || [])];
+                            updated[idx] = { ...updated[idx], color: e.target.value };
+                            setFormData((prev) => ({
+                              ...prev,
+                              luckyWheel: { ...(prev.luckyWheel || {}), prizes: updated }
+                            }));
+                          }}
+                          className="w-full h-8 p-0.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* Campaign Round & Global Reset */}
+            <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full bg-purple-600 text-white text-[10px] font-black uppercase">
+                    Active Campaign: Round #{formData.luckyWheel?.campaignVersion || 1}
+                  </span>
+                  {formData.luckyWheel?.lastResetDate && (
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      Last started: {new Date(formData.luckyWheel.lastResetDate).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
+                  Visitors can play once per campaign round. Launch a new round to allow all visitors and clients to play again!
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const nextVersion = (formData.luckyWheel?.campaignVersion || 1) + 1;
+                  setFormData((prev) => ({
+                    ...prev,
+                    luckyWheel: {
+                      ...(prev.luckyWheel || {}),
+                      campaignVersion: nextVersion,
+                      lastResetDate: new Date().toISOString()
+                    }
+                  }));
+                  toast.success(`🎉 New Game Round #${nextVersion} initiated! Click "Save Settings" to publish live.`);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-black text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-95 shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer active:scale-95 transition-all"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Start New Round 🚀</span>
+              </button>
+            </div>
           </div>
+
 
 
           {/* Section 4: Maintenance & Coming Soon Gates */}

@@ -55,7 +55,7 @@ const DEFAULT_SETTINGS = {
     subtitle: 'World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale.',
   },
   announcementBar: {
-    enabled: true,
+    enabled: false,
     text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
     badge: 'FLASH OFFER',
     link: '/pricing',
@@ -63,16 +63,105 @@ const DEFAULT_SETTINGS = {
     discountPercent: 20,
     btnText: 'Claim Offer',
   },
+  importantUpdates: {
+    enabled: true,
+    speed: 'normal',
+    showForLoggedInOnly: false,
+    items: [
+      {
+        id: 'update-1',
+        text: '🚀 Platform Upgrade: New AI Assistant, Instant Callback & 48-Hour Rapid Delivery are now active!',
+        badge: 'SYSTEM UPDATE',
+        badgeType: 'purple',
+        link: '/dashboard',
+        isActive: true,
+      },
+      {
+        id: 'update-2',
+        text: '🎁 Special Launch Incentive: Spin the Lucky Wheel for up to 20% OFF & free custom domain setup.',
+        badge: 'OFFER',
+        badgeType: 'amber',
+        link: '/pricing',
+        isActive: true,
+      },
+      {
+        id: 'update-3',
+        text: '⚡ Live Client Desk: 15-Minute Instant Founder Callback is now live for all project inquiries.',
+        badge: 'LIVE SUPPORT',
+        badgeType: 'emerald',
+        link: '/contact',
+        isActive: true,
+      }
+    ]
+  },
   luckyWheel: {
     enabled: true,
-    title: '🎡 Spin & Win Exclusive Launch Rewards',
-    subtitle: 'Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!',
-    btnText: 'Spin & Win Prize',
+    activeGame: 'wheel',
+    title: '🎡 Interactive Rewards & Launch Gifts',
+    subtitle: 'Play our interactive launch game to win instant discounts, free domains, and launch vouchers!',
+    btnText: 'Play & Win Prize',
     rewardVoucher: 'INDIA2025',
     rewardDiscount: 20,
     campaignVersion: 1,
     lastResetDate: new Date().toISOString(),
+    prizes: [
+      {
+        id: 'prize-1',
+        label: '20% OFF Launch Voucher',
+        subLabel: 'Flat 20% Discount on any Plan',
+        code: 'INDIA2025',
+        discountPercent: 20,
+        color: '#8b5cf6',
+        icon: '🎉',
+      },
+      {
+        id: 'prize-2',
+        label: '₹1,000 Flat Discount',
+        subLabel: 'Instant ₹1,000 Savings',
+        code: 'LOCAL1000',
+        discountPercent: 15,
+        color: '#ec4899',
+        icon: '⚡',
+      },
+      {
+        id: 'prize-3',
+        label: 'Free Custom Domain',
+        subLabel: '1-Year .com / .in Domain Setup',
+        code: 'FREEDOMAIN',
+        discountPercent: 10,
+        color: '#06b6d4',
+        icon: '🌐',
+      },
+      {
+        id: 'prize-4',
+        label: 'VIP Priority 48h Turnaround',
+        subLabel: 'Express Delivery in 48 Hours',
+        code: 'EXPRESS48',
+        discountPercent: 15,
+        color: '#10b981',
+        icon: '🚀',
+      },
+      {
+        id: 'prize-5',
+        label: 'Free SSL + Cloudflare CDN',
+        subLabel: 'Lifetime Enterprise Security',
+        code: 'SECURE2025',
+        discountPercent: 10,
+        color: '#f59e0b',
+        icon: '🛡️',
+      },
+      {
+        id: 'prize-6',
+        label: '15% OFF Starter Package',
+        subLabel: 'Special Starter Pack Savings',
+        code: 'STARTER15',
+        discountPercent: 15,
+        color: '#6366f1',
+        icon: '✨',
+      },
+    ]
   },
+
   bannerImage: '',
 
   pricingPlans: [
@@ -288,25 +377,45 @@ export const dataStore = {
     });
   },
 
-  async findUserByEmail(email) {
-    if (!email) return null;
-    const cleanEmail = String(email).toLowerCase().trim();
+  async findUserByEmail(emailOrPhone) {
+    if (!emailOrPhone) return null;
+    const raw = String(emailOrPhone).trim();
+    const cleanEmail = raw.toLowerCase();
+    const cleanDigits = raw.replace(/\D/g, '');
+
     await ensureDb();
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
         const escaped = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const dbUser = await User.findOne({
-          email: { $regex: new RegExp(`^${escaped}$`, 'i') }
-        }).select('+password +emailOtp +emailOtpExpires');
+        const queryOr = [
+          { email: { $regex: new RegExp(`^${escaped}$`, 'i') } }
+        ];
+        if (cleanDigits.length >= 6) {
+          queryOr.push({ phone: { $regex: cleanDigits, $options: 'i' } });
+          queryOr.push({ phone: raw });
+        } else if (raw.length > 0) {
+          queryOr.push({ phone: raw });
+        }
+
+        const dbUser = await User.findOne({ $or: queryOr }).select('+password +emailOtp +emailOtpExpires');
         if (dbUser) return dbUser;
       } catch (err) {
         console.warn('MongoDB findUserByEmail notice:', err.message);
       }
     }
     const users = readLocalStore('users') || [];
-    return users.find((u) => u && u.email && u.email.toLowerCase().trim() === cleanEmail) || null;
+    return (
+      users.find((u) => {
+        if (!u) return false;
+        if (u.email && u.email.toLowerCase().trim() === cleanEmail) return true;
+        if (cleanDigits.length >= 6 && u.phone && u.phone.replace(/\D/g, '').includes(cleanDigits)) return true;
+        if (u.phone && u.phone.trim() === raw) return true;
+        return false;
+      }) || null
+    );
   },
+
 
   async findUserById(id) {
     if (!id) return null;

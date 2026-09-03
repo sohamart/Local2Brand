@@ -64,7 +64,7 @@ const siteSettingsSchema = new mongoose.Schema(
       subtitle: { type: String, default: 'World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale.' },
     },
     announcementBar: {
-      enabled: { type: Boolean, default: true },
+      enabled: { type: Boolean, default: false },
       text: { type: String, default: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025' },
       badge: { type: String, default: 'FLASH OFFER' },
       link: { type: String, default: '/pricing' },
@@ -72,16 +72,105 @@ const siteSettingsSchema = new mongoose.Schema(
       discountPercent: { type: Number, default: 20 },
       btnText: { type: String, default: 'Claim Offer' },
     },
+    importantUpdates: {
+      enabled: { type: Boolean, default: true },
+      speed: { type: String, default: 'normal' },
+      showForLoggedInOnly: { type: Boolean, default: false },
+      items: [
+        {
+          id: { type: String, default: 'update-1' },
+          text: { type: String, default: '🚀 Platform Upgrade: New AI Assistant, Instant Callback & 48-Hour Rapid Delivery are now active!' },
+          badge: { type: String, default: 'SYSTEM UPDATE' },
+          badgeType: { type: String, default: 'purple' },
+          link: { type: String, default: '/dashboard' },
+          isActive: { type: Boolean, default: true },
+        },
+        {
+          id: { type: String, default: 'update-2' },
+          text: { type: String, default: '🎁 Special Launch Incentive: Spin the Lucky Wheel for up to 20% OFF & free custom domain setup.' },
+          badge: { type: String, default: 'OFFER' },
+          badgeType: { type: String, default: 'amber' },
+          link: { type: String, default: '/pricing' },
+          isActive: { type: Boolean, default: true },
+        },
+        {
+          id: { type: String, default: 'update-3' },
+          text: { type: String, default: '⚡ Live Client Desk: 15-Minute Instant Founder Callback is now live for all project inquiries.' },
+          badge: { type: String, default: 'LIVE SUPPORT' },
+          badgeType: { type: String, default: 'emerald' },
+          link: { type: String, default: '/contact' },
+          isActive: { type: Boolean, default: true },
+        }
+      ]
+    },
     luckyWheel: {
       enabled: { type: Boolean, default: true },
-      title: { type: String, default: '🎡 Spin & Win Exclusive Launch Rewards' },
-      subtitle: { type: String, default: 'Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!' },
-      btnText: { type: String, default: 'Spin & Win Prize' },
+      activeGame: { type: String, default: 'wheel' }, // 'wheel', 'slots', 'boxes', 'scratch'
+      title: { type: String, default: '🎡 Interactive Rewards & Launch Gifts' },
+      subtitle: { type: String, default: 'Play our interactive launch game to win instant discounts, free domains, and launch vouchers!' },
+      btnText: { type: String, default: 'Play & Win Prize' },
       rewardVoucher: { type: String, default: 'INDIA2025' },
       rewardDiscount: { type: Number, default: 20 },
       campaignVersion: { type: Number, default: 1 },
       lastResetDate: { type: Date, default: Date.now },
+      prizes: [
+        {
+          id: { type: String, default: 'prize-1' },
+          label: { type: String, default: '20% OFF Launch Voucher' },
+          subLabel: { type: String, default: 'Flat 20% Discount on any Plan' },
+          code: { type: String, default: 'INDIA2025' },
+          discountPercent: { type: Number, default: 20 },
+          color: { type: String, default: '#8b5cf6' },
+          icon: { type: String, default: '🎉' },
+        },
+        {
+          id: { type: String, default: 'prize-2' },
+          label: { type: String, default: '₹1,000 Flat Discount' },
+          subLabel: { type: String, default: 'Instant ₹1,000 Savings' },
+          code: { type: String, default: 'LOCAL1000' },
+          discountPercent: { type: Number, default: 15 },
+          color: { type: String, default: '#ec4899' },
+          icon: { type: String, default: '⚡' },
+        },
+        {
+          id: { type: String, default: 'prize-3' },
+          label: { type: String, default: 'Free Custom Domain' },
+          subLabel: { type: String, default: '1-Year .com / .in Domain Setup' },
+          code: { type: String, default: 'FREEDOMAIN' },
+          discountPercent: { type: Number, default: 10 },
+          color: { type: String, default: '#06b6d4' },
+          icon: { type: String, default: '🌐' },
+        },
+        {
+          id: { type: String, default: 'prize-4' },
+          label: { type: String, default: 'VIP Priority 48h Turnaround' },
+          subLabel: { type: String, default: 'Express Delivery in 48 Hours' },
+          code: { type: String, default: 'EXPRESS48' },
+          discountPercent: { type: Number, default: 15 },
+          color: { type: String, default: '#10b981' },
+          icon: { type: String, default: '🚀' },
+        },
+        {
+          id: { type: String, default: 'prize-5' },
+          label: { type: String, default: 'Free SSL + Cloudflare CDN' },
+          subLabel: { type: String, default: 'Lifetime Enterprise Security' },
+          code: { type: String, default: 'SECURE2025' },
+          discountPercent: { type: Number, default: 10 },
+          color: { type: String, default: '#f59e0b' },
+          icon: { type: String, default: '🛡️' },
+        },
+        {
+          id: { type: String, default: 'prize-6' },
+          label: { type: String, default: '15% OFF Starter Package' },
+          subLabel: { type: String, default: 'Special Starter Pack Savings' },
+          code: { type: String, default: 'STARTER15' },
+          discountPercent: { type: Number, default: 15 },
+          color: { type: String, default: '#6366f1' },
+          icon: { type: String, default: '✨' },
+        },
+      ]
     },
+
 
     bannerImage: {
       type: String,

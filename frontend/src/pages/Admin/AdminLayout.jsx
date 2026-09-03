@@ -28,6 +28,8 @@ import { useSiteSettings } from '../../context/SiteSettingsContext';
 import ThemeToggle from '../../components/common/ThemeToggle';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import DashboardLoader from '../../components/common/DashboardLoader';
+import MarqueeTicker from '../../components/common/MarqueeTicker';
+
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard, exact: true },
@@ -258,8 +260,11 @@ export default function AdminLayout() {
           </div>
         </header>
 
+        {/* Important Updates & Live Sliding Marquee Ticker */}
+        <MarqueeTicker className="sticky top-16 z-30 shadow-xs" />
 
         {/* Viewport Render Outlet */}
+
         <main className="p-4 sm:p-6 lg:p-8 flex-1">
           <Outlet />
         </main>

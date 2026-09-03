@@ -27,38 +27,171 @@
     "announcementBar": {
       "enabled": true,
       "text": "🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025",
+      "badge": "FLASH OFFER",
       "link": "/pricing",
-      "badge": ""
+      "promoCode": "INDIA2025",
+      "discountPercent": 20,
+      "btnText": "Claim Offer"
     },
     "bannerImage": "",
-    "updatedAt": "2026-09-02T16:52:38.354Z",
+    "updatedAt": "2026-09-03T16:18:33.442Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
-    "updatedBy": "6a9551f5ef178dc4ce9260cf",
+    "updatedBy": "6a95d3798cd0de29be2399db",
     "aiSettings": {
       "enabled": true,
-      "customInstructions": "",
-      "businessKnowledge": "",
+      "customInstructions": "Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount. First check the role before match the name ",
+      "businessKnowledge": "LOCAL2BRAND builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.",
       "adminShowableDetails": {
-        "founderName": "Soham Dutta & Founding Team",
+        "founderName": "Soham Dutta (Founder & Lead Architect) & Founding Team",
         "founderCount": 1,
         "showFoundersToAi": true,
         "founders": [
           {
             "name": "Soham Dutta",
             "role": "Founder & Lead Architect",
-            "bio": "",
+            "bio": "Full-Stack Engineer & Product Designer leading high-performance web systems.",
             "instagram": "https://instagram.com/sohamart",
             "linkedin": "",
             "email": "sohamduttabwn@gmail.com",
             "phone": "+91 98765 43210",
-            "_id": "6a985456dc3693a042629bfa"
+            "_id": "6a9877eac887a2d1358e435c"
           }
         ],
-        "contactEmail": "stackaddacontact@gmail.com",
         "contactPhone": "+91 98765 43210",
-        "whatsappSupport": "+91 98765 43210"
+        "contactEmail": "stackaddacontact@gmail.com",
+        "officeLocation": "Kolkata & Bangalore, India",
+        "workingHours": "Monday - Saturday: 10:00 AM - 8:00 PM IST",
+        "whatsappSupport": "+91 98765 43210",
+        "instagram": "https://instagram.com/local2brand",
+        "instagramHandle": "@local2brand"
       }
+    },
+    "demoCategories": [
+      "LMS & Courses",
+      "Restaurant",
+      "Cafe",
+      "Salon",
+      "Gym",
+      "Hotel",
+      "Real Estate",
+      "Photography",
+      "Boutique",
+      "Coaching",
+      "Dental",
+      "Jewellery",
+      "Automotive",
+      "Healthcare",
+      "Custom"
+    ],
+    "pricingPlans": [
+      {
+        "id": "starter",
+        "name": "Starter",
+        "badge": "Fast Launch",
+        "popular": false,
+        "price": "$399",
+        "priceInr": "₹12,999",
+        "billingNote": "One-time investment",
+        "turnaround": "3 - 7 Days",
+        "description": "Ideal for local businesses, consultants, and creators looking to launch a polished online presence quickly.",
+        "features": [
+          "Up to 5 High-Conversion Pages / Sections",
+          "Choice of any Ready-Made Demo Template",
+          "Full Customization (Branding, Colors, Content)",
+          "100% Mobile & Tablet Responsive Layout",
+          "WhatsApp Direct Ordering & Inquiry Integration",
+          "Basic SEO Setup & Google Maps Location Embed",
+          "14 Days Post-Launch Support & Minor Edits"
+        ],
+        "notIncluded": [
+          "Custom Complex Web App Logic",
+          "Advanced Multi-level Catalog",
+          "Dedicated Project Manager"
+        ],
+        "ctaText": "Start with Starter",
+        "websiteType": "Starter Website",
+        "status": "published",
+        "order": 1,
+        "_id": "6a9877eac887a2d1358e4359"
+      },
+      {
+        "id": "professional",
+        "name": "Professional",
+        "badge": "Most Popular",
+        "popular": true,
+        "price": "$799",
+        "priceInr": "₹24,999",
+        "billingNote": "One-time investment",
+        "turnaround": "5 - 7 Business Days",
+        "description": "Our flagship custom website tier for ambitious brands who want an Apple-grade, high-converting digital experience.",
+        "features": [
+          "Up to 12 Bespoke Pages / Dynamic Architecture",
+          "Bespoke Liquid Glass UI / Custom Design System",
+          "GSAP Micro-Animations & Lenis Smooth Scroll",
+          "Interactive WhatsApp Order Funnel with Dynamic Messages",
+          "Full On-Page Technical SEO & Schema Optimization",
+          "Speed Optimization (98+ Google Lighthouse Guaranteed)",
+          "Social Media Feeds & Lead Capture Integration",
+          "30 Days VIP Priority Post-Launch Support"
+        ],
+        "notIncluded": [
+          "Full-stack Custom SaaS Backend (Phase 4)"
+        ],
+        "ctaText": "Get Professional",
+        "websiteType": "Professional Website",
+        "status": "published",
+        "order": 2,
+        "_id": "6a9877eac887a2d1358e435a"
+      },
+      {
+        "id": "custom",
+        "name": "Custom Enterprise",
+        "badge": "Tailored Growth",
+        "popular": false,
+        "price": "$1,499+",
+        "priceInr": "₹49,999+",
+        "billingNote": "Scope-based pricing",
+        "turnaround": "10 - 15 Business Days",
+        "description": "Full-scale custom digital products, extensive e-commerce catalogs, and multi-location business solutions.",
+        "features": [
+          "Unlimited Custom Pages & Modular Design Tokens",
+          "Custom Component Architecture & Micro-Interactions",
+          "Complete E-Commerce / Multi-Category WhatsApp Shop",
+          "Interactive Calculators, Multi-Step Form Funnels",
+          "Dedicated Senior UI/UX Designer & Lead Engineer",
+          "Priority 24/7 WhatsApp & Strategy Call Access",
+          "60 Days Dedicated Hyper-Care Support & Training",
+          "Scalable code architecture ready for future Backend API"
+        ],
+        "notIncluded": [],
+        "ctaText": "Discuss Custom Scope",
+        "websiteType": "Custom Enterprise Solution",
+        "status": "published",
+        "order": 3,
+        "_id": "6a9877eac887a2d1358e435b"
+      }
+    ],
+    "luckyWheel": {
+      "enabled": true,
+      "title": "🎡 Spin & Win Exclusive Launch Rewards",
+      "subtitle": "Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!",
+      "btnText": "Spin & Win Prize",
+      "rewardVoucher": "INDIA2025",
+      "rewardDiscount": 20
+    },
+    "importantUpdates": {
+      "items": [
+        {
+          "id": "update-1788452305316",
+          "text": "New platform update notification...",
+          "badge": "UPDATE",
+          "badgeType": "purple",
+          "link": "/dashboard",
+          "isActive": true,
+          "_id": "6a999dd99f018b99e77b495c"
+        }
+      ]
     }
   }
 ]

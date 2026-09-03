@@ -18,32 +18,7 @@ export const getSettings = async (req, res) => {
 
 export const updateSettings = async (req, res) => {
   try {
-    const fields = [
-      'brandName',
-      'domain',
-      'tagline',
-      'supportEmail',
-      'displayPhone',
-      'turnaroundTime',
-      'startingPriceUsd',
-      'startingPriceInr',
-      'isMaintenanceMode',
-      'isComingSoonMode',
-      'maintenanceMessage',
-      'socialLinks',
-      'heroConfig',
-      'announcementBar',
-      'bannerImage',
-      'aiSettings',
-      'pricingPlans',
-      'demoCategories',
-    ];
-
-
-    const updates = {};
-    fields.forEach((f) => {
-      if (req.body[f] !== undefined) updates[f] = req.body[f];
-    });
+    const { _id, __v, createdAt, updatedAt, ...updates } = req.body;
 
     const userId = req.user?.id || req.user?._id;
     if (userId && mongoose.Types.ObjectId.isValid(userId)) {
@@ -51,6 +26,7 @@ export const updateSettings = async (req, res) => {
     }
 
     const settings = await dataStore.updateSettings(updates);
+
 
     return res.status(200).json({
       success: true,

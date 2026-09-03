@@ -31,7 +31,9 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
+import MarqueeTicker from '../../components/common/MarqueeTicker';
 import { SEO } from '../../components/common/CommonUI';
+
 
 const STATUS_BADGES = {
   'Draft': 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300',
@@ -235,8 +237,11 @@ export default function AdminDashboard() {
       <SEO title="Admin Overview — LOCAL2BRAND" description="Platform analytics, project requirements pipeline, and leads management." />
 
       <div className="space-y-8 select-text">
-        
+        {/* Important Updates & Live Sliding Marquee Ticker */}
+        <MarqueeTicker className="rounded-2xl shadow-sm" />
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold mb-1">
               <AshokaChakra size={11} />
