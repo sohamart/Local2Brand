@@ -11,9 +11,9 @@ const uploadBufferToCloudinary = (buffer, options = {}) => {
   });
 };
 
-// @desc    Upload single image
+// @desc    Upload single or multiple images (FormData or Base64 Data URI)
 // @route   POST /api/upload
-// @access  Private (or Public for guest profile setup)
+// @access  Public
 export const uploadImage = async (req, res) => {
   try {
     let filesList = [];
@@ -29,53 +29,66 @@ export const uploadImage = async (req, res) => {
       }
     }
 
-    if (!filesList || filesList.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide one or more image files to upload',
-      });
-    }
-
     const uploadedUrls = [];
 
-    for (const file of filesList) {
-      const buffer = file.buffer;
-      const mimetype = file.mimetype || 'image/jpeg';
+    // 1. Process Multipart Files
+    if (filesList && filesList.length > 0) {
+      for (const file of filesList) {
+        const buffer = file.buffer;
+        const mimetype = file.mimetype || 'image/jpeg';
 
-      if (isCloudinaryConfigured && buffer) {
+        if (isCloudinaryConfigured && buffer) {
+          try {
+            const result = await uploadBufferToCloudinary(buffer, {
+              folder: 'local2brand_assets',
+              resource_type: 'image',
+            });
+            uploadedUrls.push(result.secure_url);
+          } catch (cloudErr) {
+            console.warn('Cloudinary upload stream notice, using resilient data URI:', cloudErr.message);
+            const base64Data = buffer.toString('base64');
+            uploadedUrls.push(`data:${mimetype};base64,${base64Data}`);
+          }
+        } else if (buffer) {
+          const base64Data = buffer.toString('base64');
+          uploadedUrls.push(`data:${mimetype};base64,${base64Data}`);
+        } else if (file.path) {
+          if (isCloudinaryConfigured) {
+            try {
+              const result = await cloudinary.uploader.upload(file.path, {
+                folder: 'local2brand_assets',
+                resource_type: 'image',
+              });
+              uploadedUrls.push(result.secure_url);
+            } catch (e) {}
+          }
+        }
+      }
+    }
+
+    // 2. Process Base64 Data URI in JSON body
+    const base64Input = req.body?.image || req.body?.file || req.body?.avatar || req.body?.data;
+    if (base64Input && typeof base64Input === 'string' && base64Input.startsWith('data:image')) {
+      if (isCloudinaryConfigured) {
         try {
-          const result = await uploadBufferToCloudinary(buffer, {
+          const result = await cloudinary.uploader.upload(base64Input, {
             folder: 'local2brand_assets',
             resource_type: 'image',
           });
           uploadedUrls.push(result.secure_url);
         } catch (cloudErr) {
-          console.warn('Cloudinary upload stream notice, using resilient data URI:', cloudErr.message);
-          const base64Data = buffer.toString('base64');
-          uploadedUrls.push(`data:${mimetype};base64,${base64Data}`);
+          console.warn('Cloudinary base64 upload notice:', cloudErr.message);
+          uploadedUrls.push(base64Input);
         }
-      } else if (buffer) {
-        // Safe, self-contained Data URI that never 404s across serverless lambda instances
-        const base64Data = buffer.toString('base64');
-        uploadedUrls.push(`data:${mimetype};base64,${base64Data}`);
-      } else if (file.path) {
-        // Fallback for disk file if present
-        if (isCloudinaryConfigured) {
-          try {
-            const result = await cloudinary.uploader.upload(file.path, {
-              folder: 'local2brand_assets',
-              resource_type: 'image',
-            });
-            uploadedUrls.push(result.secure_url);
-          } catch (e) {}
-        }
+      } else {
+        uploadedUrls.push(base64Input);
       }
     }
 
     if (uploadedUrls.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Failed to process the uploaded file',
+        message: 'Please provide one or more image files or valid base64 data to upload',
       });
     }
 
@@ -93,4 +106,5 @@ export const uploadImage = async (req, res) => {
     });
   }
 };
+
 

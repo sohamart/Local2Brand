@@ -57,6 +57,8 @@ import AdminDemos from './pages/Admin/AdminDemos';
 import AdminBroadcast from './pages/Admin/AdminBroadcast';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminReviews from './pages/Admin/AdminReviews';
+import AdminAnalytics from './pages/Admin/AdminAnalytics';
+
 
 function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }) {
   const { displayLocation } = usePageTransition();
@@ -97,8 +99,10 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }
         {/* Admin Panel Routes */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="requirements" element={<AdminRequirements />} />
           <Route path="pricing" element={<AdminPricing />} />
+
           <Route path="form-builder" element={<AdminFormBuilder />} />
           <Route path="leads" element={<AdminLeads />} />
           <Route path="callbacks" element={<AdminCallbacks />} />

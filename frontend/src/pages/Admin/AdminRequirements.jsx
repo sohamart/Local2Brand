@@ -368,18 +368,19 @@ export default function AdminRequirements() {
       {/* ======================================================== */}
       {selectedReq && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-text"
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-text modal-touch-scroll"
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedReq(null);
           }}
-          onWheel={(e) => {
-            // Forward mousewheel & trackpad two-finger scroll directly to content body
-            if (contentScrollRef.current && e.target !== contentScrollRef.current && !contentScrollRef.current.contains(e.target)) {
-              contentScrollRef.current.scrollTop += e.deltaY;
-            }
-          }}
         >
-          <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[88vh] sm:max-h-[92vh] h-[88vh] sm:h-[92vh] flex flex-col min-h-0">
+          <div
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[88vh] sm:max-h-[92vh] h-[88vh] sm:h-[92vh] flex flex-col min-h-0"
+          >
+
             
             {/* Modal Fixed Top Header */}
             <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/80 shrink-0">
@@ -471,14 +472,17 @@ export default function AdminRequirements() {
             {/* Modal Smooth Scrollable Body */}
             <div
               ref={contentScrollRef}
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
               tabIndex={0}
-              className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 min-h-0 text-xs scroll-smooth custom-scrollbar focus:outline-none"
+              className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 min-h-0 text-xs custom-scrollbar modal-touch-scroll overscroll-contain focus:outline-none"
               style={{
                 overflowY: 'auto',
                 WebkitOverflowScrolling: 'touch',
-                touchAction: 'pan-y'
+                touchAction: 'pan-y',
               }}
             >
+
               
               {/* TAB 1: ALL 12 STEPS COMPLETE BREAKDOWN */}
               {activeInspectTab === 'all_steps' && (

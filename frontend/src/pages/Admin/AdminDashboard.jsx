@@ -90,8 +90,9 @@ export default function AdminDashboard() {
         api.get('/requirements/admin/all').catch(() => null),
         api.get('/queries').catch(() => null),
         api.get('/callbacks').catch(() => null),
-        api.get('/telemetry/stats').catch(() => null)
+        api.get('/analytics/stats').catch(() => null)
       ]);
+
 
       const allReqs = (reqsRes?.requirements && reqsRes.requirements.length > 0)
         ? reqsRes.requirements
@@ -198,9 +199,18 @@ export default function AdminDashboard() {
 
       const telData = telRes || statsRes?.telemetry;
       if (telData) {
-        setLiveVisitors(telData.liveOnlineUsers || 1);
-        setTodayViews(telData.totalPageViews || 1);
+        const liveCount = typeof telData.summary?.onlineUsersNow === 'number'
+          ? telData.summary.onlineUsersNow
+          : (telData.liveOnlineUsers ?? 1);
+
+        const viewsCount = typeof telData.summary?.todayViews === 'number'
+          ? telData.summary.todayViews
+          : (telData.totalPageViews ?? 1);
+
+        setLiveVisitors(liveCount);
+        setTodayViews(viewsCount);
       }
+
     } catch (err) {
       console.warn('Error fetching admin dashboard stats:', err);
     } finally {
@@ -263,36 +273,46 @@ export default function AdminDashboard() {
         {/* Real-time Online Visitors & Traffic Bar (Light & Dark Responsive) */}
         <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-gradient-to-r dark:from-slate-900 dark:via-indigo-950 dark:to-purple-950 border border-slate-200/90 dark:border-purple-500/20 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 transition-colors">
           
-          <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/5 border border-slate-200/80 dark:border-white/10">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center relative shrink-0">
+          <Link
+            to="/admin/analytics"
+            className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 hover:border-emerald-500/50 transition-all cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center relative shrink-0 group-hover:scale-105 transition-transform">
               <Radio className="w-5 h-5 animate-pulse" />
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 absolute top-1 right-1 animate-ping" />
             </div>
             <div>
               <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1.5">
                 <span>Active Online Now</span>
+                <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <div className="text-xl font-black text-slate-900 dark:text-white flex items-baseline gap-2">
                 <span>{liveVisitors} {liveVisitors === 1 ? 'User' : 'Users'}</span>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">● Live</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">● Live Presence</span>
               </div>
             </div>
-          </div>
+          </Link>
 
-          <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/5 border border-slate-200/80 dark:border-white/10">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+
+          <Link
+            to="/admin/analytics"
+            className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/5 border border-slate-200/80 dark:border-white/10 hover:border-blue-500/50 transition-all cursor-pointer group"
+          >
+            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
               <Eye className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider">
-                Total Page Views
+              <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>Total Page Views</span>
+                <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
               <div className="text-xl font-black text-slate-900 dark:text-white flex items-baseline gap-1.5">
                 <span>{todayViews.toLocaleString()}</span>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">▲ Live</span>
               </div>
             </div>
-          </div>
+          </Link>
+
 
           <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50/90 dark:bg-white/5 border border-slate-200/80 dark:border-white/10">
             <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">

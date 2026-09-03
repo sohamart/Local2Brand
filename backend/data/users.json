@@ -27,11 +27,12 @@
     "name": "LOCAL2BRAND Master Admin",
     "email": "sohamduttabwn@gmail.com",
     "role": "admin",
-    "avatar": "",
+    "avatar": "https://res.cloudinary.com/tm2pwzjj/image/upload/v1788448991/local2brand_assets/rppymgbg4jsambwm5g39.png",
     "phone": "",
     "company": "",
     "status": "active",
     "password": "$2b$10$29uMUu7xSPyzf38JMEYlU.JuQr2aa.tAw3irtEglf9nnSJwOzQ5.2",
-    "passwordHash": "$2b$10$29uMUu7xSPyzf38JMEYlU.JuQr2aa.tAw3irtEglf9nnSJwOzQ5.2"
+    "passwordHash": "$2b$10$29uMUu7xSPyzf38JMEYlU.JuQr2aa.tAw3irtEglf9nnSJwOzQ5.2",
+    "updatedAt": "2026-09-03T15:23:14.676Z"
   }
 ]

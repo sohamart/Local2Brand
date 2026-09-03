@@ -278,14 +278,32 @@ export default function UserDashboard() {
     reader.readAsDataURL(file);
 
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('file', file);
+      let finalUrl = '';
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('file', file);
+        const uploadRes = await api.post('/upload', formData);
+        if (uploadRes && uploadRes.success && uploadRes.url) {
+          finalUrl = uploadRes.url;
+        }
+      } catch (formErr) {
+        console.warn('FormData upload notice, falling back to base64 upload:', formErr.message);
+        // Base64 upload fallback
+        const base64Data = await new Promise((resolve) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result);
+          r.readAsDataURL(file);
+        });
+        const base64Res = await api.post('/upload', { image: base64Data });
+        if (base64Res && base64Res.success && base64Res.url) {
+          finalUrl = base64Res.url;
+        }
+      }
 
-      const uploadRes = await api.post('/upload', formData);
-      if (uploadRes && uploadRes.success && uploadRes.url) {
-        setAvatarUrl(uploadRes.url);
-        await updateProfile({ avatar: uploadRes.url });
+      if (finalUrl) {
+        setAvatarUrl(finalUrl);
+        await updateProfile({ avatar: finalUrl });
         setSaveSuccess(true);
         toast.update(toastId, {
           render: 'Avatar updated successfully! 📸',
@@ -293,10 +311,12 @@ export default function UserDashboard() {
           isLoading: false,
           autoClose: 2000
         });
+      } else {
+        throw new Error('Could not obtain image URL from server.');
       }
     } catch (uploadErr) {
       toast.update(toastId, {
-        render: 'Upload failed: ' + uploadErr.message,
+        render: 'Upload failed: ' + (uploadErr.message || 'Network error'),
         type: 'error',
         isLoading: false,
         autoClose: 3000
@@ -305,6 +325,7 @@ export default function UserDashboard() {
       setUploadingAvatar(false);
     }
   };
+
 
   const handleProfileSave = async (e) => {
     e.preventDefault();

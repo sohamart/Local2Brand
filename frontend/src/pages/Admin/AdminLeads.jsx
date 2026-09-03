@@ -370,12 +370,18 @@ export default function AdminLeads() {
         {/* Lead Details Modal */}
         {selectedLead && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-text"
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-text modal-touch-scroll"
             onClick={(e) => {
               if (e.target === e.currentTarget) setSelectedLead(null);
             }}
           >
-            <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[88vh] sm:max-h-[92vh] flex flex-col min-h-0">
+            <div
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
+              className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[88vh] sm:max-h-[92vh] flex flex-col min-h-0"
+            >
               
               <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950 shrink-0">
                 <div>
@@ -393,9 +399,12 @@ export default function AdminLeads() {
               </div>
 
               <div
-                className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs flex-1 min-h-0 custom-scrollbar"
+                data-lenis-prevent="true"
+                onWheel={(e) => e.stopPropagation()}
+                className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs flex-1 min-h-0 custom-scrollbar modal-touch-scroll overscroll-contain"
                 style={{ WebkitOverflowScrolling: 'touch' }}
               >
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                   <div><strong className="block text-slate-400 text-[10px]">Phone:</strong> <a href={`tel:${selectedLead.phone}`} className="text-emerald-600 font-bold hover:underline font-mono">{selectedLead.phone}</a></div>
                   <div><strong className="block text-slate-400 text-[10px]">Email:</strong> <a href={`mailto:${selectedLead.email}`} className="text-blue-600 hover:underline">{selectedLead.email}</a></div>
