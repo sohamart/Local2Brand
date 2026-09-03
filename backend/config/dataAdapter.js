@@ -230,7 +230,12 @@ export const dataStore = {
   // Users
   async findUserByEmail(email) {
     if (!email) return null;
-    const cleanEmail = email.toLowerCase().trim();
+    const cleanEmail = String(email).toLowerCase().trim();
+    if (mongoose.connection.readyState !== 1) {
+      try {
+        await connectDB();
+      } catch (e) {}
+    }
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
@@ -250,6 +255,11 @@ export const dataStore = {
   async findUserById(id) {
     if (!id) return null;
     const cleanId = String(id).trim();
+    if (mongoose.connection.readyState !== 1) {
+      try {
+        await connectDB();
+      } catch (e) {}
+    }
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
@@ -276,6 +286,7 @@ export const dataStore = {
     const { password, passwordHash, ...rest } = user;
     return rest;
   },
+
 
   async createUser(userData) {
     const cleanEmail = userData.email.toLowerCase().trim();
@@ -742,7 +753,7 @@ export const dataStore = {
     if (isDbConnected()) {
       const { User } = await import('../models/User.js');
       for (const email of adminEmails) {
-        const exists = await User.findOne({ email });
+        let exists = await User.findOne({ email }).select('+password');
         if (!exists) {
           await User.create({
             name: 'LOCAL2BRAND Master Admin',
@@ -753,8 +764,17 @@ export const dataStore = {
             company: 'LOCAL2BRAND HQ',
           });
           console.log(`👑 Admin Account Created (MongoDB): ${email} / ${adminPassword}`);
+        } else {
+          // If password doesn't match current admin password, update it
+          const isMatch = await exists.matchPassword(adminPassword);
+          if (!isMatch) {
+            exists.password = adminPassword;
+            await exists.save();
+            console.log(`👑 Admin Password Synced (MongoDB): ${email}`);
+          }
         }
       }
+
     } else {
       const users = readLocalStore('users') || [];
       const salt = await bcrypt.genSalt(10);
