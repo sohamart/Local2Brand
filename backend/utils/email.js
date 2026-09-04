@@ -28,23 +28,31 @@ export const getClientUrl = (path = '') => {
   return `${base}${cleanPath}`;
 };
 
-// Create transporter
+// Cached singleton transporter with connection pooling for lightning fast dispatch
+let cachedTransporter = null;
+
 const createTransporter = () => {
+  if (cachedTransporter) return cachedTransporter;
+
   const host = process.env.EMAIL_HOST;
   const port = process.env.EMAIL_PORT || 587;
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
 
   if (host && user && pass && pass !== 'your_smtp_app_password') {
-    return nodemailer.createTransport({
+    cachedTransporter = nodemailer.createTransport({
       host,
       port: Number(port),
       secure: Number(port) === 465,
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
       auth: {
         user,
         pass,
       },
     });
+    return cachedTransporter;
   }
 
   // If no SMTP configured, return null for mock logger

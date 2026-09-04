@@ -1039,8 +1039,9 @@ export default function GetStarted() {
     );
   };
 
-    // Explicit Manual Save Action with Toast Feedback
+  // Explicit Manual Save Action with Toast Feedback
   const handleManualSave = (silent = false) => {
+    const isSilent = silent === true;
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('l2b_get_started_step', String(currentStepIndex));
@@ -1052,18 +1053,18 @@ export default function GetStarted() {
         const now = new Date();
         const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         setLastSavedTime(timeStr);
-        if (!silent) {
+        if (!isSilent) {
           toast.success(
             lang === 'bn'
               ? '✨ আপনার সমস্ত তথ্য ও কুপন সফলভাবে সেভ করা হয়েছে!'
               : lang === 'hi'
               ? '✨ आपकी सभी जानकारी और कूपन सफलतापूर्वक सहेजे गए!'
-              : '✨ Progress and coupon saved successfully!'
+              : '✨ Progress and draft saved successfully!'
           );
         }
       } catch (err) {
         console.warn('Manual save error:', err);
-        if (!silent) toast.error('Failed to save progress locally');
+        if (!isSilent) toast.error('Failed to save progress locally');
       }
     }
   };
@@ -1547,31 +1548,9 @@ export default function GetStarted() {
     setErrorMessage('');
 
     try {
-      let finalUploadedUrls = (formData.uploadedImages || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
-
-      if (selectedFileObjects.length > 0) {
-        const uploadToastId = toast.loading(`Uploading ${selectedFileObjects.length} photo(s) to cloud storage... ⏳`);
-        const data = new FormData();
-        selectedFileObjects.forEach((f) => {
-          data.append('images', f);
-        });
-
-        try {
-          const uploadRes = await api.post('/upload', data);
-          if (uploadRes && uploadRes.success && (uploadRes.urls || uploadRes.url)) {
-            const newUrls = uploadRes.urls || [uploadRes.url];
-            finalUploadedUrls = Array.from(new Set([...finalUploadedUrls, ...newUrls]));
-            toast.update(uploadToastId, {
-              render: `${selectedFileObjects.length} photo(s) uploaded successfully! ☁️`,
-              type: 'success',
-              isLoading: false,
-              autoClose: 2000
-            });
-          }
-        } catch (uploadErr) {
-          console.warn('Upload warning:', uploadErr.message);
-        }
-      }
+      const finalUploadedUrls = (formData.uploadedImages || []).filter(
+        (u) => typeof u === 'string' && u.startsWith('http')
+      );
 
       // Structure rich answers dictionary for MongoDB & Admin inspect modal
       const answersMap = {

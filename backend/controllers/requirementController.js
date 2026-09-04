@@ -140,31 +140,33 @@ export const submitRequirement = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Requirement session not found' });
     }
 
-    // Admin Notification
-    const businessName = doc.clientInfo?.businessName || doc.websiteTypeName || 'New Project';
-    const clientName = doc.clientInfo?.ownerName || doc.clientInfo?.contactPerson || 'Client';
-    const reqId = doc.requirementId || targetId;
-
-    dataStore.createNotification({
-      title: `New Requirement Submitted (${reqId})`,
-      message: `${clientName} submitted complete specifications for ${businessName}`,
-      type: 'requirement',
-      link: '/admin/requirements',
-    }).catch((err) => console.warn('Notification error:', err.message));
-
-    // Send ultra-premium styled confirmation emails
-    try {
-      sendRequirementConfirmationEmail(doc).catch((err) => console.warn('Client requirement email error:', err.message));
-      sendAdminRequirementAlert(doc).catch((err) => console.warn('Admin requirement alert error:', err.message));
-    } catch (mailErr) {
-      console.warn('Email dispatch error:', mailErr.message);
-    }
-
+    // Immediately respond to client so UI transitions in milliseconds
     res.status(200).json({
       success: true,
       message: 'Your website requirements have been submitted successfully.',
-      requirementId: doc.requirementId || reqId,
+      requirementId: doc.requirementId || targetId,
       requirement: doc
+    });
+
+    // Background asynchronous dispatch for admin notifications & emails (Non-blocking)
+    setImmediate(async () => {
+      try {
+        const businessName = doc.clientInfo?.businessName || doc.websiteTypeName || 'New Project';
+        const clientName = doc.clientInfo?.ownerName || doc.clientInfo?.contactPerson || 'Client';
+        const reqId = doc.requirementId || targetId;
+
+        dataStore.createNotification({
+          title: `New Requirement Submitted (${reqId})`,
+          message: `${clientName} submitted complete specifications for ${businessName}`,
+          type: 'requirement',
+          link: '/admin/requirements',
+        }).catch((err) => console.warn('Notification error:', err.message));
+
+        sendRequirementConfirmationEmail(doc).catch((err) => console.warn('Client requirement email error:', err.message));
+        sendAdminRequirementAlert(doc).catch((err) => console.warn('Admin requirement alert error:', err.message));
+      } catch (bgErr) {
+        console.warn('Background requirement alert error:', bgErr.message);
+      }
     });
   } catch (error) {
     console.error('Error submitting requirement:', error);
