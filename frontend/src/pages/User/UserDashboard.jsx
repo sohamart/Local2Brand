@@ -900,8 +900,8 @@ export default function UserDashboard() {
               </button>
             </div>
 
-            {/* Non-Accepted / Rejected Orders Notification Banner */}
-            {requirements.some((r) => r.status === 'Rejected') && (
+            {/* Non-Accepted / Rejected / Cancelled Orders Notification Banner */}
+            {requirements.some((r) => r.status === 'Rejected' || r.status === 'Cancelled' || r.isDeleted) && (
               <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
@@ -909,10 +909,10 @@ export default function UserDashboard() {
                   </div>
                   <div>
                     <h4 className="text-xs sm:text-sm font-black text-rose-900 dark:text-rose-200">
-                      One or more website project submissions were not accepted
+                      Project Status Notice: Rejected or Cancelled Orders
                     </h4>
                     <p className="text-xs text-rose-700 dark:text-rose-300 mt-0.5">
-                      Please check your email for the detailed architectural review, or view the reason on the rejected card below.
+                      Specific review/cancellation reasons are shown directly on the project cards below. You can submit a revised specification anytime.
                     </p>
                   </div>
                 </div>
@@ -984,18 +984,20 @@ export default function UserDashboard() {
                           </span>
                         </div>
 
-                        {/* Rejection / Non-Acceptance Notice on Card */}
-                        {req.status === 'Rejected' && (
+                        {/* Rejection / Cancellation Notice on Card */}
+                        {(req.status === 'Rejected' || req.status === 'Cancelled' || req.isDeleted) && (
                           <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 space-y-1.5 text-xs">
                             <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300 font-extrabold uppercase text-[10px] tracking-wider">
                               <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                              <span>Project Submission Not Accepted</span>
+                              <span>{req.status === 'Rejected' ? 'Project Submission Not Accepted' : 'Order Cancelled / Removed'}</span>
                             </div>
                             <p className="text-slate-800 dark:text-slate-200 font-bold">
-                              {req.rejectionReason ? `Reason: ${req.rejectionReason}` : 'Project parameters could not be accepted. Check your email for details.'}
+                              {req.rejectionReason || req.deletionReason || req.internalNotes
+                                ? `Reason: ${req.rejectionReason || req.deletionReason || req.internalNotes}`
+                                : 'Project parameters could not be accepted under current scope. Check your email for details.'}
                             </p>
                             <p className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
-                              💡 Check your email for full review details or submit a revised project specification.
+                              💡 Check your email for full details or submit a revised project specification.
                             </p>
                           </div>
                         )}
@@ -1763,6 +1765,22 @@ export default function UserDashboard() {
 
             {/* Modal Scrollable Content */}
             <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-xs">
+              
+              {/* Rejection / Cancellation Status Alert in Modal */}
+              {(viewingReqSpec.status === 'Rejected' || viewingReqSpec.status === 'Cancelled' || viewingReqSpec.isDeleted) && (
+                <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300 font-extrabold uppercase text-[11px] tracking-wider">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{viewingReqSpec.status === 'Rejected' ? 'Submission Not Accepted' : 'Order Cancelled / Removed'}</span>
+                  </div>
+                  <p className="text-slate-900 dark:text-slate-100 font-bold text-xs leading-relaxed">
+                    {viewingReqSpec.rejectionReason || viewingReqSpec.deletionReason || viewingReqSpec.internalNotes
+                      ? `Reason: ${viewingReqSpec.rejectionReason || viewingReqSpec.deletionReason || viewingReqSpec.internalNotes}`
+                      : 'Project parameters could not be accepted under the current configuration.'}
+                  </p>
+                </div>
+              )}
+
               {/* Client Info Grid */}
               <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                 <div>

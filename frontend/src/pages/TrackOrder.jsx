@@ -430,17 +430,19 @@ export default function TrackOrder() {
                   </div>
                 </div>
 
-                {/* Rejection / Non-Acceptance Notice Banner */}
-                {trackedOrder.status === 'Rejected' && (
+                {/* Rejection / Cancellation Notice Banner */}
+                {(trackedOrder.status === 'Rejected' || trackedOrder.status === 'Cancelled' || trackedOrder.isDeleted) && (
                   <div className="p-4 sm:p-5 rounded-2xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 space-y-3">
                     <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-extrabold uppercase text-xs tracking-wider">
                       <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                      <span>Project Requirement Submission Not Accepted</span>
+                      <span>{trackedOrder.status === 'Rejected' ? 'Project Requirement Submission Not Accepted' : 'Order Cancelled / Removed'}</span>
                     </div>
                     <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-rose-100 dark:border-rose-900/60 text-xs sm:text-sm text-slate-800 dark:text-slate-200 shadow-2xs">
-                      <strong className="text-rose-700 dark:text-rose-400 block text-[11px] uppercase font-bold mb-1">Architect Review Reason:</strong>
+                      <strong className="text-rose-700 dark:text-rose-400 block text-[11px] uppercase font-bold mb-1">
+                        {trackedOrder.status === 'Rejected' ? 'Architect Review Reason:' : 'Cancellation Reason:'}
+                      </strong>
                       <p className="font-semibold leading-relaxed">
-                        {trackedOrder.rejectionReason || 'Project parameters could not be approved at this time. Please check your registered email for complete technical feedback from our lead engineer.'}
+                        {trackedOrder.rejectionReason || trackedOrder.deletionReason || trackedOrder.internalNotes || 'Project parameters could not be approved at this time. Please check your registered email for complete technical feedback from our lead engineer.'}
                       </p>
                     </div>
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1 text-xs">

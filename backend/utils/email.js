@@ -3,25 +3,23 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Universal Base URL Resolver (Always respects CLIENT_URL / FRONTEND_URL from .env with path appending)
+// Universal Base URL Resolver (Always respects CLIENT_URL / FRONTEND_URL from .env with fallback to local2brand.vercel.app)
 export const getClientUrl = (path = '') => {
   let base = '';
+  
   if (process.env.FRONTEND_URL) {
-    base = process.env.FRONTEND_URL.replace(/\/$/, '');
+    base = process.env.FRONTEND_URL.trim().replace(/\/$/, '');
   } else if (process.env.CLIENT_URL) {
     const rawUrls = process.env.CLIENT_URL.split(',').map((u) => u.trim().replace(/\/$/, '')).filter(Boolean);
     if (rawUrls.length > 0) {
-      // Prioritize public production domain if available
+      // Prioritize public production URL over localhost if available
       const publicUrl = rawUrls.find((u) => !u.includes('localhost') && !u.includes('127.0.0.1'));
-      if (process.env.NODE_ENV === 'production' && publicUrl) {
-        base = publicUrl;
-      } else {
-        base = rawUrls[0];
-      }
+      base = publicUrl || rawUrls[0];
     }
   }
 
-  if (!base) {
+  // Sanitize obsolete or empty domain to standard production domain
+  if (!base || base.includes('local2brandofficial.com')) {
     base = 'https://local2brand.vercel.app';
   }
 

@@ -370,6 +370,7 @@ export const updateRequirementStatus = async (req, res) => {
 
     if (status === 'Rejected' || status === 'Cancelled') {
       updatePayload.rejectionReason = finalRejectionReason;
+      updatePayload.deletionReason = finalRejectionReason;
       updatePayload.rejectedAt = new Date();
     }
 
@@ -421,41 +422,57 @@ export const updateRequirementStatus = async (req, res) => {
   }
 };
 
-// @desc    Delete Requirement permanently (Admin)
+// @desc    Delete/Cancel Requirement with reason (Admin)
 // @route   DELETE /api/requirements/admin/:id or DELETE /api/requirements/:id
 // @access  Admin
 export const deleteRequirement = async (req, res) => {
   try {
     const { id } = req.params;
-    const reason = req.body?.reason || req.query?.reason || '';
+    const reason = req.body?.reason || req.query?.reason || 'Cancelled/Deleted by Administrator';
     let doc = null;
 
     if (mongoose.connection.readyState === 1) {
       const query = mongoose.Types.ObjectId.isValid(id)
         ? { $or: [{ requirementId: id }, { _id: id }] }
         : { requirementId: id };
-      doc = await Requirement.findOneAndDelete(query);
+      
+      // Soft-delete and archive record with status 'Cancelled' & reason so it displays in user portal
+      doc = await Requirement.findOneAndUpdate(
+        query,
+        {
+          $set: {
+            isDeleted: true,
+            status: 'Cancelled',
+            deletionReason: reason,
+            rejectionReason: reason,
+            deletedAt: new Date(),
+            updatedAt: new Date()
+          }
+        },
+        { new: true }
+      );
     }
 
     if (!doc) {
       const allReqs = dataStore.read('requirements') || [];
       const existing = allReqs.find((r) => r.requirementId === id || r._id?.toString() === id);
       if (existing) {
-        doc = existing;
-        dataStore.delete('requirements', existing._id);
+        doc = dataStore.update('requirements', existing._id, {
+          isDeleted: true,
+          status: 'Cancelled',
+          deletionReason: reason,
+          rejectionReason: reason,
+          deletedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
       }
-    } else {
-      // Also ensure removed from dataStore if present
-      try {
-        dataStore.delete('requirements', doc._id?.toString() || id);
-      } catch (e) {}
     }
 
     if (!doc) {
       return res.status(404).json({ success: false, message: 'Requirement submission not found' });
     }
 
-    // Automatically remove attached photos from Cloudinary
+    // Automatically remove attached photos from Cloudinary if needed
     try {
       const allDocImages = [
         ...(Array.isArray(doc.images) ? doc.images : []),
@@ -481,7 +498,8 @@ export const deleteRequirement = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Requirement submission #${doc.requirementId || id} deleted permanently from database and Cloudinary storage.`,
+      message: `Requirement submission #${doc.requirementId || id} cancelled and archived with reason.`,
+      requirement: doc,
       deletedId: id
     });
   } catch (error) {

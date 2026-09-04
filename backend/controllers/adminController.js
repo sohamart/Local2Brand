@@ -1,5 +1,5 @@
 import { dataStore } from '../config/dataAdapter.js';
-import { sendEmail } from '../utils/email.js';
+import { sendEmail, getClientUrl } from '../utils/email.js';
 import { getLiveTelemetryStats } from './telemetryController.js';
 import mongoose from 'mongoose';
 
@@ -196,9 +196,13 @@ export const sendBroadcastEmail = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No valid recipient email addresses found' });
     }
 
+    const resolvedActionUrl = actionUrl
+      ? (actionUrl.startsWith('http://') || actionUrl.startsWith('https://') ? actionUrl : getClientUrl(actionUrl))
+      : getClientUrl();
+
     const ctaButton = actionText && actionUrl
       ? `<div style="margin-top: 24px; margin-bottom: 8px; text-align: center;">
-           <a href="${actionUrl}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); background-color: #9333ea; color: #ffffff !important; padding: 14px 34px; text-decoration: none; border-radius: 12px; font-size: 14px; font-weight: 900; display: inline-block; box-shadow: 0 8px 24px rgba(192, 38, 211, 0.45); letter-spacing: 0.4px;">
+           <a href="${resolvedActionUrl}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); background-color: #9333ea; color: #ffffff !important; padding: 14px 34px; text-decoration: none; border-radius: 12px; font-size: 14px; font-weight: 900; display: inline-block; box-shadow: 0 8px 24px rgba(192, 38, 211, 0.45); letter-spacing: 0.4px;">
              ${actionText} &rarr;
            </a>
          </div>`

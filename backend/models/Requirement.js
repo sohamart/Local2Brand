@@ -88,6 +88,17 @@ const RequirementSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  deletionReason: {
+    type: String,
+    default: ''
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+  deletedAt: {
+    type: Date
+  },
   rejectedAt: {
     type: Date
   },
