@@ -52,7 +52,8 @@ const createTransporter = () => {
 };
 
 export const sendEmail = async ({ to, subject, html, text }) => {
-  const fromEmail = process.env.EMAIL_FROM || process.env.SUPPORT_EMAIL || 'LOCAL2BRAND <stackaddacontact@gmail.com>';
+  const fromEmail = process.env.EMAIL_FROM || 'LOCAL2BRAND <stackaddacontact@gmail.com>';
+  const supportEmail = process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
   const transporter = createTransporter();
 
   if (!transporter) {
@@ -66,10 +67,16 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   try {
     const info = await transporter.sendMail({
       from: fromEmail,
+      replyTo: `LOCAL2BRAND Desk <${supportEmail}>`,
       to,
       subject,
       text: text || '',
       html,
+      headers: {
+        'X-Mailer': 'LOCAL2BRAND Dispatch Engine 2026',
+        'X-Priority': '3',
+        'Auto-Submitted': 'auto-generated'
+      }
     });
     console.log(`✅ Email sent successfully to ${to} (MessageId: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
@@ -989,70 +996,72 @@ export const sendGameRewardWinEmail = async ({ user, prize }) => {
   });
 };
 
-// 14. Requirement Deletion Notice (to Client)
+// 14. Requirement Deletion / Cancellation Notice (to Client)
 export const sendRequirementDeletionEmail = async (reqDoc, reason = '') => {
   const clientEmail = reqDoc.clientInfo?.email || reqDoc.email;
   if (!clientEmail) return;
 
   const clientUrl = getClientUrl();
-  const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString().slice(-6).toUpperCase() : 'REQ-DELETED');
+  const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString().slice(-6).toUpperCase() : 'REQ-ID');
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
   const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Website Project';
 
-  const subject = `Requirement Submission #${reqId} Removed — LOCAL2BRAND`;
+  const subject = `Update regarding your project specification #${reqId} — LOCAL2BRAND`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
-      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
         Hi ${clientName},
       </p>
       <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
-        This is a notification to confirm that your project requirement submission for <strong>${businessName}</strong> (Ref: <code style="font-family: monospace; font-weight: 800; color: #dc2626;">#${reqId}</code>) has been removed from our active project queue.
+        This email is to confirm that your project requirement specification for <strong>${businessName}</strong> (Ref: <code style="font-family: monospace; font-weight: 800; color: #4338ca;">#${reqId}</code>) has been concluded and archived in our queue.
       </p>
 
       ${reason ? `
-        <div class="bg-box border-theme" style="background-color: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 14px 16px; margin: 14px 0;">
-          <div style="font-size: 11px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Reason / Notes:</div>
-          <div style="font-size: 13px; font-weight: 700; color: #881337; line-height: 1.5;">${reason}</div>
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 14px 16px; margin: 14px 0;">
+          <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Status Note:</div>
+          <div style="font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.5;">${reason}</div>
         </div>
       ` : ''}
 
-      <div class="bg-box border-theme" style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px 16px; margin: 16px 0;">
+      <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin: 16px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
           <tr>
-            <td style="padding: 4px 0; color: #991b1b; font-weight: 700; width: 35%;">Submission ID:</td>
-            <td style="padding: 4px 0; color: #7f1d1d; font-family: monospace; font-weight: 800;">#${reqId}</td>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 600; width: 35%;">Submission Ref:</td>
+            <td style="padding: 4px 0; color: #0f172a; font-family: monospace; font-weight: 800;">#${reqId}</td>
           </tr>
           <tr>
-            <td style="padding: 4px 0; color: #991b1b; font-weight: 700;">Project / Brand:</td>
-            <td style="padding: 4px 0; color: #7f1d1d; font-weight: 700;">${businessName}</td>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 600;">Project / Brand:</td>
+            <td style="padding: 4px 0; color: #0f172a; font-weight: 700;">${businessName}</td>
           </tr>
           <tr>
-            <td style="padding: 4px 0; color: #991b1b; font-weight: 700;">Status:</td>
-            <td style="padding: 4px 0; color: #b91c1c; font-weight: 800;">Closed &amp; Removed</td>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 600;">Status:</td>
+            <td style="padding: 4px 0; color: #4338ca; font-weight: 700;">Concluded &amp; Archived</td>
           </tr>
         </table>
       </div>
 
       <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">
-        If you would like to start a new project or explore our latest 48-hour launch templates, feel free to submit a fresh project inquiry anytime.
+        If you would like to explore our latest 48-hour launch packages or submit a revised project scope, our team is always ready to assist you.
       </p>
     </div>
   `;
 
   const html = wrapAgencyEmail({
-    preheader: `Project requirement #${reqId} for ${businessName} has been removed.`,
-    headerBadge: '🗑️ SUBMISSION UPDATE',
-    title: `Requirement Submission Removed`,
+    preheader: `Update on project requirement #${reqId} for ${businessName}.`,
+    headerBadge: '📋 PROJECT STATUS UPDATE',
+    title: `Project Status Update`,
     subtitle: `Project #${reqId} &bull; ${businessName}`,
     orderId: reqId,
     contentHtml,
     ctaText: 'Start a New Website Project',
     ctaUrl: `${clientUrl}/get-started`,
-    footerNote: 'Need help or want to re-open this? Reply directly to this email.',
+    footerNote: 'Need assistance or have questions? Reply directly to this email.',
   });
 
-  return await sendEmail({ to: clientEmail, subject, html, text: `Your project requirement #${reqId} for ${businessName} has been removed from our queue. Reason: ${reason || 'N/A'}` });
+  const plainText = `Hi ${clientName},\n\nThis email is to confirm that your project requirement specification #${reqId} for ${businessName} has been concluded and archived in our queue.\n\nStatus Note: ${reason || 'Archived by administration'}\n\nIf you would like to submit a new project specification, visit: ${clientUrl}/get-started\n\nBest regards,\nLOCAL2BRAND Team`;
+
+  return await sendEmail({ to: clientEmail, subject, html, text: plainText });
 };
 
 // 14b. Requirement Rejection Notice (to Client)
@@ -1065,51 +1074,51 @@ export const sendRequirementRejectedEmail = async (reqDoc, reason = '') => {
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
   const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Website Project';
 
-  const subject = `Important Update: Project #${reqId} Not Accepted — LOCAL2BRAND`;
+  const subject = `Project Specification Review: #${reqId} (${businessName}) — LOCAL2BRAND`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
-      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
         Hi ${clientName},
       </p>
       <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
-        Thank you for submitting your website specifications for <strong>${businessName}</strong> (Ref: <code style="font-family: monospace; font-weight: 800; color: #e11d48;">#${reqId}</code>). After review by our architecture team, we are unable to accept or proceed with this project under the current parameters.
+        Thank you for submitting your website specifications for <strong>${businessName}</strong> (Ref: <code style="font-family: monospace; font-weight: 800; color: #4338ca;">#${reqId}</code>). Our engineering and architecture team has reviewed your requirements.
       </p>
 
       ${reason ? `
-        <div class="bg-box border-theme" style="background-color: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 14px 16px; margin: 16px 0;">
-          <div style="font-size: 11px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Reason for Non-Acceptance:</div>
-          <div style="font-size: 13px; font-weight: 700; color: #881337; line-height: 1.5;">${reason}</div>
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 14px 16px; margin: 16px 0;">
+          <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Architecture Review Feedback:</div>
+          <div style="font-size: 13px; font-weight: 600; color: #1e293b; line-height: 1.5;">${reason}</div>
         </div>
       ` : ''}
 
       <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin: 16px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
           <tr>
-            <td style="padding: 4px 0; color: #64748b; font-weight: 700; width: 35%;">Submission ID:</td>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 600; width: 35%;">Submission ID:</td>
             <td style="padding: 4px 0; color: #0f172a; font-family: monospace; font-weight: 800;">#${reqId}</td>
           </tr>
           <tr>
-            <td style="padding: 4px 0; color: #64748b; font-weight: 700;">Project / Brand:</td>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 600;">Project / Brand:</td>
             <td style="padding: 4px 0; color: #0f172a; font-weight: 700;">${businessName}</td>
           </tr>
           <tr>
-            <td style="padding: 4px 0; color: #64748b; font-weight: 700;">Status:</td>
-            <td style="padding: 4px 0; color: #e11d48; font-weight: 800;">Not Accepted / Rejected</td>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 600;">Next Recommended Step:</td>
+            <td style="padding: 4px 0; color: #4338ca; font-weight: 700;">Submit Revised Specifications</td>
           </tr>
         </table>
       </div>
 
       <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">
-        If you would like to adjust the specifications, discuss custom requirements with our lead developer, or start a new inquiry, we would love to help you build your dream digital platform.
+        If you would like to adjust the specifications or discuss custom modules with our lead developer, please feel free to submit a revised requirement form or contact us anytime.
       </p>
     </div>
   `;
 
   const html = wrapAgencyEmail({
-    preheader: `Important update regarding your project #${reqId} for ${businessName}.`,
-    headerBadge: '⚠️ PROJECT STATUS UPDATE',
-    title: `Project Submission Not Accepted`,
+    preheader: `Architecture review feedback for project #${reqId} (${businessName}).`,
+    headerBadge: '📋 PROJECT ARCHITECTURE REVIEW',
+    title: `Project Review &amp; Recommendations`,
     subtitle: `Project #${reqId} &bull; ${businessName}`,
     orderId: reqId,
     contentHtml,
@@ -1118,7 +1127,9 @@ export const sendRequirementRejectedEmail = async (reqDoc, reason = '') => {
     footerNote: 'Have questions or want to discuss alternatives? Reply directly to this email.',
   });
 
-  return await sendEmail({ to: clientEmail, subject, html, text: `Your project requirement #${reqId} for ${businessName} was not accepted. Reason: ${reason || 'Parameters not supported'}` });
+  const plainText = `Hi ${clientName},\n\nThank you for submitting your website specifications for ${businessName} (Ref: #${reqId}). Our engineering team has reviewed your submission.\n\nReview Feedback: ${reason || 'Parameters require revision before proceeding.'}\n\nYou can submit a revised requirement form here: ${clientUrl}/get-started\n\nBest regards,\nLOCAL2BRAND Engineering Team`;
+
+  return await sendEmail({ to: clientEmail, subject, html, text: plainText });
 };
 
 // 15. Admin Alert on Requirement Deletion
@@ -1130,25 +1141,25 @@ export const sendAdminRequirementDeletionAlert = async (reqDoc, reason = '') => 
   const clientPhone = reqDoc.clientInfo?.mobile || 'No phone';
   const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Project';
 
-  const subject = `🗑️ [REQUIREMENT DELETED] #${reqId} — ${businessName}`;
+  const subject = `[Admin Notice] Requirement #${reqId} archived (${businessName})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
       <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
-        A project requirement submission has been permanently deleted from the database via the Admin Console.
+        A project requirement submission has been archived via the Admin Console.
       </p>
 
       ${reason ? `
-        <div class="bg-box border-theme" style="background-color: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 14px 16px; margin: 14px 0;">
-          <div style="font-size: 11px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Deletion Reason:</div>
-          <div style="font-size: 13px; font-weight: 700; color: #881337; line-height: 1.5;">${reason}</div>
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 14px 16px; margin: 14px 0;">
+          <div style="font-size: 11px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Reason:</div>
+          <div style="font-size: 13px; font-weight: 700; color: #1e293b; line-height: 1.5;">${reason}</div>
         </div>
       ` : ''}
 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 12px;">
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
           <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600; width: 34%;">Requirement ID:</td>
-          <td style="padding: 10px 12px; font-family: monospace; font-weight: 800; color: #dc2626; font-size: 13px;">${reqId}</td>
+          <td style="padding: 10px 12px; font-family: monospace; font-weight: 800; color: #4338ca; font-size: 13px;">${reqId}</td>
         </tr>
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
           <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600;">Business / Brand:</td>
@@ -1159,7 +1170,7 @@ export const sendAdminRequirementDeletionAlert = async (reqDoc, reason = '') => 
           <td style="padding: 10px 12px; color: #334155; font-size: 13px; font-weight: 700;">${clientName} (${clientPhone} &bull; ${clientEmail})</td>
         </tr>
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
-          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600;">Deleted At:</td>
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600;">Archived At:</td>
           <td style="padding: 10px 12px; color: #64748b; font-size: 12px; font-mono font-weight: 600;">${new Date().toLocaleString()}</td>
         </tr>
       </table>
@@ -1167,9 +1178,9 @@ export const sendAdminRequirementDeletionAlert = async (reqDoc, reason = '') => 
   `;
 
   const html = wrapAgencyEmail({
-    preheader: `Requirement #${reqId} (${businessName}) deleted from database.`,
-    headerBadge: '🗑️ ADMIN RECORD DELETION',
-    title: `Requirement Deleted from Database`,
+    preheader: `Requirement #${reqId} (${businessName}) archived.`,
+    headerBadge: '📁 ADMIN RECORD ARCHIVED',
+    title: `Requirement Archived`,
     subtitle: `Record: #${reqId} &bull; ${businessName}`,
     orderId: reqId,
     contentHtml,
@@ -1177,7 +1188,7 @@ export const sendAdminRequirementDeletionAlert = async (reqDoc, reason = '') => 
     ctaUrl: `${getClientUrl()}/admin/requirements`,
   });
 
-  return await sendEmail({ to: recipients, subject, html, text: `Requirement #${reqId} for ${businessName} deleted from database. Reason: ${reason || 'N/A'}` });
+  return await sendEmail({ to: recipients, subject, html, text: `Requirement #${reqId} for ${businessName} archived. Reason: ${reason || 'N/A'}` });
 };
 
 // 16. Callback Request Deletion Notice (to Client)

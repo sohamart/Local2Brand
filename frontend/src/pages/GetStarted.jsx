@@ -824,6 +824,7 @@ export default function GetStarted() {
 
   const [selectedFileObjects, setSelectedFileObjects] = useState([]);
   const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [publishedFormSchema, setPublishedFormSchema] = useState(null);
   const [databaseDemos, setDatabaseDemos] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -1328,33 +1329,112 @@ export default function GetStarted() {
     setTimeout(() => setCopiedAi(false), 3000);
   };
 
-  const handleMultiImageUpload = (e) => {
+  // Direct Cloud Upload for Store/Logo Photos (Immediate & Persistent)
+  const handleMultiImageUpload = async (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    if (selectedFileObjects.length + files.length > 20) {
+    const currentUploaded = Array.isArray(formData.uploadedImages) ? formData.uploadedImages : [];
+    if (currentUploaded.length + files.length > 20) {
       toast.error('You can attach up to 20 photos in total.');
       return;
     }
 
-    setSelectedFileObjects((prev) => [...prev, ...files]);
-    files.forEach((f) => {
-      const preview = URL.createObjectURL(f);
-      setImagePreviewUrls((prev) => [...prev, preview]);
-    });
-    toast.success(`${files.length} photo(s) selected.`);
+    setIsUploadingImages(true);
+    const toastId = toast.loading(`Uploading ${files.length} photo(s) to cloud storage... ⏳`);
+
+    try {
+      const newUrls = [];
+
+      // 1. Try Multipart upload with FormData
+      try {
+        const data = new FormData();
+        files.forEach((f) => {
+          data.append('images', f);
+        });
+        const res = await api.post('/upload', data);
+        if (res && res.success && (res.urls || res.url)) {
+          const list = res.urls || [res.url];
+          list.forEach((u) => {
+            if (u && typeof u === 'string') newUrls.push(u);
+          });
+        }
+      } catch (formErr) {
+        console.warn('Multipart upload notice, attempting Base64 upload fallback:', formErr?.message);
+        
+        // 2. Base64 upload fallback
+        for (const file of files) {
+          try {
+            const base64Data = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            const b64Res = await api.post('/upload', { image: base64Data });
+            if (b64Res && b64Res.success && (b64Res.urls || b64Res.url)) {
+              const list = b64Res.urls || [b64Res.url];
+              list.forEach((u) => {
+                if (u && typeof u === 'string') newUrls.push(u);
+              });
+            }
+          } catch (b64Err) {
+            console.warn('Base64 upload error for file:', file.name, b64Err?.message);
+          }
+        }
+      }
+
+      if (newUrls.length > 0) {
+        const combined = Array.from(new Set([...currentUploaded, ...newUrls]));
+        setFormData((prev) => ({
+          ...prev,
+          uploadedImages: combined,
+          images: combined
+        }));
+
+        toast.update(toastId, {
+          render: `🎉 ${newUrls.length} photo(s) uploaded & saved to draft!`,
+          type: 'success',
+          isLoading: false,
+          autoClose: 2500
+        });
+      } else {
+        toast.update(toastId, {
+          render: 'Could not upload photos. Please check file format and try again.',
+          type: 'error',
+          isLoading: false,
+          autoClose: 3500
+        });
+      }
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      toast.update(toastId, {
+        render: `Upload failed: ${err.message || 'Network error'}`,
+        type: 'error',
+        isLoading: false,
+        autoClose: 3500
+      });
+    } finally {
+      setIsUploadingImages(false);
+      // Reset input value to allow selecting same file again if needed
+      if (e.target) e.target.value = '';
+    }
   };
 
-  const handleRemoveSelectedImage = (indexToRemove) => {
-    setSelectedFileObjects((prev) => prev.filter((_, idx) => idx !== indexToRemove));
-    setImagePreviewUrls((prev) => {
-      const urlToRevoke = prev[indexToRemove];
-      if (urlToRevoke && urlToRevoke.startsWith('blob:')) {
-        URL.revokeObjectURL(urlToRevoke);
-      }
-      return prev.filter((_, idx) => idx !== indexToRemove);
+  const handleRemoveImage = (indexToRemove) => {
+    setFormData((prev) => {
+      const current = Array.isArray(prev.uploadedImages) ? prev.uploadedImages : [];
+      const updated = current.filter((_, idx) => idx !== indexToRemove);
+      return {
+        ...prev,
+        uploadedImages: updated,
+        images: updated
+      };
     });
+    toast.info('Photo removed from upload list.');
   };
+
+  const handleRemoveSelectedImage = handleRemoveImage;
 
   const handleGenerateAiSummary = async () => {
     setIsGeneratingAi(true);
@@ -2755,37 +2835,105 @@ export default function GetStarted() {
                     onOpenAiSummary={handleOpenStepAiSummary}
                   />
 
-                  <div className="p-6 sm:p-8 rounded-3xl border-2 border-dashed border-purple-300 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/20 text-center space-y-3">
-                    <UploadCloud className="w-10 h-10 text-purple-600 dark:text-purple-400 mx-auto animate-pulse" />
-                    <div>
-                      <label className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs cursor-pointer hover:bg-purple-500 shadow-md inline-block transition-all active:scale-95">
-                        {lang === 'bn' ? 'ছবি ব্রাউজ করুন (সর্বোচ্চ ২০ টি)' : lang === 'hi' ? 'तस्वीरें चुनें (अधिकतम 20)' : 'Browse Photos (Up to 20)'}
+                  {/* Upload Dropzone / Button Box */}
+                  <div className="p-6 sm:p-8 rounded-3xl border-2 border-dashed border-purple-300 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/20 text-center space-y-3 transition-all hover:border-purple-500">
+                    <UploadCloud className={`w-10 h-10 text-purple-600 dark:text-purple-400 mx-auto ${isUploadingImages ? 'animate-bounce' : 'animate-pulse'}`} />
+                    
+                    <div className="space-y-1.5">
+                      <label className={`px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs cursor-pointer shadow-md inline-flex items-center gap-2 transition-all active:scale-95 ${isUploadingImages ? 'opacity-60 cursor-not-allowed pointer-events-none' : ''}`}>
+                        {isUploadingImages ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            <span>{lang === 'bn' ? 'আপলোড ও ক্লাউড সেভ হচ্ছে... ⏳' : lang === 'hi' ? 'क्लाउड पर अपलोड हो रहा है... ⏳' : 'Uploading & Saving to Cloud... ⏳'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>{lang === 'bn' ? 'ছবি ব্রাউজ করুন (একসাথে একাধিক ফাইল)' : lang === 'hi' ? 'तस्वीरें चुनें (एक साथ कई फाइलें)' : 'Browse Photos (Select Multiple)'}</span>
+                          </>
+                        )}
                         <input
                           type="file"
                           multiple
                           accept="image/*"
+                          disabled={isUploadingImages}
                           onChange={handleMultiImageUpload}
                           className="hidden"
                         />
                       </label>
-                      <p className="text-[11px] text-slate-500 mt-1.5 font-medium">PNG, JPG, WEBP up to 10MB per file</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        JPG, PNG, WEBP up to 15MB per photo • Automatic instant Cloudinary sync &amp; persistent draft save
+                      </p>
                     </div>
+
+                    {formData.uploadedImages?.length > 0 && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{formData.uploadedImages.length} photo(s) attached • Saved to your browser draft</span>
+                      </div>
+                    )}
                   </div>
 
+                  {/* Uploaded Photos Grid */}
                   {formData.uploadedImages?.length > 0 && (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                      {formData.uploadedImages.map((img, i) => (
-                        <div key={i} className="relative rounded-xl overflow-hidden aspect-square border border-slate-200/90 dark:border-slate-800 shadow-2xs group">
-                          <img src={img} alt="Uploaded" className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(i)}
-                            className="absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white opacity-90 hover:opacity-100 cursor-pointer shadow-sm"
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          Attached Photos ({formData.uploadedImages.length} / 20):
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm('Remove all attached photos from this form draft?')) {
+                              setFormData((prev) => ({ ...prev, uploadedImages: [], images: [] }));
+                              toast.info('All photos removed from draft.');
+                            }
+                          }}
+                          className="text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 cursor-pointer"
+                        >
+                          Clear All Photos
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        {formData.uploadedImages.map((img, i) => (
+                          <div
+                            key={i}
+                            className="relative rounded-2xl overflow-hidden aspect-square border-2 border-slate-200 dark:border-slate-800 shadow-sm group bg-slate-900"
                           >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
+                            <img
+                              src={img}
+                              alt={`Uploaded photo ${i + 1}`}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                            
+                            {/* Photo Index Badge */}
+                            <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-white text-[10px] font-mono font-black">
+                              #{i + 1}
+                            </div>
+
+                            {/* Top Controls Overlay */}
+                            <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
+                              <a
+                                href={img}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-black/60 hover:bg-black/90 text-white transition-all"
+                                title="Open full image"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(i)}
+                                className="p-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white cursor-pointer shadow-sm transition-all"
+                                title="Delete this photo"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2893,12 +3041,43 @@ export default function GetStarted() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block font-bold text-[11px]">lang === 'bn' ? 'টাইমলাইন' : lang === 'hi' ? 'टाइमलाइन' : 'Timeline'</span>
+                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'টাইমলাইন' : lang === 'hi' ? 'टाइमलाइन' : 'Timeline'}</span>
                         <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
                           {formData.timeline}
                         </span>
                       </div>
                     </div>
+
+                    {/* Attached Photos Review */}
+                    {formData.uploadedImages?.length > 0 && (
+                      <div className="p-3.5 rounded-xl bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 space-y-2">
+                        <div className="flex items-center justify-between text-[11px] font-bold">
+                          <span className="text-purple-950 dark:text-purple-200">
+                            📷 {lang === 'bn' ? 'সংযুক্ত ছবিসমূহ' : 'Attached Photos'} ({formData.uploadedImages.length}):
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => jumpToStep(9)}
+                            className="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+                          >
+                            {lang === 'bn' ? 'ছবি পরিবর্তন করুন' : 'Edit Photos'} &rarr;
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                          {formData.uploadedImages.map((img, idx) => (
+                            <a
+                              key={idx}
+                              href={img}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-12 h-12 rounded-lg overflow-hidden border border-purple-300 dark:border-purple-700 shrink-0 block"
+                            >
+                              <img src={img} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Interactive Discount Coupon & In-Place Autosave Card */}
                     <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-500/5 via-amber-500/5 to-pink-500/5 dark:from-purple-950/30 dark:via-slate-900/60 dark:to-amber-950/20 border border-purple-200/80 dark:border-purple-800/80 space-y-3.5 shadow-xs">
