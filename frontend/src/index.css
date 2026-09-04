@@ -1336,3 +1336,19 @@ body.has-announcement-bar .page-header-offset,
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Hide all YouTube player UI artifacts and force oversized full-bleed render */
+#yt-bg-player-container,
+#yt-bg-player-container iframe,
+iframe.yt-bg-iframe {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 300vw !important;
+  height: 300vh !important;
+  min-width: 200vw !important;
+  min-height: 200vh !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
+  border: 0 !important;
+}
