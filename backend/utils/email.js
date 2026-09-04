@@ -19,7 +19,7 @@ export const getClientUrl = (path = '') => {
   }
 
   // Sanitize obsolete or empty domain to standard production domain
-  if (!base || base.includes('local2brandofficial.com')) {
+  if (!base || base.includes('local2brandofficial') || base.includes('local2brandofficial.vercel.app') || base.includes('local2brandofficial.com')) {
     base = 'https://local2brand.vercel.app';
   }
 
