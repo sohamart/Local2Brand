@@ -3,6 +3,7 @@ import { PhoneCall, Trash2, CheckCircle2, Clock, Filter, Phone, Mail, User, Aler
 import api from '../../services/api';
 import { SEO } from '../../components/common/CommonUI';
 import { toast } from 'react-toastify';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 export default function AdminCallbacks() {
   const [callbacks, setCallbacks] = useState([]);
@@ -146,9 +147,12 @@ export default function AdminCallbacks() {
         {/* Callback Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {loading && callbacks.length === 0 ? (
-            <div className="col-span-full p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400 animate-pulse flex flex-col items-center justify-center gap-2">
-              <RefreshCw className="w-6 h-6 animate-spin text-purple-600" />
-              <span>Loading callback queue...</span>
+            <div className="col-span-full py-16 flex items-center justify-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+              <DashboardLoader
+                title="Loading Callback Requests Queue..."
+                subtitle="Fetching pending phone calls and scheduled consultation requests..."
+                role="admin"
+              />
             </div>
           ) : filteredCallbacks.length === 0 ? (
             <div className="col-span-full p-12 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400 space-y-2">

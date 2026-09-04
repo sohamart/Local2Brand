@@ -3,6 +3,7 @@ import { Sliders, Plus, Edit2, Trash2, CheckCircle2, X } from 'lucide-react';
 import api from '../../services/api';
 import { SEO } from '../../components/common/CommonUI';
 import { toast } from 'react-toastify';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 export default function AdminServices() {
   const [services, setServices] = useState([]);
@@ -116,27 +117,44 @@ export default function AdminServices() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {services.map((s) => (
-            <div key={s._id} className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">{s.title}</h3>
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{s.startingPrice}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <button onClick={() => handleOpenModal(s)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:text-purple-600 cursor-pointer">
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => handleDelete(s._id)} className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-              <p className="text-xs text-slate-500">{s.shortDesc}</p>
+        {loading && services.length === 0 ? (
+          <div className="py-16 flex items-center justify-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+            <DashboardLoader
+              title="Loading Services CMS..."
+              subtitle="Fetching website offerings, deliverables, and service packages..."
+              role="admin"
+            />
+          </div>
+        ) : services.length === 0 ? (
+          <div className="p-12 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-2">
+            <div className="w-10 h-10 mx-auto rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center mb-2">
+              <Sliders className="w-5 h-5" />
             </div>
-          ))}
-        </div>
+            <p className="text-xs font-bold">No services configured yet. Click "Add New Service" above.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {services.map((s) => (
+              <div key={s._id} className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">{s.title}</h3>
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{s.startingPrice}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={() => handleOpenModal(s)} className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:text-purple-600 cursor-pointer">
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => handleDelete(s._id)} className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500">{s.shortDesc}</p>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Modal */}
         {isModalOpen && (

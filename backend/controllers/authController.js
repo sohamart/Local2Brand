@@ -23,8 +23,20 @@ export const register = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'An account with this email address already exists',
+        message: 'An account with this email address already exists. Please sign in.',
       });
+    }
+
+    // Enforce unique phone number (Aki number a ekjon-i register korte parbe)
+    const rawPhone = (phone || '').trim();
+    if (rawPhone) {
+      const existingPhoneUser = await dataStore.findUserByPhone(rawPhone);
+      if (existingPhoneUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'This phone number is already registered to another account. Please sign in or use a different phone number.',
+        });
+      }
     }
 
     const allUsers = await dataStore.getAllUsers();
@@ -38,7 +50,7 @@ export const register = async (req, res) => {
       name: name.trim(),
       email: cleanEmail,
       password,
-      phone: phone || '',
+      phone: rawPhone,
       company: company || '',
       role,
       isEmailVerified,
@@ -84,7 +96,7 @@ export const login = async (req, res) => {
 
     const cleanIdentifier = loginIdentifier.toLowerCase().trim();
     const cleanPassword = password.trim();
-    let user = await dataStore.findUserByEmail(loginIdentifier);
+    let user = await dataStore.findUserByIdentifier(loginIdentifier);
 
     const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
     const envAdminPass = (process.env.ADMIN_PASSWORD || 'Admin@12345').trim();
@@ -285,27 +297,75 @@ export const getAllUsers = async (req, res) => {
   try {
     const rawUsers = await dataStore.getAllUsers();
     
-    // Fetch requirements and leads to aggregate stats per user
+    // Fetch requirements, leads, and callbacks to aggregate live stats per user
     let requirements = [];
     let leads = [];
-    try {
-      requirements = (await dataStore.getAllRequirements?.()) || (dataStore.read?.('requirements') || []);
-      leads = (await dataStore.getAllLeads?.()) || (dataStore.read?.('leads') || []);
-    } catch (e) {}
+    let callbacks = [];
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const { default: Requirement } = await import('../models/Requirement.js');
+        requirements = await Requirement.find().lean();
+      } catch (e) {
+        console.warn('getAllUsers requirements query notice:', e.message);
+      }
+      try {
+        const { default: QueryLead } = await import('../models/QueryLead.js');
+        leads = await QueryLead.find().lean();
+      } catch (e) {
+        console.warn('getAllUsers leads query notice:', e.message);
+      }
+      try {
+        const { default: CallbackRequest } = await import('../models/CallbackRequest.js');
+        callbacks = await CallbackRequest.find().lean();
+      } catch (e) {
+        console.warn('getAllUsers callbacks query notice:', e.message);
+      }
+    }
+
+    if (requirements.length === 0) {
+      requirements = dataStore.read('requirements') || [];
+    }
+    if (leads.length === 0) {
+      leads = (await dataStore.getAllLeads?.()) || [];
+    }
+    if (callbacks.length === 0) {
+      callbacks = (await dataStore.getAllCallbacks?.()) || [];
+    }
 
     const enrichedUsers = rawUsers.map((u) => {
       const userEmail = (u.email || '').toLowerCase().trim();
       const userId = String(u._id || u.id || '');
+      const userPhone = (u.phone || '').replace(/\D/g, '').slice(-10);
       
       const userOrders = requirements.filter((r) => {
-        const clientEmail = (r.clientInfo?.email || '').toLowerCase().trim();
-        const rUserId = String(r.userId || '');
-        return (clientEmail && clientEmail === userEmail) || (rUserId && rUserId === userId);
+        const clientEmail = (r.clientInfo?.email || r.email || '').toLowerCase().trim();
+        const rUser = String(r.user?._id || r.user || r.userId || '');
+        const clientPhone = (r.clientInfo?.mobile || r.clientInfo?.phone || r.phone || '').replace(/\D/g, '').slice(-10);
+        
+        return (
+          (clientEmail && clientEmail === userEmail) ||
+          (rUser && rUser === userId) ||
+          (userPhone && clientPhone && userPhone.length >= 10 && userPhone === clientPhone)
+        );
       });
 
       const userLeads = leads.filter((l) => {
         const leadEmail = (l.email || '').toLowerCase().trim();
-        return leadEmail && leadEmail === userEmail;
+        const leadPhone = (l.phone || '').replace(/\D/g, '').slice(-10);
+        return (
+          (leadEmail && leadEmail === userEmail) ||
+          (userPhone && leadPhone && userPhone.length >= 10 && userPhone === leadPhone)
+        );
+      });
+
+      const userCallbacks = callbacks.filter((c) => {
+        const cbEmail = (c.email || '').toLowerCase().trim();
+        const cbPhone = (c.phone || '').replace(/\D/g, '').slice(-10);
+        return (
+          (cbEmail && cbEmail === userEmail) ||
+          (userPhone && cbPhone && userPhone.length >= 10 && userPhone === cbPhone)
+        );
       });
 
       return {
@@ -313,7 +373,7 @@ export const getAllUsers = async (req, res) => {
         isEmailVerified: Boolean(u.isEmailVerified),
         avatar: u.avatar || '',
         ordersCount: userOrders.length,
-        inquiriesCount: userLeads.length,
+        inquiriesCount: userLeads.length + userCallbacks.length,
         lastActive: u.updatedAt || u.createdAt,
       };
     });

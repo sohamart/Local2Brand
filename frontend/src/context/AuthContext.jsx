@@ -138,8 +138,27 @@ export function AuthProvider({ children }) {
     api.setToken(null);
     setToken(null);
     setUser(null);
-    localStorage.removeItem('l2b_cached_user');
-    localStorage.removeItem('l2b_auth_token');
+
+    // Thoroughly clean all user session and chatbot keys
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('l2b_cached_user');
+        localStorage.removeItem('l2b_auth_token');
+        localStorage.removeItem('l2b_chat_messages');
+        localStorage.removeItem('l2b_chat_session_id');
+        localStorage.removeItem('l2b_chat_session_time');
+
+        // Clear all user-specific prefixed keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.startsWith('l2b_chat_') || key.startsWith('l2b_form_progress_') || key.startsWith('l2b_draft_'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+      } catch (e) {}
+    }
 
     if (showToast) {
       toast.info('Logged out successfully. See you soon! 👋');

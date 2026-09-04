@@ -24,6 +24,7 @@ import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { pricingPlans as defaultPricingPlans } from '../../data/pricing';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import { toast } from 'react-toastify';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 export default function AdminPricing() {
   const { settings, fetchSettings } = useSiteSettings();
@@ -200,6 +201,18 @@ export default function AdminPricing() {
       features: prev.features.filter((_, i) => i !== idx)
     }));
   };
+
+  if (loading) {
+    return (
+      <div className="py-20 flex items-center justify-center">
+        <DashboardLoader
+          title="Loading Pricing Packages & Offerings..."
+          subtitle="Fetching monetization packages and custom deliverables..."
+          role="admin"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

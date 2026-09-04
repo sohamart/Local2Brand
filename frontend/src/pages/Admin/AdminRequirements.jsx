@@ -44,6 +44,7 @@ import {
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import { toast } from 'react-toastify';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 const STATUS_COLORS = {
   'Draft': 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300',
@@ -298,9 +299,12 @@ export default function AdminRequirements() {
         
         {/* Loading state */}
         {loading && requirements.length === 0 && (
-          <div className="p-12 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
-            <RefreshCw className="w-6 h-6 animate-spin text-purple-600" />
-            <span className="text-xs font-semibold">Loading requirement submissions...</span>
+          <div className="py-16 flex items-center justify-center">
+            <DashboardLoader
+              title="Loading Requirement Submissions..."
+              subtitle="Fetching client website blueprints and active project orders..."
+              role="admin"
+            />
           </div>
         )}
 

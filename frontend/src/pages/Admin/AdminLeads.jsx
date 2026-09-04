@@ -20,6 +20,7 @@ import {
 import api from '../../services/api';
 import { SEO } from '../../components/common/CommonUI';
 import { toast } from 'react-toastify';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 export default function AdminLeads() {
   const [leads, setLeads] = useState([]);
@@ -196,9 +197,22 @@ export default function AdminLeads() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                {leads.length === 0 ? (
+                {loading && leads.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-400">
+                      <DashboardLoader
+                        title="Loading Project Inquiries & Proposals..."
+                        subtitle="Fetching customer submissions from database..."
+                        role="admin"
+                      />
+                    </td>
+                  </tr>
+                ) : leads.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-slate-400">
+                      <div className="w-10 h-10 mx-auto rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center mb-2">
+                        <Inbox className="w-5 h-5" />
+                      </div>
                       No inquiries found matching criteria.
                     </td>
                   </tr>
@@ -277,8 +291,19 @@ export default function AdminLeads() {
 
         {/* Dedicated Mobile Card View (< md) */}
         <div className="block md:hidden space-y-4">
-          {leads.length === 0 ? (
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+          {loading && leads.length === 0 ? (
+            <div className="py-12 flex items-center justify-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+              <DashboardLoader
+                title="Loading Inquiries..."
+                subtitle="Fetching customer submissions..."
+                role="admin"
+              />
+            </div>
+          ) : leads.length === 0 ? (
+            <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
+              <div className="w-10 h-10 mx-auto rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center mb-2">
+                <Inbox className="w-5 h-5" />
+              </div>
               No inquiries found matching criteria.
             </div>
           ) : (

@@ -23,6 +23,7 @@ import { toast } from 'react-toastify';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import { SEO } from '../../components/common/CommonUI';
 import WriteReviewModal from '../../components/common/WriteReviewModal';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 export default function AdminReviews() {
   const [reviews, setReviews] = useState([]);
@@ -263,10 +264,13 @@ export default function AdminReviews() {
         </div>
 
         {/* Reviews List */}
-        {loading ? (
-          <div className="p-12 text-center text-slate-500 text-xs">
-            <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            <span>Loading reviews database...</span>
+        {loading && reviews.length === 0 ? (
+          <div className="py-16 flex items-center justify-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+            <DashboardLoader
+              title="Loading Client Reviews & Testimonials..."
+              subtitle="Fetching verified ratings and feedback from database..."
+              role="admin"
+            />
           </div>
         ) : reviews.length === 0 ? (
           <div className="p-12 rounded-3xl bg-white dark:bg-slate-900/80 border border-dashed border-slate-300 dark:border-slate-700 text-center space-y-3">

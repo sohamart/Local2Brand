@@ -29,6 +29,7 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { SEO } from '../../components/common/CommonUI';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();
@@ -315,11 +316,12 @@ export default function AdminUsers() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                 {loading && users.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-12 text-center text-slate-400 text-xs">
-                      <div className="flex flex-col items-center justify-center gap-2">
-                        <RefreshCw className="w-6 h-6 animate-spin text-purple-600" />
-                        <span>Loading client directory...</span>
-                      </div>
+                    <td colSpan="7" className="py-16 text-center text-slate-400 text-xs">
+                      <DashboardLoader
+                        title="Loading User Directory & Client Accounts..."
+                        subtitle="Fetching registered client profiles and account permissions..."
+                        role="admin"
+                      />
                     </td>
                   </tr>
                 ) : filteredUsers.length === 0 ? (

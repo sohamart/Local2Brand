@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 const DEFAULT_CATEGORIES = [
   'LMS & Courses',
@@ -667,8 +668,14 @@ export default function AdminDemos() {
 
         {/* Catalog List Items */}
         <div className="space-y-2.5">
-          {loading ? (
-            <div className="p-8 text-center text-slate-400 text-xs">Loading template catalog...</div>
+          {loading && demos.length === 0 ? (
+            <div className="py-16 flex items-center justify-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+              <DashboardLoader
+                title="Loading Demo Templates Catalog..."
+                subtitle="Fetching responsive industry website presets and blueprints..."
+                role="admin"
+              />
+            </div>
           ) : filteredCatalog.length === 0 ? (
             <div className="p-8 text-center text-slate-400 text-xs">No matching demo templates found.</div>
           ) : (

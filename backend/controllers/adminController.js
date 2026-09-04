@@ -165,10 +165,19 @@ export const markNotificationRead = async (req, res) => {
   }
 };
 
-// Mass Broadcast Email to All Registered Users / Clients
+// Mass Broadcast Email to All Registered Users / Clients with Segment Filtering
 export const sendBroadcastEmail = async (req, res) => {
   try {
-    const { subject, heading, messageHtml, actionText, actionUrl, targetAudience = 'all', customEmails = '' } = req.body;
+    const {
+      subject,
+      heading,
+      messageHtml,
+      actionText,
+      actionUrl,
+      targetAudience = 'all',
+      customEmails = '',
+      isImportant = false,
+    } = req.body;
 
     if (!subject || !messageHtml) {
       return res.status(400).json({ success: false, message: 'Subject and Message content are required' });
@@ -176,24 +185,105 @@ export const sendBroadcastEmail = async (req, res) => {
 
     let recipients = [];
 
-    if (targetAudience === 'custom' && customEmails) {
-      recipients = customEmails.split(',').map((e) => e.trim()).filter(Boolean);
-    } else {
-      const allUsers = await dataStore.getAllUsers();
-      if (targetAudience === 'clients') {
-        recipients = allUsers.filter((u) => u.role !== 'admin').map((u) => u.email);
-      } else if (targetAudience === 'admins') {
-        recipients = allUsers.filter((u) => u.role === 'admin').map((u) => u.email);
-      } else {
-        recipients = allUsers.map((u) => u.email);
-      }
+    // Gather all users and requirements safely
+    let allUsers = [];
+    let allRequirements = [];
+    let allLeads = [];
+    let allCallbacks = [];
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        const { User } = await import('../models/User.js');
+        allUsers = await User.find().select('email name role createdAt');
+      } catch (e) {}
+      try {
+        const { default: Requirement } = await import('../models/Requirement.js');
+        allRequirements = await Requirement.find().select('clientInfo email status createdAt submittedAt');
+      } catch (e) {}
+      try {
+        const { default: QueryLead } = await import('../models/QueryLead.js');
+        allLeads = await QueryLead.find().select('email phone name createdAt');
+      } catch (e) {}
+      try {
+        const { default: CallbackRequest } = await import('../models/CallbackRequest.js');
+        allCallbacks = await CallbackRequest.find().select('email phone name createdAt');
+      } catch (e) {}
     }
 
-    // Deduplicate
-    recipients = [...new Set(recipients.filter((e) => e && e.includes('@')))];
+    if (allUsers.length === 0) {
+      allUsers = await dataStore.getAllUsers();
+    }
+    if (allRequirements.length === 0) {
+      allRequirements = dataStore.read('requirements') || [];
+    }
+    if (allLeads.length === 0) {
+      allLeads = await dataStore.getAllLeads();
+    }
+    if (allCallbacks.length === 0) {
+      allCallbacks = await dataStore.getAllCallbacks();
+    }
+
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+    if (targetAudience === 'custom' && customEmails) {
+      recipients = customEmails.split(',').map((e) => e.trim()).filter(Boolean);
+    } else if (targetAudience === 'no_orders_2days') {
+      // Find registered clients who registered > 2 days ago and have 0 orders
+      const orderedEmails = new Set(
+        allRequirements
+          .map((r) => (r.clientInfo?.email || r.email || '').toLowerCase().trim())
+          .filter(Boolean)
+      );
+
+      const winbackUsers = allUsers.filter((u) => {
+        if (u.role === 'admin') return false;
+        const uEmail = (u.email || '').toLowerCase().trim();
+        const userCreated = u.createdAt ? new Date(u.createdAt) : new Date(0);
+        const isOldEnough = userCreated <= twoDaysAgo;
+        return !orderedEmails.has(uEmail);
+      });
+
+      recipients = winbackUsers.map((u) => u.email);
+    } else if (targetAudience === 'active_orders') {
+      const activeStatuses = ['Submitted', 'In Development', 'Approved', 'Under Review', 'Quotation Sent'];
+      recipients = allRequirements
+        .filter((r) => activeStatuses.includes(r.status))
+        .map((r) => r.clientInfo?.email || r.email)
+        .filter(Boolean);
+    } else if (targetAudience === 'requirements_submitted') {
+      recipients = allRequirements
+        .map((r) => r.clientInfo?.email || r.email)
+        .filter(Boolean);
+    } else if (targetAudience === 'leads_inquiries') {
+      recipients = [
+        ...allLeads.map((l) => l.email),
+        ...allCallbacks.map((c) => c.email)
+      ].filter(Boolean);
+    } else if (targetAudience === 'clients') {
+      recipients = allUsers.filter((u) => u.role !== 'admin').map((u) => u.email);
+    } else if (targetAudience === 'admins') {
+      recipients = allUsers.filter((u) => u.role === 'admin').map((u) => u.email);
+    } else if (targetAudience === 'all_contacts') {
+      // Combined ecosystem: registered users + requirements + leads + callbacks
+      recipients = [
+        ...allUsers.map((u) => u.email),
+        ...allRequirements.map((r) => r.clientInfo?.email || r.email),
+        ...allLeads.map((l) => l.email),
+        ...allCallbacks.map((c) => c.email)
+      ];
+    } else {
+      // 'all' / default: Strictly all registered user accounts
+      recipients = allUsers.map((u) => u.email);
+    }
+
+    // Deduplicate & normalize
+    recipients = [...new Set(recipients.map((e) => (e || '').toLowerCase().trim()).filter((e) => e && e.includes('@')))];
 
     if (recipients.length === 0) {
-      return res.status(400).json({ success: false, message: 'No valid recipient email addresses found' });
+      return res.status(400).json({
+        success: false,
+        message: 'No recipient email addresses found for the selected audience segment.',
+      });
     }
 
     const resolvedActionUrl = actionUrl
@@ -232,7 +322,7 @@ export const sendBroadcastEmail = async (req, res) => {
 
       <div style="padding: 26px 20px 18px 20px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff; box-sizing: border-box;">
         <div style="display: inline-block; padding: 4px 12px; border-radius: 9999px; background-color: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;">
-          📢 OFFICIAL AGENCY BROADCAST
+          📢 ${isImportant ? '⚡ PRIORITY CLIENT NOTIFICATION' : 'OFFICIAL AGENCY BROADCAST'}
         </div>
         <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.2;">
           LOCAL<span style="color: #7c3aed;">2</span>BRAND
@@ -283,6 +373,8 @@ export const sendBroadcastEmail = async (req, res) => {
           subject: subject,
           html: formattedHtml,
           text: messageHtml,
+          isImportant: Boolean(isImportant),
+          priority: isImportant ? 'high' : 'normal',
         })
       )
     );
@@ -300,7 +392,7 @@ export const sendBroadcastEmail = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Broadcast completed! Sent to ${sentCount} recipients.`,
+      message: `Broadcast completed! Dispatched to ${sentCount} recipients.`,
       sentCount,
       failedCount,
       total: recipients.length,

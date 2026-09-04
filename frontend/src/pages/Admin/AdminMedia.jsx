@@ -24,6 +24,7 @@ import { toast } from 'react-toastify';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import { SEO } from '../../components/common/CommonUI';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 export default function AdminMedia() {
   const [usage, setUsage] = useState(null);
@@ -365,9 +366,12 @@ export default function AdminMedia() {
 
         {/* Media Grid */}
         {loading && mediaList.length === 0 ? (
-          <div className="p-16 text-center space-y-3 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
-            <RefreshCw className="w-8 h-8 animate-spin text-purple-600 mx-auto" />
-            <p className="text-xs text-slate-400 font-bold">Connecting to Cloudinary Asset Vault...</p>
+          <div className="py-16 flex items-center justify-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+            <DashboardLoader
+              title="Connecting to Cloudinary Asset Vault..."
+              subtitle="Fetching uploaded brand assets, client logos, and media files..."
+              role="admin"
+            />
           </div>
         ) : filteredMedia.length === 0 ? (
           <div className="p-16 text-center space-y-3 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">

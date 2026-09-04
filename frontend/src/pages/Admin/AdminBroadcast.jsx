@@ -20,31 +20,54 @@ import { toast } from 'react-toastify';
 
 const TEMPLATE_PRESETS = [
   {
+    id: 'no_orders_2days',
+    name: '⏰ 2 Days No Order / Project Help',
+    subject: '👋 Quick question regarding your website project (VIP Founder Assistance)',
+    heading: 'Can We Help You Launch Your Website This Week?',
+    message: `Hi there!\n\nWe noticed you registered on LOCAL2BRAND but haven't finalized your website project order yet. Whether you are wondering about the right design, features, tech stack, or budget — our engineering team is here to assist you.\n\n⚡ For the next 48 hours, we are offering an exclusive ₹2,000 launch credit on all packages, including free .IN domain connection, Tier-4 SSL certificate, and WhatsApp direct ordering.\n\nWould you like to schedule a quick 15-minute consultation or select a live demo to fast-track your launch?`,
+    actionText: 'Claim ₹2,000 Credit & Start Project',
+    actionUrl: 'https://local2brand.vercel.app/pricing',
+    isImportant: true,
+  },
+  {
     id: 'launch',
-    name: '🚀 48h Website Launch Showcase',
+    name: '🚀 48h Website Launch Blueprint',
     subject: '🎉 Exciting Launch: New Website Templates & 48h Fast Delivery on LOCAL2BRAND!',
     heading: 'Supercharge Your Digital Brand Today!',
     message: `We are thrilled to announce new premium website templates, lightning-fast 48-hour delivery, and enterprise-grade cloud hosting for all new client projects.\n\nExplore our latest high-converting live demos and request your customized quote in just 2 minutes.`,
     actionText: 'Explore New Website Demos',
     actionUrl: 'https://local2brand.vercel.app/demos',
+    isImportant: true,
   },
   {
-    id: 'discount',
-    name: '🎁 20% Discount Flash Offer',
-    subject: '🎁 Exclusive 20% OFF on Custom Website Development — Promo: INDIA2025',
-    heading: 'Claim 20% Savings on Your Next Website Project!',
+    id: 'founder_note',
+    name: '🤝 Founder Direct 1-on-1 Note',
+    subject: 'A quick personal note from Soham Dutta (Founder, LOCAL2BRAND)',
+    heading: 'Let’s Build Something Exceptional For Your Business',
+    message: `I wanted to personally reach out and thank you for connecting with LOCAL2BRAND.\n\nOur mission is simple: deliver agency-grade, sub-second websites that convert casual visitors into paying customers without bloated timelines or excessive costs.\n\nIf you have any questions or need custom architecture recommendations for your brand, reply directly to this email or click below to schedule a 15-minute strategy call.`,
+    actionText: 'Schedule 15-Min Founder Call',
+    actionUrl: 'https://local2brand.vercel.app/contact',
+    isImportant: true,
+  },
+  {
+    id: 'vip_discount',
+    name: '🎁 VIP ₹2,000 Voucher + Free Domain',
+    subject: '🎁 Exclusive Privilege: ₹2,000 Voucher + Free .IN Domain Activated For Your Account',
+    heading: 'Claim ₹2,000 Savings on Your Next Website Project!',
     message: `Upgrade your business with a brand-new website tailored to your domain. For a limited time, use promo code INDIA2025 at checkout to enjoy a flat 20% discount on any standard or pro package.\n\nOur team handles design, copywriting, domain connection, and launch within 48 hours.`,
-    actionText: 'Claim 20% Discount Now',
+    actionText: 'Redeem Voucher Now',
     actionUrl: 'https://local2brand.vercel.app/get-started',
+    isImportant: true,
   },
   {
-    id: 'newsletter',
-    name: '📰 Monthly Agency Tech Newsletter',
-    subject: '📰 LOCAL2BRAND Insights: How Sub-Second Load Speed Doubles Your Inquiries',
-    heading: 'Engineering Secrets for High-Converting Business Websites',
-    message: `Did you know that 53% of mobile visitors abandon a website that takes over 3 seconds to load?\n\nIn this monthly digest, we break down how our custom React + Next.js architecture scores 98+ on Google Lighthouse, giving your business higher organic search rankings and instant WhatsApp lead conversion.\n\nRead our latest architecture breakdown or book an audit for your existing site!`,
-    actionText: 'Explore Engineering Features',
-    actionUrl: 'https://local2brand.vercel.app/pricing',
+    id: 'security_update',
+    name: '🔒 Security & SSL Infrastructure Notice',
+    subject: 'Important: Security & High-Speed Cloud Infrastructure Update for Your Account',
+    heading: 'Your Web Infrastructure is Now Faster & More Secure',
+    message: `All client websites hosted under LOCAL2BRAND now feature automatic Tier-4 Cloudflare SSL encryption, DDoS mitigation, and global edge cache replication.\n\nYour customers enjoy zero downtime, instantaneous asset delivery, and maximum trust.`,
+    actionText: 'View Platform Status & Orders',
+    actionUrl: 'https://local2brand.vercel.app/track-order',
+    isImportant: true,
   },
   {
     id: 'whatsapp_store',
@@ -54,33 +77,27 @@ const TEMPLATE_PRESETS = [
     message: `We have introduced 1-Click WhatsApp Ordering & Direct Inquiries across all e-commerce and catalog demo websites.\n\nClients receive instant ping notifications on their phone as soon as a customer selects a service, resulting in a 3x higher closing rate.`,
     actionText: 'Preview WhatsApp Demo',
     actionUrl: 'https://local2brand.vercel.app/demos',
+    isImportant: false,
   },
   {
-    id: 'callback',
-    name: '📞 Free 15-Min Founder Consultation',
-    subject: '📞 Need advice on your business website? Talk directly with our founding architects',
-    heading: 'Book a Free 15-Minute Technical Strategy Call',
-    message: `Unsure which tech stack or architecture fits your online store, LMS, or service business? Connect with our senior tech leads for a personalized 1-on-1 consultation.\n\nNo obligations — just actionable insights to scale your brand.`,
-    actionText: 'Request Instant Callback',
-    actionUrl: 'https://local2brand.vercel.app/contact',
+    id: 'newsletter',
+    name: '📰 Monthly Tech & SEO Masterclass',
+    subject: '📰 LOCAL2BRAND Insights: How Sub-Second Load Speed Doubles Your Inquiries',
+    heading: 'Engineering Secrets for High-Converting Business Websites',
+    message: `Did you know that 53% of mobile visitors abandon a website that takes over 3 seconds to load?\n\nIn this monthly digest, we break down how our custom React + Next.js architecture scores 98+ on Google Lighthouse, giving your business higher organic search rankings and instant WhatsApp lead conversion.\n\nRead our latest architecture breakdown or book an audit for your existing site!`,
+    actionText: 'Explore Engineering Features',
+    actionUrl: 'https://local2brand.vercel.app/pricing',
+    isImportant: false,
   },
   {
-    id: 'spin_wheel',
-    name: '🎡 Spin & Win Rewards Announcement',
-    subject: '🎡 Spin the LOCAL2BRAND Lucky Wheel to Win Instant ₹1,000+ Vouchers!',
-    heading: 'Claim Your Exclusive Launch Reward on Our Wheel!',
-    message: `Visit our platform today and try our interactive Spin & Win wheel. Every participant wins an instant prize — including up to 20% OFF vouchers, free .IN domain registration, and VIP 48h priority queue access!`,
-    actionText: 'Spin the Wheel on Homepage',
+    id: 'custom',
+    name: '✏️ Blank / Custom Broadcast',
+    subject: '',
+    heading: '',
+    message: '',
+    actionText: 'Visit LOCAL2BRAND',
     actionUrl: 'https://local2brand.vercel.app/',
-  },
-  {
-    id: 'security_update',
-    name: '🛡️ Cloud Infrastructure & SSL Upgrade',
-    subject: '🛡️ Platform Notice: Enterprise SSL, Global CDN & Sub-Second Edge Routing Active',
-    heading: 'Your Web Infrastructure is Now Faster & More Secure',
-    message: `All client websites hosted under LOCAL2BRAND now feature automatic Tier-4 Cloudflare SSL encryption, DDoS mitigation, and global edge cache replication.\n\nYour customers enjoy zero downtime, instantaneous asset delivery, and maximum trust.`,
-    actionText: 'View Platform Status',
-    actionUrl: 'https://local2brand.vercel.app/track-order',
+    isImportant: true,
   },
 ];
 
@@ -93,6 +110,7 @@ export default function AdminBroadcast() {
   const [messageHtml, setMessageHtml] = useState(TEMPLATE_PRESETS[0].message);
   const [actionText, setActionText] = useState(TEMPLATE_PRESETS[0].actionText);
   const [actionUrl, setActionUrl] = useState(TEMPLATE_PRESETS[0].actionUrl);
+  const [isImportant, setIsImportant] = useState(true);
 
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
@@ -105,6 +123,9 @@ export default function AdminBroadcast() {
     setMessageHtml(preset.message);
     setActionText(preset.actionText);
     setActionUrl(preset.actionUrl);
+    if (typeof preset.isImportant === 'boolean') {
+      setIsImportant(preset.isImportant);
+    }
     toast.info(`Applied preset: ${preset.name}`);
   };
 
@@ -115,7 +136,7 @@ export default function AdminBroadcast() {
       return;
     }
 
-    if (!confirm(`Are you sure you want to send this broadcast email to ${targetAudience === 'all' ? 'ALL registered users' : targetAudience}?`)) {
+    if (!confirm(`Are you sure you want to dispatch this broadcast email to "${targetAudience.toUpperCase()}" with ${isImportant ? 'HIGH PRIORITY (Inbox Placement)' : 'Standard Delivery'}?`)) {
       return;
     }
 
@@ -123,15 +144,20 @@ export default function AdminBroadcast() {
     setResult(null);
 
     try {
-      const res = await api.post('/admin/broadcast-email', {
-        subject,
-        heading,
-        messageHtml,
-        actionText,
-        actionUrl,
-        targetAudience,
-        customEmails,
-      });
+      const res = await api.post(
+        '/admin/broadcast-email',
+        {
+          subject,
+          heading,
+          messageHtml,
+          actionText,
+          actionUrl,
+          targetAudience,
+          customEmails,
+          isImportant,
+        },
+        { timeout: 120000 }
+      );
 
       if (res.success) {
         toast.success(`Broadcast sent successfully to ${res.sentCount} recipients! 🚀`);
@@ -236,14 +262,25 @@ export default function AdminBroadcast() {
           
           {/* 1. Target Audience */}
           <div className="glass-panel p-5 rounded-2xl border border-white dark:border-slate-800 space-y-3 shadow-xs">
-            <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
-              1. Target Audience
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
+                1. Target Audience Segment
+              </label>
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
+                Segment Engine
+              </span>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
               {[
-                { id: 'all', label: 'All Users', desc: 'Registered accounts' },
+                { id: 'all', label: 'Registered Users', desc: 'Active user accounts' },
+                { id: 'no_orders_2days', label: '⏰ 2d+ No Order', desc: 'Registered winback' },
+                { id: 'active_orders', label: 'Active Orders', desc: 'In development' },
+                { id: 'requirements_submitted', label: 'Req Submitted', desc: 'Blueprint logged' },
+                { id: 'leads_inquiries', label: 'Inquiries & Leads', desc: 'Form & Callbacks' },
                 { id: 'clients', label: 'Clients Only', desc: 'Non-admin users' },
                 { id: 'admins', label: 'Admins Only', desc: 'Staff / Admin' },
+                { id: 'all_contacts', label: 'All Contacts', desc: 'Users + Leads (6)' },
                 { id: 'custom', label: 'Custom List', desc: 'Specific emails' },
               ].map((aud) => (
                 <button
@@ -252,14 +289,37 @@ export default function AdminBroadcast() {
                   onClick={() => setTargetAudience(aud.id)}
                   className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                     targetAudience === aud.id
-                      ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-500 text-purple-900 dark:text-purple-200 shadow-xs'
+                      ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-500 text-purple-900 dark:text-purple-200 shadow-xs ring-1 ring-purple-400/50'
                       : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50'
                   }`}
                 >
                   <div className="font-bold text-xs">{aud.label}</div>
-                  <div className="text-[10px] opacity-75">{aud.desc}</div>
+                  <div className="text-[10px] opacity-75 truncate">{aud.desc}</div>
                 </button>
               ))}
+            </div>
+
+            {/* Inbox Placement Toggle */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                  🎯 Primary / Inbox Priority Delivery
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  Adds urgent headers & removes bot flags to prevent falling into Promotions/Spam tab.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsImportant(!isImportant)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  isImportant
+                    ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
+                }`}
+              >
+                {isImportant ? '✅ Inbox Priority Active' : '⚪ Standard Delivery'}
+              </button>
             </div>
 
             {targetAudience === 'custom' && (

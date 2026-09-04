@@ -50,33 +50,38 @@ const QUICK_CHIPS = [
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-// Helper to get or create a session valid for 7 days
-const getStoredSessionId = () => {
+export const getUserChatKey = (user) => {
+  if (!user) return 'guest';
+  return (user._id || user.id || user.email || 'guest').toString().replace(/[^a-zA-Z0-9_]/g, '_');
+};
+
+// Helper to get or create a session valid for 7 days per user
+const getStoredSessionId = (userKey = 'guest') => {
   if (typeof window === 'undefined') return '';
   try {
-    const storedTime = localStorage.getItem('l2b_chat_session_time');
-    const storedId = localStorage.getItem('l2b_chat_session_id');
+    const storedTime = localStorage.getItem(`l2b_chat_session_time_${userKey}`);
+    const storedId = localStorage.getItem(`l2b_chat_session_id_${userKey}`);
     const now = Date.now();
 
     if (storedId && storedTime && now - parseInt(storedTime, 10) < SEVEN_DAYS_MS) {
       return storedId;
     }
 
-    const newId = `sess_${now}_${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem('l2b_chat_session_id', newId);
-    localStorage.setItem('l2b_chat_session_time', now.toString());
-    localStorage.removeItem('l2b_chat_messages');
+    const newId = `sess_${userKey}_${now}_${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem(`l2b_chat_session_id_${userKey}`, newId);
+    localStorage.setItem(`l2b_chat_session_time_${userKey}`, now.toString());
+    localStorage.removeItem(`l2b_chat_messages_${userKey}`);
     return newId;
   } catch {
-    return `sess_${Date.now()}`;
+    return `sess_${userKey}_${Date.now()}`;
   }
 };
 
-// Initial welcome message
-const getStoredMessages = (brandName) => {
+// Initial welcome message per user
+const getStoredMessages = (brandName, userKey = 'guest') => {
   if (typeof window !== 'undefined') {
     try {
-      const stored = localStorage.getItem('l2b_chat_messages');
+      const stored = localStorage.getItem(`l2b_chat_messages_${userKey}`);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -284,6 +289,8 @@ export default function AssistantChatbot() {
   const { settings } = useSiteSettings();
   const { user } = useAuth();
 
+  const userKey = getUserChatKey(user);
+
   const [isOpen, setIsOpen] = useState(false);
   const [hasPrompted, setHasPrompted] = useState(false);
   const [isBubbleDismissed, setIsBubbleDismissed] = useState(false);
@@ -291,12 +298,19 @@ export default function AssistantChatbot() {
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
   const [copiedCoupon, setCopiedCoupon] = useState(false);
 
-  const [sessionId, setSessionId] = useState(() => getStoredSessionId());
-  const [messages, setMessages] = useState(() => getStoredMessages(settings?.brandName));
+  const [sessionId, setSessionId] = useState(() => getStoredSessionId(userKey));
+  const [messages, setMessages] = useState(() => getStoredMessages(settings?.brandName, userKey));
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  // When logged in user changes or logs out, reload the correct user's isolated chat thread
+  useEffect(() => {
+    setSessionId(getStoredSessionId(userKey));
+    setMessages(getStoredMessages(settings?.brandName, userKey));
+    setHistoryLoaded(false);
+  }, [userKey, settings?.brandName]);
 
   const triggerInChatMessageCallback = (customTopic) => {
     const callbackMessageCard = {
@@ -314,8 +328,10 @@ export default function AssistantChatbot() {
 
     const updated = [...messages, callbackMessageCard];
     setMessages(updated);
-    localStorage.setItem('l2b_chat_messages', JSON.stringify(updated));
-    localStorage.setItem('l2b_chat_session_time', Date.now().toString());
+    try {
+      localStorage.setItem(`l2b_chat_messages_${userKey}`, JSON.stringify(updated));
+      localStorage.setItem(`l2b_chat_session_time_${userKey}`, Date.now().toString());
+    } catch (e) {}
   };
 
   const messagesEndRef = useRef(null);
@@ -405,8 +421,8 @@ export default function AssistantChatbot() {
       setMessages((prev) => {
         const next = [...prev, prizeBotMsg];
         try {
-          localStorage.setItem('l2b_chat_messages', JSON.stringify(next));
-          localStorage.setItem('l2b_chat_session_time', Date.now().toString());
+          localStorage.setItem(`l2b_chat_messages_${userKey}`, JSON.stringify(next));
+          localStorage.setItem(`l2b_chat_session_time_${userKey}`, Date.now().toString());
         } catch (err) {}
         return next;
       });
@@ -414,7 +430,7 @@ export default function AssistantChatbot() {
 
     window.addEventListener('l2b_open_chatbot_prize', handlePrizeAwarded);
     return () => window.removeEventListener('l2b_open_chatbot_prize', handlePrizeAwarded);
-  }, []);
+  }, [userKey]);
 
   // Emerge the dynamic liquid announcement bubble from chatbot after 2.5s if not dismissed
   useEffect(() => {
@@ -475,8 +491,8 @@ export default function AssistantChatbot() {
         const res = await api.get(`/chat/history?sessionId=${sessionId}`);
         if (res?.success && Array.isArray(res.messages) && res.messages.length > 0) {
           setMessages(res.messages);
-          localStorage.setItem('l2b_chat_messages', JSON.stringify(res.messages));
-          localStorage.setItem('l2b_chat_session_time', Date.now().toString());
+          localStorage.setItem(`l2b_chat_messages_${userKey}`, JSON.stringify(res.messages));
+          localStorage.setItem(`l2b_chat_session_time_${userKey}`, Date.now().toString());
         }
       } catch (err) {
         console.warn('Chat DB sync notice (using 7-day cache):', err.message);
@@ -486,7 +502,7 @@ export default function AssistantChatbot() {
     };
 
     syncHistoryFromDb();
-  }, [sessionId]);
+  }, [sessionId, userKey]);
 
   // Auto-scroll to bottom of messages container
   useEffect(() => {
@@ -518,8 +534,10 @@ export default function AssistantChatbot() {
 
     const updatedWithUser = [...messages, newUserMsg];
     setMessages(updatedWithUser);
-    localStorage.setItem('l2b_chat_messages', JSON.stringify(updatedWithUser));
-    localStorage.setItem('l2b_chat_session_time', Date.now().toString());
+    try {
+      localStorage.setItem(`l2b_chat_messages_${userKey}`, JSON.stringify(updatedWithUser));
+      localStorage.setItem(`l2b_chat_session_time_${userKey}`, Date.now().toString());
+    } catch (e) {}
     setIsTyping(true);
 
     try {
@@ -552,14 +570,17 @@ export default function AssistantChatbot() {
           timestamp: res.timestamp || new Date().toISOString(),
           requirementCreated: res.requirementCreated || false,
           requirementId: res.requirementId || null,
+          orderCard: res.orderCard || null,
           callbackCreated: res.callbackCreated || false,
           callbackPhone: res.callbackPhone || null,
           isStreaming: true,
         };
         const finalThread = [...updatedWithUser, assistantReply];
         setMessages(finalThread);
-        localStorage.setItem('l2b_chat_messages', JSON.stringify(finalThread));
-        localStorage.setItem('l2b_chat_session_time', Date.now().toString());
+        try {
+          localStorage.setItem(`l2b_chat_messages_${userKey}`, JSON.stringify(finalThread));
+          localStorage.setItem(`l2b_chat_session_time_${userKey}`, Date.now().toString());
+        } catch (e) {}
       } else {
         throw new Error(res?.message || 'Failed to get response from AI');
       }
@@ -576,8 +597,10 @@ export default function AssistantChatbot() {
       };
       const threadWithError = [...updatedWithUser, errorReply];
       setMessages(threadWithError);
-      localStorage.setItem('l2b_chat_messages', JSON.stringify(threadWithError));
-      localStorage.setItem('l2b_chat_session_time', Date.now().toString());
+      try {
+        localStorage.setItem(`l2b_chat_messages_${userKey}`, JSON.stringify(threadWithError));
+        localStorage.setItem(`l2b_chat_session_time_${userKey}`, Date.now().toString());
+      } catch (e) {}
     } finally {
       setIsTyping(false);
     }
@@ -599,9 +622,11 @@ export default function AssistantChatbot() {
     }
 
     const now = Date.now();
-    const newSession = `sess_${now}_${Math.random().toString(36).substring(2, 9)}`;
-    localStorage.setItem('l2b_chat_session_id', newSession);
-    localStorage.setItem('l2b_chat_session_time', now.toString());
+    const newSession = `sess_${userKey}_${now}_${Math.random().toString(36).substring(2, 9)}`;
+    try {
+      localStorage.setItem(`l2b_chat_session_id_${userKey}`, newSession);
+      localStorage.setItem(`l2b_chat_session_time_${userKey}`, now.toString());
+    } catch (e) {}
     setSessionId(newSession);
 
     const initial = [
@@ -612,7 +637,9 @@ export default function AssistantChatbot() {
       },
     ];
     setMessages(initial);
-    localStorage.setItem('l2b_chat_messages', JSON.stringify(initial));
+    try {
+      localStorage.setItem(`l2b_chat_messages_${userKey}`, JSON.stringify(initial));
+    } catch (e) {}
   };
 
   // Helper to format inline markdown text (bold, code, links)
@@ -1068,10 +1095,9 @@ export default function AssistantChatbot() {
                           msg={msg}
                           user={user}
                           onSubmitted={(cName, cPhone, cSlot) => {
-                            msg.isSubmitted = true;
-                            const updated = [...messages];
-                            setMessages(updated);
-                            localStorage.setItem('l2b_chat_messages', JSON.stringify(updated));
+                            try {
+                              localStorage.setItem(`l2b_chat_messages_${userKey}`, JSON.stringify(updated));
+                            } catch (e) {}
                           }}
                         />
                       </div>
@@ -1154,24 +1180,63 @@ export default function AssistantChatbot() {
                           </div>
                         )}
 
-                        {/* Interactive Order Action Card if requirement was created */}
-                        {msg.requirementId && (
-                          <div className="mt-3 p-3 rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/30 space-y-2">
+                        {/* Interactive Confirmed Order Card */}
+                        {(msg.orderCard || msg.requirementId) && (
+                          <div className="mt-3 p-3.5 rounded-2xl bg-gradient-to-br from-purple-500/15 via-indigo-500/10 to-pink-500/15 border-2 border-purple-400/50 dark:border-cyan-400/50 shadow-md space-y-2.5">
                             <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-300">
-                                📦 Order Logged
+                              <span className="px-2 py-0.5 rounded-md bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>Order Confirmed</span>
                               </span>
-                              <span className="font-mono text-[10px] font-extrabold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/80 px-2 py-0.5 rounded-md">
-                                {msg.requirementId}
+                              <span className="font-mono text-xs font-black text-purple-600 dark:text-cyan-300 bg-white dark:bg-slate-900 px-2.5 py-0.5 rounded-lg border border-purple-300 dark:border-cyan-700 shadow-xs">
+                                {msg.orderCard?.requirementId || msg.requirementId}
                               </span>
                             </div>
-                            <a
-                              href={`/dashboard?track=${msg.requirementId}`}
-                              className="w-full py-1.5 px-3 rounded-lg text-[11px] font-black text-white l2b-gradient-bg hover:opacity-95 flex items-center justify-center gap-1.5 shadow-xs transition-all text-center"
-                            >
-                              <span>Track Live Progress</span>
-                              <ArrowRight className="w-3 h-3" />
-                            </a>
+
+                            {msg.orderCard?.businessName && (
+                              <div className="bg-white/80 dark:bg-slate-900/80 rounded-xl p-2.5 border border-purple-200/60 dark:border-slate-800 text-[11px] space-y-1">
+                                <div className="flex justify-between">
+                                  <span className="text-slate-500">Business:</span>
+                                  <span className="font-bold text-slate-900 dark:text-white truncate max-w-[170px]">{msg.orderCard.businessName}</span>
+                                </div>
+                                {msg.orderCard.websiteTypeName && (
+                                  <div className="flex justify-between">
+                                    <span className="text-slate-500">Website:</span>
+                                    <span className="font-semibold text-purple-600 dark:text-cyan-300">{msg.orderCard.websiteTypeName}</span>
+                                  </div>
+                                )}
+                                {msg.orderCard.email && (
+                                  <div className="flex justify-between">
+                                    <span className="text-slate-500">Confirmation Sent:</span>
+                                    <span className="font-mono text-slate-700 dark:text-slate-300 truncate max-w-[170px]">{msg.orderCard.email}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  navigate(`/track-order?id=${msg.orderCard?.requirementId || msg.requirementId}`);
+                                }}
+                                className="py-2 px-2.5 rounded-xl text-[11px] font-black text-white l2b-gradient-bg shadow-xs hover:opacity-95 flex items-center justify-center gap-1 cursor-pointer transition-all"
+                              >
+                                <span>📦 Track Sprint</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  navigate('/dashboard');
+                                }}
+                                className="py-2 px-2.5 rounded-xl text-[11px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-50 flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                              >
+                                <span>📊 Client Portal</span>
+                              </button>
+                            </div>
                           </div>
                         )}
 

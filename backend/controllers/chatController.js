@@ -114,23 +114,131 @@ export const handleChatMessage = async (req, res) => {
       activeDemos: demos,
     });
 
-    // Smart auto-detection of Phone Number, Email, and Intents in message
-    const phoneMatch = message.match(/(?:\+?91[\s-]?)?[6-9]\d{9}/) || message.match(/\b\d{10,12}\b/);
-    const emailMatch = message.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
-    const callbackIntent = /call|phone|callback|contact|reach|যোগাযোগ|কল|ফোন|নম্বর|কথা/i.test(message);
-    const requirementIntent = /requirement|order|website|app|build|banate|chai|dorkar|create|develop|restaurant|salon|hotel|ecommerce|shop|ওয়েবসাইট|অ্যাপ|বানাবো/i.test(message);
+    // Helper function to intelligently parse project order parameters from conversation thread
+    const extractOrderDetailsFromThread = (threadMessages, userProfile) => {
+      const allText = threadMessages.map((m) => m.content || '').join('\n');
+
+      // 1. Phone number (strictly 10-12 digits)
+      const pMatch = allText.match(/(?:\+?91[\s-]?)?[6-9]\d{9}/) || allText.match(/\b[6-9]\d{9}\b/);
+      const phone = pMatch ? pMatch[0].replace(/[\s-+]/g, '').slice(-10) : (userProfile?.phone || '');
+
+      // 2. Email address
+      const eMatch = allText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
+      const email = eMatch ? eMatch[0].toLowerCase() : (userProfile?.email || '');
+
+      // 3. Client Name
+      let name = userProfile?.name || '';
+      if (!name || name === 'Valued Client') {
+        const nMatch = allText.match(/(?:name|naam|নাম|owner|client|I am|Ami|আমার নাম)\s*(?::|is|hocche|-)?\s*([A-Za-z\u0980-\u09FF\s]{2,30})/i);
+        if (nMatch && nMatch[1]) {
+          const candidate = nMatch[1].trim().split(/\n|,|\./)[0].trim();
+          if (candidate && candidate.length > 2 && !/^(website|cafe|restaurant|shop|order|phone|email|confirm|yes|ok)$/i.test(candidate)) {
+            name = candidate;
+          }
+        }
+      }
+      if (!name) name = 'Valued Client';
+
+      // 4. Business / Brand Name
+      let businessName = userProfile?.company || '';
+      const bMatch = allText.match(/(?:business|brand|company|shop|store|cafe|restaurant|clinic|hotel|ব্যবসা|দোকান|ব্র্যান্ড|কোম্পানি|নাম)\s*(?:name|naam|er naam|er name)?\s*(?::|is|hocche|-)?\s*([A-Za-z0-9\u0980-\u09FF\s&'-]{2,50})/i);
+      if (bMatch && bMatch[1]) {
+        const candidate = bMatch[1].trim().split(/\n|,|\./)[0].trim();
+        if (candidate && candidate.length > 2 && !/^(website|phone|email|order|confirm|yes|ok|chai|banabo)$/i.test(candidate)) {
+          businessName = candidate;
+        }
+      }
+      if (!businessName) {
+        businessName = name !== 'Valued Client' ? `${name}'s Website Project` : 'Custom Client Project';
+      }
+
+      // 5. Website Type & Category
+      let websiteTypeName = 'Custom Business Website';
+      let websiteType = 'custom_business';
+      if (/restaurant|cafe|food|dining|biryani|রেস্টুরেন্ট|ক্যাফে|খাবার/i.test(allText)) {
+        websiteTypeName = 'Restaurant & Cafe Website';
+        websiteType = 'restaurant_cafe';
+      } else if (/ecommerce|shop|store|boutique|clothing|shopping|ই-কমার্স|দোকান|কেনাকাটা/i.test(allText)) {
+        websiteTypeName = 'E-Commerce & Online Store';
+        websiteType = 'ecommerce_store';
+      } else if (/salon|spa|beauty|parlour|সিলন|পার্লার/i.test(allText)) {
+        websiteTypeName = 'Salon, Spa & Beauty Booking';
+        websiteType = 'salon_spa';
+      } else if (/clinic|doctor|dental|hospital|health|ডাক্তার|হাসপাতাল|ক্লিনিক/i.test(allText)) {
+        websiteTypeName = 'Medical Clinic & Doctor Portal';
+        websiteType = 'healthcare_clinic';
+      } else if (/hotel|resort|homestay|travel|হোটেল|রিসোর্ট/i.test(allText)) {
+        websiteTypeName = 'Hotel & Homestay Booking Website';
+        websiteType = 'hotel_hospitality';
+      } else if (/coaching|lms|course|tuition|academy|টিচিং|কোচিং|কোর্স/i.test(allText)) {
+        websiteTypeName = 'LMS & Coaching Academy Portal';
+        websiteType = 'lms_education';
+      } else if (/portfolio|agency|photographer|creative|পোর্টফোলিও/i.test(allText)) {
+        websiteTypeName = 'Creative Portfolio & Agency Website';
+        websiteType = 'portfolio_agency';
+      }
+
+      // 6. Selected Features
+      const selectedFeatures = [];
+      if (/whatsapp|হোয়াটসঅ্যাপ/i.test(allText)) selectedFeatures.push('WhatsApp Direct Ordering & Inquiries');
+      if (/payment|razorpay|upi|qr|পেমেন্ট/i.test(allText)) selectedFeatures.push('Online Payment Gateway & QR Integration');
+      if (/booking|appointment|বুকিং/i.test(allText)) selectedFeatures.push('Instant Appointment & Booking System');
+      if (/gallery|photo|ছবি/i.test(allText)) selectedFeatures.push('HD Photo & Portfolio Gallery');
+      selectedFeatures.push('Mobile Responsive UX', 'Free Cloudflare SSL', 'Custom Domain Setup', 'Fast 48h Delivery');
+
+      // 7. Timeline & Budget
+      let timeline = '⚡ Express (48 - 72 Hours)';
+      if (/express|48\s*h|48\s*hours|urgent|তাড়াতাড়ি|জরুরি/i.test(allText)) {
+        timeline = '⚡ Express (48 Hours Guaranteed)';
+      } else if (/standard|3-5|7\s*days/i.test(allText)) {
+        timeline = 'Standard Sprint (3 - 5 Days)';
+      }
+
+      let budget = '₹9,999 / $399 (Starter Tier with 20% OFF Code INDIA2025)';
+      const bgMatch = allText.match(/(?:budget|price|দাম|টাকা)\s*(?::|is|হলো|-)?\s*([₹$0-9,\s-]+)/i);
+      if (bgMatch && bgMatch[1]) {
+        budget = bgMatch[1].trim();
+      }
+
+      return {
+        phone,
+        email,
+        name,
+        businessName,
+        websiteType,
+        websiteTypeName,
+        selectedFeatures,
+        timeline,
+        budget,
+        notes: allText.slice(-600).trim(),
+      };
+    };
+
+    // Extract captured ordering details across the whole conversation
+    const capturedOrder = extractOrderDetailsFromThread(aiInput, currentUser);
+    const isConfirmIntent = /\b(confirm|confirmed|yes|yep|yeah|sure|proceed|ok|okay|done|accept|ha|haan|korun|koro|thik ache|hobe|হ্যাঁ|কনফার্ম|করুন|ঠিক আছে|হবে)\b/i.test(message);
+    const hasOrderIntent = /requirement|order|website|app|build|banate|chai|dorkar|create|develop|রেস্টুরেন্ট|ক্যাফে|অর্ডার|বানাবো/i.test(message) || isConfirmIntent;
 
     let callbackCreated = false;
     let requirementCreated = false;
     let createdRequirementId = null;
+    let orderCardData = null;
 
-    let detectedPhone = phoneMatch ? phoneMatch[0].replace(/[\s-]/g, '') : (currentUser?.phone || '');
-    let detectedEmail = emailMatch ? emailMatch[0].toLowerCase() : (currentUser?.email || '');
-    let detectedName = currentUser?.name || 'Valued Client';
+    let detectedPhone = capturedOrder.phone || (phoneMatch ? phoneMatch[0].replace(/[\s-]/g, '') : (currentUser?.phone || ''));
+    let detectedEmail = capturedOrder.email || (emailMatch ? emailMatch[0].toLowerCase() : (currentUser?.email || ''));
+    let detectedName = capturedOrder.name || currentUser?.name || 'Valued Client';
     const isBengali = /[\u0980-\u09FF]/.test(message);
 
-    // 1. Direct Requirement Registration from Chat if user shares phone + project need
-    if (detectedPhone && requirementIntent && (message.length > 25 || detectedEmail)) {
+    // Check if an order was already registered in this chat session to prevent duplicate spamming
+    const alreadyHasOrderInSession = (session.messages || []).some((m) => m.requirementCreated || (m.content && m.content.includes('Order ID: `REQ-')));
+
+    // Finalize and Confirm Requirement when user confirms or provides complete contact details for project
+    if (
+      !alreadyHasOrderInSession &&
+      detectedPhone &&
+      (detectedEmail || currentUser) &&
+      (isConfirmIntent || (hasOrderIntent && message.length > 25 && detectedPhone.length >= 10))
+    ) {
       try {
         const reqId = generateRequirementId();
         const { default: Requirement } = await import('../models/Requirement.js');
@@ -139,20 +247,21 @@ export const handleChatMessage = async (req, res) => {
 
         const reqPayload = {
           requirementId: reqId,
-          websiteType: 'AI Chat Custom Project Submission',
-          websiteTypeName: 'AI Chat Smart Order',
+          websiteType: capturedOrder.websiteType || 'custom_business',
+          websiteTypeName: capturedOrder.websiteTypeName || 'Custom Business Website',
           clientInfo: {
-            businessName: currentUser?.company || 'Client Business (via AI Chat)',
+            businessName: capturedOrder.businessName,
             ownerName: detectedName,
             mobile: detectedPhone,
             email: detectedEmail || `${detectedPhone}@client.local2brand.com`,
           },
-          additionalNotes: `Auto-submitted via AI Chatbot Session ${sessionId}. Client Message: "${message.trim()}"`,
+          selectedFeatures: capturedOrder.selectedFeatures,
+          timeline: capturedOrder.timeline,
+          budget: capturedOrder.budget,
+          additionalNotes: `Auto-submitted via AI Chatbot Session ${sessionId}. Order Details: Business: "${capturedOrder.businessName}", Type: "${capturedOrder.websiteTypeName}", Features: "${capturedOrder.selectedFeatures.join(', ')}", Client Summary: "${capturedOrder.notes}"`,
           status: 'Submitted',
-          timeline: '⚡ Express (48 - 72 Hours)',
-          budget: 'Standard Tier (from ₹9,999)',
           user: validUserId,
-          submittedAt: new Date()
+          submittedAt: new Date(),
         };
 
         let reqDoc;
@@ -164,8 +273,19 @@ export const handleChatMessage = async (req, res) => {
 
         createdRequirementId = reqId;
         requirementCreated = true;
+        orderCardData = {
+          requirementId: reqId,
+          businessName: capturedOrder.businessName,
+          websiteTypeName: capturedOrder.websiteTypeName,
+          ownerName: detectedName,
+          mobile: detectedPhone,
+          email: detectedEmail,
+          timeline: capturedOrder.timeline,
+          budget: capturedOrder.budget,
+          status: 'Submitted',
+        };
 
-        // Dispatch alerts & emails
+        // Dispatch alerts & emails directly to the submitter's verified email
         sendAdminRequirementAlert(reqDoc).catch((err) => console.warn('AI chat admin requirement alert error:', err.message));
         if (detectedEmail) {
           sendRequirementConfirmationEmail(reqDoc).catch((err) => console.warn('AI chat client requirement email error:', err.message));
@@ -173,14 +293,14 @@ export const handleChatMessage = async (req, res) => {
 
         dataStore.createNotification({
           title: `New AI Chat Project Order (${reqId})`,
-          message: `${detectedName} submitted a project via AI Chat (${detectedPhone})`,
+          message: `${detectedName} confirmed order for ${capturedOrder.businessName} (${detectedPhone})`,
           type: 'requirement',
           link: '/admin/requirements',
         }).catch((err) => console.warn('Notification error:', err.message));
 
         const orderBanner = isBengali
-          ? `\n\n---\n🎉 **আপনার প্রজেক্ট অর্ডার সফলভাবে নথিভুক্ত হয়েছে!**\n- **Order ID:** \`${reqId}\`\n- **স্ট্যাটাস:** Submitted (ইঞ্জিনিয়ারিং রিভিউ চলছে)\n- ফাউন্ডার ও অ্যাডমিন ডেস্কে লাইভ অ্যালার্ট পাঠানো হয়েছে। আপনি আপনার ক্লায়েন্ট ড্যাশবোর্ড থেকে এই Order ID দিয়ে সরাসরি প্রোগ্রেস ট্র্যাক করতে পারবেন! 🚀`
-          : `\n\n---\n🎉 **Your Project Order Has Been Logged!**\n- **Order ID:** \`${reqId}\`\n- **Status:** Submitted (Under Engineering Review)\n- Live alert dispatched to our senior tech desk. You can track sprint progress online in your Client Portal using your Order ID! 🚀`;
+          ? `\n\n---\n🎉 **আপনার প্রজেক্ট অর্ডার সফলভাবে কনফার্ম হয়েছে!**\n- 🏢 **ব্যবসার নাম:** ${capturedOrder.businessName}\n- 🌐 **ওয়েবসাইটের ধরণ:** ${capturedOrder.websiteTypeName}\n- 👤 **ক্লায়েন্ট:** ${detectedName}\n- 📱 **ফোন:** ${detectedPhone}\n- ✉️ **ইমেল:** ${detectedEmail || 'N/A'}\n- ⏱️ **টাইমলাইন:** ${capturedOrder.timeline}\n- 📦 **Order ID:** \`${reqId}\`\n\nফাউন্ডার ও ইঞ্জিনিয়ারিং ডেস্কে লাইভ অ্যালার্ট পাঠানো হয়েছে। আপনি আপনার ক্লায়েন্ট ড্যাশবোর্ড থেকে এই Order ID দিয়ে সরাসরি লাইভ প্রোগ্রেস ট্র্যাক করতে পারবেন! 🚀`
+          : `\n\n---\n🎉 **Your Project Order is Confirmed & Registered!**\n- 🏢 **Business Name:** ${capturedOrder.businessName}\n- 🌐 **Website Type:** ${capturedOrder.websiteTypeName}\n- 👤 **Client Name:** ${detectedName}\n- 📱 **Mobile:** ${detectedPhone}\n- ✉️ **Email:** ${detectedEmail || 'N/A'}\n- ⏱️ **Timeline:** ${capturedOrder.timeline}\n- 📦 **Order ID:** \`${reqId}\`\n\nLive sprint alert dispatched to our senior tech leads. You can track progress in real-time in your Client Portal using your Order ID! 🚀`;
 
         aiResponse.text += orderBanner;
       } catch (reqErr) {
@@ -294,6 +414,7 @@ export const handleChatMessage = async (req, res) => {
       callbackPhone: detectedPhone || null,
       requirementCreated,
       requirementId: createdRequirementId || null,
+      orderCard: orderCardData || null,
       timestamp: assistantMessageDoc.timestamp,
     });
   } catch (error) {

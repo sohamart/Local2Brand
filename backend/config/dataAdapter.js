@@ -377,43 +377,69 @@ export const dataStore = {
     });
   },
 
-  async findUserByEmail(emailOrPhone) {
-    if (!emailOrPhone) return null;
-    const raw = String(emailOrPhone).trim();
-    const cleanEmail = raw.toLowerCase();
-    const cleanDigits = raw.replace(/\D/g, '');
+  async findUserByEmail(email) {
+    if (!email) return null;
+    const cleanEmail = String(email).toLowerCase().trim();
 
     await ensureDb();
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
         const escaped = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const queryOr = [
-          { email: { $regex: new RegExp(`^${escaped}$`, 'i') } }
-        ];
-        if (cleanDigits.length >= 6) {
-          queryOr.push({ phone: { $regex: cleanDigits, $options: 'i' } });
-          queryOr.push({ phone: raw });
-        } else if (raw.length > 0) {
-          queryOr.push({ phone: raw });
-        }
-
-        const dbUser = await User.findOne({ $or: queryOr }).select('+password +emailOtp +emailOtpExpires');
+        const dbUser = await User.findOne({ email: { $regex: new RegExp(`^${escaped}$`, 'i') } }).select('+password +emailOtp +emailOtpExpires');
         if (dbUser) return dbUser;
       } catch (err) {
         console.warn('MongoDB findUserByEmail notice:', err.message);
       }
     }
     const users = readLocalStore('users') || [];
+    return users.find((u) => u && u.email && u.email.toLowerCase().trim() === cleanEmail) || null;
+  },
+
+  async findUserByPhone(phone) {
+    if (!phone) return null;
+    const rawPhone = String(phone).trim();
+    const cleanDigits = rawPhone.replace(/\D/g, '');
+    if (!cleanDigits || cleanDigits.length < 7) return null;
+
+    // Use last 10 digits for Indian & standard phone matching
+    const standard10 = cleanDigits.slice(-10);
+
+    await ensureDb();
+    if (isDbConnected()) {
+      try {
+        const { User } = await import('../models/User.js');
+        const dbUser = await User.findOne({
+          $or: [
+            { phone: rawPhone },
+            { phone: { $regex: standard10, $options: 'i' } }
+          ]
+        }).select('+password +emailOtp +emailOtpExpires');
+        if (dbUser) return dbUser;
+      } catch (err) {
+        console.warn('MongoDB findUserByPhone notice:', err.message);
+      }
+    }
+    const users = readLocalStore('users') || [];
     return (
       users.find((u) => {
-        if (!u) return false;
-        if (u.email && u.email.toLowerCase().trim() === cleanEmail) return true;
-        if (cleanDigits.length >= 6 && u.phone && u.phone.replace(/\D/g, '').includes(cleanDigits)) return true;
-        if (u.phone && u.phone.trim() === raw) return true;
-        return false;
+        if (!u || !u.phone) return false;
+        const uDigits = String(u.phone).replace(/\D/g, '');
+        return uDigits.slice(-10) === standard10 || u.phone.trim() === rawPhone;
       }) || null
     );
+  },
+
+  async findUserByIdentifier(identifier) {
+    if (!identifier) return null;
+    const raw = String(identifier).trim();
+    if (raw.includes('@')) {
+      return await this.findUserByEmail(raw);
+    }
+    // Try phone first if purely digits/phone format, else check both
+    const userByPhone = await this.findUserByPhone(raw);
+    if (userByPhone) return userByPhone;
+    return await this.findUserByEmail(raw);
   },
 
 

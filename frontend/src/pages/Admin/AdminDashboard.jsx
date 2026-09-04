@@ -33,6 +33,7 @@ import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import MarqueeTicker from '../../components/common/MarqueeTicker';
 import { SEO } from '../../components/common/CommonUI';
+import DashboardLoader from '../../components/common/DashboardLoader';
 
 
 const STATUS_BADGES = {
@@ -231,6 +232,18 @@ export default function AdminDashboard() {
   };
 
   const maxWeeklyActivity = Math.max(1, ...weeklyTrends.map((w) => w.totalActivity || w.orders || 1));
+
+  if (loading) {
+    return (
+      <div className="py-20 flex items-center justify-center">
+        <DashboardLoader
+          title="Loading Master Admin Command Center..."
+          subtitle="Aggregating live project submissions, telemetry metrics, and customer pipeline..."
+          role="admin"
+        />
+      </div>
+    );
+  }
 
   return (
     <>
