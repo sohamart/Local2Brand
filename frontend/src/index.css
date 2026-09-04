@@ -107,10 +107,12 @@
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-/* Super Smooth Responsive Momentum Scrolling Standards */
+/* Super Smooth Responsive Momentum Scrolling Standards with Global Invisible Scrollbar */
 html {
   scroll-behavior: smooth !important;
   -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
 }
 
 body {
@@ -119,35 +121,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   touch-action: pan-y pinch-zoom;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
-/* Butter-Smooth Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+/* Globally Hide Scrollbar on all elements while keeping full scrolling functionality */
+* {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+*::-webkit-scrollbar,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
 }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(147, 51, 234, 0.25);
-  border-radius: 9999px;
-  transition: background 0.2s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(147, 51, 234, 0.6);
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(168, 85, 247, 0.5);
-}
 
 /* Authentic Circular UI Reveal Lens Standards */
 ::view-transition-old(root),
@@ -1352,4 +1344,51 @@ iframe.yt-bg-iframe {
   pointer-events: none !important;
   border: 0 !important;
   outline: none !important;
+}
+
+/* Toastify Modern Styling for Dark & Light Mode */
+.Toastify__toast-container {
+  width: auto !important;
+  max-width: 95vw !important;
+}
+
+@media (min-width: 640px) {
+  .Toastify__toast-container {
+    min-width: 360px !important;
+    max-width: 440px !important;
+  }
+}
+
+.Toastify__toast {
+  border-radius: 16px !important;
+  font-family: inherit !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: blur(16px) !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+
+.dark .Toastify__toast {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .Toastify__toast--error {
+  border: 1px solid rgba(244, 63, 94, 0.4) !important;
+}
+
+.dark .Toastify__toast--success {
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+
+.dark .Toastify__close-button {
+  color: #94a3b8 !important;
+  opacity: 0.8 !important;
+}
+
+.dark .Toastify__close-button:hover {
+  color: #ffffff !important;
+  opacity: 1 !important;
 }

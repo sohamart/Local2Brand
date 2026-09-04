@@ -1,7 +1,18 @@
 import multer from 'multer';
+import os from 'os';
+import path from 'path';
 
-// Memory storage for serverless and local environments
-const storage = multer.memoryStorage();
+// Disk storage in temp directory for handling large files (up to 2GB) without RAM exhaustion
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, os.tmpdir());
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname || '') || '.bin';
+    cb(null, `l2b-${uniqueSuffix}${ext}`);
+  },
+});
 
 // File filter (images and video media)
 const fileFilter = (req, file, cb) => {
@@ -22,12 +33,14 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 2048 * 1024 * 1024, // 2 GB (2147483648 bytes)
-    fieldSize: 2048 * 1024 * 1024,
+    fileSize: 2024 * 1024 * 1024, // 2024 MB
+    fieldSize: 2024 * 1024 * 1024, // 2024 MB
     fields: 50,
     files: 20,
   },
 });
+
+
 
 
 

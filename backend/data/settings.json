@@ -34,7 +34,7 @@
       "btnText": "Claim Offer"
     },
     "bannerImage": "",
-    "updatedAt": "2026-09-04T18:32:50.170Z",
+    "updatedAt": "2026-09-04T19:34:37.146Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
     "updatedBy": "6a95d3798cd0de29be2399db",
@@ -262,7 +262,7 @@
         "videoPoster": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&auto=format&fit=crop&q=80"
       },
       "United States": {
-        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-aerial-timelapse-of-a-modern-city-at-night-42217-large.mp4",
+        "videoBg": "https://res.cloudinary.com/tm2pwzjj/video/upload/v1788550477/local2brand_videos/l2b-1788550452746-218134190_nqzzms.mp4",
         "videoPoster": "https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=1200&auto=format&fit=crop&q=80"
       },
       "United Kingdom": {

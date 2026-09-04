@@ -4,10 +4,16 @@ import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
 
-// Safe upload handler with explicit error interception
+// Safe upload handler with explicit error interception and no timeout for 2GB streaming
 router.post(
   '/',
   (req, res, next) => {
+    // Disable socket timeouts for large 2GB media streaming
+    if (req.socket) {
+      req.socket.setTimeout(0);
+    }
+    req.setTimeout(0);
+
     upload.any()(req, res, (err) => {
       if (err) {
         console.warn('Multer upload notice:', err.message);
@@ -21,6 +27,7 @@ router.post(
   },
   uploadImage
 );
+
 
 export default router;
 

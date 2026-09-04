@@ -107,8 +107,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-app.use(express.json({ limit: '200mb' }));
-app.use(express.urlencoded({ extended: true, limit: '200mb' }));
+app.use(express.json({ limit: '2024mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2024mb' }));
+
+
 app.use(cookieParser());
 
 if (process.env.NODE_ENV !== 'production') {
@@ -226,11 +228,19 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
       dbSeeded = true;
 
 
-      app.listen(PORT, () => {
+      const server = app.listen(PORT, () => {
         console.log(`\n🚀 LOCAL2BRAND Backend running on http://localhost:${PORT}`);
         console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
         console.log(`🔗 API Base: http://localhost:${PORT}/api\n`);
       });
+
+      // Disable timeouts for 2GB large file uploads
+      server.setTimeout(0);
+      server.keepAliveTimeout = 600000;
+      server.headersTimeout = 605000;
+      if (server.requestTimeout !== undefined) {
+        server.requestTimeout = 0;
+      }
     } catch (err) {
       console.error('Error during server startup:', err.message);
     }
@@ -240,3 +250,4 @@ if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
 }
 
 export default app;
+

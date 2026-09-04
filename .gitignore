@@ -20,6 +20,13 @@ dist-ssr
 .env.local
 !.env.example
 
+# Uploads and User Media
+uploads/
+backend/uploads/
+*.crdownload
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -29,3 +36,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+

@@ -276,9 +276,9 @@ function MainAppContent() {
         pauseOnFocusLoss={false}
         draggable
         pauseOnHover
-        theme="colored"
         style={{ zIndex: 2147483647 }}
       />
+
 
     </div>
   );

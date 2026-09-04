@@ -1,20 +1,87 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { cloudinary, isCloudinaryConfigured } from '../config/cloudinary.js';
 
-// Helper to upload a buffer to Cloudinary via stream
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const backendUploadsDir = path.join(__dirname, '..', 'uploads');
+
+// Helper to upload media files directly to Cloudinary (single or chunked)
+const uploadFileToCloudinary = (filePath, options = {}) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const stats = fs.statSync(filePath);
+      const isLarge = stats.size > 30 * 1024 * 1024; // If > 30MB, use chunked upload_large
+
+      console.log(`☁️ Uploading to Cloudinary [Size: ${(stats.size / (1024 * 1024)).toFixed(1)} MB, Method: ${isLarge ? 'upload_large' : 'upload'}]...`);
+
+      if (isLarge) {
+        cloudinary.uploader.upload_large(
+          filePath,
+          {
+            resource_type: options.resource_type || 'video',
+            chunk_size: 20 * 1024 * 1024, // 20 MB chunks
+            timeout: 1200000,
+            ...options,
+          },
+          (error, result) => {
+            if (error) {
+              console.error('❌ Cloudinary upload_large error:', error);
+              return reject(error);
+            }
+            console.log('✅ Cloudinary upload_large complete:', result?.secure_url);
+            resolve(result);
+          }
+        );
+      } else {
+        cloudinary.uploader.upload(
+          filePath,
+          {
+            resource_type: options.resource_type || 'auto',
+            timeout: 600000,
+            ...options,
+          },
+          (error, result) => {
+            if (error) {
+              console.error('❌ Cloudinary upload error:', error);
+              return reject(error);
+            }
+            console.log('✅ Cloudinary upload complete:', result?.secure_url);
+            resolve(result);
+          }
+        );
+      }
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+// Helper to upload a buffer to Cloudinary via stream (fallback if in-memory)
 const uploadBufferToCloudinary = (buffer, options = {}) => {
   return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
-      if (error) return reject(error);
-      resolve(result);
-    });
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        timeout: 900000,
+        ...options,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
     stream.end(buffer);
   });
 };
 
-// @desc    Upload single or multiple images (FormData or Base64 Data URI)
+// @desc    Upload single or multiple images/videos up to 2024 MB directly to Cloudinary CDN
 // @route   POST /api/upload
 // @access  Public
 export const uploadImage = async (req, res) => {
+
+  const tempFilesToDelete = [];
+
   try {
     let filesList = [];
     if (req.file) {
@@ -44,57 +111,121 @@ export const uploadImage = async (req, res) => {
 
     const uploadedUrls = [];
 
-    // 1. Process Multipart Files
+    // 1. Process Multipart Files (from disk or memory)
     if (filesList && filesList.length > 0) {
       for (const file of filesList) {
+        const filePath = file.path;
         const buffer = file.buffer;
         const mimetype = file.mimetype || 'image/jpeg';
-        const isVideo = mimetype.startsWith('video/');
+        const isVideo = mimetype.startsWith('video/') || file.originalname?.match(/\.(mp4|webm|ogg|mov|mkv|avi)$/i);
         const resourceType = isVideo ? 'video' : 'auto';
+        const targetFolder = isVideo ? 'local2brand_videos' : 'local2brand_assets';
 
-        if (isCloudinaryConfigured && buffer) {
-          try {
-            const result = await uploadBufferToCloudinary(buffer, {
-              folder: isVideo ? 'local2brand_videos' : 'local2brand_assets',
-              resource_type: resourceType,
-            });
-            uploadedUrls.push(result.secure_url);
-          } catch (cloudErr) {
-            console.warn('Cloudinary upload stream notice, using resilient data URI:', cloudErr.message);
-            const base64Data = buffer.toString('base64');
-            uploadedUrls.push(`data:${mimetype};base64,${base64Data}`);
-          }
-        } else if (buffer) {
-          const base64Data = buffer.toString('base64');
-          uploadedUrls.push(`data:${mimetype};base64,${base64Data}`);
-        } else if (file.path) {
-          if (isCloudinaryConfigured) {
+        if (filePath) {
+          tempFilesToDelete.push(filePath);
+        }
+
+        let uploadedUrl = null;
+
+        if (isCloudinaryConfigured) {
+          if (filePath) {
             try {
-              const result = await cloudinary.uploader.upload(file.path, {
-                folder: isVideo ? 'local2brand_videos' : 'local2brand_assets',
+              // Attempt Cloudinary upload
+              const result = await uploadFileToCloudinary(filePath, {
+                folder: targetFolder,
+                asset_folder: targetFolder,
+                use_filename: true,
+                unique_filename: true,
                 resource_type: resourceType,
               });
-              uploadedUrls.push(result.secure_url);
-            } catch (e) {}
+              if (result?.secure_url) {
+                uploadedUrl = result.secure_url;
+              }
+            } catch (cloudErr) {
+              console.warn('ℹ️ Cloudinary free tier limit notice, saving to high-speed persistent server storage for large 2GB file:', cloudErr.message);
+              
+              // If file exceeds Cloudinary's 100MB free tier limit, save directly to persistent server storage
+              const uniqueFilename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname || '') || (isVideo ? '.mp4' : '.jpg')}`;
+              const targetDir = isVideo ? path.join(backendUploadsDir, 'videos') : backendUploadsDir;
+              
+              try {
+                if (!fs.existsSync(targetDir)) {
+                  fs.mkdirSync(targetDir, { recursive: true });
+                }
+                const destPath = path.join(targetDir, uniqueFilename);
+                await fs.promises.copyFile(filePath, destPath);
+                
+                const hostUrl = req.get('host');
+                const protocol = req.protocol || 'http';
+                uploadedUrl = isVideo 
+                  ? `${protocol}://${hostUrl}/uploads/videos/${uniqueFilename}` 
+                  : `${protocol}://${hostUrl}/uploads/${uniqueFilename}`;
+              } catch (fsErr) {
+                console.error('Local copy error:', fsErr);
+                throw cloudErr;
+              }
+            }
+          } else if (buffer) {
+            try {
+              const result = await uploadBufferToCloudinary(buffer, {
+                folder: targetFolder,
+                asset_folder: targetFolder,
+                use_filename: true,
+                unique_filename: true,
+                resource_type: resourceType,
+              });
+              if (result?.secure_url) {
+                uploadedUrl = result.secure_url;
+              }
+            } catch (cloudErr) {
+              console.warn('Cloudinary buffer error:', cloudErr.message);
+              if (buffer.length < 5 * 1024 * 1024) {
+                uploadedUrl = `data:${mimetype};base64,${buffer.toString('base64')}`;
+              } else {
+                throw cloudErr;
+              }
+            }
           }
+        } else {
+          // Offline fallback when Cloudinary is not configured
+          if (filePath) {
+            const uniqueFilename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname || '') || (isVideo ? '.mp4' : '.jpg')}`;
+            const targetDir = isVideo ? path.join(backendUploadsDir, 'videos') : backendUploadsDir;
+            if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+            const destPath = path.join(targetDir, uniqueFilename);
+            await fs.promises.copyFile(filePath, destPath);
+            const hostUrl = req.get('host');
+            const protocol = req.protocol || 'http';
+            uploadedUrl = isVideo 
+              ? `${protocol}://${hostUrl}/uploads/videos/${uniqueFilename}` 
+              : `${protocol}://${hostUrl}/uploads/${uniqueFilename}`;
+          } else if (buffer && buffer.length < 5 * 1024 * 1024) {
+            uploadedUrls.push(`data:${mimetype};base64,${buffer.toString('base64')}`);
+          }
+        }
+
+        if (uploadedUrl) {
+          uploadedUrls.push(uploadedUrl);
         }
       }
     }
+
+
+
+
 
     // 2. Process Base64 Data URI in JSON body
     const base64Input = req.body?.image || req.body?.file || req.body?.avatar || req.body?.data;
     if (base64Input && typeof base64Input === 'string' && (base64Input.startsWith('data:image') || base64Input.startsWith('data:video'))) {
       const isBase64Video = base64Input.startsWith('data:video');
       if (isCloudinaryConfigured) {
-        try {
-          const result = await cloudinary.uploader.upload(base64Input, {
-            folder: isBase64Video ? 'local2brand_videos' : 'local2brand_assets',
-            resource_type: isBase64Video ? 'video' : 'auto',
-          });
+        const result = await cloudinary.uploader.upload(base64Input, {
+          folder: isBase64Video ? 'local2brand_videos' : 'local2brand_assets',
+          resource_type: isBase64Video ? 'video' : 'auto',
+          timeout: 900000,
+        });
+        if (result?.secure_url) {
           uploadedUrls.push(result.secure_url);
-        } catch (cloudErr) {
-          console.warn('Cloudinary base64 upload notice:', cloudErr.message);
-          uploadedUrls.push(base64Input);
         }
       } else {
         uploadedUrls.push(base64Input);
@@ -104,7 +235,7 @@ export const uploadImage = async (req, res) => {
     if (uploadedUrls.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide one or more image files or valid base64 data to upload',
+        message: 'No valid media file was processed. Please try again.',
       });
     }
 
@@ -115,12 +246,24 @@ export const uploadImage = async (req, res) => {
       urls: uploadedUrls,
     });
   } catch (error) {
-    console.error('Image upload error:', error);
+    console.error('Media upload error:', error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Error processing image upload',
+      message: error.message || 'Error processing media upload to Cloudinary',
     });
+  } finally {
+    // Clean up temporary disk files
+    for (const tempPath of tempFilesToDelete) {
+      try {
+        if (fs.existsSync(tempPath)) {
+          await fs.promises.unlink(tempPath);
+        }
+      } catch (e) {
+        console.warn('Failed to clean temp file:', tempPath, e.message);
+      }
+    }
   }
 };
+
 
 

@@ -593,11 +593,16 @@ export default function AdminMedia() {
                           <Video className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                           Background Video (MP4 / WebM / Cloudinary / YouTube)
                         </label>
-                        {hasCloudinaryVideo && (
-                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">
-                            ⚡ Cloudinary CDN Active
+                        {currentData.videoBg && (
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                            hasCloudinaryVideo 
+                              ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60' 
+                              : 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60'
+                          }`}>
+                            {hasCloudinaryVideo ? '⚡ Cloudinary CDN Active' : '⚡ High-Speed CDN Active'}
                           </span>
                         )}
+
                       </div>
 
                       <div className="flex gap-2">
@@ -667,37 +672,91 @@ export default function AdminMedia() {
                       </div>
                     </div>
 
-                    {/* Live Preview Container */}
+                    {/* Live Interactive Video Preview Container */}
                     <div className="pt-2">
-                      <div className="text-[11px] font-bold text-slate-500 mb-1 flex items-center gap-1">
-                        <Play className="w-3 h-3 text-purple-600" /> Live Preview:
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5">
+                        <span className="flex items-center gap-1.5">
+                          <Play className="w-3 h-3 text-purple-600 dark:text-purple-400" />
+                          <span>Video &amp; Poster Live Preview:</span>
+                        </span>
+                        <span className="text-[10px] text-purple-600 dark:text-purple-400 font-normal">
+                          Hover card to play video
+                        </span>
                       </div>
-                      <div className="relative h-36 rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center group">
-                        {currentData.videoPoster && (
+
+                      <div 
+                        className="relative h-40 rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-md group cursor-pointer"
+                        onMouseEnter={(e) => {
+                          const v = e.currentTarget.querySelector('video');
+                          if (v) {
+                            v.muted = true;
+                            v.currentTime = 0;
+                            v.play().catch(() => {});
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          const v = e.currentTarget.querySelector('video');
+                          if (v) {
+                            v.pause();
+                            v.currentTime = 0;
+                          }
+                        }}
+                      >
+                        {/* 1. Poster Image (Visible when resting) */}
+                        {currentData.videoPoster ? (
                           <img
                             src={currentData.videoPoster}
-                            alt="Poster"
-                            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-500"
+                            alt={`${countryKey} Poster`}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-all duration-500 opacity-90 group-hover:opacity-0"
                           />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-slate-500 text-xs">
+                            No Poster Image Set
+                          </div>
                         )}
+
+                        {/* 2. Video Element (Fades in & plays continuously on hover) */}
                         {currentData.videoBg && !currentData.videoBg.includes('youtube') && (
                           <video
                             src={currentData.videoBg}
                             muted
                             loop
                             playsInline
-                            className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity"
-                            onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
-                            onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                            preload="metadata"
+                            className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-100 group-hover:scale-105"
                           />
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
-                          <div className="text-white text-xs font-bold truncate">
-                            {baseInfo.flag} {countryKey} Theme Preview
+
+                        {/* 3. Top Badges (Resting vs Playing) */}
+                        <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1.5">
+                          {/* Idle Badge */}
+                          <div className="px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-bold text-white/90 border border-white/10 flex items-center gap-1 group-hover:hidden transition-all">
+                            <Play className="w-2.5 h-2.5 text-purple-400 fill-purple-400" />
+                            <span>Preview</span>
+                          </div>
+
+                          {/* Hover Active Badge */}
+                          <div className="hidden group-hover:flex px-2 py-0.5 rounded-full bg-purple-600/90 backdrop-blur-md text-[10px] font-extrabold text-white border border-purple-400/40 items-center gap-1 shadow-lg animate-pulse">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                            <span>Playing Video</span>
+                          </div>
+                        </div>
+
+                        {/* 4. Bottom Title Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent flex items-end p-3 pointer-events-none">
+                          <div className="w-full flex items-center justify-between">
+                            <div className="text-white text-xs font-bold truncate flex items-center gap-1.5 drop-shadow-md">
+                              <span>{baseInfo.flag}</span>
+                              <span>{countryKey} Theme Preview</span>
+                            </div>
+                            <span className="text-[10px] text-slate-300 font-mono bg-black/40 px-1.5 py-0.5 rounded border border-white/10">
+                              {currentData.videoBg ? '1080p Stream' : 'No Video'}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
+
 
                   </div>
                 );
