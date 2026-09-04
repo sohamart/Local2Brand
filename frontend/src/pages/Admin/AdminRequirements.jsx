@@ -38,7 +38,8 @@ import {
   Zap,
   Sliders,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Trash2
 } from 'lucide-react';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
@@ -148,6 +149,27 @@ export default function AdminRequirements() {
       toast.error(err.message || 'Failed to update');
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const handleDeleteRequirement = async (reqItem, e) => {
+    if (e) e.stopPropagation();
+    const reqId = reqItem.requirementId || reqItem._id;
+    const business = reqItem.clientInfo?.businessName || reqItem.websiteTypeName || 'Project Submission';
+    if (!window.confirm(`⚠️ Are you sure you want to permanently delete Requirement #${reqId} (${business}) from the database?\n\nThis will remove the record completely and dispatch deletion notification emails to the client and admins.`)) {
+      return;
+    }
+    try {
+      const res = await api.delete(`/requirements/admin/${reqId}`);
+      if (res?.success) {
+        toast.success(`Requirement #${reqId} deleted from database. Notifications sent.`);
+        setRequirements((prev) => prev.filter((r) => r.requirementId !== reqId && r._id !== reqId));
+        if (selectedReq && (selectedReq.requirementId === reqId || selectedReq._id === reqId)) {
+          setSelectedReq(null);
+        }
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete requirement');
     }
   };
 
@@ -288,13 +310,22 @@ export default function AdminRequirements() {
                   <span className="text-[11px] text-slate-400">
                     {new Date(req.createdAt || req.submittedAt).toLocaleDateString()}
                   </span>
-                  <button
-                    onClick={() => handleOpenDetail(req)}
-                    className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm hover:bg-purple-500 cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Inspect Answers</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleDeleteRequirement(req, e)}
+                      className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
+                      title="Delete requirement from database"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleOpenDetail(req)}
+                      className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm hover:bg-purple-500 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Inspect Answers</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -347,13 +378,22 @@ export default function AdminRequirements() {
                       {new Date(req.createdAt || req.submittedAt).toLocaleDateString()}
                     </td>
                     <td className="p-4 text-right">
-                      <button
-                        onClick={() => handleOpenDetail(req)}
-                        className="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300 hover:bg-purple-100 font-bold flex items-center gap-1.5 inline-flex cursor-pointer transition-colors shadow-xs"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>Inspect All Answers</span>
-                      </button>
+                      <div className="inline-flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenDetail(req)}
+                          className="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300 hover:bg-purple-100 font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>Inspect All Answers</span>
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteRequirement(req, e)}
+                          className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer shadow-xs"
+                          title="Delete requirement permanently"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -966,6 +1006,15 @@ export default function AdminRequirements() {
               </span>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDeleteRequirement(selectedReq)}
+                  className="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+                  title="Delete this order permanently from database"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete Order</span>
+                </button>
+
                 <a
                   href={`https://wa.me/${selectedReq.clientInfo?.mobile?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${selectedReq.clientInfo?.ownerName || 'Client'}, this is the LOCAL2BRAND Engineering Desk regarding your website order ${selectedReq.requirementId}.`)}`}
                   target="_blank"

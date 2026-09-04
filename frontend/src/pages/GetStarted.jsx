@@ -607,11 +607,13 @@ function StepAiTypewriterView({
   maxReachedStep,
   currentStepIndex,
   onSelectStep,
-  onSwitchLang
+  onSwitchLang,
+  t
 }) {
   const [typedQuestion, setTypedQuestion] = useState('');
   const [typedTip, setTypedTip] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const activeT = t || TRANSLATIONS[lang] || TRANSLATIONS.en;
 
   useEffect(() => {
     if (!guideData) return;
@@ -638,7 +640,7 @@ function StepAiTypewriterView({
     <div className="space-y-4 animate-in fade-in">
       {/* Step Navigation Ribbon: ONLY show unlocked steps! */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
-        {t.steps.map((s, idx) => {
+        {(activeT?.steps || []).map((s, idx) => {
           const isUnlocked = idx <= maxReachedStep;
           const isSelected = idx === stepIdx;
           const isFormCurrent = idx === currentStepIndex;
@@ -1318,7 +1320,7 @@ export default function GetStarted() {
         return lang === 'bn' ? 'অনুগ্রহ করে প্রতিষ্ঠাতা বা মালিকের নাম লিখুন।' : lang === 'hi' ? 'कृपया मालिक / संस्थापक का नाम दर्ज करें।' : 'Please enter Owner / Founder Name.';
       }
       if (!formData.clientInfo.mobile?.trim() || formData.clientInfo.mobile.replace(/[^0-9]/g, '').length < 8) {
-                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'হোয়াটসঅ্যাপ' : lang === 'hi' ? 'व्हाट्सएप' : 'WhatsApp'}</span>
+        return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ফোন/হোয়াটসঅ্যাপ নম্বর দিন।' : lang === 'hi' ? 'कृपया एक वैध मोबाइल नंबर दर्ज करें।' : 'Please enter a valid Mobile / WhatsApp number.';
       }
       if (!formData.clientInfo.email?.trim() || !formData.clientInfo.email.includes('@')) {
         return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ইমেইল অ্যাড্রেস দিন।' : lang === 'hi' ? 'कृपया एक वैध ईमेल पता दर्ज करें।' : 'Please provide a valid Email address.';
@@ -2179,19 +2181,19 @@ export default function GetStarted() {
                                   </div>
                                 </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
-                                  {tpl.liveUrl && (
-                                    <a
-                                      href={tpl.liveUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 hover:bg-blue-100 border border-blue-200 dark:border-blue-800 transition-colors"
-                                      title="Open live preview"
-                                    >
-                                      <ExternalLink className="w-3.5 h-3.5" />
-                                    </a>
-                                  )}
+                                {/* Action Buttons: Live Demo & Apply */}
+                                <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                                  <a
+                                    href={tpl.liveUrl || `/live-demo/${tpl.slug}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 py-2 px-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                                    title="Open live interactive demo preview"
+                                  >
+                                    <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                    <span>{lang === 'bn' ? 'লাইভ ডেমো' : lang === 'hi' ? 'लाइव डेमो' : 'Live Demo'}</span>
+                                    <ExternalLink className="w-3 h-3 opacity-70" />
+                                  </a>
 
                                   <button
                                     type="button"
@@ -2220,14 +2222,23 @@ export default function GetStarted() {
                                           : `🎯 Template "${tpl.title}" applied successfully!`
                                       );
                                     }}
-                                    className={`flex-1 py-1.5 px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                    className={`flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer ${
                                       isCurrentSelected
                                         ? 'bg-purple-600 text-white shadow-xs'
                                         : 'l2b-gradient-bg text-white hover:opacity-95 shadow-2xs active:scale-95'
                                     }`}
                                   >
-                                    <Sparkles className="w-3 h-3" />
-                                    <span>{isCurrentSelected ? (lang === 'bn' ? 'সিলেক্টেড ✓' : 'Applied ✓') : (lang === 'bn' ? 'টেমপ্লেট নিন' : 'Apply Template')}</span>
+                                    {isCurrentSelected ? (
+                                      <>
+                                        <Check className="w-3.5 h-3.5 text-white" />
+                                        <span>{lang === 'bn' ? 'সিলেক্টেড ✓' : 'Applied ✓'}</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Sparkles className="w-3.5 h-3.5 text-white" />
+                                        <span>{lang === 'bn' ? 'টেমপ্লেট নিন' : 'Apply Template'}</span>
+                                      </>
+                                    )}
                                   </button>
                                 </div>
                               </div>
@@ -3286,7 +3297,7 @@ export default function GetStarted() {
                     }`}
                     title="हिंदी में अनुवाद करें"
                   >
-        : targetLang === 'hi' ? 'हिंदी अनुवाद सक्रिय किया गया'
+                    हिंदी
                   </button>
                 </div>
 

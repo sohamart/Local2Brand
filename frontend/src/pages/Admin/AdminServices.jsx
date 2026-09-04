@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Sliders, Plus, Edit2, Trash2, CheckCircle2, X } from 'lucide-react';
 import api from '../../services/api';
 import { SEO } from '../../components/common/CommonUI';
+import { toast } from 'react-toastify';
 
 export default function AdminServices() {
   const [services, setServices] = useState([]);
@@ -73,23 +74,26 @@ export default function AdminServices() {
     try {
       if (editingService) {
         await api.put(`/services/${editingService._id}`, payload);
+        toast.success('Service updated successfully');
       } else {
         await api.post('/services', payload);
+        toast.success('Service created successfully');
       }
       setIsModalOpen(false);
       fetchServices();
     } catch (err) {
-      alert('Error saving service: ' + err.message);
+      toast.error('Error saving service: ' + err.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this service?')) return;
+    if (!window.confirm('⚠️ Are you sure you want to permanently delete this service package from the database? Admin alert will be sent.')) return;
     try {
       await api.delete(`/services/${id}`);
       setServices((prev) => prev.filter((s) => s._id !== id));
+      toast.success('Service deleted from database. Admin alert sent.');
     } catch (err) {
-      alert('Delete failed: ' + err.message);
+      toast.error('Delete failed: ' + err.message);
     }
   };
 

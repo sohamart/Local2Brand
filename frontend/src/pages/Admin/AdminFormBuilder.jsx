@@ -82,12 +82,17 @@ function AdminFormBuilderContent() {
   const [questionModalOpen, setQuestionModalOpen] = useState(false);
   const [questionEditing, setQuestionEditing] = useState(null);
   const [qTitle, setQTitle] = useState('');
+  const [qLabel, setQLabel] = useState('');
+  const [qDefaultValue, setQDefaultValue] = useState('');
   const [qStepId, setQStepId] = useState('step_business');
   const [qCategoryId, setQCategoryId] = useState('all');
   const [qType, setQType] = useState('text');
   const [qPlaceholder, setQPlaceholder] = useState('');
+  const [qDescription, setQDescription] = useState('');
   const [qOptions, setQOptions] = useState('');
   const [qRequired, setQRequired] = useState(false);
+  const [qEnabled, setQEnabled] = useState(true);
+  const [qOrder, setQOrder] = useState(1);
 
   // Category Modal State
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -162,48 +167,71 @@ function AdminFormBuilderContent() {
   const handleOpenAddQuestion = () => {
     setQuestionEditing(null);
     setQTitle('');
+    setQLabel('');
+    setQDefaultValue('');
     setQStepId('step_business');
     setQCategoryId(questionCategoryFilter === 'all' ? 'all' : questionCategoryFilter);
     setQType('text');
     setQPlaceholder('');
+    setQDescription('');
     setQOptions('');
     setQRequired(false);
+    setQEnabled(true);
+    setQOrder((activeForm?.questions?.length || 0) + 1);
     setQuestionModalOpen(true);
   };
 
   const handleOpenEditQuestion = (q) => {
     setQuestionEditing(q);
     setQTitle(typeof q.title === 'string' ? q.title : '');
+    setQLabel(typeof q.label === 'string' ? q.label : (typeof q.inputLabel === 'string' ? q.inputLabel : ''));
+    setQDefaultValue(typeof q.defaultValue === 'string' ? q.defaultValue : (typeof q.defaultSelected === 'string' ? q.defaultSelected : ''));
     setQStepId(typeof q.stepId === 'string' ? q.stepId : 'step_business');
     setQCategoryId(typeof q.categoryId === 'string' ? q.categoryId : 'all');
     setQType(typeof q.type === 'string' ? q.type : 'text');
     setQPlaceholder(typeof q.placeholder === 'string' ? q.placeholder : '');
-    setQOptions(Array.isArray(q.options) ? q.options.map(String).join(', ') : (typeof q.options === 'string' ? q.options : ''));
+    setQDescription(typeof q.description === 'string' ? q.description : (typeof q.helperText === 'string' ? q.helperText : ''));
+    setQOptions(Array.isArray(q.options) ? q.options.map(o => typeof o === 'object' ? (o.label || o.value || o.name) : String(o)).join(', ') : (typeof q.options === 'string' ? q.options : ''));
     setQRequired(Boolean(q.required));
+    setQEnabled(q.enabled !== false);
+    setQOrder(Number(q.order || 1));
     setQuestionModalOpen(true);
   };
 
   const handleSaveQuestion = () => {
     if (!qTitle.trim()) {
-      alert('Please provide question title');
+      toast.error('Please provide question title');
       return;
     }
 
-    const optionsArray = ['select', 'multiselect', 'radio', 'checkbox'].includes(qType)
+    const rawOptions = ['select', 'multiselect', 'radio', 'checkbox', 'multi_select'].includes(qType)
       ? qOptions.split(',').map((o) => o.trim()).filter(Boolean)
       : [];
+
+    const optionsArray = rawOptions.map((opt, idx) => ({
+      id: `opt_${idx + 1}`,
+      label: opt,
+      value: opt,
+      order: idx + 1
+    }));
 
     const newQuestion = {
       id: questionEditing ? String(questionEditing.id) : `q_${Date.now()}`,
       title: String(qTitle),
+      label: String(qLabel || qTitle),
+      inputLabel: String(qLabel || qTitle),
+      defaultValue: String(qDefaultValue || ''),
+      defaultSelected: String(qDefaultValue || ''),
       stepId: String(qStepId),
       categoryId: String(qCategoryId),
       type: String(qType),
       placeholder: String(qPlaceholder || ''),
+      description: String(qDescription || ''),
+      helperText: String(qDescription || ''),
       options: optionsArray,
       required: Boolean(qRequired),
-      enabled: true,
-      order: questionEditing ? Number(questionEditing.order || 1) : ((activeForm?.questions?.length || 0) + 1)
+      enabled: Boolean(qEnabled),
+      order: Number(qOrder || (questionEditing ? questionEditing.order : (activeForm?.questions?.length || 0) + 1))
     };
 
     let updatedQuestions = activeForm?.questions || [];
@@ -213,18 +241,20 @@ function AdminFormBuilderContent() {
       updatedQuestions = [...updatedQuestions, newQuestion];
     }
 
+    updatedQuestions.sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+
     setActiveForm({ ...activeForm, questions: updatedQuestions });
     setQuestionModalOpen(false);
-    showNotification(`Question "${qTitle}" saved to draft!`);
+    toast.success(`Question "${qTitle}" saved to draft!`);
   };
 
   const handleDeleteQuestion = (qId) => {
-    if (!confirm('Are you sure you want to delete this question?')) return;
+    if (!window.confirm('Are you sure you want to delete this question?')) return;
     setActiveForm({
       ...activeForm,
       questions: (activeForm.questions || []).filter((q) => String(q.id) !== String(qId))
     });
-    showNotification('Question removed from draft.');
+    toast.info('Question removed from draft.');
   };
 
   // --- CATEGORY OPERATIONS ---
@@ -471,10 +501,32 @@ function AdminFormBuilderContent() {
                             Required *
                           </span>
                         )}
+                        {q.enabled === false ? (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
+                            Disabled
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                            Active
+                          </span>
+                        )}
                         <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
                           Category: {q.categoryId === 'all' ? 'All (Global)' : String(q.categoryId || 'Custom')}
                         </span>
                       </div>
+
+                      {(q.label || q.inputLabel) && (
+                        <p className="text-[11px] text-purple-700 dark:text-purple-300 font-semibold mt-0.5">
+                          🏷️ Input Box Label: <strong>"{q.label || q.inputLabel}"</strong>
+                        </p>
+                      )}
+
+                      {(q.defaultValue || q.defaultSelected) && (
+                        <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">
+                          ⚡ Default Selected: <strong>"{q.defaultValue || q.defaultSelected}"</strong>
+                        </p>
+                      )}
+
                       {q.placeholder && (
                         <p className="text-[11px] text-slate-400 mt-0.5">
                           Placeholder: "{typeof q.placeholder === 'string' ? q.placeholder : ''}"
@@ -695,6 +747,41 @@ function AdminFormBuilderContent() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Input Box Label (Client Form)</label>
+                  <input
+                    type="text"
+                    value={qLabel}
+                    onChange={(e) => setQLabel(e.target.value)}
+                    placeholder="e.g. Signature Specialties / Menu Items"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Default Selected Value / Option</label>
+                  <input
+                    type="text"
+                    value={qDefaultValue}
+                    onChange={(e) => setQDefaultValue(e.target.value)}
+                    placeholder="e.g. Biryani, North Indian (or default radio/select)"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-purple-700 dark:text-purple-300"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Helper Text / Sub-description</label>
+                <input
+                  type="text"
+                  value={qDescription}
+                  onChange={(e) => setQDescription(e.target.value)}
+                  placeholder="e.g. We will highlight these signature items in your digital menu & hero banner."
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Step Assignment</label>
                   <select
                     value={qStepId}
@@ -722,7 +809,7 @@ function AdminFormBuilderContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Field Input Type</label>
                   <select
@@ -738,6 +825,7 @@ function AdminFormBuilderContent() {
                     <option value="phone">Phone / WhatsApp</option>
                     <option value="email">Email</option>
                     <option value="number">Number</option>
+                    <option value="toggle">Toggle Yes/No</option>
                   </select>
                 </div>
 
@@ -751,9 +839,19 @@ function AdminFormBuilderContent() {
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white"
                   />
                 </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Display Sequence (Order)</label>
+                  <input
+                    type="number"
+                    value={qOrder}
+                    onChange={(e) => setQOrder(Number(e.target.value))}
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-900 dark:text-white"
+                  />
+                </div>
               </div>
 
-              {['select', 'multiselect', 'radio', 'checkbox'].includes(qType) && (
+              {['select', 'multiselect', 'radio', 'checkbox', 'multi_select'].includes(qType) && (
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Options (Comma Separated)</label>
                   <input
@@ -766,16 +864,32 @@ function AdminFormBuilderContent() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="qReqCheck"
-                  checked={qRequired}
-                  onChange={(e) => setQRequired(e.target.checked)}
-                />
-                <label htmlFor="qReqCheck" className="font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
-                  Mandatory Field (Required to proceed)
-                </label>
+              <div className="flex flex-wrap items-center gap-6 pt-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="qReqCheck"
+                    checked={qRequired}
+                    onChange={(e) => setQRequired(e.target.checked)}
+                    className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+                  />
+                  <label htmlFor="qReqCheck" className="font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                    Mandatory Field (Required to proceed)
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="qEnabledCheck"
+                    checked={qEnabled}
+                    onChange={(e) => setQEnabled(e.target.checked)}
+                    className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+                  />
+                  <label htmlFor="qEnabledCheck" className="font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                    Active / Enabled (Visible to Clients)
+                  </label>
+                </div>
               </div>
 
             </div>

@@ -5,7 +5,8 @@ import {
   getMyRequirements,
   getRequirementById,
   getAllRequirements,
-  updateRequirementStatus
+  updateRequirementStatus,
+  deleteRequirement
 } from '../controllers/requirementController.js';
 import { protect, optionalAuth, adminOnly } from '../middleware/auth.js';
 
@@ -25,5 +26,8 @@ router.patch('/admin/:id/status', protect, adminOnly, updateRequirementStatus);
 router.patch('/:id/status', protect, adminOnly, updateRequirementStatus);
 router.put('/admin/:id/status', protect, adminOnly, updateRequirementStatus);
 router.put('/:id/status', protect, adminOnly, updateRequirementStatus);
+router.delete('/admin/:id', protect, adminOnly, deleteRequirement);
+router.delete('/:id', protect, adminOnly, deleteRequirement);
 
 export default router;
+

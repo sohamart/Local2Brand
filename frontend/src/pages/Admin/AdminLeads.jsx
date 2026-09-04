@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { SEO } from '../../components/common/CommonUI';
+import { toast } from 'react-toastify';
 
 export default function AdminLeads() {
   const [leads, setLeads] = useState([]);
@@ -68,8 +69,9 @@ export default function AdminLeads() {
       if (selectedLead && selectedLead._id === id) {
         setSelectedLead((prev) => ({ ...prev, status: newStatus }));
       }
+      toast.success(`Inquiry status updated to "${newStatus}"`);
     } catch (err) {
-      alert('Failed to update status: ' + err.message);
+      toast.error('Failed to update status: ' + err.message);
     }
   };
 
@@ -81,20 +83,21 @@ export default function AdminLeads() {
         prev.map((l) => (l._id === selectedLead._id ? { ...l, adminNotes: adminNoteText } : l))
       );
       setSelectedLead((prev) => ({ ...prev, adminNotes: adminNoteText }));
-      alert('Notes saved successfully');
+      toast.success('Admin notes saved successfully');
     } catch (err) {
-      alert('Failed to save notes: ' + err.message);
+      toast.error('Failed to save notes: ' + err.message);
     }
   };
 
   const handleDeleteLead = async (id) => {
-    if (!window.confirm('Are you sure you want to permanently delete this lead?')) return;
+    if (!window.confirm('⚠️ Are you sure you want to permanently delete this lead/inquiry from the database? Client and admin notification emails will be dispatched.')) return;
     try {
       await api.delete(`/queries/${id}`);
       setLeads((prev) => prev.filter((l) => l._id !== id));
       if (selectedLead && selectedLead._id === id) setSelectedLead(null);
+      toast.success('Inquiry deleted from database. Notifications sent.');
     } catch (err) {
-      alert('Delete failed: ' + err.message);
+      toast.error('Delete failed: ' + err.message);
     }
   };
 

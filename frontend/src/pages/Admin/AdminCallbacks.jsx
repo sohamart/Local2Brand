@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PhoneCall, Trash2, CheckCircle2, Clock, Filter, Phone, Mail, User, AlertCircle, RefreshCw, MessageSquare, ExternalLink } from 'lucide-react';
 import api from '../../services/api';
 import { SEO } from '../../components/common/CommonUI';
+import { toast } from 'react-toastify';
 
 export default function AdminCallbacks() {
   const [callbacks, setCallbacks] = useState([]);
@@ -44,19 +45,21 @@ export default function AdminCallbacks() {
         setCallbacks((prev) =>
           prev.map((c) => (c._id === id ? { ...c, status: newStatus } : c))
         );
+        toast.success(`Callback status changed to "${newStatus}"`);
       }
     } catch (err) {
-      alert('Failed to update status: ' + (err.message || 'Error'));
+      toast.error('Failed to update status: ' + (err.message || 'Error'));
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this callback request?')) return;
+    if (!window.confirm('⚠️ Are you sure you want to permanently delete this callback request from the database? Client & admin email notifications will be sent.')) return;
     try {
       await api.delete(`/callbacks/${id}`);
       setCallbacks((prev) => prev.filter((c) => c._id !== id));
+      toast.success('Callback request deleted from database. Notifications dispatched.');
     } catch (err) {
-      alert('Delete failed: ' + (err.message || 'Error'));
+      toast.error('Delete failed: ' + (err.message || 'Error'));
     }
   };
 

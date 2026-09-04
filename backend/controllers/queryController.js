@@ -4,7 +4,9 @@ import {
   sendLeadConfirmationEmail,
   sendAdminNewLeadAlert,
   sendLeadStatusUpdateEmail,
-  sendContactFormConfirmationEmail
+  sendContactFormConfirmationEmail,
+  sendQueryDeletionEmail,
+  sendAdminQueryDeletionAlert
 } from '../utils/email.js';
 
 
@@ -171,7 +173,25 @@ export const updateQueryStatus = async (req, res) => {
 
 export const deleteQuery = async (req, res) => {
   try {
-    await dataStore.deleteLead(req.params.id);
+    const id = req.params.id;
+    let lead = null;
+
+    try {
+      const leads = await dataStore.getAllLeads();
+      lead = leads.find((l) => l._id?.toString() === id.toString() || l.id?.toString() === id.toString());
+    } catch (e) {
+      console.warn('Error finding lead before deletion:', e.message);
+    }
+
+    await dataStore.deleteLead(id);
+
+    if (lead) {
+      if (lead.email) {
+        sendQueryDeletionEmail(lead).catch((err) => console.warn('Query deletion email error:', err.message));
+      }
+      sendAdminQueryDeletionAlert(lead).catch((err) => console.warn('Admin query deletion alert error:', err.message));
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Inquiry deleted successfully',

@@ -4,7 +4,9 @@ import {
   sendRequirementConfirmationEmail,
   sendAdminRequirementAlert,
   sendRequirementStatusUpdateEmail,
-  sendOrderDeliveredEmail
+  sendOrderDeliveredEmail,
+  sendRequirementDeletionEmail,
+  sendAdminRequirementDeletionAlert
 } from '../utils/email.js';
 
 import mongoose from 'mongoose';
@@ -400,5 +402,59 @@ export const updateRequirementStatus = async (req, res) => {
   } catch (error) {
     console.error('updateRequirementStatus error:', error);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete Requirement permanently (Admin)
+// @route   DELETE /api/requirements/admin/:id or DELETE /api/requirements/:id
+// @access  Admin
+export const deleteRequirement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let doc = null;
+
+    if (mongoose.connection.readyState === 1) {
+      const query = mongoose.Types.ObjectId.isValid(id)
+        ? { $or: [{ requirementId: id }, { _id: id }] }
+        : { requirementId: id };
+      doc = await Requirement.findOneAndDelete(query);
+    }
+
+    if (!doc) {
+      const allReqs = dataStore.read('requirements') || [];
+      const existing = allReqs.find((r) => r.requirementId === id || r._id?.toString() === id);
+      if (existing) {
+        doc = existing;
+        dataStore.delete('requirements', existing._id);
+      }
+    } else {
+      // Also ensure removed from dataStore if present
+      try {
+        dataStore.delete('requirements', doc._id?.toString() || id);
+      } catch (e) {}
+    }
+
+    if (!doc) {
+      return res.status(404).json({ success: false, message: 'Requirement submission not found' });
+    }
+
+    // Fire email notifications to user (if email available) and admin
+    try {
+      if (doc.clientInfo?.email || doc.email) {
+        sendRequirementDeletionEmail(doc).catch((err) => console.warn('Client deletion email error:', err.message));
+      }
+      sendAdminRequirementDeletionAlert(doc).catch((err) => console.warn('Admin deletion alert error:', err.message));
+    } catch (mailErr) {
+      console.warn('Deletion email dispatch error:', mailErr.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Requirement submission #${doc.requirementId || id} deleted permanently from database.`,
+      deletedId: id
+    });
+  } catch (error) {
+    console.error('deleteRequirement error:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };

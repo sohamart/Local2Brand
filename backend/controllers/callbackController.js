@@ -1,5 +1,11 @@
 import { dataStore } from '../config/dataAdapter.js';
-import { sendCallbackConfirmationEmail, sendAdminCallbackAlert, sendCallbackResolutionEmail } from '../utils/email.js';
+import {
+  sendCallbackConfirmationEmail,
+  sendAdminCallbackAlert,
+  sendCallbackResolutionEmail,
+  sendCallbackDeletionEmail,
+  sendAdminCallbackDeletionAlert
+} from '../utils/email.js';
 import mongoose from 'mongoose';
 
 
@@ -124,7 +130,25 @@ export const updateCallbackStatus = async (req, res) => {
 
 export const deleteCallback = async (req, res) => {
   try {
-    await dataStore.deleteCallback(req.params.id);
+    const id = req.params.id;
+    let callback = null;
+
+    try {
+      const allCallbacks = await dataStore.getAllCallbacks({});
+      callback = allCallbacks.find((c) => c._id?.toString() === id.toString() || c.id?.toString() === id.toString());
+    } catch (e) {
+      console.warn('Error finding callback before deletion:', e.message);
+    }
+
+    await dataStore.deleteCallback(id);
+
+    if (callback) {
+      if (callback.email) {
+        sendCallbackDeletionEmail(callback).catch((err) => console.warn('Callback deletion email error:', err.message));
+      }
+      sendAdminCallbackDeletionAlert(callback).catch((err) => console.warn('Admin callback deletion alert error:', err.message));
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Callback request deleted successfully',

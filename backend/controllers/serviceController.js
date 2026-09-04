@@ -1,4 +1,5 @@
 import { Service } from '../models/Service.js';
+import { sendServiceDeletionAlert } from '../utils/email.js';
 
 // Seed default services
 const DEFAULT_SERVICES = [
@@ -105,7 +106,10 @@ export const updateService = async (req, res) => {
 // @access  Private/Admin
 export const deleteService = async (req, res) => {
   try {
-    await Service.findByIdAndDelete(req.params.id);
+    const service = await Service.findByIdAndDelete(req.params.id);
+    if (service) {
+      sendServiceDeletionAlert(service).catch((err) => console.warn('Service deletion alert error:', err.message));
+    }
     return res.status(200).json({ success: true, message: 'Service deleted successfully' });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });

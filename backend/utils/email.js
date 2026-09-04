@@ -979,5 +979,283 @@ export const sendGameRewardWinEmail = async ({ user, prize }) => {
   });
 };
 
+// 14. Requirement Deletion Notice (to Client)
+export const sendRequirementDeletionEmail = async (reqDoc) => {
+  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email;
+  if (!clientEmail) return;
+
+  const clientUrl = getClientUrl();
+  const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString().slice(-6).toUpperCase() : 'REQ-DELETED');
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Website Project';
+
+  const subject = `Requirement Submission #${reqId} Removed — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Hi ${clientName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        This is a notification to confirm that your project requirement submission for <strong>${businessName}</strong> (Ref: <code style="font-family: monospace; font-weight: 800; color: #dc2626;">#${reqId}</code>) has been removed from our active project queue.
+      </p>
+
+      <div class="bg-box border-theme" style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px 16px; margin: 16px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
+          <tr>
+            <td style="padding: 4px 0; color: #991b1b; font-weight: 700; width: 35%;">Submission ID:</td>
+            <td style="padding: 4px 0; color: #7f1d1d; font-family: monospace; font-weight: 800;">#${reqId}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: #991b1b; font-weight: 700;">Project / Brand:</td>
+            <td style="padding: 4px 0; color: #7f1d1d; font-weight: 700;">${businessName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: #991b1b; font-weight: 700;">Status:</td>
+            <td style="padding: 4px 0; color: #b91c1c; font-weight: 800;">Closed &amp; Removed</td>
+          </tr>
+        </table>
+      </div>
+
+      <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">
+        If you would like to start a new project or explore our latest 48-hour launch templates, feel free to submit a fresh project inquiry anytime.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Project requirement #${reqId} for ${businessName} has been removed.`,
+    headerBadge: '🗑️ SUBMISSION UPDATE',
+    title: `Requirement Submission Removed`,
+    subtitle: `Project #${reqId} &bull; ${businessName}`,
+    orderId: reqId,
+    contentHtml,
+    ctaText: 'Start a New Website Project',
+    ctaUrl: `${clientUrl}/get-started`,
+    footerNote: 'Need help or want to re-open this? Reply directly to this email.',
+  });
+
+  return await sendEmail({ to: clientEmail, subject, html, text: `Your project requirement #${reqId} for ${businessName} has been removed from our queue.` });
+};
+
+// 15. Admin Alert on Requirement Deletion
+export const sendAdminRequirementDeletionAlert = async (reqDoc) => {
+  const recipients = ['sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'];
+  const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString() : 'REQ-ID');
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Client';
+  const clientEmail = reqDoc.clientInfo?.email || 'No email';
+  const clientPhone = reqDoc.clientInfo?.mobile || 'No phone';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Project';
+
+  const subject = `🗑️ [REQUIREMENT DELETED] #${reqId} — ${businessName}`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        A project requirement submission has been permanently deleted from the database via the Admin Console.
+      </p>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 12px;">
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600; width: 34%;">Requirement ID:</td>
+          <td style="padding: 10px 12px; font-family: monospace; font-weight: 800; color: #dc2626; font-size: 13px;">${reqId}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600;">Business / Brand:</td>
+          <td class="text-title" style="padding: 10px 12px; font-weight: 800; color: #0f172a; font-size: 13px;">${businessName}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600;">Client:</td>
+          <td style="padding: 10px 12px; color: #334155; font-size: 13px; font-weight: 700;">${clientName} (${clientPhone} &bull; ${clientEmail})</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600;">Deleted At:</td>
+          <td style="padding: 10px 12px; color: #64748b; font-size: 12px; font-mono font-weight: 600;">${new Date().toLocaleString()}</td>
+        </tr>
+      </table>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Requirement #${reqId} (${businessName}) deleted from database.`,
+    headerBadge: '🗑️ ADMIN RECORD DELETION',
+    title: `Requirement Deleted from Database`,
+    subtitle: `Record: #${reqId} &bull; ${businessName}`,
+    orderId: reqId,
+    contentHtml,
+    ctaText: 'Open Requirements Console',
+    ctaUrl: `${getClientUrl()}/admin/requirements`,
+  });
+
+  return await sendEmail({ to: recipients, subject, html, text: `Requirement #${reqId} for ${businessName} deleted from database.` });
+};
+
+// 16. Callback Request Deletion Notice (to Client)
+export const sendCallbackDeletionEmail = async (callback) => {
+  if (!callback.email) return;
+  const clientUrl = getClientUrl();
+  const subject = `Callback Request Closed — LOCAL2BRAND 📞`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Hi ${callback.name || 'Valued Client'},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Your consultation callback request for phone <strong>${callback.phone}</strong> regarding <strong>${callback.topic || 'Website Consultation'}</strong> has been processed and closed in our queue.
+      </p>
+      <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">
+        If you still need immediate assistance or would like to schedule another call, feel free to submit a quick request on our website.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Your callback request has been closed.`,
+    headerBadge: '📞 CALLBACK CLOSED',
+    title: `Callback Request Closed`,
+    subtitle: `Phone: ${callback.phone} &bull; ${callback.topic || 'Consultation'}`,
+    contentHtml,
+    ctaText: 'Request Instant Callback',
+    ctaUrl: `${clientUrl}/contact`,
+  });
+
+  return await sendEmail({ to: callback.email, subject, html, text: `Your callback request for ${callback.phone} has been closed.` });
+};
+
+// 17. Admin Alert on Callback Deletion
+export const sendAdminCallbackDeletionAlert = async (callback) => {
+  const recipients = ['sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'];
+  const subject = `🗑️ [CALLBACK DELETED] ${callback.name} — ${callback.phone}`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        A callback request was deleted from the admin database.
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 12px;">
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600; width: 34%;">Client Name:</td>
+          <td class="text-title" style="padding: 10px 12px; font-weight: 800; color: #0f172a; font-size: 13px;">${callback.name}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600;">Phone:</td>
+          <td style="padding: 10px 12px; font-family: monospace; font-weight: 800; color: #059669; font-size: 13px;">${callback.phone}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600;">Topic:</td>
+          <td style="padding: 10px 12px; color: #334155; font-size: 13px;">${callback.topic || 'General'}</td>
+        </tr>
+      </table>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Callback for ${callback.name} (${callback.phone}) deleted.`,
+    headerBadge: '🗑️ ADMIN CALLBACK DELETION',
+    title: `Callback Request Deleted`,
+    subtitle: `${callback.name} &bull; ${callback.phone}`,
+    contentHtml,
+    ctaText: 'Open Callbacks Queue',
+    ctaUrl: `${getClientUrl()}/admin/callbacks`,
+  });
+
+  return await sendEmail({ to: recipients, subject, html, text: `Callback for ${callback.name} (${callback.phone}) deleted.` });
+};
+
+// 18. Service Offering Deletion Notice (to Admin)
+export const sendServiceDeletionAlert = async (service) => {
+  const recipients = ['sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'];
+  const subject = `🗑️ [SERVICE DELETED] ${service.title || 'Service Offering'}`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        The service package <strong>${service.title}</strong> (Slug: <code>${service.slug}</code>) has been deleted from the database.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Service package ${service.title} deleted.`,
+    headerBadge: '🗑️ SERVICE DELETION',
+    title: `Service Package Removed`,
+    subtitle: `${service.title} &bull; ${service.startingPrice || ''}`,
+    contentHtml,
+    ctaText: 'Open Services CMS',
+    ctaUrl: `${getClientUrl()}/admin/services`,
+  });
+
+  return await sendEmail({ to: recipients, subject, html, text: `Service package ${service.title} deleted.` });
+};
+
+// 19. Contact Query / Lead Deletion Notice (to Client & Admin)
+export const sendQueryDeletionEmail = async (queryDoc) => {
+  if (!queryDoc.email) return;
+  const clientUrl = getClientUrl();
+  const subject = `Inquiry Ticket #${(queryDoc._id || '').toString().slice(-6).toUpperCase()} Closed — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Hi ${queryDoc.name || 'Valued Client'},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Your contact inquiry regarding <strong>${queryDoc.service || queryDoc.requirements || 'Website Project'}</strong> has been processed and closed.
+      </p>
+      <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">
+        If you have any questions or would like to discuss a new build, please feel free to reach out anytime.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Your inquiry has been closed.`,
+    headerBadge: '📬 INQUIRY CLOSED',
+    title: `Inquiry Ticket Closed`,
+    subtitle: `${queryDoc.name} &bull; ${queryDoc.service || 'Website Project'}`,
+    contentHtml,
+    ctaText: 'Contact LOCAL2BRAND',
+    ctaUrl: `${clientUrl}/contact`,
+  });
+
+  return await sendEmail({ to: queryDoc.email, subject, html, text: `Your inquiry for ${queryDoc.service || 'Website Project'} has been closed.` });
+};
+
+export const sendAdminQueryDeletionAlert = async (queryDoc) => {
+  const recipients = ['sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'];
+  const subject = `🗑️ [INQUIRY DELETED] ${queryDoc.name || 'Lead'} — ${queryDoc.email || queryDoc.phone}`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        A contact query / lead record was deleted from the database.
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 12px;">
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600; width: 34%;">Client:</td>
+          <td class="text-title" style="padding: 10px 12px; font-weight: 800; color: #0f172a; font-size: 13px;">${queryDoc.name} (${queryDoc.phone || 'No phone'} &bull; ${queryDoc.email || 'No email'})</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600;">Service/Requirement:</td>
+          <td style="padding: 10px 12px; color: #334155; font-size: 13px;">${queryDoc.service || queryDoc.requirements || 'General'}</td>
+        </tr>
+      </table>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Lead for ${queryDoc.name} deleted.`,
+    headerBadge: '🗑️ ADMIN LEAD DELETION',
+    title: `Inquiry Record Deleted`,
+    subtitle: `${queryDoc.name} &bull; ${queryDoc.email || queryDoc.phone}`,
+    contentHtml,
+    ctaText: 'Open Leads Console',
+    ctaUrl: `${getClientUrl()}/admin/leads`,
+  });
+
+  return await sendEmail({ to: recipients, subject, html, text: `Lead for ${queryDoc.name} deleted.` });
+};
+
 
 

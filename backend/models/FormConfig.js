@@ -21,7 +21,12 @@ const QuestionSchema = new mongoose.Schema({
   stepId: { type: String, required: true },
   categoryId: { type: String, default: 'all' }, // 'all' or specific website type e.g. 'restaurant'
   title: { type: String, required: true },
+  label: { type: String, default: '' },
+  inputLabel: { type: String, default: '' },
+  defaultValue: { type: mongoose.Schema.Types.Mixed, default: '' },
+  defaultSelected: { type: mongoose.Schema.Types.Mixed, default: '' },
   description: { type: String, default: '' },
+  helperText: { type: String, default: '' },
   type: {
     type: String,
     enum: [
