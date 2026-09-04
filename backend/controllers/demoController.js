@@ -211,7 +211,6 @@ export const getDemos = async (req, res) => {
 
 
 export const getDemoByIdOrSlug = async (req, res) => {
-
   try {
     const { id } = req.params;
     if (!id) {
@@ -219,29 +218,64 @@ export const getDemoByIdOrSlug = async (req, res) => {
     }
 
     const cleanId = String(id).trim().toLowerCase();
+    const cleanHyphen = cleanId.replace(/_/g, '-');
+    const cleanUnderscore = cleanId.replace(/-/g, '_');
     let demo = null;
 
     if (mongoose.connection.readyState === 1) {
-      if (mongoose.Types.ObjectId.isValid(id)) {
-        demo = await PortfolioDemo.findById(id);
+      try {
+        if (mongoose.Types.ObjectId.isValid(id)) {
+          demo = await PortfolioDemo.findById(id);
+        }
+        if (!demo) {
+          demo = await PortfolioDemo.findOne({
+            $or: [
+              { slug: cleanId },
+              { slug: cleanHyphen },
+              { slug: cleanUnderscore },
+              { templateId: cleanId },
+              { templateId: cleanHyphen },
+              { templateId: cleanUnderscore },
+              { id: cleanId },
+              { title: { $regex: new RegExp(`^${cleanId}$`, 'i') } }
+            ]
+          });
+        }
+      } catch (dbErr) {
+        console.warn('MongoDB query warning in getDemoByIdOrSlug:', dbErr.message);
       }
-      if (!demo) {
-        demo = await PortfolioDemo.findOne({
-          $or: [
-            { slug: cleanId },
-            { templateId: cleanId },
-            { id: cleanId },
-            { title: { $regex: new RegExp(`^${cleanId}$`, 'i') } }
-          ]
-        });
-      }
+    }
+
+    if (!demo) {
+      const demos = readLocalStore('demos') || [];
+      demo = demos.find((d) =>
+        d.slug === cleanId ||
+        d.slug === cleanHyphen ||
+        d.slug === cleanUnderscore ||
+        d._id === cleanId ||
+        d.templateId === cleanId ||
+        d.title?.toLowerCase() === cleanId
+      );
+    }
+
+    if (!demo) {
+      demo = DEFAULT_DEMOS.find((d) =>
+        d.slug === cleanId ||
+        d.slug === cleanHyphen ||
+        d.slug === cleanUnderscore ||
+        d._id === cleanId ||
+        d.title?.toLowerCase() === cleanId
+      );
     }
 
     if (!demo) {
       return res.status(404).json({ success: false, message: `Website template '${id}' was not found in database` });
     }
 
-    return res.status(200).json({ success: true, demo });
+    const demoObj = demo.toObject ? demo.toObject() : demo;
+    if (!demoObj.status) demoObj.status = 'published';
+
+    return res.status(200).json({ success: true, demo: demoObj });
   } catch (error) {
     console.error('getDemoByIdOrSlug error:', error);
     return res.status(500).json({ success: false, message: error.message || 'Error fetching demo' });

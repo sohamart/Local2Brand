@@ -31,8 +31,11 @@ export default function CustomCursor() {
       }
     };
 
-    const handleMouseLeave = () => {
-      if (containerRef.current) containerRef.current.style.opacity = '0';
+    const handleMouseLeave = (e) => {
+      // Only hide if the cursor genuinely exited the browser window bounds
+      if (!e || e.clientX <= 0 || e.clientY <= 0 || e.clientX >= window.innerWidth || e.clientY >= window.innerHeight) {
+        if (containerRef.current) containerRef.current.style.opacity = '0';
+      }
     };
 
     const handleMouseEnter = () => {

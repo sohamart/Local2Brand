@@ -25,7 +25,7 @@ function DemoCardComponent({ demo, onShare }) {
       e.stopPropagation();
       setShowComingSoonPopup(true);
     } else {
-      navigate(`/details/${demo.slug || demo._id}`);
+      navigate(`/demos/${demo.slug || demo._id}`);
     }
   };
 
@@ -112,7 +112,7 @@ function DemoCardComponent({ demo, onShare }) {
         <div className="hidden sm:flex absolute inset-0 bg-slate-900/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-200 items-center justify-center gap-2 p-4 z-10 pointer-events-none group-hover:pointer-events-auto">
           {isLive ? (
             <Link
-              to={`/details/${demo.slug || demo._id}`}
+              to={`/demos/${demo.slug || demo._id}`}
               onClick={(e) => e.stopPropagation()}
               className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold text-xs shadow-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-1.5"
             >
@@ -263,7 +263,7 @@ function DemoCardComponent({ demo, onShare }) {
           <div className="grid grid-cols-2 gap-2">
             {isLive ? (
               <Link
-                to={`/details/${demo.slug || demo._id}`}
+                to={`/demos/${demo.slug || demo._id}`}
                 onClick={(e) => e.stopPropagation()}
                 className="py-2.5 px-3 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-center transition-all flex items-center justify-center gap-1.5"
               >
