@@ -10,30 +10,36 @@ export const ensureDefaultForm = async () => {
     if (!form) {
       form = new FormConfig(defaultFormSchema);
       await form.save();
-      console.log('✅ Default Dynamic Form Configuration Seeded (Version 1.0)');
-    } else if (!form.questions || form.questions.length < defaultFormSchema.questions.length) {
+      console.log('✅ Default Dynamic Form Configuration Seeded (Version 2.0)');
+    } else if (form.version !== '2.0' || !form.questions || form.questions.length < defaultFormSchema.questions.length) {
+      form.version = defaultFormSchema.version;
+      form.versionNumber = defaultFormSchema.versionNumber;
       form.categories = defaultFormSchema.categories;
+      form.steps = defaultFormSchema.steps;
       form.questions = defaultFormSchema.questions;
       await form.save();
-      console.log('✅ Dynamic Form Configuration Updated with Category-Specific Questions');
+      console.log('✅ Dynamic Form Configuration Upgraded to Full 12-Step Schema (Version 2.0)');
     }
     return form;
   } else {
     let form = dataStore.find('form_configs', (f) => f.status === 'published');
     if (!form) {
       form = {
-        _id: 'form_config_default_v1',
+        _id: 'form_config_default_v2',
         ...defaultFormSchema,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       dataStore.create('form_configs', form);
-      console.log('✅ Default Form Configuration Seeded in Local Store (Version 1.0)');
-    } else if (!form.questions || form.questions.length < defaultFormSchema.questions.length) {
+      console.log('✅ Default Form Configuration Seeded in Local Store (Version 2.0)');
+    } else if (form.version !== '2.0' || !form.questions || form.questions.length < defaultFormSchema.questions.length) {
+      form.version = defaultFormSchema.version;
+      form.versionNumber = defaultFormSchema.versionNumber;
       form.categories = defaultFormSchema.categories;
+      form.steps = defaultFormSchema.steps;
       form.questions = defaultFormSchema.questions;
       dataStore.update('form_configs', form._id, form);
-      console.log('✅ Local Store Form Configuration Updated with Category-Specific Questions');
+      console.log('✅ Local Store Form Configuration Upgraded to Full 12-Step Schema (Version 2.0)');
     }
     return form;
   }
@@ -86,7 +92,7 @@ export const createForm = async (req, res) => {
 
     const newFormData = {
       name: name || 'Custom Website Requirement Form',
-      version: version || '1.1',
+      version: version || '2.0',
       versionNumber: 2,
       status: 'draft',
       isPublished: false,
@@ -152,7 +158,6 @@ export const publishForm = async (req, res) => {
     const { id } = req.params;
 
     if (mongoose.connection.readyState === 1) {
-      // Set all other forms to archived/draft
       await FormConfig.updateMany({ _id: { $ne: id } }, { status: 'archived', isPublished: false });
       const published = await FormConfig.findByIdAndUpdate(
         id,
@@ -176,6 +181,55 @@ export const publishForm = async (req, res) => {
       const published = dataStore.findById('form_configs', id);
       return res.status(200).json({ success: true, message: 'Form configuration published live!', form: published });
     }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Reset Form to Standard Default 12-Step Schema
+// @route   POST /api/forms/admin/reset-defaults
+// @access  Admin
+export const resetFormToDefaults = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const resetData = {
+      name: defaultFormSchema.name,
+      version: '2.0',
+      versionNumber: 2,
+      status: 'published',
+      isPublished: true,
+      categories: defaultFormSchema.categories,
+      steps: defaultFormSchema.steps,
+      questions: defaultFormSchema.questions,
+      updatedAt: new Date()
+    };
+
+    let form;
+    if (mongoose.connection.readyState === 1) {
+      if (id) {
+        form = await FormConfig.findByIdAndUpdate(id, resetData, { new: true });
+      } else {
+        form = await FormConfig.findOneAndUpdate({ status: 'published' }, resetData, { new: true, upsert: true });
+      }
+    } else {
+      if (id) {
+        form = dataStore.update('form_configs', id, resetData);
+      } else {
+        const existing = dataStore.find('form_configs', (f) => f.status === 'published');
+        if (existing) {
+          form = dataStore.update('form_configs', existing._id, resetData);
+        } else {
+          form = dataStore.create('form_configs', { _id: 'form_config_default_v2', ...resetData });
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'All 12 steps and standard questions restored to official schema!',
+      form
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

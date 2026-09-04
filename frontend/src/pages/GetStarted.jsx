@@ -56,7 +56,8 @@ import {
   Gift,
   Calendar,
   Scale,
-  Heart
+  Heart,
+  Eye
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -942,6 +943,8 @@ export default function GetStarted() {
   });
 
   const [selectedFileObjects, setSelectedFileObjects] = useState([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
+  const [publishedFormSchema, setPublishedFormSchema] = useState(null);
   const [databaseDemos, setDatabaseDemos] = useState(() => {
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem('l2b_cached_demos');
@@ -1122,7 +1125,26 @@ export default function GetStarted() {
     }
   }, [user]);
 
-    const changeLanguage = (newLang) => {
+  // Fetch dynamic published form schema from backend
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPublishedSchema = async () => {
+      try {
+        const res = await api.get('/forms/published');
+        if (isMounted && res && res.success && res.form) {
+          setPublishedFormSchema(res.form);
+        }
+      } catch (err) {
+        // Fallback safely to built-in presets
+      }
+    };
+    fetchPublishedSchema();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const changeLanguage = (newLang) => {
     setLang(newLang);
     if (typeof window !== 'undefined') {
       localStorage.setItem('l2b_form_lang', newLang);
@@ -1400,6 +1422,30 @@ export default function GetStarted() {
     setTimeout(() => setCopiedLink(false), 3000);
   };
 
+  const handleOpenStepAiSummary = (stepIdx = currentStepIndex) => {
+    setAiModalTab('step');
+    setAiModalStepIndex(typeof stepIdx === 'number' ? stepIdx : currentStepIndex);
+    setAiModalLang(lang || 'bn');
+    setIsAiModalOpen(true);
+  };
+
+  const handleSwitchAiModalLang = (newLang) => {
+    setAiModalLang(newLang);
+  };
+
+  const handleCopyModalSummary = () => {
+    if (aiModalTab === 'step') {
+      const guide = STEP_AI_GUIDES[aiModalStepIndex] ? (STEP_AI_GUIDES[aiModalStepIndex][aiModalLang] || STEP_AI_GUIDES[aiModalStepIndex].en) : null;
+      const textToCopy = guide ? `${guide.title}\n${guide.purpose}\n\nObjective: ${guide.question}\n\nTip: ${guide.tip}` : '';
+      navigator.clipboard.writeText(textToCopy);
+    } else {
+      navigator.clipboard.writeText(displayedAiSummary || aiSummary);
+    }
+    setCopiedAi(true);
+    toast.success(lang === 'bn' ? 'সারসংক্ষেপ কপি হয়েছে!' : 'Summary copied to clipboard!');
+    setTimeout(() => setCopiedAi(false), 3000);
+  };
+
   const handleMultiImageUpload = (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -1411,128 +1457,72 @@ export default function GetStarted() {
 
     setSelectedFileObjects((prev) => [...prev, ...files]);
     files.forEach((f) => {
-      const previewUrl = URL.createObjectURL(f);
-      setFormData((prev) => ({
-        ...prev,
-        uploadedImages: [...(prev.uploadedImages || []), previewUrl]
-      }));
+      const preview = URL.createObjectURL(f);
+      setImagePreviewUrls((prev) => [...prev, preview]);
     });
-    toast.success(`${files.length} photo(s) selected! 📸`);
+    toast.success(`${files.length} photo(s) selected.`);
   };
 
-  const handleRemoveImage = (indexToRemove) => {
+  const handleRemoveSelectedImage = (indexToRemove) => {
     setSelectedFileObjects((prev) => prev.filter((_, idx) => idx !== indexToRemove));
-    setFormData((prev) => ({
-      ...prev,
-      uploadedImages: (prev.uploadedImages || []).filter((_, idx) => idx !== indexToRemove)
-    }));
+    setImagePreviewUrls((prev) => {
+      const urlToRevoke = prev[indexToRemove];
+      if (urlToRevoke && urlToRevoke.startsWith('blob:')) {
+        URL.revokeObjectURL(urlToRevoke);
+      }
+      return prev.filter((_, idx) => idx !== indexToRemove);
+    });
   };
 
-  // Open AI Step Summary & Guide Modal
-  const handleOpenStepAiSummary = (stepIdx = currentStepIndex) => {
-    setAiModalStepIndex(stepIdx);
-    setAiModalTab('step');
-    setAiModalLang(lang || 'bn');
-    setIsAiModalOpen(true);
-  };
-
-  // Switch Active Language inside the AI Modal
-  const handleSwitchAiModalLang = (targetLang) => {
-    setAiModalLang(targetLang);
-    toast.info(
-      targetLang === 'bn'
-        ? 'বাংলা অনুবাদ সক্রিয় করা হয়েছে'
-        : targetLang === 'hi'
-        ? 'हिंदी अनुवाद सक्रिय किया गया'
-        : 'English Translation Active'
-    );
-  };
-
-  // Copy AI Summary from Modal (supports both Step Guide & Full Scope)
-  const handleCopyModalSummary = () => {
-    if (aiModalTab === 'step') {
-      const currentGuide = STEP_AI_GUIDES[aiModalStepIndex] || STEP_AI_GUIDES[0];
-      const selection = getCurrentStepSelectionText(aiModalStepIndex, formData, aiModalLang);
-      const plainText = formatStepSummaryPlainText(currentGuide, selection, aiModalLang, aiModalStepIndex + 1);
-      navigator.clipboard.writeText(plainText);
-      setCopiedAi(true);
-      toast.success(
-        aiModalLang === 'bn'
-          ? `ধাপ ${aiModalStepIndex + 1} এর AI সারসংক্ষেপ কপি হয়েছে!`
-          : aiModalLang === 'hi'
-          ? 'AI सारांश कॉपी हुआ!'
-          : `Step ${aiModalStepIndex + 1} AI summary copied to clipboard!`
-      );
-      setTimeout(() => setCopiedAi(false), 3000);
-    } else {
-      navigator.clipboard.writeText(aiSummary || displayedAiSummary);
-      setCopiedAi(true);
-      toast.success(
-        aiModalLang === 'bn'
-          ? 'সম্পূর্ণ প্রজেক্ট AI সামারি ক্লিপবোর্ডে কপি হয়েছে!'
-          : aiModalLang === 'hi'
-          ? 'AI सारांश कॉपी हुआ!'
-          : 'AI Summary copied to clipboard!'
-      );
-      setTimeout(() => setCopiedAi(false), 3000);
-    }
-  };
-
-  // AI Executive Summary Generator with Progressive Delay & Typewriter Stream
   const handleGenerateAiSummary = async () => {
     setIsGeneratingAi(true);
-    setIsAiModalOpen(true);
-    setAiModalTab('full');
-    setDisplayedAiSummary('');
     setAiAnalysisStage(1);
+    setDisplayedAiSummary('');
 
-    // Realistic progressive analysis stage delay
     await new Promise((r) => setTimeout(r, 600));
     setAiAnalysisStage(2);
     await new Promise((r) => setTimeout(r, 600));
     setAiAnalysisStage(3);
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 600));
 
     let finalAiText = '';
-    const activeLang = aiModalLang || lang;
-
-    if (activeLang === 'bn') {
-      finalAiText = `### 🎯 AI এক্সিকিউটিভ প্রজেক্ট স্কোপ ও রূপরেখা
-**ব্র্যান্ডের নাম:** ${formData.clientInfo.businessName || 'নতুন কমার্শিয়াল এন্টারপ্রাইজ'}
-**ইন্ডাস্ট্রি টাইপ:** ${formData.websiteTypeName}
+    if (lang === 'bn') {
+      finalAiText = `### 🎯 এক্সিকিউটিভ প্রজেক্ট সামারি ও স্ট্র্যাটেজিক আর্কিটেকচার
+**ব্র্যান্ডের নাম:** ${formData.clientInfo.businessName || 'বাণিজ্যিক এন্টারপ্রাইজ'}
+**ইন্ডাস্ট্রি ফোকাস:** ${formData.websiteTypeName}
 **টার্গেট ডেলিভারি:** ${formData.timeline}
 
-#### 🛠️ রিকমেন্ডেড ফুল-স্ট্যাক আর্কিটেকচার
-- **ফ্রন্টএন্ড:** React 19 + Vite (অথবা Next.js 15 App Router) সাথে TailwindCSS এবং Framer Motion লিকুইড এনিমেশন।
-- **ব্যাকএন্ড ও ডেটাবেজ:** Node.js Express হাই-পারফরম্যান্স REST API সাথে MongoDB ক্লাউড ক্লাস্টার এবং JWT সিকিউরিটি।
-- **পেমেন্ট গেটওয়ে:** ${formData.paymentMethods.join(', ')} সাথে অটোমেটেড GST ট্যাক্স ইনভয়েস জেনারেটর।
-- **নোটিফিকেশন ইঞ্জিন:** ইনস্ট্যান্ট হোয়াটসঅ্যাপ ক্লাউড API ওয়েবহুক ও SMTP অটোমেটেড রিসিপ্ট সেন্ডার।
+#### 🛠️ আধুনিক ফুল-স্ট্যাক আর্কিটেকচার ও টেক-স্ট্যাক
+- **ফ্রন্টএন্ড লেয়ার:** React 19 + Vite (বা Next.js 15 App Router) সাথে আধুনিক TailwindCSS এবং স্মুথ ফ্লুইড অ্যানিমেশন।
+- **ব্যাকএন্ড ও ডেটাবেস:** Node.js Express হাই-স্পিড API এবং সুরক্ষিত MongoDB ক্লাউড ক্লাস্টার।
+- **পেমেন্ট গেটওয়ে:** ${formData.paymentMethods.join(', ')} ইন্টিগ্রেশন সাথে স্বয়ংক্রিয় জিএসটি ইনভয়েসিং।
+- **ইনস্ট্যান্ট নোটিফিকেশন:** WhatsApp ক্লাউড API অটোমেশন এবং ইমেইল রিসিপ্ট ডিসপ্যাচ।
 
-#### ⚡ উচ্চ কনভার্সন অপ্টিমাইজেশন ও ফিচারসমূহ
-- **মূল ফিচারসমূহ:** ${formData.selectedFeatures.slice(0, 4).join(', ')}
-- **পেজ স্ট্রাকচার:** ${formData.selectedPages.slice(0, 5).join(' ➔ ')}
-- **গতি ও এসইও:** সাব-সেকেন্ড পেজ রেন্ডারিং, JSON-LD স্কিমা এবং ১০০/১০০ কোর ওয়েব ভাইটালস স্পিড স্কোর।
+#### ⚡ হাই-কনভার্সন ফিচারসমূহ
+- **মূল মডিউল:** ${formData.selectedFeatures.slice(0, 4).join(', ')}
+- **সাইটম্যাপ স্ট্রাকচার:** ${formData.selectedPages.slice(0, 5).join(' ➔ ')}
+- **স্পিড ও এসইও:** সাব-সেকেন্ড পেজ লোড স্পিড, স্কিমা মার্কআপ এবং ১০০/১০০ কোর ওয়েব ভাইটালস।
 
-#### ⏱️ মাইলস্টোন ডেলিভারি ও স্প্রিন্ট পরিকল্পনা
-- **ফেজ ১ (দিন ১-২):** ভিজ্যুয়াল UI/UX ওয়্যারফ্রেম ও ইন্টারেক্টিভ প্রোটোটাইপ ডিজাইন।
-- **ফেজ ২ (দিন ৩-৪):** ফুল-স্ট্যাক কোড ইমপ্লিমেন্টেশন, পেমেন্ট গেটওয়ে স্যান্ডবক্স ও CMS কনফিগারেশন।
-- **ফেজ ৩ (ফাইনাল ডেলিভারি):** টেকনিক্যাল এসইও অডিট, স্পিড অপ্টিমাইজেশন এবং লাইভ DNS লঞ্চ।`;
-    } else if (activeLang === 'hi') {
-      finalAiText = `### 🎯 AI कार्यकारी प्रोजेक्ट स्कोप और रोडमैप
-**ब्रांड का नाम:** ${formData.clientInfo.businessName || 'व्यावसायिक उद्यम'}
-**उद्योग प्रकार:** ${formData.websiteTypeName}
+#### ⏱️ ডেলিভারি স্প্রিন্ট
+- **ধাপ ১ (১-২ দিন):** UI/UX ডিজাইন ও প্রোটোটাইপ রিভিউ।
+- **ধাপ ২ (৩-৪ দিন):** ফুল-স্ট্যাক ডেভেলপমেন্ট, পেমেন্ট গেটওয়ে ও CMS কনফিগারেশন।
+- **ধাপ ৩ (ফাইনাল ডেলিভারি):** স্পিড অপ্টিমাইজেশন, এসইও অডিট এবং ডোমেইন লাইভ।`;
+    } else if (lang === 'hi') {
+      finalAiText = `### 🎯 कार्यकारी प्रोजेक्ट सारांश और रणनीतिक संरचना
+**ब्रांड का नाम:** ${formData.clientInfo.businessName || 'कमर्शियल एंटरप्राइज'}
+**उद्योग फोकस:** ${formData.websiteTypeName}
 **लक्षित डिलीवरी:** ${formData.timeline}
 
-#### 🛠️ अनुशंसित आधुनिक फुल-स्टैक आर्किटेक्चर
-- **फ्रंटएंड:** React 19 + Vite (या Next.js 15) साथ में TailwindCSS और Framer Motion लिक्विड एनिमेशन।
-- **बैकएंड और डेटाबेस:** Node.js Express API साथ में सुरक्षित MongoDB क्लाउड क्लस्टर और JWT प्रमाणीकरण।
-- **पेमेंट गेटवे:** ${formData.paymentMethods.join(', ')} साथ में स्वचालित GST इनवॉइस।
-- **सूचनाएं:** त्वरित व्हाट्सएप क्लाउड API और स्वचालित रसीद ईमेल।
+#### 🛠️ आधुनिक फुल-स्टैक आर्किटेक्चर
+- **फ्रंटएंड लेयर:** React 19 + Vite (या Next.js 15) साथ में TailwindCSS और स्मूथ एनिमेशन।
+- **बैकएंड और डेटाबेस:** Node.js Express हाई-स्पीड API और सुरक्षित MongoDB क्लस्टर।
+- **पेमेंट गेटवे:** ${formData.paymentMethods.join(', ')} इंटीग्रेशन के साथ ऑटोमैटिक इनवॉइसिंग।
+- **इंस्टेंट अलर्ट:** WhatsApp क्लाउड API ऑटोमेशन और ईमेल रसीद डिस्पैच।
 
-#### ⚡ मुख्य फीचर्स और विकास रणनीति
+#### ⚡ मुख्य फीचर्स
 - **प्रमुख मॉड्यूल:** ${formData.selectedFeatures.slice(0, 4).join(', ')}
-- **पेज संरचना:** ${formData.selectedPages.slice(0, 5).join(' ➔ ')}
-- **स्पीड और एसईओ:** 1 सेकंड से कम लोडिंग, गूगल स्कीमा मार्कअप और 100/100 कोर वेब वाइटल्स।
+- **साइटमैप:** ${formData.selectedPages.slice(0, 5).join(' ➔ ')}
+- **स्पीड और एसईओ:** सब-सेकंड पेज लोड स्पीड और 100/100 कोर वेब वाइटल्स।
 
 #### ⏱️ चरणबद्ध डिलीवरी और टर्नअराउंड
 - **चरण 1 (दिन 1-2):** UI/UX डिज़ाइन और प्रोटोटाइप समीक्षा।
@@ -1696,134 +1686,132 @@ export default function GetStarted() {
         <div className="absolute -bottom-20 left-10 w-[450px] sm:w-[600px] h-[450px] sm:h-[600px] bg-gradient-to-tr from-emerald-400/15 to-teal-400/15 dark:from-emerald-600/10 dark:to-teal-600/10 blur-[130px] rounded-full" />
       </div>
 
-      {/* 1. DISTRACTION-FREE MINIMALIST PRO HEADER */}
-      <header className="sticky top-0 z-40 bg-white/85 dark:bg-slate-900/85 backdrop-blur-2xl border-b border-slate-200/70 dark:border-slate-800/80 px-3 sm:px-8 py-3 flex items-center justify-between gap-3 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.03)] dark:shadow-none">
-        
-        {/* Left: Back to Home & Brand Logo */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <Link
-            to="/"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:text-purple-600 dark:hover:text-purple-400 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">{t.backToHome}</span>
-          </Link>
-
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
-              <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-black tracking-tight text-sm hidden md:inline bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent">
-              LOCAL<span className="text-purple-600">2</span>BRAND
-            </span>
-          </Link>
-        </div>
-
-        {/* Center: Live Step Progress Badge & Live Autosave Status */}
-        {!submittedData && (
-          <div className="flex items-center gap-2 text-center">
-            <span className="text-[11px] sm:text-xs font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-50/90 dark:bg-purple-950/80 px-2.5 py-1 rounded-full border border-purple-200/90 dark:border-purple-800 shadow-2xs">
-              {currentStepIndex + 1}/{t.steps.length}
-            </span>
-            <span className="text-xs font-black text-slate-800 dark:text-slate-200 hidden xs:inline truncate max-w-[130px] sm:max-w-none">
-              {t.steps[currentStepIndex].title}
-            </span>
-            {lastSavedTime && (
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold hidden md:inline-flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60 shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Autosaved {lastSavedTime}</span>
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Right: Language Translator, AI Trigger, Share Link & Theme Toggle */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+      {/* 1. DISTRACTION-FREE MINIMALIST PRO HEADER (100% MOBILE RESPONSIVE) */}
+      <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border-b border-slate-200/70 dark:border-slate-800/80 px-2 sm:px-6 lg:px-8 py-2 sm:py-3 w-full max-w-full overflow-hidden shadow-[0_4px_25px_-5px_rgba(0,0,0,0.03)] dark:shadow-none">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-1 sm:gap-3 w-full min-w-0">
           
-          {/* Multi-Language Translator Dropdown Pill */}
-          <div className="p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center gap-0.5 shadow-2xs">
-            <button
-              type="button"
-              onClick={() => changeLanguage('en')}
-              className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                lang === 'en'
-                  ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="English"
+          {/* Left: Back to Home & Brand Logo */}
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <Link
+              to="/"
+              className="flex items-center justify-center p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:text-purple-600 dark:hover:text-purple-400 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
+              title={t.backToHome}
             >
-              EN
-            </button>
-            <button
-              type="button"
-              onClick={() => changeLanguage('bn')}
-              className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                lang === 'bn'
-                  ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="বাংলা"
-            >
-              বাংলা
-            </button>
-            <button
-              type="button"
-              onClick={() => changeLanguage('hi')}
-              className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                lang === 'hi'
-                  ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-              }`}
-              title="हिंदी"
-            >
-              हिंदी
-            </button>
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden md:inline ml-1">{t.backToHome}</span>
+            </Link>
+
+            <Link to="/" className="flex items-center gap-1.5 shrink-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
+                <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+              </div>
+              <span className="font-black tracking-tight text-xs sm:text-sm hidden lg:inline bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent">
+                LOCAL<span className="text-purple-600">2</span>BRAND
+              </span>
+            </Link>
           </div>
 
-          {/* Manual Save Button with Toast Feedback */}
+          {/* Center: Live Step Progress Badge & Autosave */}
           {!submittedData && (
-            <button
-              type="button"
-              onClick={handleManualSave}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/80 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/90 dark:border-emerald-800 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
-              title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : lang === 'hi' ? 'प्रगति और कूपन सेव करें' : 'Save Progress & Coupon'}
-            >
-              <Save className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="hidden sm:inline">{lang === 'bn' ? 'সেভ করুন' : lang === 'hi' ? 'सेव करें' : 'Save'}</span>
-            </button>
+            <div className="flex items-center gap-1 sm:gap-2 text-center min-w-0 shrink">
+              <span className="text-[10px] sm:text-xs font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-50/90 dark:bg-purple-950/80 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-purple-200/90 dark:border-purple-800 shadow-2xs shrink-0">
+                {currentStepIndex + 1}/{t.steps.length}
+              </span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 hidden md:inline truncate max-w-[140px] lg:max-w-none">
+                {t.steps[currentStepIndex]?.title}
+              </span>
+            </div>
           )}
 
-          {/* Reset / Clear Form Button */}
-          {!submittedData && (
+          {/* Right: Language Translator, Save, Reset, Share & Theme Toggle */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            
+            {/* Multi-Language Translator Dropdown Pill */}
+            <div className="p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center gap-0.5 shadow-2xs shrink-0">
+              <button
+                type="button"
+                onClick={() => changeLanguage('en')}
+                className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                  lang === 'en'
+                    ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="English"
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => changeLanguage('bn')}
+                className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                  lang === 'bn'
+                    ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="বাংলা"
+              >
+                বাং
+              </button>
+              <button
+                type="button"
+                onClick={() => changeLanguage('hi')}
+                className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
+                  lang === 'hi'
+                    ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-2xs'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="हिंदी"
+              >
+                हिं
+              </button>
+            </div>
+
+            {/* Manual Save Button */}
+            {!submittedData && (
+              <button
+                type="button"
+                onClick={handleManualSave}
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/80 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/90 dark:border-emerald-800 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs active:scale-95 shrink-0"
+                title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : lang === 'hi' ? 'सेव करें' : 'Save Progress'}
+              >
+                <Save className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="hidden md:inline">{lang === 'bn' ? 'সেভ' : 'Save'}</span>
+              </button>
+            )}
+
+            {/* Reset / Clear Form Button */}
+            {!submittedData && (
+              <button
+                type="button"
+                onClick={handleResetForm}
+                className="p-1.5 sm:px-2 sm:py-1.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer active:scale-95 shrink-0"
+                title={lang === 'bn' ? 'ফর্ম রিসেট করুন' : 'Reset form'}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {/* Share Link Button (hidden on mobile, visible on sm+) */}
             <button
               type="button"
-              onClick={handleResetForm}
-              className="px-2 sm:px-2.5 py-1.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer active:scale-95"
-              title={lang === 'bn' ? 'ফর্ম ও কুপন রিসেট করুন (নতুন করে শুরু করুন)' : 'Reset and clear form'}
+              onClick={handleCopyShareLink}
+              className="hidden sm:flex p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-purple-50/90 dark:bg-purple-950/80 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800 text-xs font-bold items-center gap-1 transition-all cursor-pointer shadow-2xs shrink-0"
+              title="Copy share link"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{lang === 'bn' ? 'রিসেট' : lang === 'hi' ? 'रीसेट' : 'Reset'}</span>
+              <Share2 className="w-3.5 h-3.5" />
             </button>
-          )}
 
-          {/* Share Link Button */}
-          <button
-            type="button"
-            onClick={handleCopyShareLink}
-            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-purple-50/90 dark:bg-purple-950/80 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-            title="Copy requirement form link to send directly to clients"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">{copiedLink ? t.copiedLink : t.shareForm}</span>
-          </button>
+            <div className="shrink-0 scale-90 sm:scale-100">
+              <ThemeToggle />
+            </div>
+          </div>
 
-          <ThemeToggle />
         </div>
       </header>
 
       {/* 2. SLIM SMOOTH PROGRESS BAR */}
       {!submittedData && (
-        <div className="w-full bg-slate-200/60 dark:bg-slate-800/60 h-1 relative overflow-hidden">
+        <div className="w-full max-w-full bg-slate-200/60 dark:bg-slate-800/60 h-1 sm:h-1.5 relative overflow-hidden shrink-0">
           <div
             className="h-full l2b-gradient-bg transition-all duration-500 ease-out shadow-xs"
             style={{ width: `${((currentStepIndex + 1) / t.steps.length) * 100}%` }}
@@ -1832,16 +1820,16 @@ export default function GetStarted() {
       )}
 
       {/* 3. MAIN FORM BODY */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-10 flex flex-col justify-between">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col justify-between min-w-0 max-w-full overflow-x-hidden">
 
         {/* ========================================================================= */}
         {/* TEMPLATE AUTO-APPLIED BANNER (When arriving from Live Demo / Template) */}
         {/* ========================================================================= */}
         {!submittedData && appliedTemplate && (
-          <div className="mb-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-900/10 via-pink-900/10 to-amber-900/10 dark:from-purple-950/60 dark:via-slate-900/80 dark:to-amber-950/40 border border-purple-300/80 dark:border-purple-700/60 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-3">
-            <div className="flex items-center gap-3 min-w-0">
+          <div className="mb-4 sm:mb-5 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-900/10 via-pink-900/10 to-amber-900/10 dark:from-purple-950/60 dark:via-slate-900/80 dark:to-amber-950/40 border border-purple-300/80 dark:border-purple-700/60 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-3 w-full min-w-0 max-w-full overflow-hidden">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 w-full sm:w-auto">
               {appliedTemplate.heroImage ? (
-                <div className="w-12 h-12 rounded-xl overflow-hidden border border-purple-400/50 shadow-xs shrink-0 bg-slate-900">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-purple-400/50 shadow-xs shrink-0 bg-slate-900">
                   <img
                     src={appliedTemplate.heroImage}
                     alt={appliedTemplate.title}
@@ -1849,30 +1837,30 @@ export default function GetStarted() {
                   />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <Sparkles className="w-5 h-5" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
               )}
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
-                  <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/70 text-purple-700 dark:text-purple-300 font-extrabold text-[10px] tracking-wide uppercase flex items-center gap-1">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1 mb-0.5">
+                  <span className="px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/70 text-purple-700 dark:text-purple-300 font-extrabold text-[9px] sm:text-[10px] tracking-wide uppercase flex items-center gap-1 shrink-0">
                     <Sparkles className="w-2.5 h-2.5 text-purple-500 animate-pulse" />
-                    <span>{lang === 'bn' ? 'অটো-অ্যাপ্লাইড ডেমো টেমপ্লেট' : lang === 'hi' ? 'ऑटो-अप्लाई डेमो टेम्पलेट' : 'Auto-Applied Demo Template'}</span>
+                    <span>{lang === 'bn' ? 'অটো-অ্যাপ্লাইড ডেমো' : lang === 'hi' ? 'ऑटो-अप्लाई डेमो' : 'Auto-Applied Demo'}</span>
                   </span>
-                  <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-black text-[10px]">
-                    20% OFF ACTIVE
+                  <span className="px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-black text-[9px] sm:text-[10px] shrink-0">
+                    20% OFF
                   </span>
                   {appliedTemplate.price && (
-                    <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                    <span className="text-[10px] sm:text-[11px] font-black text-emerald-600 dark:text-emerald-400 font-mono shrink-0">
                       {appliedTemplate.price}
                     </span>
                   )}
                 </div>
-                <h3 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">
+                <h3 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[220px] sm:max-w-md">
                   {appliedTemplate.title}
                 </h3>
-                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
-                  {lang === 'bn' ? 'আপনার জন্য এই টেমপ্লেটের সকল স্পেসিফিকেশন ও ফিচার স্বয়ংক্রিয়ভাবে লোড করা হয়েছে।' : 'Specifications, pages, and parameters for this template are pre-configured.'}
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[240px] sm:max-w-none">
+                  {lang === 'bn' ? 'এই টেমপ্লেটের সকল স্পেসিফিকেশন লোড করা হয়েছে।' : 'Template specs and parameters are pre-configured.'}
                 </p>
               </div>
             </div>
@@ -1883,22 +1871,22 @@ export default function GetStarted() {
                   href={appliedTemplate.liveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-bold flex items-center gap-1 transition-all"
+                  className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-all"
                   title="Open live preview in new tab"
                 >
-                  <Globe className="w-3.5 h-3.5" />
+                  <Globe className="w-3 h-3" />
                   <span>{lang === 'bn' ? 'লাইভ প্রিভিউ' : 'Live Preview'}</span>
-                  <ExternalLink className="w-3 h-3 text-blue-400" />
+                  <ExternalLink className="w-2.5 h-2.5 text-blue-400" />
                 </a>
               )}
               <button
                 type="button"
                 onClick={handleManualSave}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shadow-xs transition-all cursor-pointer active:scale-95"
+                className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-xs transition-all cursor-pointer active:scale-95"
                 title="Save template state"
               >
-                <Save className="w-3.5 h-3.5" />
-                <span>{lang === 'bn' ? 'সেভ রাখুন' : 'Save'}</span>
+                <Save className="w-3 h-3" />
+                <span>{lang === 'bn' ? 'সেভ' : 'Save'}</span>
               </button>
             </div>
           </div>
@@ -1980,12 +1968,12 @@ export default function GetStarted() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6 sm:space-y-8 flex-1 flex flex-col justify-between">
+          <div className="space-y-4 sm:space-y-6 flex-1 flex flex-col justify-between w-full min-w-0 max-w-full">
             
             {/* Step Pills Bar with Smooth Horizontal Touch Scroll & Strict Lock */}
             <div
               ref={stepScrollContainerRef}
-              className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-none snap-x touch-pan-x"
+              className="w-full max-w-full min-w-0 flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-none snap-x touch-pan-x"
             >
               {t.steps.map((s, idx) => {
                 const isCompleted = idx < currentStepIndex;
