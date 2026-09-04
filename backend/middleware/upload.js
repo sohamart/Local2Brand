@@ -1,15 +1,20 @@
 import multer from 'multer';
 
-// Memory storage for serverless environments (handles buffer in memory without relying on ephemeral disk)
+// Memory storage for serverless and local environments
 const storage = multer.memoryStorage();
 
-// File filter (images only)
+// File filter (images and video media)
 const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-  if (allowedMimeTypes.includes(file.mimetype)) {
+  if (
+    !file.mimetype ||
+    file.mimetype.startsWith('image/') ||
+    file.mimetype.startsWith('video/') ||
+    file.mimetype === 'application/octet-stream' ||
+    file.originalname?.match(/\.(mp4|webm|ogg|mov|mkv|avi|jpg|jpeg|png|webp|gif|svg)$/i)
+  ) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file format. Only JPEG, PNG, WEBP, GIF, and SVG are supported.'), false);
+    cb(new Error('Invalid file format. Only video and image formats are supported.'), false);
   }
 };
 
@@ -17,7 +22,12 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: (Number(process.env.MAX_FILE_SIZE_MB) || 10) * 1024 * 1024, // default 10MB
+    fileSize: 2048 * 1024 * 1024, // 2 GB (2147483648 bytes)
+    fieldSize: 2048 * 1024 * 1024,
+    fields: 50,
+    files: 20,
   },
 });
+
+
 

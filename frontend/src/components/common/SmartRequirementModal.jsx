@@ -49,6 +49,7 @@ import { useOrderModal } from '../../context/OrderModalContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import api from '../../services/api';
+import { uploadWithToast } from '../../utils/toastUpload';
 import AshokaChakra from './AshokaChakra';
 
 // Icon Map for dynamic category render
@@ -569,33 +570,19 @@ export default function SmartRequirementModal() {
 
       // ONLY upload un-uploaded local files when the user explicitly clicks Final Submit
       if (selectedFileObjects.length > 0) {
-        const uploadToastId = toast.loading(`Uploading ${selectedFileObjects.length} store photo(s) to secure cloud storage... ⏳`);
-        const data = new FormData();
-        selectedFileObjects.forEach((f) => {
-          data.append('images', f);
-          data.append('image', f);
-        });
-
         try {
-          const uploadRes = await api.post('/upload', data);
+          const uploadRes = await uploadWithToast({
+            files: selectedFileObjects,
+            title: `Uploading ${selectedFileObjects.length} store photo(s)...`,
+            successMessage: `${selectedFileObjects.length} photo(s) uploaded successfully! ☁️`,
+          });
+
           if (uploadRes && uploadRes.success && (uploadRes.urls || uploadRes.url)) {
             const newUrls = uploadRes.urls || [uploadRes.url];
             finalUploadedUrls = [...finalUploadedUrls, ...newUrls];
-            toast.update(uploadToastId, {
-              render: `${selectedFileObjects.length} photo(s) uploaded successfully! ☁️`,
-              type: 'success',
-              isLoading: false,
-              autoClose: 2000,
-            });
           }
         } catch (uploadErr) {
           console.warn('Media upload warning, submitting specifications:', uploadErr.message);
-          toast.update(uploadToastId, {
-            render: 'Photos attached to proposal request! ✅',
-            type: 'info',
-            isLoading: false,
-            autoClose: 2000,
-          });
         }
       }
 

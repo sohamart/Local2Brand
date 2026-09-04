@@ -2,7 +2,7 @@
   {
     "_id": "6a955e52fbc06cc76d6648d3",
     "brandName": "LOCAL2BRAND",
-    "domain": "local2brand.com",
+    "domain": "local2brand.vercel.app",
     "tagline": "Build Local. Think Global.",
     "supportEmail": "stackaddacontact@gmail.com",
     "displayPhone": "+91 98765 43210",
@@ -34,7 +34,7 @@
       "btnText": "Claim Offer"
     },
     "bannerImage": "",
-    "updatedAt": "2026-09-04T07:53:41.299Z",
+    "updatedAt": "2026-09-04T18:32:50.170Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
     "updatedBy": "6a95d3798cd0de29be2399db",
@@ -247,6 +247,48 @@
         }
       ],
       "enabled": false
+    },
+    "countryThemes": {
+      "India": {
+        "videoBg": "https://res.cloudinary.com/tm2pwzjj/video/upload/v1788546769/local2brand_videos/et5pqnwawk793za2vix5.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1600&auto=format&fit=crop&q=85"
+      },
+      "Bangladesh": {
+        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-river-in-a-green-valley-42419-large.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1608958435020-e8a7109ba809?w=1200&auto=format&fit=crop&q=80"
+      },
+      "United Arab Emirates": {
+        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-traffic-at-night-in-a-futuristic-city-43187-large.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&auto=format&fit=crop&q=80"
+      },
+      "United States": {
+        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-aerial-timelapse-of-a-modern-city-at-night-42217-large.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=1200&auto=format&fit=crop&q=80"
+      },
+      "United Kingdom": {
+        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-london-city-traffic-and-big-ben-at-night-42220-large.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&auto=format&fit=crop&q=80"
+      },
+      "Canada": {
+        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-snow-falling-over-a-pine-forest-42352-large.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=1200&auto=format&fit=crop&q=80"
+      },
+      "Australia": {
+        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1200&auto=format&fit=crop&q=80"
+      },
+      "Singapore": {
+        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-traffic-at-night-in-a-futuristic-city-43187-large.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200&auto=format&fit=crop&q=80"
+      },
+      "Germany": {
+        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-futuristic-modern-architecture-building-42526-large.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=1200&auto=format&fit=crop&q=80"
+      },
+      "Other": {
+        "videoBg": "https://assets.mixkit.co/videos/preview/mixkit-digital-network-connections-tunnel-42777-large.mp4",
+        "videoPoster": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80"
+      }
     }
   }
 ]

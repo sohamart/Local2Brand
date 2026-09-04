@@ -43,6 +43,7 @@ import { toast } from 'react-toastify';
 import { useOrderModal } from '../../context/OrderModalContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import api from '../../services/api';
+import { uploadWithToast } from '../../utils/toastUpload';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import DashboardLoader from '../../components/common/DashboardLoader';
 import MarqueeTicker from '../../components/common/MarqueeTicker';
@@ -396,66 +397,22 @@ export default function UserDashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image size must be under 10MB');
-      return;
-    }
-
     setUploadingAvatar(true);
-    const toastId = toast.loading('Uploading and optimizing avatar... ⏳');
-
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      if (uploadEvent.target?.result) {
-        setAvatarUrl(uploadEvent.target.result);
-      }
-    };
-    reader.readAsDataURL(file);
-
     try {
-      let finalUrl = '';
-      try {
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('file', file);
-        const uploadRes = await api.post('/upload', formData);
-        if (uploadRes && uploadRes.success && uploadRes.url) {
-          finalUrl = uploadRes.url;
-        }
-      } catch (formErr) {
-        console.warn('FormData upload notice, falling back to base64 upload:', formErr.message);
-        // Base64 upload fallback
-        const base64Data = await new Promise((resolve) => {
-          const r = new FileReader();
-          r.onload = () => resolve(r.result);
-          r.readAsDataURL(file);
-        });
-        const base64Res = await api.post('/upload', { image: base64Data });
-        if (base64Res && base64Res.success && base64Res.url) {
-          finalUrl = base64Res.url;
-        }
-      }
+      const uploadRes = await uploadWithToast({
+        file,
+        title: 'Uploading Avatar...',
+        successMessage: 'Avatar uploaded and updated! 📸',
+      });
 
+      const finalUrl = uploadRes?.url || uploadRes?.urls?.[0];
       if (finalUrl) {
         setAvatarUrl(finalUrl);
         await updateProfile({ avatar: finalUrl });
         setSaveSuccess(true);
-        toast.update(toastId, {
-          render: 'Avatar updated successfully! 📸',
-          type: 'success',
-          isLoading: false,
-          autoClose: 2000
-        });
-      } else {
-        throw new Error('Could not obtain image URL from server.');
       }
     } catch (uploadErr) {
-      toast.update(toastId, {
-        render: 'Upload failed: ' + (uploadErr.message || 'Network error'),
-        type: 'error',
-        isLoading: false,
-        autoClose: 3000
-      });
+      console.error('Avatar upload error:', uploadErr);
     } finally {
       setUploadingAvatar(false);
     }

@@ -98,41 +98,74 @@ export const getAllCloudinaryMedia = async (req, res) => {
       });
     }
 
-    const { max_results = 100, next_cursor, prefix } = req.query;
+    const { max_results = 100, next_cursor, prefix, resource_type } = req.query;
 
-    const options = {
-      type: 'upload',
-      max_results: Number(max_results) || 100,
-      direction: 'desc'
-    };
+    let allResources = [];
+    let nextCursor = null;
 
-    if (next_cursor) {
-      options.next_cursor = next_cursor;
+    if (resource_type) {
+      const options = {
+        resource_type,
+        type: 'upload',
+        max_results: Number(max_results) || 100,
+        direction: 'desc'
+      };
+      if (next_cursor) options.next_cursor = next_cursor;
+      if (prefix) options.prefix = prefix;
+      const result = await cloudinary.api.resources(options);
+      allResources = result.resources || [];
+      nextCursor = result.next_cursor || null;
+    } else {
+      // Query both image and video resources from Cloudinary
+      const imageOptions = {
+        resource_type: 'image',
+        type: 'upload',
+        max_results: Number(max_results) || 100,
+        direction: 'desc'
+      };
+      const videoOptions = {
+        resource_type: 'video',
+        type: 'upload',
+        max_results: Number(max_results) || 100,
+        direction: 'desc'
+      };
+      if (prefix) {
+        imageOptions.prefix = prefix;
+        videoOptions.prefix = prefix;
+      }
+
+      try {
+        const [imageRes, videoRes] = await Promise.allSettled([
+          cloudinary.api.resources(imageOptions),
+          cloudinary.api.resources(videoOptions)
+        ]);
+
+        const images = imageRes.status === 'fulfilled' ? (imageRes.value?.resources || []) : [];
+        const videos = videoRes.status === 'fulfilled' ? (videoRes.value?.resources || []) : [];
+        allResources = [...images, ...videos].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      } catch (err) {
+        const fallbackRes = await cloudinary.api.resources(imageOptions);
+        allResources = fallbackRes.resources || [];
+      }
     }
 
-    if (prefix) {
-      options.prefix = prefix;
-    }
-
-    const result = await cloudinary.api.resources(options);
-
-    const formattedResources = (result.resources || []).map((r) => ({
+    const formattedResources = allResources.map((r) => ({
       public_id: r.public_id,
       secure_url: r.secure_url,
-      format: r.format,
+      format: r.format || (r.resource_type === 'video' ? 'mp4' : 'jpg'),
       bytes: r.bytes,
       sizeFormatted: formatBytes(r.bytes),
       width: r.width,
       height: r.height,
       folder: r.folder || (r.public_id.includes('/') ? r.public_id.split('/')[0] : 'root'),
       created_at: r.created_at,
-      resource_type: r.resource_type
+      resource_type: r.resource_type || (r.format === 'mp4' || r.format === 'webm' ? 'video' : 'image')
     }));
 
     return res.status(200).json({
       success: true,
       total: formattedResources.length,
-      next_cursor: result.next_cursor || null,
+      next_cursor: nextCursor,
       resources: formattedResources
     });
   } catch (error) {
@@ -144,7 +177,7 @@ export const getAllCloudinaryMedia = async (req, res) => {
   }
 };
 
-// @desc    Delete single Cloudinary image by public_id
+// @desc    Delete single Cloudinary image/video by public_id
 // @route   DELETE /api/media/:public_id
 // @access  Admin
 export const deleteCloudinaryImage = async (req, res) => {
@@ -153,7 +186,6 @@ export const deleteCloudinaryImage = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Cloudinary not configured' });
     }
 
-    // req.params.public_id may be passed encoded or via req.query
     const rawPublicId = req.params.public_id || req.query.public_id;
     const publicId = decodeURIComponent(rawPublicId);
 
@@ -161,7 +193,11 @@ export const deleteCloudinaryImage = async (req, res) => {
       return res.status(400).json({ success: false, message: 'public_id is required' });
     }
 
-    const result = await cloudinary.uploader.destroy(publicId, { invalidate: true });
+    let result = await cloudinary.uploader.destroy(publicId, { invalidate: true });
+    if (result.result !== 'ok') {
+      // Retry with video resource_type
+      result = await cloudinary.uploader.destroy(publicId, { resource_type: 'video', invalidate: true });
+    }
 
     return res.status(200).json({
       success: true,
@@ -169,10 +205,10 @@ export const deleteCloudinaryImage = async (req, res) => {
       result
     });
   } catch (error) {
-    console.error('Error deleting Cloudinary image:', error);
+    console.error('Error deleting Cloudinary media:', error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Failed to delete image from Cloudinary'
+      message: error.message || 'Failed to delete media from Cloudinary'
     });
   }
 };

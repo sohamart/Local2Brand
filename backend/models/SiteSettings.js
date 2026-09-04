@@ -250,6 +250,10 @@ const siteSettingsSchema = new mongoose.Schema(
       type: [String],
       default: []
     },
+    countryThemes: {
+      type: Object,
+      default: {}
+    },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

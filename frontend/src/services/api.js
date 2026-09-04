@@ -48,8 +48,9 @@ class ApiClient {
     }
 
     const controller = new AbortController();
+    const isUpload = endpoint.includes('/upload');
     const isLongRunning = endpoint.includes('/chat') || endpoint.includes('broadcast') || endpoint.includes('email');
-    const timeoutDuration = options.timeout || (isLongRunning ? 60000 : 30000);
+    const timeoutDuration = options.timeout || (isUpload ? 15 * 60 * 1000 : isLongRunning ? 60000 : 30000);
     const timeoutId = setTimeout(() => {
       try {
         controller.abort(new Error('Network request timed out. Please check your connection.'));
@@ -139,6 +140,76 @@ class ApiClient {
       finalBody = bodyOrOptions instanceof FormData ? bodyOrOptions : JSON.stringify(bodyOrOptions);
     }
     return this.request(endpoint, { ...finalOptions, method: 'DELETE', body: finalBody });
+  }
+
+  uploadWithProgress(endpoint, formData, onProgress, options = {}) {
+    return new Promise((resolve, reject) => {
+      const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      const token = this.getToken();
+      const xhr = new XMLHttpRequest();
+
+      xhr.open(options.method || 'POST', url, true);
+      xhr.withCredentials = true;
+
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
+
+      if (options.headers) {
+        Object.entries(options.headers).forEach(([k, v]) => {
+          xhr.setRequestHeader(k, v);
+        });
+      }
+
+      if (xhr.upload && typeof onProgress === 'function') {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const loaded = event.loaded;
+            const total = event.total;
+            const percent = Math.min(100, Math.round((loaded * 100) / total));
+            const loadedMB = (loaded / (1024 * 1024)).toFixed(1);
+            const totalMB = (total / (1024 * 1024)).toFixed(1);
+            onProgress({
+              loaded,
+              total,
+              percent,
+              loadedMB,
+              totalMB,
+            });
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        let responseData = {};
+        try {
+          responseData = JSON.parse(xhr.responseText || '{}');
+        } catch (e) {
+          responseData = { raw: xhr.responseText };
+        }
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(responseData);
+        } else {
+          const error = new Error(responseData.message || `Upload failed with status ${xhr.status}`);
+          error.status = xhr.status;
+          error.data = responseData;
+          reject(error);
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('Network error during upload. Please check your internet connection.'));
+      };
+
+      xhr.ontimeout = () => {
+        reject(new Error('Upload timed out. Please try again.'));
+      };
+
+      xhr.timeout = options.timeout || 15 * 60 * 1000;
+
+      xhr.send(formData);
+    });
   }
 
   async uploadFile(file) {

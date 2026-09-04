@@ -49,12 +49,14 @@ export const uploadImage = async (req, res) => {
       for (const file of filesList) {
         const buffer = file.buffer;
         const mimetype = file.mimetype || 'image/jpeg';
+        const isVideo = mimetype.startsWith('video/');
+        const resourceType = isVideo ? 'video' : 'auto';
 
         if (isCloudinaryConfigured && buffer) {
           try {
             const result = await uploadBufferToCloudinary(buffer, {
-              folder: 'local2brand_assets',
-              resource_type: 'image',
+              folder: isVideo ? 'local2brand_videos' : 'local2brand_assets',
+              resource_type: resourceType,
             });
             uploadedUrls.push(result.secure_url);
           } catch (cloudErr) {
@@ -69,8 +71,8 @@ export const uploadImage = async (req, res) => {
           if (isCloudinaryConfigured) {
             try {
               const result = await cloudinary.uploader.upload(file.path, {
-                folder: 'local2brand_assets',
-                resource_type: 'image',
+                folder: isVideo ? 'local2brand_videos' : 'local2brand_assets',
+                resource_type: resourceType,
               });
               uploadedUrls.push(result.secure_url);
             } catch (e) {}
@@ -81,12 +83,13 @@ export const uploadImage = async (req, res) => {
 
     // 2. Process Base64 Data URI in JSON body
     const base64Input = req.body?.image || req.body?.file || req.body?.avatar || req.body?.data;
-    if (base64Input && typeof base64Input === 'string' && base64Input.startsWith('data:image')) {
+    if (base64Input && typeof base64Input === 'string' && (base64Input.startsWith('data:image') || base64Input.startsWith('data:video'))) {
+      const isBase64Video = base64Input.startsWith('data:video');
       if (isCloudinaryConfigured) {
         try {
           const result = await cloudinary.uploader.upload(base64Input, {
-            folder: 'local2brand_assets',
-            resource_type: 'image',
+            folder: isBase64Video ? 'local2brand_videos' : 'local2brand_assets',
+            resource_type: isBase64Video ? 'video' : 'auto',
           });
           uploadedUrls.push(result.secure_url);
         } catch (cloudErr) {

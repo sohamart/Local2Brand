@@ -10,7 +10,7 @@ import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 
 // Load environment variables immediately before any route modules
-dotenv.config();
+dotenv.config(); // High-speed Cloudinary 2GB Video & Media Engine active
 
 // Protect process from uncaught rejections
 process.on('uncaughtException', (err) => {
@@ -107,8 +107,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use(express.json({ limit: '200mb' }));
+app.use(express.urlencoded({ extended: true, limit: '200mb' }));
 app.use(cookieParser());
 
 if (process.env.NODE_ENV !== 'production') {

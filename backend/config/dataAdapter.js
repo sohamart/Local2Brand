@@ -294,6 +294,7 @@ const DEFAULT_SETTINGS = {
       instagramHandle: '@local2brand',
     },
   },
+  countryThemes: {},
 };
 
 

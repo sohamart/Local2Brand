@@ -9,8 +9,8 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇮🇳 Bharat / India Edition',
     flagStripe: 'from-[#FF9933] via-[#FFFFFF] via-[#0072FF] to-[#138808]',
     flagColors: ['#FF9933', '#FFFFFF', '#138808'],
-    videoBg: '/india.mp4',
-    videoPoster: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1200&auto=format&fit=crop&q=80',
+    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-temple-complex-at-sunset-42867-large.mp4',
+    videoPoster: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1600&auto=format&fit=crop&q=85',
     bgGradient: 'from-amber-500/10 via-orange-500/5 to-emerald-500/10 dark:from-amber-950/40 dark:via-slate-950 dark:to-emerald-950/40',
     cardBorder: 'border-orange-500/30 dark:border-orange-500/20 hover:border-orange-500/60',
     accentGlow: 'rgba(245, 158, 11, 0.15)',
@@ -308,4 +308,31 @@ export const resolveCategoryFromTemplate = (templateNameOrSlug) => {
     return 'showroom';
   }
   return '';
+};
+
+// Get country theme with dynamic Cloudinary/admin overrides from localStorage & backend settings
+export const getEffectiveCountryTheme = (countryName, dynamicSettings = null) => {
+  const base = COUNTRY_CULTURAL_THEMES[countryName] || COUNTRY_CULTURAL_THEMES['India'] || COUNTRY_CULTURAL_THEMES['Other'];
+  try {
+    let override = null;
+    if (dynamicSettings && dynamicSettings[countryName]) {
+      override = dynamicSettings[countryName];
+    } else if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('l2b_country_themes_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        override = parsed[countryName];
+      }
+    }
+
+    if (override) {
+      return {
+        ...base,
+        ...override,
+        videoBg: override.videoBg || base.videoBg,
+        videoPoster: override.videoPoster || base.videoPoster,
+      };
+    }
+  } catch (err) {}
+  return base;
 };
