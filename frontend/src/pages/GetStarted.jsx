@@ -2310,7 +2310,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
       <main className="w-[95%] max-w-4xl mx-auto pt-16 sm:pt-20 flex-1 flex flex-col">
         
         {/* Step Progress Tracker Card (Inside Scrollable Form Area) */}
-        <div className="mb-4 bg-white/95 dark:bg-[#0F172A]/95 p-3.5 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 backdrop-blur-xl shadow-lg dark:shadow-slate-950/50 transition-all">
+        <div className="mb-4 bg-white/80 dark:bg-[#0B1120]/80 p-3.5 sm:p-5 rounded-3xl border border-white/80 dark:border-slate-800/80 backdrop-blur-2xl shadow-xl dark:shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
             <div>
               <span className="text-[11px] sm:text-xs font-mono font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
@@ -2392,7 +2392,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
         </div>
 
         {/* Step Content Container Card */}
-        <div className="bg-white dark:bg-slate-900/90 p-4 sm:p-8 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 backdrop-blur-xl shadow-xl shadow-slate-100/50 dark:shadow-none mb-6 flex-1 transition-all">
+        <div className="bg-white/80 sm:bg-white/85 dark:bg-slate-900/80 sm:dark:bg-slate-900/85 p-4 sm:p-8 rounded-3xl border border-white/80 dark:border-slate-800/80 backdrop-blur-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-950/60 mb-6 flex-1 transition-all">
 
 
           {/* ==================================================== */}
@@ -4619,7 +4619,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
       <div className="fixed bottom-0 left-0 right-0 h-24 sm:h-28 pointer-events-none z-30 bg-gradient-to-t from-black/70 via-black/25 to-transparent dark:from-black dark:via-black/75 to-transparent transition-all" />
 
       {/* FLOATING BOTTOM ACTIONS DOCK: 95% Width Mobile Responsive */}
-      <div className="fixed bottom-2 sm:bottom-4 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 w-[95%] sm:max-w-5xl z-40 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-slate-800/90 rounded-2xl sm:rounded-3xl px-3 sm:px-6 py-2.5 sm:py-3 shadow-2xl dark:shadow-slate-950/80 flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden transition-all">
+      <div className="fixed bottom-2 sm:bottom-4 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 w-[95%] sm:max-w-5xl z-40 bg-white/85 dark:bg-[#0B1120]/85 backdrop-blur-2xl border border-white/70 dark:border-slate-800/80 rounded-2xl sm:rounded-3xl px-3 sm:px-6 py-2.5 sm:py-3 shadow-2xl dark:shadow-slate-950/80 flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden transition-all">
         
         {/* Dynamic National Flag Minimal Top Stripe */}
         {formData.country && (

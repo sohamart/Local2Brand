@@ -14,6 +14,7 @@ export default function BackgroundCountryArt({ country = 'India' }) {
 
     video.muted = true;
     video.defaultMuted = true;
+    video.loop = true;
     
     const playVideo = () => {
       const playPromise = video.play();
@@ -23,6 +24,7 @@ export default function BackgroundCountryArt({ country = 'India' }) {
           const startPlaybackOnUserAction = () => {
             if (video) {
               video.muted = true;
+              video.loop = true;
               video.play().catch(() => {});
             }
             window.removeEventListener('click', startPlaybackOnUserAction);
@@ -53,21 +55,28 @@ export default function BackgroundCountryArt({ country = 'India' }) {
         playsInline
         preload="auto"
         poster={videoPoster}
-        className="absolute inset-0 w-full h-full object-cover opacity-25 sm:opacity-30 dark:opacity-20 transition-opacity duration-1000 scale-105 filter saturate-150 contrast-105"
+        onEnded={(e) => {
+          // Guaranteed seamless infinite loop across all mobile devices
+          try {
+            e.currentTarget.currentTime = 0;
+            e.currentTarget.play().catch(() => {});
+          } catch (err) {}
+        }}
+        className="absolute inset-0 w-full h-full object-cover opacity-50 sm:opacity-35 dark:opacity-40 sm:dark:opacity-25 transition-opacity duration-1000 scale-105 filter saturate-150 contrast-110"
       >
         <source src={videoSrc} type="video/mp4" />
       </video>
 
       {/* Smooth Soft Radial Vignette Mask */}
       <div 
-        className="absolute inset-0 bg-radial-[ellipse_at_center,_transparent_40%,_rgba(248,250,252,0.85)_95%] dark:bg-radial-[ellipse_at_center,_transparent_35%,_#080B11_90%]" 
+        className="absolute inset-0 bg-radial-[ellipse_at_center,_transparent_50%,_rgba(248,250,252,0.65)_95%] dark:bg-radial-[ellipse_at_center,_transparent_45%,_rgba(8,11,17,0.75)_95%]" 
       />
       
       {/* Gentle Top & Bottom Edge Gradient Blend */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-50/70 via-transparent to-slate-50/80 dark:from-[#080B11]/85 dark:via-transparent dark:to-[#080B11]/90" />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-50/40 via-transparent to-slate-50/60 dark:from-[#080B11]/50 dark:via-transparent dark:to-[#080B11]/70" />
       
       {/* Dynamic Cultural Color Hue Tint */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${theme.bgGradient || 'from-transparent to-transparent'} opacity-35 dark:opacity-25 transition-all duration-1000`} />
+      <div className={`absolute inset-0 bg-gradient-to-br ${theme.bgGradient || 'from-transparent to-transparent'} opacity-25 dark:opacity-20 transition-all duration-1000`} />
     </div>
   );
 }
