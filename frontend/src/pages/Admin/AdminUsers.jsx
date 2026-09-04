@@ -22,7 +22,8 @@ import {
   MessageSquare,
   Sparkles,
   Zap,
-  Filter
+  Filter,
+  MessageCircle
 } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -494,6 +495,18 @@ export default function AdminUsers() {
                         {/* Actions Column */}
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            {u.phone && (
+                              <a
+                                href={`https://wa.me/${u.phone.replace(/[^0-9]/g, '').length === 10 ? '91' + u.phone.replace(/[^0-9]/g, '') : u.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${u.name || 'there'}! 👋 This is from LOCAL2BRAND Admin Team regarding your account/website requirements.`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-400 dark:hover:bg-emerald-900/60 cursor-pointer transition-colors flex items-center justify-center"
+                                title={`Direct WhatsApp Chat with ${u.name || 'User'} (${u.phone})`}
+                              >
+                                <MessageCircle className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+
                             <button
                               type="button"
                               onClick={() => setInspectingUser(u)}
@@ -631,22 +644,36 @@ export default function AdminUsers() {
                 </div>
 
                 {/* Action Row */}
-                <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                  <button
-                    onClick={() => handleToggleVerification(inspectingUser._id || inspectingUser.id)}
-                    className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>{inspectingUser.isEmailVerified ? 'Mark as Unverified' : 'Mark as Verified'}</span>
-                  </button>
+                <div className="flex flex-col gap-2 pt-2">
+                  {inspectingUser.phone && (
+                    <a
+                      href={`https://wa.me/${inspectingUser.phone.replace(/[^0-9]/g, '').length === 10 ? '91' + inspectingUser.phone.replace(/[^0-9]/g, '') : inspectingUser.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inspectingUser.name || 'there'}! 👋 This is from LOCAL2BRAND Admin Team regarding your account/website requirements.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      <span>Direct WhatsApp Chat ({inspectingUser.phone})</span>
+                    </a>
+                  )}
 
-                  <button
-                    onClick={() => handleSendOtpToUser(inspectingUser._id || inspectingUser.id, inspectingUser.email)}
-                    className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800 hover:bg-purple-100 cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Send Verification Code</span>
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={() => handleToggleVerification(inspectingUser._id || inspectingUser.id)}
+                      className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{inspectingUser.isEmailVerified ? 'Mark as Unverified' : 'Mark as Verified'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleSendOtpToUser(inspectingUser._id || inspectingUser.id, inspectingUser.email)}
+                      className="flex-1 py-2.5 px-3 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800 hover:bg-purple-100 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Send Verification Code</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

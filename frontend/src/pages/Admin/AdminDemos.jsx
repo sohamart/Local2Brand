@@ -470,7 +470,7 @@ export default function AdminDemos() {
       )}
 
       {/* ========================================================================= */}
-      {/* SECTION 1: HERO SLIDER SHOWCASE MANAGER (THE CORE USER REQUIREMENT)        */}
+      {/* SECTION 1: HOMEPAGE SHOWCASE & CASE STUDIES MANAGER                        */}
       {/* ========================================================================= */}
       <div className="p-6 rounded-3xl bg-gradient-to-b from-purple-500/10 via-white to-white dark:from-purple-950/40 dark:via-slate-900 dark:to-slate-900 border-2 border-purple-500/40 shadow-xl space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-purple-200/60 dark:border-purple-800/60 pb-4">
@@ -481,14 +481,14 @@ export default function AdminDemos() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                  Home Hero Slider Showcase Order
+                  Homepage Showcase & Featured Case Studies
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border border-purple-300">
-                  {heroDemos.length} Slides Active
+                  {heroDemos.length} Selected on Homepage
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                These demo templates will appear in the 3D showcase slider on the Homepage. Use ⬆️ / ⬇️ arrows to reorder which demo plays first.
+                These templates power both the <strong>Homepage Hero 3D Slider</strong> and the <strong>"Work That Speaks for Your Brand"</strong> section. Use ⬆️ / ⬇️ to set the display sequence.
               </p>
             </div>
           </div>
@@ -501,7 +501,7 @@ export default function AdminDemos() {
                 className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 flex items-center gap-1.5 cursor-pointer shadow-lg animate-pulse"
               >
                 <Save className="w-3.5 h-3.5" />
-                <span>{savingHeroOrder ? 'Saving Sequence...' : 'Save Slider Order'}</span>
+                <span>{savingHeroOrder ? 'Saving Sequence...' : 'Save Showcase Order'}</span>
               </button>
             )}
           </div>
@@ -760,7 +760,7 @@ export default function AdminDemos() {
 
                 {/* Right Section: Action Controls */}
                 <div className="flex items-center gap-2 sm:self-center self-end shrink-0">
-                  {/* Hero Showcase Toggle Button */}
+                  {/* Home Showcase Toggle Button */}
                   <button
                     type="button"
                     onClick={() => handleToggleFeatured(demo)}
@@ -769,10 +769,10 @@ export default function AdminDemos() {
                         ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-purple-50 dark:hover:bg-purple-950 hover:text-purple-600'
                     }`}
-                    title="Click to toggle Show on Home Page Hero Slider"
+                    title="Click to toggle Show on Homepage (Hero Slider & 'Work That Speaks for Your Brand' Showcase)"
                   >
                     <Sparkles className={`w-3 h-3 ${demo.isFeatured ? 'fill-white' : ''}`} />
-                    <span>{demo.isFeatured ? 'Hero Active 🌟' : 'Add to Hero'}</span>
+                    <span>{demo.isFeatured ? 'On Homepage 🌟' : '+ Add to Home'}</span>
                   </button>
 
                   {/* Status Toggle Button */}
@@ -1029,15 +1029,15 @@ export default function AdminDemos() {
                 />
               </div>
 
-              {/* HOME HERO SLIDER SETTINGS CARD */}
+              {/* HOME SHOWCASE & HERO SLIDER SETTINGS CARD */}
               <div className="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border-2 border-purple-300 dark:border-purple-800 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <span className="text-xs font-black text-slate-900 dark:text-white block">
-                      🌟 Home Page Hero Slider Visibility
+                      🌟 Homepage Hero Slider & Featured Case Studies Showcase
                     </span>
                     <span className="text-[11px] text-slate-500 block">
-                      Include this template in the main interactive 3D hero slider on the home page.
+                      Feature this template on both the Hero 3D Slider and the "Work That Speaks for Your Brand" showcase on the Homepage.
                     </span>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer shrink-0">

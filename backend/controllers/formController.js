@@ -6,13 +6,18 @@ import mongoose from 'mongoose';
 // Ensure default published form exists in store or MongoDB
 export const ensureDefaultForm = async () => {
   if (mongoose.connection.readyState === 1) {
-    const count = await FormConfig.countDocuments();
-    if (count === 0) {
-      const form = new FormConfig(defaultFormSchema);
+    let form = await FormConfig.findOne({ status: 'published' });
+    if (!form) {
+      form = new FormConfig(defaultFormSchema);
       await form.save();
       console.log('✅ Default Dynamic Form Configuration Seeded (Version 1.0)');
-      return form;
+    } else if (!form.questions || form.questions.length < defaultFormSchema.questions.length) {
+      form.categories = defaultFormSchema.categories;
+      form.questions = defaultFormSchema.questions;
+      await form.save();
+      console.log('✅ Dynamic Form Configuration Updated with Category-Specific Questions');
     }
+    return form;
   } else {
     let form = dataStore.find('form_configs', (f) => f.status === 'published');
     if (!form) {
@@ -24,6 +29,11 @@ export const ensureDefaultForm = async () => {
       };
       dataStore.create('form_configs', form);
       console.log('✅ Default Form Configuration Seeded in Local Store (Version 1.0)');
+    } else if (!form.questions || form.questions.length < defaultFormSchema.questions.length) {
+      form.categories = defaultFormSchema.categories;
+      form.questions = defaultFormSchema.questions;
+      dataStore.update('form_configs', form._id, form);
+      console.log('✅ Local Store Form Configuration Updated with Category-Specific Questions');
     }
     return form;
   }
@@ -34,15 +44,7 @@ export const ensureDefaultForm = async () => {
 // @access  Public
 export const getPublishedForm = async (req, res) => {
   try {
-    let form;
-    if (mongoose.connection.readyState === 1) {
-      form = await FormConfig.findOne({ status: 'published' }).sort({ versionNumber: -1 });
-      if (!form) {
-        form = await ensureDefaultForm();
-      }
-    } else {
-      form = dataStore.find('form_configs', (f) => f.status === 'published') || (await ensureDefaultForm());
-    }
+    let form = await ensureDefaultForm();
 
     res.status(200).json({
       success: true,

@@ -22,7 +22,7 @@ const DEFAULT_DEMOS = [
     heroStat: 'Full-Stack EdTech',
     rating: '5.0 ★ (78+ Reviews)',
     iconName: 'GraduationCap',
-    liveUrl: 'https://skillcraft-lms-demo.vercel.app',
+    liveUrl: 'https://stackadda.me',
     thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400&auto=format&fit=crop',
     description: 'Complete full-stack LMS & video course selling platform with curriculum player, student dashboard, quiz engine, and 1-click checkout.',
     features: ['Full Video Lecture Player', 'Student Dashboard with Progress', '1-Click Course Checkout', 'Certificate Generation']

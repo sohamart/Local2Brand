@@ -119,6 +119,198 @@ export const defaultFormSchema = {
         { id: 'content_partial', label: 'Partially Ready (Need Copywriting / Stock Photography)', value: 'partially' },
         { id: 'content_no', label: 'No, Need End-to-End Content Creation', value: 'no' }
       ]
+    },
+
+    // Step 3: Category-Specific Business Details
+    // 1. LMS & Courses / Coaching
+    {
+      id: 'q_lms_courses',
+      stepId: 'step_business',
+      categoryId: 'coaching',
+      title: 'Course Format & Delivery Methods',
+      type: 'multi_select',
+      required: true,
+      order: 10,
+      enabled: true,
+      options: [
+        { id: 'lms_pre_recorded', label: 'Pre-Recorded Video Courses (Curriculum Player)', value: 'video_courses' },
+        { id: 'lms_live_classes', label: 'Live Zoom / Google Meet Batch Integration', value: 'live_batches' },
+        { id: 'lms_pdf_notes', label: 'Downloadable PDF Notes & Study Materials', value: 'pdf_notes' },
+        { id: 'lms_quizzes', label: 'Online Quizzes & Auto Certificate Generation', value: 'quiz_certs' }
+      ]
+    },
+    {
+      id: 'q_lms_video_hosting',
+      stepId: 'step_business',
+      categoryId: 'coaching',
+      title: 'Video Hosting Preference (Anti-Piracy)',
+      type: 'select',
+      required: false,
+      order: 11,
+      enabled: true,
+      options: [
+        { id: 'vh_encrypted', label: 'DRM Encrypted Secure Player (No Screen Recording/Download)', value: 'drm_secure' },
+        { id: 'vh_vimeo', label: 'Vimeo OTT / Private Vimeo Embed', value: 'vimeo' },
+        { id: 'vh_youtube', label: 'Unlisted YouTube Embed (Budget-Friendly)', value: 'youtube_unlisted' },
+        { id: 'vh_cloudflare', label: 'Cloudflare Stream Direct CDN', value: 'cloudflare_stream' }
+      ]
+    },
+
+    // 2. Restaurant / Fine Dining
+    {
+      id: 'q_rest_cuisines',
+      stepId: 'step_business',
+      categoryId: 'restaurant',
+      title: 'Cuisines & Dining Experience',
+      type: 'multi_select',
+      required: true,
+      order: 20,
+      enabled: true,
+      options: [
+        { id: 'c_north_indian', label: 'North Indian & Mughlai', value: 'north_indian' },
+        { id: 'c_bengali', label: 'Traditional Bengali Specials', value: 'bengali' },
+        { id: 'c_chinese', label: 'Authentic Chinese & Asian', value: 'chinese' },
+        { id: 'c_continental', label: 'Continental & Italian Pasta/Pizza', value: 'continental' },
+        { id: 'c_biryani', label: 'Dum Biryani & Kebabs', value: 'biryani' },
+        { id: 'c_desserts', label: 'Gourmet Desserts & Bakery', value: 'desserts' }
+      ]
+    },
+    {
+      id: 'q_rest_booking',
+      stepId: 'step_business',
+      categoryId: 'restaurant',
+      title: 'Table Reservation & Takeaway Funnels',
+      type: 'multi_select',
+      required: true,
+      order: 21,
+      enabled: true,
+      options: [
+        { id: 'res_table_booking', label: 'Online Table Reservation Calendar', value: 'table_booking' },
+        { id: 'res_whatsapp_orders', label: 'Instant WhatsApp Takeaway Ordering', value: 'whatsapp_takeaway' },
+        { id: 'res_chef_specials', label: 'Chef Signature Specials Showcase', value: 'chef_specials' },
+        { id: 'res_zomato_swiggy', label: 'Zomato & Swiggy Direct Hub Links', value: 'delivery_partners' }
+      ]
+    },
+
+    // 3. Cafe & Bakery
+    {
+      id: 'q_cafe_features',
+      stepId: 'step_business',
+      categoryId: 'cafe',
+      title: 'Café Signature Menu & Digital Setup',
+      type: 'multi_select',
+      required: true,
+      order: 30,
+      enabled: true,
+      options: [
+        { id: 'cafe_aesthetic_menu', label: 'Aesthetic Visual Food & Beverage Lookbook', value: 'visual_menu' },
+        { id: 'cafe_cake_preorder', label: 'Custom Birthday / Event Cake Pre-Orders', value: 'cake_preorder' },
+        { id: 'cafe_takeout', label: 'Direct Counter Pickup Ordering', value: 'counter_pickup' },
+        { id: 'cafe_insta', label: 'Live Instagram Feed Embed', value: 'insta_embed' }
+      ]
+    },
+
+    // 4. Salon & Spa
+    {
+      id: 'q_salon_features',
+      stepId: 'step_business',
+      categoryId: 'salon',
+      title: 'Salon Services & Stylist Booking',
+      type: 'multi_select',
+      required: true,
+      order: 40,
+      enabled: true,
+      options: [
+        { id: 'salon_stylist_roster', label: 'Stylist Roster & Portfolios', value: 'stylist_portfolio' },
+        { id: 'salon_rate_card', label: 'Interactive Service Rate-Card with Duration', value: 'rate_card' },
+        { id: 'salon_slot_booking', label: 'VIP Online Appointment Slot Booking', value: 'slot_booking' },
+        { id: 'salon_bridal', label: 'Bridal & Party Package Showcase', value: 'bridal_packages' }
+      ]
+    },
+
+    // 5. Gym & Fitness
+    {
+      id: 'q_gym_features',
+      stepId: 'step_business',
+      categoryId: 'gym',
+      title: 'Fitness Hub Features & Memberships',
+      type: 'multi_select',
+      required: true,
+      order: 50,
+      enabled: true,
+      options: [
+        { id: 'gym_tiers', label: 'Monthly / Annual Membership Tier Pricing Grid', value: 'tier_pricing' },
+        { id: 'gym_trial_pass', label: '1-Day Free Trial Pass Lead Capture', value: 'trial_pass' },
+        { id: 'gym_trainer_roster', label: 'Certified Trainer Profiles & Achievements', value: 'trainers' },
+        { id: 'gym_timetable', label: 'Weekly Live Class & Batch Timetable', value: 'class_timetable' }
+      ]
+    },
+
+    // 6. Hotel & Luxury Resort
+    {
+      id: 'q_hotel_features',
+      stepId: 'step_business',
+      categoryId: 'hotel',
+      title: 'Resort & Room Showcase Capabilities',
+      type: 'multi_select',
+      required: true,
+      order: 60,
+      enabled: true,
+      options: [
+        { id: 'hotel_room_categories', label: 'Room Categories & Tariff Grid', value: 'room_grid' },
+        { id: 'hotel_360_tour', label: 'Virtual 360 Suite Tour / Gallery Embed', value: 'virtual_tour' },
+        { id: 'hotel_booking_inquiry', label: 'Direct Room Booking & Date Selection Engine', value: 'direct_booking' },
+        { id: 'hotel_amenities', label: 'Amenities & Local Sightseeing Guide', value: 'amenities_guide' }
+      ]
+    },
+
+    // 7. Real Estate
+    {
+      id: 'q_re_features',
+      stepId: 'step_business',
+      categoryId: 'real_estate',
+      title: 'Property Portal & Broker Lead Funnels',
+      type: 'multi_select',
+      required: true,
+      order: 70,
+      enabled: true,
+      options: [
+        { id: 're_property_search', label: 'Interactive Property Search & Filters', value: 'property_search' },
+        { id: 're_floor_plans', label: 'High-Res Floor Plans & Brochure Downloads', value: 'floor_plans' },
+        { id: 're_emi_calc', label: 'Home Loan & EMI Calculator', value: 'emi_calculator' },
+        { id: 're_site_visit', label: 'Instant Site Visit Booking Lead Capture', value: 'site_visit' }
+      ]
+    },
+
+    // 8. E-Commerce & Boutique Fashion
+    {
+      id: 'q_boutique_features',
+      stepId: 'step_business',
+      categoryId: 'boutique',
+      title: 'E-Commerce & Fashion Store Capabilities',
+      type: 'multi_select',
+      required: true,
+      order: 80,
+      enabled: true,
+      options: [
+        { id: 'ecom_catalog', label: 'Full Product Catalog with Size/Color Variants', value: 'product_catalog' },
+        { id: 'ecom_checkout', label: 'Instant Payment Gateway (Razorpay/Stripe/UPI)', value: 'online_checkout' },
+        { id: 'ecom_whatsapp_buy', label: '1-Click WhatsApp Direct Ordering', value: 'whatsapp_buy' },
+        { id: 'ecom_tracking', label: 'Order Tracking & Automated Courier Sync', value: 'courier_tracking' }
+      ]
+    },
+
+    // Universal Custom User Input Box for All Templates & Categories
+    {
+      id: 'q_custom_user_notes',
+      stepId: 'step_business',
+      categoryId: 'all',
+      title: 'Special Custom Requirements & Specific Feature Requests',
+      placeholder: 'Describe any specific features, third-party tools, custom design requests, or exact pages you want on your website...',
+      type: 'textarea',
+      required: false,
+      order: 99,
+      enabled: true
     }
   ]
 };

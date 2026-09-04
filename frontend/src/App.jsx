@@ -8,7 +8,6 @@ import AnnouncementBar from './components/common/AnnouncementBar';
 import Footer from './components/common/Footer';
 import LiquidBackground from './components/common/LiquidBackground';
 import CustomCursor from './components/common/CustomCursor';
-import SmartRequirementModal from './components/common/SmartRequirementModal';
 import CallbackModal from './components/common/CallbackModal';
 import AuthModal from './components/common/AuthModal';
 import AssistantChatbot from './components/common/AssistantChatbot';
@@ -85,8 +84,11 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }
 
         {/* Dedicated Standalone Interactive Form & Tracking Routes */}
         <Route path="/get-started" element={<GetStarted />} />
+        <Route path="/get-started/:templateId" element={<GetStarted />} />
         <Route path="/start-project" element={<GetStarted />} />
+        <Route path="/start-project/:templateId" element={<GetStarted />} />
         <Route path="/order" element={<GetStarted />} />
+        <Route path="/order/:templateId" element={<GetStarted />} />
         <Route path="/track-order" element={<TrackOrder />} />
         <Route path="/track" element={<TrackOrder />} />
         <Route path="/track/:id" element={<TrackOrder />} />
@@ -139,9 +141,9 @@ function MainAppContent() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
   const isStandaloneFormRoute =
-    location.pathname === '/get-started' ||
-    location.pathname === '/start-project' ||
-    location.pathname === '/order' ||
+    location.pathname.startsWith('/get-started') ||
+    location.pathname.startsWith('/start-project') ||
+    location.pathname.startsWith('/order') ||
     location.pathname.startsWith('/track');
 
   const isMaintenanceOrComingSoon =
@@ -199,7 +201,6 @@ function MainAppContent() {
     return (
       <div className="min-h-screen bg-[#07090e] font-sans text-slate-100 selection:bg-purple-600 selection:text-white">
         <MaintenanceMode onBypassGranted={() => setIsBypassed(true)} />
-        <SmartRequirementModal />
         <CallbackModal />
         <AuthModal />
       </div>
@@ -258,7 +259,6 @@ function MainAppContent() {
       {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <AssistantChatbot />}
 
       {/* Global Modals */}
-      <SmartRequirementModal />
       <CallbackModal />
       <AuthModal />
 

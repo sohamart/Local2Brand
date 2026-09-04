@@ -524,23 +524,13 @@ export default function TrackOrder() {
 
                 {/* Quick Consultant Communication CTAs */}
                 <div className="pt-1 sm:pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                  <a
-                    href={`https://wa.me/919876543210?text=${encodeURIComponent(`Hi LOCAL2BRAND, I am checking the status for my project Order ${trackedOrder.requirementId} (${trackedOrder.clientInfo?.businessName || ''}).`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>WhatsApp Live Update</span>
-                  </a>
-
                   <button
                     type="button"
                     onClick={() => openCallbackModal({ topic: `Status Discussion for Order ${trackedOrder.requirementId}` })}
-                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+                    className="w-full sm:w-auto px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
                   >
-                    <PhoneCall className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                    <span>Request Founder Call</span>
+                    <PhoneCall className="w-3.5 h-3.5" />
+                    <span>Request a Callback</span>
                   </button>
 
                   <Link

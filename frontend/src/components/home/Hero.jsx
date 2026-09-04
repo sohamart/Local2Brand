@@ -650,83 +650,31 @@ export default function Hero() {
                       </h3>
                     </div>
 
-                    <div className="flex items-center gap-2.5 shrink-0 pointer-events-auto">
-                      {(() => {
-                        const isComingSoon = current.status === 'coming_soon';
-                        const hasLive = Boolean(current.liveUrl && current.liveUrl.trim().length > 0);
-                        const isLiveReady = !isComingSoon && hasLive;
-                        const isReadyToOrder = !isComingSoon && !hasLive;
+                    <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 pointer-events-auto">
+                      <Link
+                        to={`/demos/${current.slug || current.id}`}
+                        className="px-3.5 sm:px-4 py-2 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-1.5 group/btn hover:scale-102 cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-purple-600" />
+                        <span>📱 Device Preview</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover/btn:translate-x-0.5 transition-transform" />
+                      </Link>
 
-                        if (isLiveReady) {
-                          return (
-                            <>
-                              <Link
-                                to={`/demos/${current.slug}`}
-                                className="px-3.5 sm:px-4 py-2 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-1.5 group/btn hover:scale-102 cursor-pointer"
-                              >
-                                <Eye className="w-3.5 h-3.5 text-purple-600" />
-                                <span>View Live Demo</span>
-                                <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover/btn:translate-x-0.5 transition-transform" />
-                              </Link>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openOrderModal({
-                                    selectedDemo: current.title,
-                                    websiteType: `Template Customization: ${current.title}`,
-                                    category: current.category,
-                                    initialRequirements: `I want to order and build the "${current.title}" (${current.category}) website.`
-                                  })
-                                }
-                                className="px-3.5 sm:px-4 py-2 rounded-xl l2b-gradient-bg text-white font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-1.5 group/btn hover:scale-102 cursor-pointer"
-                              >
-                                <span>Get Website</span>
-                                <ArrowRight className="w-3.5 h-3.5" />
-                              </button>
-                            </>
-                          );
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openOrderModal({
+                            selectedDemo: current.title,
+                            websiteType: `Template: ${current.title}`,
+                            category: current.category,
+                            initialRequirements: `I want to order and build the "${current.title}" (${current.category}) website.`
+                          })
                         }
-
-                        if (isReadyToOrder) {
-                          return (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                openOrderModal({
-                                  selectedDemo: current.title,
-                                  websiteType: `Template Order: ${current.title}`,
-                                  category: current.category,
-                                  initialRequirements: `I want to order and build the "${current.title}" (${current.category}) website.`
-                                })
-                              }
-                              className="px-4 py-2 rounded-xl l2b-gradient-bg text-white font-black text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-2 group/btn hover:scale-102 cursor-pointer"
-                            >
-                              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                              <span>Order This Website (48h Launch)</span>
-                              <ArrowRight className="w-3.5 h-3.5 text-white group-hover/btn:translate-x-0.5 transition-transform" />
-                            </button>
-                          );
-                        }
-
-                        return (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openOrderModal({
-                                selectedDemo: current.title,
-                                websiteType: `Pre-Order Template: ${current.title}`,
-                                category: current.category,
-                                initialRequirements: `I want to pre-order and launch the "${current.title}" (${current.category}) website.`
-                              })
-                            }
-                            className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-2 group/btn hover:scale-102 cursor-pointer"
-                          >
-                            <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-                            <span>Pre-Order (Coming Soon)</span>
-                            <ArrowRight className="w-3.5 h-3.5 text-slate-950 group-hover/btn:translate-x-0.5 transition-transform" />
-                          </button>
-                        );
-                      })()}
+                        className="px-3.5 sm:px-4 py-2 rounded-xl l2b-gradient-bg text-white font-bold text-xs sm:text-sm shadow-xl transition-all duration-200 inline-flex items-center gap-1.5 group/btn hover:scale-102 cursor-pointer"
+                      >
+                        <span>Get Website</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>

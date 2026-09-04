@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const OrderModalContext = createContext();
 
 export function OrderModalProvider({ children }) {
+  const navigate = useNavigate();
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [isCallbackOpen, setIsCallbackOpen] = useState(false);
 
@@ -29,34 +31,46 @@ export function OrderModalProvider({ children }) {
       data.websiteType?.toLowerCase().includes('offer') ||
       data.websiteType?.toLowerCase().includes('20%') ||
       data.websiteType?.toLowerCase().includes('india2025') ||
-      false;
+      true; // Default to activating coupon for direct orders
 
     const promoCode = data.promoCode || (isOfferTrigger ? 'INDIA2025' : '');
     const discountPercent = data.discountPercent || (isOfferTrigger ? 20 : 0);
+    const rawSlug = data.templateId || data.slug || data.selectedDemoSlug || data.selectedDemo || data.websiteType || '';
+    const cleanSlug = typeof rawSlug === 'string' && !rawSlug.includes(' ') ? rawSlug : '';
+    const templateTitle = data.selectedDemo || data.templateTitle || data.websiteType || 'Custom Website';
+    const price = data.price || data.priceInr || '';
+    const category = data.category || '';
 
-    setInquiryData({
-      selectedDemo: data.selectedDemo || '',
-      websiteType: data.websiteType || (data.selectedDemo ? `Demo: ${data.selectedDemo}` : 'Custom Website'),
-      initialRequirements:
-        data.initialRequirements ||
-        (data.selectedDemo ? `I would like to customize the "${data.selectedDemo}" website template for my brand.` : ''),
-      price: data.price || '',
-      industry: data.industry || '',
-      autoApplyOffer: isOfferTrigger,
-      promoCode,
-      discountPercent,
+    const params = new URLSearchParams();
+    if (rawSlug) params.set('template', rawSlug);
+    if (templateTitle) params.set('title', templateTitle);
+    if (category) params.set('category', category);
+    if (price) params.set('price', price);
+    if (promoCode) params.set('coupon', promoCode);
+    if (discountPercent) params.set('discount', String(discountPercent));
+
+    const targetPath = cleanSlug
+      ? `/get-started/${encodeURIComponent(cleanSlug)}?${params.toString()}`
+      : `/get-started?${params.toString()}`;
+
+    // Directly navigate to dedicated /get-started form page with pre-filled state!
+    navigate(targetPath, {
+      state: {
+        selectedDemo: templateTitle,
+        templateId: cleanSlug || rawSlug,
+        slug: cleanSlug || rawSlug,
+        category,
+        price,
+        promoCode,
+        discountPercent,
+        initialRequirements: data.initialRequirements || '',
+        demoDetails: data
+      }
     });
-    setIsInquiryOpen(true);
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = 'hidden';
-    }
   };
 
   const closeOrderModal = () => {
     setIsInquiryOpen(false);
-    if (typeof document !== 'undefined' && !isCallbackOpen) {
-      document.body.style.overflow = 'auto';
-    }
   };
 
   const openCallbackModal = (data = {}) => {

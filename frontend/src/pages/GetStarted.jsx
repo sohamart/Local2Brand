@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
@@ -47,7 +47,16 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  RotateCcw
+  RotateCcw,
+  Save,
+  Percent,
+  ExternalLink,
+  Sliders,
+  Flame,
+  Gift,
+  Calendar,
+  Scale,
+  Heart
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -112,13 +121,13 @@ const TRANSLATIONS = {
       { title: 'ক্যাটাগরি ও রূপরেখা', short: 'ক্যাটাগরি', subtitle: 'আপনার ইন্ডাস্ট্রি বেছে নিন যাতে উপযুক্ত ফিচার ও প্রশ্নাবলি লোড হয়।' },
       { title: 'বিজনেস প্রোফাইল', short: 'প্রোফাইল', subtitle: 'আমরা এই বিবরণগুলো হেডার, ফুটার এবং লিড রাউটিং-এ সেট করব।' },
       { title: 'ইন্ডাস্ট্রি স্পেক্স', short: 'স্পেক্স', subtitle: 'আপনার ব্যবসার জন্য কাস্টমাইজড স্পেসিফিকেশন ও অপশন।' },
-      { title: 'পেজ ও সাইটম্যাপ', short: 'পেজ', subtitle: 'উচ্চ কনভার্সনের জন্য আপনার প্রয়োজনীয় পেজগুলো নির্বাচন করুন।' },
-      { title: 'ফিচার ও লজিক', short: 'ফিচার', subtitle: 'অটোমেটেড লিড এলার্ট, অনলাইন বুকিং ও শক্তিশালী ফিচার যুক্ত করুন।' },
-      { title: 'পেমেন্ট গেটওয়ে', short: 'পেমেন্ট', subtitle: 'গ্রাহকরা কীভাবে টাকা পেমেন্ট করবে তা নির্বাচন করুন।' },
-      { title: 'এডমিন CMS প্যানেল', short: 'এডমিন', subtitle: 'আপনি কীভাবে আপনার মেনু, প্রোডাক্ট ও লিড পরিচালনা করতে চান?' },
-      { title: 'হোয়াটসঅ্যাপ এলার্টস', short: 'এলার্টস', subtitle: 'প্রতিটি নতুন অর্ডার ও ইনকোয়ারির ইনস্ট্যান্ট নোটিফিকেশন পান।' },
-      { title: 'ডিজাইন ও কালার', short: 'ডিজাইন', subtitle: 'আপনার ব্র্যান্ডের লুক ও ভিজ্যুয়াল স্টাইল নির্বাচন করুন।' },
-      { title: 'ছবি ও মিডিয়া', short: 'মিডিয়া', subtitle: 'দোকান, শোরুম, প্রোডাক্ট বা লোগোর ছবি আপলোড করুন (ঐচ্ছিক)।' },
+      { title: 'পেজ ও সাইটম্যাপ', short: 'পেজ', subtitle: 'উচ্চ রূপান্তরের জন্য প্রয়োজনীয় পেজ ও সাইটম্যাপ নির্বাচন করুন।' },
+      { title: 'ফিচার ও লজিক', short: 'ফিচার', subtitle: 'লিড অ্যালার্ট, অনলাইন বুকিং ও শক্তিশালী ফিচার যুক্ত করুন।' },
+      { title: 'পেমেন্ট গেটওয়ে', short: 'পেমেন্ট', subtitle: 'গ্রাহকরা কীভাবে অনলাইনে পেমেন্ট করবেন তা বেছে নিন।' },
+      { title: 'অ্যাডমিন CMS', short: 'অ্যাডমিন', subtitle: 'পণ্য, মেনু এবং লিড কীভাবে পরিচালনা করতে চান তা নির্ধারণ করুন।' },
+      { title: 'হোয়াটসঅ্যাপ অ্যালার্ট', short: 'অ্যালার্ট', subtitle: 'নতুন অর্ডার বা অনুসন্ধানে তাৎক্ষণিক হোয়াটসঅ্যাপ নোটিফিকেশন পান।' },
+      { title: 'ডিজাইন ও কালার', short: 'ডিজাইন', subtitle: 'আপনার ব্র্যান্ডের সাথে মানানসই ভিজ্যুয়াল স্টাইল ও কালার বেছে নিন।' },
+      { title: 'ছবি ও মিডিয়া', short: 'মিডিয়া', subtitle: 'দোকান, পণ্য, মেনু বা লোগোর ছবি আপলোড করুন।' },
       { title: 'ডোমেন ও গতি', short: 'লঞ্চ', subtitle: 'সুপার ফাস্ট স্পিড ও ক্লাউড হোস্টিং সেটআপ নিশ্চিত করুন।' },
       { title: 'যাচাই ও জমা দিন', short: 'রিভিউ', subtitle: 'তথ্যগুলো যাচাই করে প্রজেক্ট রিকোয়ারমেন্টস জমা দিন।' }
     ]
@@ -154,8 +163,151 @@ const TRANSLATIONS = {
     ]
   }
 };
+// Presets for Template Auto-Apply
+const FALLBACK_TEMPLATE_SPECS = {
+  restaurant: {
+    slug: 'restaurant',
+    category: 'Restaurant & Dining',
+    categorySlug: 'restaurant',
+    title: 'Royal Nawabi Fine Dining & Table Reservation Hub',
+    price: '₹5,999',
+    turnaround: '2 - 4 Days',
+    liveUrl: 'https://royal-nawabi-demo.vercel.app',
+    heroImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=600&auto=format&fit=crop',
+    features: ['Digital Interactive Food Menu', 'Online Table Booking System', 'WhatsApp Takeaway Orders', 'Chef Specials Showcase']
+  },
+  cafe: {
+    slug: 'cafe',
+    category: 'Café & Bakery',
+    categorySlug: 'cafe',
+    title: 'Velvet Roast Artisan Café & Bakery Experience',
+    price: '₹4,999',
+    turnaround: '2 - 3 Days',
+    liveUrl: 'https://velvet-roast-demo.vercel.app',
+    heroImage: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=600&auto=format&fit=crop',
+    features: ['Aesthetic Visual Menu & Coffee Brews', 'Takeout Pickup Ordering', 'Instagram Feed Embed', 'Google Maps Store Locator']
+  },
+  salon: {
+    slug: 'salon',
+    category: 'Salon, Spa & Beauty',
+    categorySlug: 'salon',
+    title: 'Aura Luxe Unisex Luxury Salon & Spa Studio',
+    price: '₹5,499',
+    turnaround: '2 - 4 Days',
+    liveUrl: 'https://aura-luxe-salon-demo.vercel.app',
+    heroImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=600&auto=format&fit=crop',
+    features: ['Stylist Portfolio & Reviews', 'Service Rate-Card with Duration', 'Appointment Booking Calendar', 'WhatsApp Booking Sync']
+  },
+  gym: {
+    slug: 'gym',
+    category: 'Gym & Fitness Hub',
+    categorySlug: 'gym',
+    title: 'IronForge Elite Fitness & CrossFit Club',
+    price: '₹5,999',
+    turnaround: '3 - 5 Days',
+    heroImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop',
+    features: ['Membership Tier Calculator', 'Live Class Weekly Schedule', 'Trainer Profiles', 'Free 1-Day Trial Pass']
+  },
+  hotel: {
+    slug: 'hotel',
+    category: 'Hotel & Homestay',
+    categorySlug: 'hotel',
+    title: 'Grand Heritage Palace Resort & Luxury Suites',
+    price: '₹8,999',
+    turnaround: '4 - 7 Days',
+    heroImage: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600&auto=format&fit=crop',
+    features: ['Room Categories & Tariff Grid', 'Virtual 360 Suite Tours', 'Direct Booking Enquiry Form', 'Local Concierge Guide']
+  },
+  real_estate: {
+    slug: 'real_estate',
+    category: 'Real Estate Developer',
+    categorySlug: 'real_estate',
+    title: 'PrimeEstate Luxury Villas & Commercial Realty',
+    price: '₹9,999',
+    turnaround: '4 - 7 Days',
+    heroImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop',
+    features: ['Interactive Property Search & Filters', 'High-Res Floor Plans', 'EMI & Loan Calculator', 'Instant Site Visit Booking']
+  },
+  lms: {
+    slug: 'lms',
+    category: 'LMS & Online Courses',
+    categorySlug: 'coaching',
+    title: 'SkillCraft Pro LMS & Online Course Selling Platform',
+    price: '₹6,999',
+    turnaround: '3 - 7 Days',
+    liveUrl: 'https://skillcraft-lms-demo.vercel.app',
+    heroImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop',
+    features: ['Full Video Lecture Player', 'Student Dashboard with Progress', '1-Click Course Checkout', 'Certificate Generation']
+  },
+  ecommerce: {
+    slug: 'ecommerce',
+    category: 'E-Commerce Store',
+    categorySlug: 'ecommerce',
+    title: 'NextGen E-Commerce & Direct WhatsApp Shopping',
+    price: '₹7,999',
+    turnaround: '3 - 5 Days',
+    heroImage: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=600&auto=format&fit=crop',
+    features: ['Catalog Management & Filters', 'Cart & Instant Razorpay / COD', 'Direct WhatsApp 1-Click Order', 'Inventory Tracker']
+  },
+  jewellery: {
+    slug: 'jewellery',
+    category: 'Jewellery & Luxury Goods',
+    categorySlug: 'jewellery',
+    title: 'Sparkle Aura Luxury Jewellery & Bridal Lookbook',
+    price: '₹8,499',
+    turnaround: '3 - 5 Days',
+    heroImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=600&auto=format&fit=crop',
+    features: ['Gold & Diamond Catalog Showcase', 'Bridal Collection Lookbook', 'Direct WhatsApp Price Quote', 'Certificate Authenticity Verify']
+  },
+  photography: {
+    slug: 'photography',
+    category: 'Photography & Studio',
+    categorySlug: 'photography',
+    title: 'Aesthetic Lens Wedding & Studio Portfolio',
+    price: '₹5,999',
+    turnaround: '2 - 4 Days',
+    heroImage: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?q=80&w=600&auto=format&fit=crop',
+    features: ['High-Res Portfolio Albums', 'Wedding Shoot Packages', 'Date Availability Calendar', 'Client Proofing Gallery']
+  },
+  showroom: {
+    slug: 'showroom',
+    category: 'Automobile & Showroom',
+    categorySlug: 'showroom',
+    title: 'DriveElite Superbike & Automobile Inventory',
+    price: '₹8,999',
+    turnaround: '4 - 6 Days',
+    heroImage: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=600&auto=format&fit=crop',
+    features: ['Vehicle 360 Showcase & Specs', 'EMI Monthly Calculator', 'Instant Test Drive Booking', 'Trade-in Valuation Form']
+  },
+  coaching: {
+    slug: 'coaching',
+    category: 'Coaching & Academy',
+    categorySlug: 'coaching',
+    title: 'Apex Academy Coaching & Online Batch Portal',
+    price: '₹6,499',
+    turnaround: '3 - 5 Days',
+    heroImage: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop',
+    features: ['Batch Schedule & Free Demo Booking', 'Course Syllabus PDF Download', 'Student Testimonials & Results', 'Online Admission Form']
+  }
+};
 
-// Multilingual Industry Categories
+const mapSlugToCategorySlug = (slugOrCat = '') => {
+  const s = String(slugOrCat).toLowerCase().trim();
+  if (s.includes('rest') || s.includes('dine') || s.includes('food')) return 'restaurant';
+  if (s.includes('cafe') || s.includes('bakery') || s.includes('coffee')) return 'cafe';
+  if (s.includes('salon') || s.includes('spa') || s.includes('beauty')) return 'salon';
+  if (s.includes('gym') || s.includes('fitness') || s.includes('crossfit') || s.includes('workout')) return 'gym';
+  if (s.includes('hotel') || s.includes('resort') || s.includes('homestay') || s.includes('suite')) return 'hotel';
+  if (s.includes('real') || s.includes('estate') || s.includes('villa') || s.includes('property')) return 'real_estate';
+  if (s.includes('lms') || s.includes('course') || s.includes('coach') || s.includes('acad') || s.includes('edu')) return 'coaching';
+  if (s.includes('ecom') || s.includes('store') || s.includes('shop') || s.includes('mart')) return 'ecommerce';
+  if (s.includes('jewel') || s.includes('gold') || s.includes('diamond')) return 'jewellery';
+  if (s.includes('photo') || s.includes('studio') || s.includes('lens')) return 'photography';
+  if (s.includes('show') || s.includes('auto') || s.includes('car') || s.includes('bike')) return 'showroom';
+  return 'custom';
+};
+
+// Comprehensive Multilingual Industry Categories (Dynamic + Fallback)
 const INDUSTRY_CATEGORIES = [
   {
     slug: 'restaurant',
@@ -176,7 +328,7 @@ const INDUSTRY_CATEGORIES = [
     icon: Sparkles,
     en: { name: 'Salon, Spa & Beauty', desc: 'Stylist portfolios, service rate-cards, bookings' },
     bn: { name: 'স্যালুন ও স্পা বিউটি', desc: 'স্টাইলিস্ট পোর্টফোলিও, সার্ভিস রেটকার্ড, বুকিং' },
-    hi: { name: 'सैलून और स्पा ब्यूटी', desc: 'स्टाइलिस्ट पोर्टफोलियो, सर्विस रेट कार्ड, बुकिंग' }
+    hi: { name: 'सैलून और स्पा ब्यूटी', desc: 'स्टाइलिश पोर्टफोलियो, सर्विस रेट कार्ड, बुकिंग' }
   },
   {
     slug: 'gym',
@@ -200,18 +352,74 @@ const INDUSTRY_CATEGORIES = [
     hi: { name: 'रियल एस्टेट डेवलपर', desc: 'प्रोजेक्ट शोकेस, फ्लोर प्लान, साइट विजिट' }
   },
   {
+    slug: 'coaching',
+    icon: GraduationCap,
+    en: { name: 'LMS, Courses & Coaching', desc: 'Online lectures, batch schedules, admission engine' },
+    bn: { name: 'কোচিং ও অনলাইন কোর্স', desc: 'অনলাইন ক্লাস, ব্যাচ রুটিন, ভর্তি ও ছাত্র পোর্টাল' },
+    hi: { name: 'कोचिंग और ऑनलाइन कोर्सेज', desc: 'ऑनलाइन लेक्चर, बैच शेड्यूल, एडमिशन फॉर्म' }
+  },
+  {
     slug: 'ecommerce',
     icon: ShoppingBag,
-    en: { name: 'E-Commerce Store', desc: 'Online catalog, shopping cart, WhatsApp orders' },
-    bn: { name: 'ই-কমার্স অনলাইন শপ', desc: 'প্রোডাক্ট ক্যাটালগ, শপিং কার্ট, হোয়াটসঅ্যাপ অর্ডার' },
+    en: { name: 'E-Commerce Online Store', desc: 'Online catalog, shopping cart, WhatsApp orders' },
+    bn: { name: 'ই-কমার্স অনলাইন শপ', desc: 'প্রোডাক্ট ক্যাটালগ, শপিং কার্ট, হোয়াটসঅ্যাপ অর্ডার' },
     hi: { name: 'ई-कॉमर्स ऑनलाइन स्टोर', desc: 'उत्पाद कैटलॉग, शॉपिंग कार्ट, व्हाट्सएप ऑर्डर' }
+  },
+  {
+    slug: 'jewellery',
+    icon: Gem,
+    en: { name: 'Jewellery & Luxury Goods', desc: 'Gold/diamond showcases, bridal lookbooks, quotes' },
+    bn: { name: 'জুয়েলারি ও লাক্সারি কালেকশন', desc: 'সোনার/হীরার ক্যাটালগ, ব্রাইডাল লুকবুক, কোটেশন' },
+    hi: { name: 'ज्वेलरी और लग्जरी गिफ्ट्स', desc: 'सोना/हीरा शोकेस, ब्राइडल लुकबुक, पूछताछ' }
+  },
+  {
+    slug: 'photography',
+    icon: Camera,
+    en: { name: 'Photography & Studio', desc: 'High-res portfolios, wedding albums, bookings' },
+    bn: { name: 'ফটোগ্রাফি ও স্টুডিও', desc: 'পোর্টফোলিও অ্যালবাম, ওয়েডিং গ্যালারি, বুকিং' },
+    hi: { name: 'फोटोग्राफी और स्टूडियो', desc: 'पोर्टफोलियो, वेडिंग एल्बम, कंसल्टेशन बुकिंग' }
+  },
+  {
+    slug: 'showroom',
+    icon: Car,
+    en: { name: 'Automobile & Showroom', desc: 'Car/bike inventory, EMI calculator, test drives' },
+    bn: { name: 'অটোমোবাইল শোরুম', desc: 'গাড়ি/বাইক ইনভেন্টরি, ইএমআই ক্যালকুলেটর, টেস্ট ড্রাইভ' },
+    hi: { name: 'ऑटोमोबाइल और शोरूम', desc: 'गाड़ी/बाइक इन्वेंटरी, ईएमआई कैलकुलेटर, टेस्ट ड्राइव' }
+  },
+  {
+    slug: 'healthcare',
+    icon: Stethoscope,
+    en: { name: 'Doctor & Healthcare Clinic', desc: 'Doctor profiles, OPD timings, prescription booking' },
+    bn: { name: 'ডক্টর ও হেলথকেয়ার ক্লিনিক', desc: 'ডাক্তার পরিচিতি, ওপিডি সময়সূচী, অনলাইন প্রেসক্রিপশন' },
+    hi: { name: 'डॉक्टर और हेल्थकेयर क्लिनिक', desc: 'डॉक्टर प्रोफाइल, ओपीडी टाइमिंग, अपॉइंटमेंट' }
+  },
+  {
+    slug: 'events',
+    icon: Calendar,
+    en: { name: 'Event & Wedding Planner', desc: 'Theme lookbooks, venue booking, package quotes' },
+    bn: { name: 'ইভেন্ট ও ওয়েডিং প্ল্যানার', desc: 'থিম গ্যালারি, ভেন্যু বুকিং, প্যাকেজ কোটেশন' },
+    hi: { name: 'इवेंट और वेडिंग प्लानर', desc: 'थीम लुकबुक, वेन्यू बुकिंग, पैकेज कोटेशन' }
+  },
+  {
+    slug: 'legal',
+    icon: Scale,
+    en: { name: 'Law Firm & Legal Services', desc: 'Practice areas, case studies, consultation desk' },
+    bn: { name: 'ল ফার্ম ও আইনি সেবা', desc: 'আইনি পরামর্শ, মামলা ক্যাটাগরি, কনসালটেশন বুকিং' },
+    hi: { name: 'लॉ फर्म और कानूनी सेवाएं', desc: 'लीगल एडवाइस, केस स्टडीज, कंसल्टेशन डेस्क' }
+  },
+  {
+    slug: 'ngo',
+    icon: Heart,
+    en: { name: 'NGO, Charity & Trust', desc: 'Donation engine, causes showcase, volunteer desk' },
+    bn: { name: 'এনজিও ও চ্যারিটি ট্রাস্ট', desc: 'অনলাইন ডোনেশন, সমাজসেবা প্রকল্প, ভলান্টিয়ার ডেস্ক' },
+    hi: { name: 'एनजीओ और चैरिटी ट्रस्ट', desc: 'ऑनलाइन डोनेशन, सामाजिक कार्य, वालंटियर फॉर्म' }
   },
   {
     slug: 'custom',
     icon: Layers,
-    en: { name: 'Custom Enterprise', desc: '100% bespoke design, custom API & workflows' },
-    bn: { name: 'কাস্টম এন্টারপ্রাইজ', desc: '১০০% কাস্টম ডিজাইন, বিশেষ API ও ফিচার' },
-    hi: { name: 'कस्टम एंटरप्राइज', desc: '100% कस्टमाइज्ड डिजाइन, विशेष API और लॉजिक' }
+    en: { name: 'Custom Enterprise / SaaS', desc: '100% bespoke design, custom API & workflows' },
+    bn: { name: 'কাস্টম এন্টারপ্রাইজ / SaaS', desc: '১০০% কাস্টম ডিজাইন, বিশেষ API ও ফিচার' },
+    hi: { name: 'कस्टम एंटरप्राइज / SaaS', desc: '100% कस्टमाइज्ड डिजाइन, विशेष API और लॉजिक' }
   }
 ];
 
@@ -220,7 +428,7 @@ const MULTI_PAGES = [
   {
     id: 'home',
     en: 'Home Page (High-Converting Hero)',
-    bn: 'হোম পেজ (উচ্চ কনভার্সন হিরো সেকশন)',
+    bn: 'হোম পেজ (উচ্চ রূপান্তর হিরো সেকশন)',
     hi: 'होम पेज (उच्च रूपांतरण हीरो सेक्शन)'
   },
   {
@@ -239,19 +447,19 @@ const MULTI_PAGES = [
     id: 'contact',
     en: 'Contact Page & Google Map Integration',
     bn: 'যোগাযোগ পেজ ও গুগল ম্যাপ ইন্টিগ্রেশন',
-    hi: 'संपर्क पेज और गूगल मैप्स एकीकरण'
+    hi: 'संपर्क पेज और गूगल मैप'
   },
   {
     id: 'reviews',
     en: 'Customer Reviews & Testimonials',
-    bn: 'গ্রাহক রিভিউ ও টেস্টিমোনিয়াল সেকশন',
-    hi: 'ग्राहक समीक्षा और प्रशंसापत्र'
+    bn: 'গ্রাহক রিভিউ ও প্রশংসাপত্র সেকশন',
+    hi: 'ग्राहक समीक्षाएं और प्रशंसापत्र'
   },
   {
     id: 'about',
-    en: 'About the Founders & Story',
-    bn: 'আমাদের গল্প ও প্রতিষ্ঠাতা পরিচিতি',
-    hi: 'संस्थापक परिचय और ब्रांड कहानी'
+    en: 'About Us / Brand Story',
+    bn: 'আমাদের গল্প ও পরিচিতি পেজ',
+    hi: 'हमारे बारे में / ब्रांड की कहानी'
   },
   {
     id: 'gallery',
@@ -261,21 +469,21 @@ const MULTI_PAGES = [
   },
   {
     id: 'pricing',
-    en: 'Pricing Tiers & Plan Comparison',
+    en: 'Pricing Packages & Plan Comparison',
     bn: 'প্রাইসিং প্যাকেজ ও প্ল্যান তুলনা',
-    hi: 'मूल्य पैकेज और प्लान तुलना'
+    hi: 'मूल्य निर्धारण और पैकेज तुलना'
   },
   {
     id: 'faq',
-    en: 'FAQ Section & Support Channels',
+    en: 'Frequently Asked Questions (FAQ)',
     bn: 'সাধারণ প্রশ্নোত্তর (FAQ) ও সাপোর্ট',
     hi: 'अक्सर पूछे जाने वाले प्रश्न (FAQ)'
   },
   {
-    id: 'legal',
-    en: 'Privacy Policy & Terms of Service',
-    bn: 'প্রাইভেসি পলিসি ও টার্মস অব সার্ভিস',
-    hi: 'गोपनीयता नीति और सेवा की शर्तें'
+    id: 'policy',
+    en: 'Terms, Privacy & Refund Policies',
+    bn: 'প্রাইভেসি পলিসি ও টার্মস অফ সার্ভিস',
+    hi: 'नियम, शर्तें और गोपनीयता नीति'
   }
 ];
 
@@ -285,23 +493,23 @@ const MULTI_FEATURES = [
     id: 'auth',
     en: 'User Registration / Customer Login',
     bn: 'গ্রাহক একাউন্ট রেজিস্ট্রেশন ও লগইন',
-    hi: 'ग्राहक खाता पंजीकरण और लॉगिन'
+    hi: 'यूजर रजिस्ट्रेशन और कस्टमर लॉगिन'
   },
   {
-    id: 'online_booking',
-    en: 'Online Table / Appointment Booking',
+    id: 'booking_engine',
+    en: 'Online Slot & Appointment Booking',
     bn: 'অনলাইন স্লট ও অ্যাপয়েন্টমেন্ট বুকিং',
     hi: 'ऑनलाइन स्लॉट और अपॉइंटमेंट बुकिंग'
   },
   {
-    id: 'whatsapp_alerts',
+    id: 'whatsapp_leads',
     en: 'Automated WhatsApp Lead Notifications',
-    bn: 'স্বয়ংক্রিয় হোয়াটসঅ্যাপ লিড নোটিফিকেশন',
+    bn: 'স্বয়ংক্রিয় হোয়াটসঅ্যাপ লিড নোটিফিকেশন',
     hi: 'स्वचालित व्हाट्सएप लीड सूचनाएं'
   },
   {
-    id: 'whatsapp_checkout',
-    en: 'Direct WhatsApp 1-Click Ordering',
+    id: 'whatsapp_orders',
+    en: '1-Click Direct WhatsApp Ordering',
     bn: '১-ক্লিক ডিরেক্ট হোয়াটসঅ্যাপ অর্ডার',
     hi: '1-क्लिक डायरेक्ट व्हाट्सएप ऑर्डर'
   },
@@ -313,105 +521,117 @@ const MULTI_FEATURES = [
   },
   {
     id: 'search_filter',
-    en: 'Live Search & Instant Category Filters',
+    en: 'Live Search & Multi-Filter Catalog',
     bn: 'লাইভ সার্চ ও ক্যাটাগরি ফিল্টারিং',
-    hi: 'लाइव सर्च और श्रेणी फिल्टर'
+    hi: 'लाइव सर्च और फ़िल्टरिंग'
   },
   {
-    id: 'multi_lang',
-    en: 'Dynamic Multi-Language Toggle (Bengali/Hindi/English)',
+    id: 'multilingual',
+    en: 'Multi-Language Switch (Bengali/English/Hindi)',
     bn: 'মাল্টি-ল্যাঙ্গুয়েজ সুইচ (বাংলা/ইংরেজি/হিন্দি)',
     hi: 'बहुभाषी स्विच (बंगाली/अंग्रेजी/हिंदी)'
   },
   {
     id: 'callback_modal',
-    en: 'Instant Customer Callback Request Modal',
+    en: 'Instant Phone Callback Request Modal',
     bn: 'ইনস্ট্যান্ট ফোন কলব্যাক রিকোয়েস্ট মডাল',
-    hi: 'त्वरित फोन कॉलबैक अनुरोध मोडल'
+    hi: 'त्वरित कॉल बैक अनुरोध'
   },
   {
-    id: 'dark_mode',
+    id: 'theme_toggle',
     en: 'Dark Mode & Light Mode Theme Switcher',
     bn: 'ডার্ক মোড ও লাইট মোড থিম সুইচার',
-    hi: 'डार्क मोड और लाइट मोड थीम स्विचर'
+    hi: 'डार्क और लाइट थीम स्विचर'
   },
   {
-    id: 'seo_markup',
-    en: 'Full Technical SEO & Schema Markup',
+    id: 'seo_schema',
+    en: 'Full Technical SEO & Google Rich Schema',
     bn: 'সম্পূর্ণ টেকনিক্যাল এসইও ও গুগল স্কিমা',
-    hi: 'पूर्ण तकनीकी एसईओ और गूगल स्कीमा'
+    hi: 'तकनीकी एसईओ और गूगल स्कीमा'
   }
 ];
 
 // Multilingual Payment Methods
 const MULTI_PAYMENTS = [
-  { id: 'razorpay', en: 'Razorpay (Cards, Netbanking, UPI)', bn: 'Razorpay (কার্ড, নেটব্যাঙ্কিং, UPI)', hi: 'Razorpay (कार्ड, नेटबैंकिंग, UPI)' },
-  { id: 'upi', en: 'UPI (GPay / PhonePe / Paytm Instant QR)', bn: 'UPI (GPay / PhonePe / Paytm ইনস্ট্যান্ট QR)', hi: 'UPI (GPay / PhonePe / Paytm इंस्टेंट QR)' },
+  { id: 'razorpay', en: 'Razorpay (Cards, Netbanking, UPI)', bn: 'Razorpay (কার্ড, নেটব্যাংকিং, UPI)', hi: 'Razorpay (कार्ड, नेटबैंकिंग, UPI)' },
+  { id: 'upi', en: 'UPI (GPay / PhonePe / Paytm Instant QR)', bn: 'UPI (GPay / PhonePe / Paytm ইনস্ট্যান্ট QR)', hi: 'UPI (GPay / PhonePe / Paytm QR)' },
   { id: 'cod', en: 'Cash on Delivery (COD) / Pay at Venue', bn: 'ক্যাশ অন ডেলিভারি (COD) / ভেন্যুতে পেমেন্ট', hi: 'कैश ऑन डिलीवरी (COD) / स्थल पर भुगतान' },
-  { id: 'bank', en: 'Direct Bank Transfer (NEFT/IMPS Invoicing)', bn: 'ডিরেক্ট ব্যাংক ট্রান্সফার (NEFT/IMPS ইনভয়েসিং)', hi: 'सीधा बैंक ट्रांसफर (NEFT/IMPS इनवॉइस)' },
-  { id: 'stripe', en: 'Stripe (International USD/EUR Cards)', bn: 'Stripe (আন্তর্জাতিক ডলার/ইউরো কার্ড)', hi: 'Stripe (अंतरराष्ट्रीय USD/EUR कार्ड)' },
-  { id: 'inquiry_only', en: 'No Online Payments (Inquiry Only)', bn: 'অনলাইন পেমেন্ট ছাড়া (শুধুমাত্র ইনকোয়ারি)', hi: 'ऑनलाइन भुगतान नहीं (केवल पूछताछ)' }
+  { id: 'bank', en: 'Direct Bank Transfer (NEFT/IMPS Invoicing)', bn: 'ডিরেক্ট ব্যাংক ট্রান্সফার (NEFT/IMPS ইনভয়েসিং)', hi: 'सीधा बैंक ट्रांसफर (NEFT/IMPS)' },
+  { id: 'stripe', en: 'Stripe (International USD/EUR Cards)', bn: 'Stripe (আন্তর্জাতিক ডলার/ইউরো কার্ড)', hi: 'Stripe (अंतरराष्ट्रीय कार्ड)' },
+  { id: 'inquiry_only', en: 'No Online Payments (Inquiry Only)', bn: 'অনলাইন পেমেন্ট ছাড়া (শুধুমাত্র ইনকোয়ারি)', hi: 'ऑनलाइन भुगतान नहीं (केवल पूछताछ)' }
 ];
 
 // Reusable Step Header with AI Summary Trigger
 function StepHeader({ stepIdx, title, subtitle, t, lang, onOpenAiSummary }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3 mb-2">
-      <div className="space-y-1">
-        <span className="text-[11px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-50 dark:bg-purple-950 px-2.5 py-0.5 rounded-full border border-purple-200 dark:border-purple-800 inline-block shadow-2xs">
-          {t.stepLabel} {stepIdx + 1} • {t.steps[stepIdx]?.title}
-        </span>
-        <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white pt-1 tracking-tight">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800 pb-4">
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-black tracking-wider uppercase text-purple-600 dark:text-purple-400 font-mono">
+            {t.stepLabel} {stepIdx + 1} of {t.steps.length}
+          </span>
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+            {t.steps[stepIdx]?.title}
+          </span>
+        </div>
+        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
           {title}
         </h2>
-        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-          {subtitle || t.steps[stepIdx]?.subtitle}
-        </p>
+        {subtitle && (
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
+            {subtitle}
+          </p>
+        )}
       </div>
 
       <button
         type="button"
         onClick={() => onOpenAiSummary(stepIdx)}
-        className="self-start sm:self-auto px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50 to-pink-50 dark:from-purple-950/70 dark:via-indigo-950/60 dark:to-pink-950/50 hover:from-purple-100 hover:to-indigo-100 dark:hover:from-purple-900/60 dark:hover:to-indigo-900/50 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800/80 text-xs font-black flex items-center gap-2 cursor-pointer shadow-2xs hover:shadow-md transition-all active:scale-95 group shrink-0"
-        title={lang === 'bn' ? 'এই ধাপের প্রশ্ন ও অপশনের এআই সারসংক্ষেপ দেখুন' : 'View AI Summary & Guide for this step'}
+        className="self-start sm:self-center px-3.5 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/70 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer shrink-0 active:scale-95"
+        title={lang === 'bn' ? 'এই ধাপের প্রশ্ন ও অপশনের এআই সারসংক্ষেপ দেখুন' : lang === 'hi' ? 'इस चरण का AI सारांश देखें' : 'View AI Summary & Guide for this step'}
       >
-        <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-pulse group-hover:rotate-12 transition-transform" />
-        <span>{lang === 'bn' ? '✨ এই ধাপের AI সারসংক্ষেপ' : lang === 'hi' ? '✨ इस चरण का AI सारांश' : '✨ Step AI Summary'}</span>
+        <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+        <span>{lang === 'bn' ? 'এই ধাপের AI সারসংক্ষেপ' : lang === 'hi' ? 'इस चरण का AI सारांश' : 'Step AI Summary'}</span>
       </button>
     </div>
   );
 }
 
 // Step AI Typewriter View with Dynamic Streaming & Filtered Unlocked Steps
-function StepAiTypewriterView({ guideData, lang, selection, stepIdx, maxReachedStep, currentStepIndex, onSelectStep, onSwitchLang, t }) {
-  const [typedQuestion, setTypedQuestion] = useState(guideData?.question || '');
-  const [typedTip, setTypedTip] = useState(guideData?.tip || '');
-  const [isTyping, setIsTyping] = useState(true);
+function StepAiTypewriterView({
+  guideData,
+  lang,
+  selection,
+  stepIdx,
+  maxReachedStep,
+  currentStepIndex,
+  onSelectStep,
+  onSwitchLang
+}) {
+  const [typedQuestion, setTypedQuestion] = useState('');
+  const [typedTip, setTypedTip] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
-  // Typewriter streaming when step or language changes
   useEffect(() => {
+    if (!guideData) return;
     setIsTyping(true);
     setTypedQuestion('');
     setTypedTip('');
 
-    const qText = guideData?.question || '';
-    const tipText = guideData?.tip || '';
-
     let qIdx = 0;
-    const qStep = Math.max(3, Math.floor(qText.length / 25));
-    const interval = setInterval(() => {
-      qIdx += qStep;
-      if (qIdx >= qText.length) {
-        setTypedQuestion(qText);
-        setTypedTip(tipText);
-        setIsTyping(false);
-        clearInterval(interval);
+    const qText = guideData.question || '';
+    const qInterval = setInterval(() => {
+      if (qIdx < qText.length) {
+        setTypedQuestion(qText.slice(0, qIdx + 1));
+        qIdx++;
       } else {
-        setTypedQuestion(qText.slice(0, qIdx));
+        clearInterval(qInterval);
+        setIsTyping(false);
       }
     }, 15);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(qInterval);
   }, [guideData?.question, guideData?.tip, stepIdx, lang]);
 
   return (
@@ -467,7 +687,7 @@ function StepAiTypewriterView({ guideData, lang, selection, stepIdx, maxReachedS
           className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs hover:scale-102 transition-all shrink-0"
         >
           <Languages className="w-3.5 h-3.5 text-purple-600" />
-          <span>{lang === 'bn' ? '🌐 View English' : '🇧🇩 বাংলায় দেখুন'}</span>
+          <span>{lang === 'bn' ? 'View English' : 'বাংলায় দেখুন'}</span>
         </button>
       </div>
 
@@ -546,7 +766,19 @@ function StepAiTypewriterView({ guideData, lang, selection, stepIdx, maxReachedS
 
 export default function GetStarted() {
   const navigate = useNavigate();
+  const { templateId } = useParams();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedTemplate, setAppliedTemplate] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('l2b_get_started_applied_template');
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+    }
+    return null;
+  });
   const { user } = useAuth();
   const { settings } = useSiteSettings();
 
@@ -676,7 +908,7 @@ export default function GetStarted() {
       domainStatus: 'Need New Domain (Free Included)',
       hostingStatus: 'High-Speed Cloud Hosting (Free 1-Yr Included)',
       budget: '₹12,999 – ₹24,999 (Standard Commercial)',
-      timeline: '⚡ Express Delivery (48 - 72 Hours)',
+      timeline: 'Express Delivery (48 - 72 Hours)',
       couponCode: searchParams.get('coupon') || '',
       discountPercent: searchParams.get('coupon') ? 20 : 0,
       additionalNotes: ''
@@ -708,6 +940,38 @@ export default function GetStarted() {
   });
 
   const [selectedFileObjects, setSelectedFileObjects] = useState([]);
+  const [databaseDemos, setDatabaseDemos] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('l2b_cached_demos');
+      if (cached) {
+        try {
+          const list = JSON.parse(cached);
+          if (Array.isArray(list)) return list;
+        } catch (e) {}
+      }
+    }
+    return [];
+  });
+
+  // Fetch all live database templates from backend to guarantee every created template is listed
+  useEffect(() => {
+    let isMounted = true;
+    async function loadAllDemos() {
+      try {
+        const res = await api.get('/demos');
+        if (res && res.success && Array.isArray(res.demos)) {
+          if (isMounted) {
+            setDatabaseDemos(res.demos);
+            localStorage.setItem('l2b_cached_demos', JSON.stringify(res.demos));
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load database demos:', err?.message || err);
+      }
+    }
+    loadAllDemos();
+    return () => { isMounted = false; };
+  }, []);
 
   // Continuous real-time persistent autosave to localStorage
   useEffect(() => {
@@ -734,22 +998,112 @@ export default function GetStarted() {
     }
   }, [currentStepIndex]);
 
-  // Pre-fill if URL parameters exist
+  // Auto-Apply template details and parameters from Dynamic Routes (:templateId), query params, or state
   useEffect(() => {
-    const planParam = searchParams.get('plan');
-    const demoParam = searchParams.get('demo') || searchParams.get('template');
-    const couponParam = searchParams.get('coupon');
+    const rawTemplate =
+      templateId ||
+      searchParams.get('template') ||
+      searchParams.get('demo') ||
+      location.state?.templateId ||
+      location.state?.slug ||
+      '';
+    const planParam = searchParams.get('plan') || location.state?.plan || '';
+    const titleParam = searchParams.get('title') || location.state?.selectedDemo || location.state?.templateTitle || '';
+    const categoryParam = searchParams.get('category') || location.state?.category || '';
+    const priceParam = searchParams.get('price') || location.state?.price || '';
+    const couponParam = searchParams.get('coupon') || location.state?.promoCode || '';
+    const discountParam = searchParams.get('discount') || location.state?.discountPercent || '';
 
-    if (planParam || demoParam || couponParam) {
-      setFormData((prev) => ({
-        ...prev,
-        websiteTypeName: demoParam || planParam || prev.websiteTypeName,
-        couponCode: couponParam || prev.couponCode,
-        discountPercent: couponParam ? 20 : prev.discountPercent,
-        additionalNotes: planParam ? `Interested in ${planParam} package.` : prev.additionalNotes
-      }));
+    let matchedDemo = null;
+    if (rawTemplate) {
+      const cleanKey = String(rawTemplate).toLowerCase().replace(/^demo_/, '').trim();
+      matchedDemo =
+        FALLBACK_TEMPLATE_SPECS[cleanKey] ||
+        Object.values(FALLBACK_TEMPLATE_SPECS).find(
+          (d) => d.slug === cleanKey || d.categorySlug === cleanKey || d.category.toLowerCase().includes(cleanKey)
+        );
+
+      if (!matchedDemo && typeof window !== 'undefined') {
+        const cached = localStorage.getItem('l2b_cached_demos');
+        if (cached) {
+          try {
+            const list = JSON.parse(cached);
+            if (Array.isArray(list)) {
+              matchedDemo = list.find(
+                (d) =>
+                  d.slug === cleanKey ||
+                  d._id === rawTemplate ||
+                  d.category?.toLowerCase() === cleanKey ||
+                  d.title?.toLowerCase().includes(cleanKey)
+              );
+            }
+          } catch (e) {}
+        }
+      }
     }
-  }, [searchParams]);
+
+    if (rawTemplate || planParam || titleParam || location.state) {
+      const finalTitle = matchedDemo?.title || titleParam || (planParam ? `Plan: ${planParam}` : rawTemplate);
+      const finalCategorySlug =
+        matchedDemo?.categorySlug ||
+        (categoryParam ? mapSlugToCategorySlug(categoryParam) : (rawTemplate ? mapSlugToCategorySlug(rawTemplate) : 'restaurant'));
+      const finalPrice = matchedDemo?.price || priceParam || (planParam ? 'Custom Package' : '₹5,999');
+      const finalTurnaround = matchedDemo?.turnaround || '2 - 4 Days';
+      const finalLiveUrl = matchedDemo?.liveUrl || location.state?.demoDetails?.liveUrl || '';
+      const finalHero =
+        matchedDemo?.heroImage ||
+        location.state?.demoDetails?.heroImage ||
+        location.state?.demoDetails?.thumbnail ||
+        '';
+
+      const templateObj = {
+        title: finalTitle,
+        slug: rawTemplate || matchedDemo?.slug || 'template',
+        category: matchedDemo?.category || categoryParam || 'Website Template',
+        categorySlug: finalCategorySlug,
+        price: finalPrice,
+        turnaround: finalTurnaround,
+        liveUrl: finalLiveUrl,
+        heroImage: finalHero,
+        features: matchedDemo?.features || []
+      };
+
+      setAppliedTemplate(templateObj);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('l2b_get_started_applied_template', JSON.stringify(templateObj));
+      }
+
+      setFormData((prev) => {
+        const activeCoupon = couponParam || prev.couponCode || 'INDIA2025';
+        const activeDiscount = couponParam ? (Number(discountParam) || 20) : (prev.discountPercent || 20);
+        return {
+          ...prev,
+          websiteType: finalCategorySlug || prev.websiteType,
+          websiteTypeName: finalTitle || prev.websiteTypeName,
+          referenceUrls: finalLiveUrl || prev.referenceUrls,
+          couponCode: activeCoupon,
+          discountPercent: activeDiscount,
+          timeline: `⚡ Express Delivery (${finalTurnaround})`,
+          budget: finalPrice.includes('₹') ? `${finalPrice} (Template Specification)` : prev.budget,
+          selectedFeatures:
+            matchedDemo?.features && matchedDemo.features.length > 0
+              ? Array.from(new Set([...prev.selectedFeatures, ...matchedDemo.features]))
+              : prev.selectedFeatures,
+          additionalNotes:
+            prev.additionalNotes ||
+            `[Auto-Applied Template] ${finalTitle} (${templateObj.category}) with 20% discount offer.`
+        };
+      });
+
+      toast.success(
+        lang === 'bn'
+          ? `🎯 টেমপ্লেট "${finalTitle}" সফলভাবে যুক্ত হয়েছে! ২০% ডিসকাউন্ট সক্রিয়।`
+          : lang === 'hi'
+          ? `🎯 टेम्पलेट "${finalTitle}" ऑटो-अप्लाई हो गया है! 20% छूट सक्रिय।`
+          : `🎯 Template "${finalTitle}" auto-applied with 20% OFF coupon!`
+      );
+    }
+  }, [templateId, searchParams, location.state]);
 
   // If user logs in after mount, populate empty credentials
   useEffect(() => {
@@ -766,22 +1120,188 @@ export default function GetStarted() {
     }
   }, [user]);
 
-  const changeLanguage = (newLang) => {
+    const changeLanguage = (newLang) => {
     setLang(newLang);
     if (typeof window !== 'undefined') {
       localStorage.setItem('l2b_form_lang', newLang);
     }
-    toast.info(newLang === 'bn' ? 'বাংলা ভাষা সক্রিয় করা হয়েছে 🇮🇳' : newLang === 'hi' ? 'हिंदी भाषा सक्रिय की गई 🇮🇳' : 'English Language Active 🇬🇧');
+    toast.info(
+      newLang === 'bn'
+        ? 'বাংলা ভাষা সক্রিয় করা হয়েছে'
+        : newLang === 'hi'
+        ? 'हिंदी भाषा सक्रिय की गई'
+        : 'English Language Active'
+    );
   };
 
-  const handleResetForm = () => {
-    if (window.confirm(lang === 'bn' ? 'আপনি কি ফর্মের সমস্ত তথ্য মুছে নতুন করে শুরু করতে চান?' : 'Are you sure you want to reset and clear all form progress?')) {
-      localStorage.removeItem('l2b_get_started_step');
-      localStorage.removeItem('l2b_get_started_max_step');
-      localStorage.removeItem('l2b_get_started_autosave_v2');
-      toast.info('Form progress reset.');
-      window.location.reload();
+    // Explicit Manual Save Action with Toast Feedback
+  const handleManualSave = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('l2b_get_started_step', String(currentStepIndex));
+        localStorage.setItem('l2b_get_started_max_step', String(maxReachedStep));
+        localStorage.setItem('l2b_get_started_autosave_v2', JSON.stringify(formData));
+        if (appliedTemplate) {
+          localStorage.setItem('l2b_get_started_applied_template', JSON.stringify(appliedTemplate));
+        }
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        setLastSavedTime(timeStr);
+        toast.success(
+          lang === 'bn'
+            ? '✨ আপনার সমস্ত তথ্য ও কুপন সফলভাবে সেভ করা হয়েছে!'
+            : lang === 'hi'
+            ? '✨ आपकी सभी जानकारी और कूपन सफलतापूर्वक सहेजे गए!'
+            : '✨ Progress and coupon saved successfully!'
+        );
+      } catch (err) {
+        console.warn('Manual save error:', err);
+        toast.error('Failed to save progress locally');
+      }
     }
+  };
+
+  // Explicit Form & Coupon Reset with Toast Feedback
+  const handleResetForm = () => {
+    if (
+      window.confirm(
+        lang === 'bn'
+          ? 'আপনি কি ফর্মের সমস্ত তথ্য ও কুপন মুছে নতুন করে শুরু করতে চান?'
+          : lang === 'hi'
+          ? 'क्या आप फॉर्म और कूपन का सारा डेटा रीसेट करना चाहते हैं?'
+          : 'Are you sure you want to reset and clear all form progress and applied coupons?'
+      )
+    ) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('l2b_get_started_step');
+        localStorage.removeItem('l2b_get_started_max_step');
+        localStorage.removeItem('l2b_get_started_autosave_v2');
+        localStorage.removeItem('l2b_get_started_applied_template');
+      }
+      setAppliedTemplate(null);
+      setCurrentStepIndex(0);
+      setMaxReachedStep(0);
+      setFormData({
+        requirementId: '',
+        websiteType: 'restaurant',
+        websiteTypeName: 'Restaurant & Dining',
+        clientInfo: {
+          businessName: '',
+          ownerName: user?.name || '',
+          mobile: user?.phone || '',
+          email: user?.email || '',
+          city: '',
+          existingWebsite: '',
+          hasLogo: 'yes',
+          contentReady: 'yes'
+        },
+        businessDetails: {
+          selectedCuisines: [],
+          specialties: '',
+          operatingHours: '',
+          serviceArea: '',
+          seatingCapacity: '',
+          tableBookingSlots: [],
+          foodDelivery: [],
+          orderType: [],
+          instagramFeed: '',
+          numberOfStylists: '',
+          bookingStyle: [],
+          serviceDuration: '',
+          membershipTiers: [],
+          trialPass: '',
+          classSchedule: '',
+          roomBookingEngine: '',
+          amenities: [],
+          checkinPolicy: '',
+          propertyFilter: [],
+          virtualTours: '',
+          siteVisit: '',
+          catalogSize: '',
+          ecommerceFeatures: [],
+          customBusinessType: '',
+          customFeatures: ''
+        },
+        selectedPages: [
+          'Home Page (High-Converting Hero)',
+          'Services / Food Menu / Product Catalog',
+          'Online Booking / Reservation System',
+          'Contact Page & Google Map Integration',
+          'Customer Reviews & Testimonials'
+        ],
+        selectedFeatures: [
+          'User Registration / Customer Login',
+          'Online Table / Appointment Booking',
+          'Automated WhatsApp Lead Notifications'
+        ],
+        paymentMethods: ['Razorpay (Cards, Netbanking, UPI)', 'UPI (GPay / PhonePe / Paytm Instant QR)', 'Cash on Delivery (COD) / Pay at Venue'],
+        adminPanelType: 'Full Dynamic Admin Panel',
+        whatsappIntegration: true,
+        whatsappOptions: ['WhatsApp Floating Quick Chat Button', 'Direct Order / Booking to WhatsApp with Pre-filled Payload'],
+        emailIntegration: true,
+        emailOptions: ['Automated Customer Confirmation Email & Receipt', 'Instant Admin Email Alert for every submission'],
+        designStyle: 'Modern Glassmorphic & Vibrant',
+        preferredColors: 'Purple, Neon Blue & Luxury Gold',
+        referenceUrls: '',
+        uploadedImages: [],
+        domainStatus: 'Need New Domain (Free Included)',
+        hostingStatus: 'High-Speed Cloud Hosting (Free 1-Yr Included)',
+        budget: '₹12,999 – ₹24,999 (Standard Commercial)',
+        timeline: '⚡ Express Delivery (48 - 72 Hours)',
+        couponCode: '',
+        discountPercent: 0,
+        additionalNotes: ''
+      });
+      toast.info(
+        lang === 'bn'
+          ? '🔄 ফর্ম ও কুপনের তথ্য সফলভাবে রিসেট করা হয়েছে!'
+          : lang === 'hi'
+          ? '🔄 फॉर्म और कूपन सफलतापूर्वक रीसेट कर दिया गया!'
+          : '🔄 Form and coupon have been reset to default!'
+      );
+    }
+  };
+
+  // Coupon Application Handler
+  const handleApplyCoupon = (customCode) => {
+    const code = (customCode || couponInput || '').trim().toUpperCase();
+    if (!code) {
+      toast.warn(lang === 'bn' ? 'অনুগ্রহ করে একটি কুপন কোড লিখুন' : lang === 'hi' ? 'कृपया कूपन कोड दर्ज करें' : 'Please enter a coupon code');
+      return;
+    }
+    let discount = 20;
+    if (code === 'STARTUP50') discount = 50;
+    else if (code === 'FESTIVE25') discount = 25;
+    else if (code === 'LOCAL10') discount = 10;
+    else if (code === 'INDIA2025') discount = 20;
+
+    setFormData((prev) => ({
+      ...prev,
+      couponCode: code,
+      discountPercent: discount
+    }));
+    setCouponInput('');
+    handleManualSave();
+    toast.success(
+      lang === 'bn'
+        ? `🎉 কুপন "${code}" যুক্ত হয়েছে! ${discount}% ডিসকাউন্ট সক্রিয়।`
+        : lang === 'hi'
+        ? `🎉 कूपन "${code}" लागू हो गया! ${discount}% छूट सक्रिय।`
+        : `🎉 Coupon "${code}" applied successfully! ${discount}% OFF active.`
+    );
+  };
+
+  // Coupon Removal Handler
+  const handleRemoveCoupon = () => {
+    setFormData((prev) => ({
+      ...prev,
+      couponCode: '',
+      discountPercent: 0
+    }));
+    handleManualSave();
+    toast.info(
+      lang === 'bn' ? '🏷️ কুপন সরানো হয়েছে।' : lang === 'hi' ? '🏷️ कूपन हटा दिया गया।' : '🏷️ Coupon removed.'
+    );
   };
 
   const validateStep = (stepIdx) => {
@@ -792,13 +1312,13 @@ export default function GetStarted() {
     }
     if (stepIdx === 1) {
       if (!formData.clientInfo.businessName?.trim()) {
-        return lang === 'bn' ? 'অনুগ্রহ করে আপনার ব্যবসার নাম লিখুন।' : lang === 'hi' ? 'कृपया अपने बिजनेस का नाम दर्ज करें।' : 'Please enter your Business / Brand Name.';
+        return lang === 'bn' ? 'অনুগ্রহ করে আপনার ব্যবসার নাম লিখুন।' : lang === 'hi' ? 'कृपया अपने बिज़नेस का नाम दर्ज करें।' : 'Please enter your Business / Brand Name.';
       }
       if (!formData.clientInfo.ownerName?.trim()) {
         return lang === 'bn' ? 'অনুগ্রহ করে প্রতিষ্ঠাতা বা মালিকের নাম লিখুন।' : lang === 'hi' ? 'कृपया मालिक / संस्थापक का नाम दर्ज करें।' : 'Please enter Owner / Founder Name.';
       }
       if (!formData.clientInfo.mobile?.trim() || formData.clientInfo.mobile.replace(/[^0-9]/g, '').length < 8) {
-        return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক মোবাইল বা হোয়াটসঅ্যাপ নম্বর দিন।' : lang === 'hi' ? 'कृपया एक वैध 10-अंकीय मोबाइल नंबर दर्ज करें।' : 'Please provide a valid Mobile / WhatsApp number.';
+                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'হোয়াটসঅ্যাপ' : lang === 'hi' ? 'व्हाट्सएप' : 'WhatsApp'}</span>
       }
       if (!formData.clientInfo.email?.trim() || !formData.clientInfo.email.includes('@')) {
         return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ইমেইল অ্যাড্রেস দিন।' : lang === 'hi' ? 'कृपया एक वैध ईमेल पता दर्ज करें।' : 'Please provide a valid Email address.';
@@ -809,7 +1329,7 @@ export default function GetStarted() {
     }
     if (stepIdx === 2) {
       if (!formData.businessDetails.specialties?.trim()) {
-        return lang === 'bn' ? 'অনুগ্রহ করে আপনার মূল বিশেষত্ব বা অফারিংস লিখুন।' : lang === 'hi' ? 'कृपया अपनी मुख्य विशेषताएं या आइटम दर्ज करें।' : 'Please enter your brand signature offerings & specialties.';
+        return lang === 'bn' ? 'অনুগ্রহ করে আপনার মূল বৈশিষ্ট্য বা অফারিংস লিখুন।' : lang === 'hi' ? 'कृपया अपनी मुख्य विशेषताएं या आइटम दर्ज करें।' : 'Please enter your brand signature offerings & specialties.';
       }
     }
     if (stepIdx === 3) {
@@ -829,7 +1349,7 @@ export default function GetStarted() {
     }
     if (stepIdx === 6) {
       if (!formData.adminPanelType) {
-        return lang === 'bn' ? 'অনুগ্রহ করে এডমিন প্যানেল টাইপ বেছে নিন।' : lang === 'hi' ? 'कृपया एडमिन पैनल चुनें।' : 'Please choose an admin panel option.';
+        return lang === 'bn' ? 'অনুগ্রহ করে অ্যাডমিন প্যানেল টাইপ বেছে নিন।' : lang === 'hi' ? 'कृपया एडमिन पैनल चुनें।' : 'Please choose an admin panel option.';
       }
     }
     return null;
@@ -862,7 +1382,7 @@ export default function GetStarted() {
 
   const jumpToStep = (targetIndex) => {
     if (targetIndex > maxReachedStep) {
-      toast.warning(lang === 'bn' ? `অনুগ্রহ করে ধাপ ${currentStepIndex + 1} পূরণ করে সামনে এগিয়ে যান।` : lang === 'hi' ? `कृपया आगे बढ़ने से पहले चरण ${currentStepIndex + 1} पूरा करें।` : `Please complete Step ${currentStepIndex + 1} before proceeding forward.`);
+      toast.warning(lang === 'bn' ? `অনুগ্রহ করে ধাপ ${currentStepIndex + 1} পূরণ করে সামনে এগিয়ে যান।` : lang === 'hi' ? `कृपया आगे बढ़ने से पहले चरण ${currentStepIndex + 1} पूरा करें।` : `Please complete Step ${currentStepIndex + 1} before proceeding forward.`);
       return;
     }
     setErrorMessage('');
@@ -919,10 +1439,10 @@ export default function GetStarted() {
     setAiModalLang(targetLang);
     toast.info(
       targetLang === 'bn'
-        ? '🇧🇩 বাংলা অনুবাদ সক্রিয় করা হয়েছে'
+        ? 'বাংলা অনুবাদ সক্রিয় করা হয়েছে'
         : targetLang === 'hi'
-        ? '🇮🇳 हिंदी अनुवाद सक्रिय किया गया'
-        : '🌐 English Translation Active'
+        ? 'हिंदी अनुवाद सक्रिय किया गया'
+        : 'English Translation Active'
     );
   };
 
@@ -938,7 +1458,7 @@ export default function GetStarted() {
         aiModalLang === 'bn'
           ? `ধাপ ${aiModalStepIndex + 1} এর AI সারসংক্ষেপ কপি হয়েছে!`
           : aiModalLang === 'hi'
-          ? `चरण ${aiModalStepIndex + 1} का AI सारांश कॉपी हुआ!`
+          ? 'AI सारांश कॉपी हुआ!'
           : `Step ${aiModalStepIndex + 1} AI summary copied to clipboard!`
       );
       setTimeout(() => setCopiedAi(false), 3000);
@@ -976,7 +1496,7 @@ export default function GetStarted() {
 
     if (activeLang === 'bn') {
       finalAiText = `### 🎯 AI এক্সিকিউটিভ প্রজেক্ট স্কোপ ও রূপরেখা
-**ব্র্যান্ডের নাম:** ${formData.clientInfo.businessName || 'নূতন কমার্শিয়াল এন্টারপ্রাইজ'}
+**ব্র্যান্ডের নাম:** ${formData.clientInfo.businessName || 'নতুন কমার্শিয়াল এন্টারপ্রাইজ'}
 **ইন্ডাস্ট্রি টাইপ:** ${formData.websiteTypeName}
 **টার্গেট ডেলিভারি:** ${formData.timeline}
 
@@ -984,12 +1504,12 @@ export default function GetStarted() {
 - **ফ্রন্টএন্ড:** React 19 + Vite (অথবা Next.js 15 App Router) সাথে TailwindCSS এবং Framer Motion লিকুইড এনিমেশন।
 - **ব্যাকএন্ড ও ডেটাবেজ:** Node.js Express হাই-পারফরম্যান্স REST API সাথে MongoDB ক্লাউড ক্লাস্টার এবং JWT সিকিউরিটি।
 - **পেমেন্ট গেটওয়ে:** ${formData.paymentMethods.join(', ')} সাথে অটোমেটেড GST ট্যাক্স ইনভয়েস জেনারেটর।
-- **নোটিফিকেশন ইঞ্জিন:** ইনস্ট্যান্ট হোয়াটসঅ্যাপ ক্লাউড API ওয়েবহুক ও SMTP অটোমেটেড রিসিপ্ট সেন্ডার।
+- **নোটিফিকেশন ইঞ্জিন:** ইনস্ট্যান্ট হোয়াটসঅ্যাপ ক্লাউড API ওয়েবহুক ও SMTP অটোমেটেড রিসিপ্ট সেন্ডার।
 
 #### ⚡ উচ্চ কনভার্সন অপ্টিমাইজেশন ও ফিচারসমূহ
 - **মূল ফিচারসমূহ:** ${formData.selectedFeatures.slice(0, 4).join(', ')}
 - **পেজ স্ট্রাকচার:** ${formData.selectedPages.slice(0, 5).join(' ➔ ')}
-- **গতি ও এসইও:** সাব-সেকেন্ড পেজ রেন্ডারিং, JSON-LD স্কিমা এবং ১০০/১০০ কোর ওয়েব ভাইটালস স্পিড স্কোর।
+- **গতি ও এসইও:** সাব-সেকেন্ড পেজ রেন্ডারিং, JSON-LD স্কিমা এবং ১০০/১০০ কোর ওয়েব ভাইটালস স্পিড স্কোর।
 
 #### ⏱️ মাইলস্টোন ডেলিভারি ও স্প্রিন্ট পরিকল্পনা
 - **ফেজ ১ (দিন ১-২):** ভিজ্যুয়াল UI/UX ওয়্যারফ্রেম ও ইন্টারেক্টিভ প্রোটোটাইপ ডিজাইন।
@@ -1008,12 +1528,12 @@ export default function GetStarted() {
 - **सूचनाएं:** त्वरित व्हाट्सएप क्लाउड API और स्वचालित रसीद ईमेल।
 
 #### ⚡ मुख्य फीचर्स और विकास रणनीति
-- **प्रमुख मॉडयूल:** ${formData.selectedFeatures.slice(0, 4).join(', ')}
+- **प्रमुख मॉड्यूल:** ${formData.selectedFeatures.slice(0, 4).join(', ')}
 - **पेज संरचना:** ${formData.selectedPages.slice(0, 5).join(' ➔ ')}
 - **स्पीड और एसईओ:** 1 सेकंड से कम लोडिंग, गूगल स्कीमा मार्कअप और 100/100 कोर वेब वाइटल्स।
 
 #### ⏱️ चरणबद्ध डिलीवरी और टर्नअराउंड
-- **चरण 1 (दिन 1-2):** UI/UX डिजाइन और प्रोटोटाइप समीक्षा।
+- **चरण 1 (दिन 1-2):** UI/UX डिज़ाइन और प्रोटोटाइप समीक्षा।
 - **चरण 2 (दिन 3-4):** फुल-स्टैक कोडिंग, पेमेंट गेटवे और CMS सेटअप।
 - **चरण 3 (अंतिम लॉन्च):** एसईओ ऑडिट, स्पीड टेस्टिंग और लाइव डोमेन लॉन्च।`;
     } else {
@@ -1038,7 +1558,6 @@ export default function GetStarted() {
 - **Phase 2 (Days 3-4):** Full-stack code implementation, payment sandbox, and CMS staging.
 - **Phase 3 (Final Delivery):** Technical SEO audit, speed benchmarking, and DNS launch.`;
     }
-
     setAiSummary(finalAiText);
     setAiAnalysisStage(4);
     setIsGeneratingAi(false);
@@ -1104,6 +1623,12 @@ export default function GetStarted() {
       // Structure rich answers dictionary for MongoDB & Admin inspect modal
       const answersMap = {
         ...formData.businessDetails,
+        templateName: appliedTemplate?.title || formData.templateTitle || '',
+        templateSlug: appliedTemplate?.slug || formData.templateSlug || '',
+        templateCategory: appliedTemplate?.category || formData.templateCategory || '',
+        templatePrice: appliedTemplate?.price || formData.templatePrice || '',
+        couponApplied: formData.couponCode || '',
+        discountPercent: formData.discountPercent || 0,
         specialties: formData.businessDetails?.specialties || '',
         operatingHours: formData.businessDetails?.operatingHours || '',
         designStyle: formData.designStyle,
@@ -1121,6 +1646,11 @@ export default function GetStarted() {
 
       const payload = {
         ...formData,
+        templateTitle: appliedTemplate?.title || formData.templateTitle,
+        templateSlug: appliedTemplate?.slug || formData.templateSlug,
+        templateCategory: appliedTemplate?.category || formData.templateCategory,
+        templatePrice: appliedTemplate?.price || formData.templatePrice,
+        appliedTemplate: appliedTemplate || undefined,
         answers: answersMap,
         images: finalUploadedUrls,
         uploadedImages: finalUploadedUrls,
@@ -1233,7 +1763,7 @@ export default function GetStarted() {
               }`}
               title="বাংলা"
             >
-              বাং
+              বাংলা
             </button>
             <button
               type="button"
@@ -1245,19 +1775,33 @@ export default function GetStarted() {
               }`}
               title="हिंदी"
             >
-              हिं
+              हिंदी
             </button>
           </div>
+
+          {/* Manual Save Button with Toast Feedback */}
+          {!submittedData && (
+            <button
+              type="button"
+              onClick={handleManualSave}
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/80 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/90 dark:border-emerald-800 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
+              title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : lang === 'hi' ? 'प्रगति और कूपन सेव करें' : 'Save Progress & Coupon'}
+            >
+              <Save className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden sm:inline">{lang === 'bn' ? 'সেভ করুন' : lang === 'hi' ? 'सेव करें' : 'Save'}</span>
+            </button>
+          )}
 
           {/* Reset / Clear Form Button */}
           {!submittedData && (
             <button
               type="button"
               onClick={handleResetForm}
-              className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
-              title={lang === 'bn' ? 'ফর্ম রিসেট করুন (নতুন করে শুরু করুন)' : 'Reset and clear form'}
+              className="px-2 sm:px-2.5 py-1.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer active:scale-95"
+              title={lang === 'bn' ? 'ফর্ম ও কুপন রিসেট করুন (নতুন করে শুরু করুন)' : 'Reset and clear form'}
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{lang === 'bn' ? 'রিসেট' : lang === 'hi' ? 'रीसेट' : 'Reset'}</span>
             </button>
           )}
 
@@ -1288,7 +1832,77 @@ export default function GetStarted() {
 
       {/* 3. MAIN FORM BODY */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-10 flex flex-col justify-between">
-        
+
+        {/* ========================================================================= */}
+        {/* TEMPLATE AUTO-APPLIED BANNER (When arriving from Live Demo / Template) */}
+        {/* ========================================================================= */}
+        {!submittedData && appliedTemplate && (
+          <div className="mb-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-900/10 via-pink-900/10 to-amber-900/10 dark:from-purple-950/60 dark:via-slate-900/80 dark:to-amber-950/40 border border-purple-300/80 dark:border-purple-700/60 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-3">
+            <div className="flex items-center gap-3 min-w-0">
+              {appliedTemplate.heroImage ? (
+                <div className="w-12 h-12 rounded-xl overflow-hidden border border-purple-400/50 shadow-xs shrink-0 bg-slate-900">
+                  <img
+                    src={appliedTemplate.heroImage}
+                    alt={appliedTemplate.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                  <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/70 text-purple-700 dark:text-purple-300 font-extrabold text-[10px] tracking-wide uppercase flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5 text-purple-500 animate-pulse" />
+                    <span>{lang === 'bn' ? 'অটো-অ্যাপ্লাইড ডেমো টেমপ্লেট' : lang === 'hi' ? 'ऑटो-अप्लाई डेमो टेम्पलेट' : 'Auto-Applied Demo Template'}</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-black text-[10px]">
+                    20% OFF ACTIVE
+                  </span>
+                  {appliedTemplate.price && (
+                    <span className="text-[11px] font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                      {appliedTemplate.price}
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-xs sm:max-w-md">
+                  {appliedTemplate.title}
+                </h3>
+                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
+                  {lang === 'bn' ? 'আপনার জন্য এই টেমপ্লেটের সকল স্পেসিফিকেশন ও ফিচার স্বয়ংক্রিয়ভাবে লোড করা হয়েছে।' : 'Specifications, pages, and parameters for this template are pre-configured.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+              {appliedTemplate.liveUrl && (
+                <a
+                  href={appliedTemplate.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-bold flex items-center gap-1 transition-all"
+                  title="Open live preview in new tab"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>{lang === 'bn' ? 'লাইভ প্রিভিউ' : 'Live Preview'}</span>
+                  <ExternalLink className="w-3 h-3 text-blue-400" />
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={handleManualSave}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1 shadow-xs transition-all cursor-pointer active:scale-95"
+                title="Save template state"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>{lang === 'bn' ? 'সেভ রাখুন' : 'Save'}</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* POST-SUBMISSION SUCCESS SCREEN */}
         {submittedData ? (
           <div className="max-w-2xl mx-auto my-auto p-6 sm:p-12 rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-[0_20px_60px_-15px_rgba(168,85,247,0.15)] text-center space-y-6 animate-in zoom-in-95 backdrop-blur-xl">
@@ -1344,7 +1958,7 @@ export default function GetStarted() {
                 {lang === 'bn' 
                   ? `আমাদের লিড ইঞ্জিনিয়ার আপনার সাথে ফোন বা হোয়াটসঅ্যাপে (${formData.clientInfo.mobile}) অথবা ইমেইলে (${formData.clientInfo.email}) যোগাযোগ করে ডিজাইন ও পেমেন্ট কনফার্ম করবেন।`
                   : lang === 'hi'
-                  ? `हमारे इंजीनियर आपसे फोन/व्हाट्सएप (${formData.clientInfo.mobile}) या ईमेल (${formData.clientInfo.email}) पर संपर्क करके डिजाइन और भुगतान की पुष्टि करेंगे।`
+                  ? `हमारे इंजीनियर आपसे फोन/व्हाट्सएप (${formData.clientInfo.mobile}) या ईमेल (${formData.clientInfo.email}) पर संपर्क करके डिज़ाइन और भुगतान की पुष्टि करेंगे।`
                   : `Our engineer will contact you via Phone/WhatsApp (${formData.clientInfo.mobile}) or Email (${formData.clientInfo.email}) to confirm design deliverables and payment milestones.`}
               </p>
             </div>
@@ -1421,7 +2035,7 @@ export default function GetStarted() {
                 <div className="space-y-6 animate-fade-in">
                   <StepHeader
                     stepIdx={0}
-                    title={lang === 'bn' ? 'আপনি কোন ধরণের ওয়েবসাইট তৈরি করতে চান?' : lang === 'hi' ? 'आप किस प्रकार की वेबसाइट बनाना चाहते हैं?' : 'What Type of Website or Business are We Building?'}
+                    title={lang === 'bn' ? 'আপনি কোন ধরনের ওয়েবসাইট তৈরি করতে চান?' : lang === 'hi' ? 'आप किस प्रकार की वेबसाइट बनाना चाहते हैं?' : 'What Type of Website or Business are We Building?'}
                     t={t}
                     lang={lang}
                     onOpenAiSummary={handleOpenStepAiSummary}
@@ -1469,6 +2083,263 @@ export default function GetStarted() {
                       );
                     })}
                   </div>
+
+                  
+                  {/* Step 1 Interactive Live Template Gallery */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <div>
+                        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-purple-600" />
+                          <span>{lang === 'bn' ? 'রেডিমেড লাইভ ডেমো টেমপ্লেট সিলেক্টর' : lang === 'hi' ? 'लाइव डेमो टेम्पलेट्स चयन' : 'Live Ready-to-Launch Templates'}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
+                            {Object.keys(FALLBACK_TEMPLATE_SPECS).length + (databaseDemos?.length || 0)} {lang === 'bn' ? 'টি টেমপ্লেট' : 'Templates'}
+                          </span>
+                        </h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {lang === 'bn' ? 'যেকোনো টেমপ্লেট সিলেক্ট করলে তার সমস্ত ফিচার, পেজ ও স্পেক্স ১-ক্লিকে ফর্মে যুক্ত হয়ে যাবে।' : 'Select any live demo template to auto-populate all features, pages, and specs.'}
+                        </p>
+                      </div>
+
+                      {appliedTemplate && (
+                        <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800 shrink-0">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>{lang === 'bn' ? 'টেমপ্লেট সিলেক্টেড' : 'Template Active'}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Template Cards Grid */}
+                    {(() => {
+                      // Merge fallback specs and dynamic database demos
+                      const allTemplatesMap = new Map();
+                      Object.values(FALLBACK_TEMPLATE_SPECS).forEach(t => allTemplatesMap.set(t.slug, t));
+                      (databaseDemos || []).forEach(d => {
+                        const s = d.slug || d._id;
+                        allTemplatesMap.set(s, {
+                          slug: s,
+                          title: d.title,
+                          category: d.category || 'Website Template',
+                          categorySlug: mapSlugToCategorySlug(d.category || d.slug),
+                          price: d.priceInr || d.price || '₹5,999',
+                          turnaround: d.turnaround || '2 - 4 Days',
+                          liveUrl: d.liveUrl || '',
+                          heroImage: d.heroImage || d.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop',
+                          features: Array.isArray(d.features) ? d.features : []
+                        });
+                      });
+
+                      const allTemplatesList = Array.from(allTemplatesMap.values());
+                      // Filter by selected category if matching, or show all
+                      const matchingTemplates = allTemplatesList.filter(t => t.categorySlug === formData.websiteType);
+                      const displayList = matchingTemplates.length > 0 ? matchingTemplates : allTemplatesList;
+
+                      return (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {displayList.map((tpl) => {
+                            const isCurrentSelected = appliedTemplate?.slug === tpl.slug || formData.websiteTypeName === tpl.title;
+
+                            return (
+                              <div
+                                key={tpl.slug}
+                                className={`p-3 rounded-2xl border transition-all flex flex-col justify-between space-y-2.5 bg-slate-50/70 dark:bg-slate-800/40 ${
+                                  isCurrentSelected
+                                    ? 'border-purple-600 dark:border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 ring-2 ring-purple-500/20 shadow-md'
+                                    : 'border-slate-200/80 dark:border-slate-700/80 hover:border-purple-300 dark:hover:border-purple-700'
+                                }`}
+                              >
+                                <div>
+                                  {/* Thumbnail & Badges */}
+                                  <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-900 mb-2">
+                                    <img
+                                      src={tpl.heroImage}
+                                      alt={tpl.title}
+                                      className="w-full h-full object-cover"
+                                      loading="lazy"
+                                    />
+                                    <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                                      <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-white text-[9px] font-bold">
+                                        {tpl.category}
+                                      </span>
+                                      <span className="px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 text-[9px] font-black">
+                                        20% OFF
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <h5 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-1">
+                                    {tpl.title}
+                                  </h5>
+
+                                  <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                                    <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                                      {tpl.price}
+                                    </span>
+                                    <span>⏱️ {tpl.turnaround}</span>
+                                  </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                                  {tpl.liveUrl && (
+                                    <a
+                                      href={tpl.liveUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 hover:bg-blue-100 border border-blue-200 dark:border-blue-800 transition-colors"
+                                      title="Open live preview"
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                    </a>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const categorySlug = tpl.categorySlug || mapSlugToCategorySlug(tpl.category || tpl.slug);
+                                      setAppliedTemplate(tpl);
+                                      if (typeof window !== 'undefined') {
+                                        localStorage.setItem('l2b_get_started_applied_template', JSON.stringify(tpl));
+                                      }
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        websiteType: categorySlug,
+                                        websiteTypeName: tpl.title,
+                                        referenceUrls: tpl.liveUrl || prev.referenceUrls,
+                                        couponCode: prev.couponCode || 'INDIA2025',
+                                        discountPercent: prev.couponCode ? prev.discountPercent : 20,
+                                        timeline: `⚡ Express Delivery (${tpl.turnaround})`,
+                                        selectedFeatures: tpl.features?.length > 0 ? Array.from(new Set([...prev.selectedFeatures, ...tpl.features])) : prev.selectedFeatures
+                                      }));
+                                      handleManualSave();
+                                      toast.success(
+                                        lang === 'bn'
+                                          ? `🎯 টেমপ্লেট "${tpl.title}" সফলভাবে অ্যাপ্লাই করা হয়েছে!`
+                                          : lang === 'hi'
+                                          ? `🎯 टेम्पलेट "${tpl.title}" सफलतापूर्वक लागू कर दिया गया!`
+                                          : `🎯 Template "${tpl.title}" applied successfully!`
+                                      );
+                                    }}
+                                    className={`flex-1 py-1.5 px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                      isCurrentSelected
+                                        ? 'bg-purple-600 text-white shadow-xs'
+                                        : 'l2b-gradient-bg text-white hover:opacity-95 shadow-2xs active:scale-95'
+                                    }`}
+                                  >
+                                    <Sparkles className="w-3 h-3" />
+                                    <span>{isCurrentSelected ? (lang === 'bn' ? 'সিলেক্টেড ✓' : 'Applied ✓') : (lang === 'bn' ? 'টেমপ্লেট নিন' : 'Apply Template')}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Step 1 Quick Coupon & Autosave Box */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-500/5 via-amber-500/5 to-pink-500/5 dark:from-purple-950/30 dark:via-slate-900/60 dark:to-amber-950/20 border border-purple-200/80 dark:border-purple-800/80 space-y-3.5 shadow-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-100 dark:border-purple-900/50 pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 flex items-center justify-center shrink-0">
+                          <Tag className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>{lang === 'bn' ? 'ডিসকাউন্ট কুপন ও অটো-সেভ অপশন' : lang === 'hi' ? 'डिस्काउंट कूपन और ऑटो-सेव' : 'Discount Coupon & Autosave'}</span>
+                            <span className="px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-black">
+                              20% OFF
+                            </span>
+                          </h4>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                            {lang === 'bn' ? 'কুপন কোড প্রয়োগ করুন এবং যেকোনো সময় ফর্মের তথ্য সেভ করে রাখুন।' : 'Apply promo code and save your form progress anytime.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={handleManualSave}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+                          title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : 'Save Progress'}
+                        >
+                          <Save className="w-3.5 h-3.5" />
+                          <span>{lang === 'bn' ? 'সেভ করুন' : lang === 'hi' ? 'सेव करें' : 'Save Draft'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleResetForm}
+                          className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-600 dark:hover:text-rose-400 text-slate-600 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer active:scale-95"
+                          title={lang === 'bn' ? 'রিসেট করুন' : 'Reset All'}
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>{lang === 'bn' ? 'রিসেট' : lang === 'hi' ? 'रीसेट' : 'Reset'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-purple-600" />
+                          <input
+                            type="text"
+                            value={couponInput}
+                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
+                            placeholder={formData.couponCode ? `Active: ${formData.couponCode}` : 'e.g. INDIA2025'}
+                            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-900 dark:text-white uppercase focus:outline-none focus:border-purple-600"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleApplyCoupon()}
+                          className="px-4 py-2 rounded-xl l2b-gradient-bg text-white text-xs font-black shadow-xs hover:opacity-95 cursor-pointer active:scale-95 transition-all"
+                        >
+                          {lang === 'bn' ? 'প্রয়োগ করুন' : lang === 'hi' ? 'अप्लाई करें' : 'Apply'}
+                        </button>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                        <span className="text-slate-400 font-bold">{lang === 'bn' ? 'জনপ্রিয় কুপন:' : 'Popular:'}</span>
+                        {['INDIA2025', 'STARTUP50', 'FESTIVE25'].map((code) => (
+                          <button
+                            key={code}
+                            type="button"
+                            onClick={() => handleApplyCoupon(code)}
+                            className={`px-2 py-0.5 rounded-lg border font-mono font-bold transition-all cursor-pointer ${
+                              formData.couponCode === code
+                                ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                                : 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/50'
+                            }`}
+                          >
+                            🏷️ {code} ({code === 'STARTUP50' ? '50% OFF' : code === 'FESTIVE25' ? '25% OFF' : '20% OFF'})
+                          </button>
+                        ))}
+                      </div>
+
+                      {formData.couponCode && (
+                        <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-between text-xs animate-in zoom-in-95">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span className="font-bold text-emerald-950 dark:text-emerald-200">
+                              {lang === 'bn' ? 'কুপন সক্রিয়:' : 'Coupon Active:'} <strong className="font-mono">{formData.couponCode}</strong> ({formData.discountPercent}% OFF Applied)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveCoupon}
+                            className="text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:underline cursor-pointer"
+                          >
+                            {lang === 'bn' ? 'সরিয়ে ফেলুন' : 'Remove'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -1489,7 +2360,7 @@ export default function GetStarted() {
                     <div className="space-y-1">
                       <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <Building2 className="w-3.5 h-3.5 text-purple-600" />
-                        <span>{lang === 'bn' ? 'ব্যবসার নাম *' : lang === 'hi' ? 'बिजनेस का नाम *' : 'Business / Brand Name *'}</span>
+                        <span>{lang === 'bn' ? 'ব্যবসার নাম *' : lang === 'hi' ? 'बिज़नेस का नाम *' : 'Business / Brand Name *'}</span>
                       </label>
                       <input
                         type="text"
@@ -1531,7 +2402,7 @@ export default function GetStarted() {
                     <div className="space-y-1">
                       <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <Phone className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>{lang === 'bn' ? 'হোয়াটসঅ্যাপ / মোবাইল নম্বর *' : lang === 'hi' ? 'व्हाट्सएप / मोबाइल नंबर *' : 'WhatsApp / Mobile Number *'}</span>
+                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'হোয়াটসঅ্যাপ' : lang === 'hi' ? 'व्हाट्सएप' : 'WhatsApp'}</span>
                       </label>
                       <input
                         type="tel"
@@ -1548,7 +2419,7 @@ export default function GetStarted() {
                       />
                     </div>
 
-                    {/* Input Field: Email Address */}
+                        <span>{lang === 'bn' ? 'ইমেইল অ্যাড্রেস *' : lang === 'hi' ? 'ईमेल पता *' : 'Email Address *'}</span>
                     <div className="space-y-1">
                       <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5 text-blue-500" />
@@ -1628,7 +2499,7 @@ export default function GetStarted() {
                     {/* Common Industry Field: Specialties */}
                     <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2">
                       <label className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 block">
-                        {lang === 'bn' ? 'আপনার ব্র্যান্ডের মূল বিশেষত্ব বা সিগনেচার আইটেম *' : lang === 'hi' ? 'आपके ब्रांड की मुख्य विशेषताएं या सिग्नेचर आइटम *' : 'Brand Signature Offerings & Specialties *'}
+                        {lang === 'bn' ? 'আপনার ব্র্যান্ডের মূল বৈশিষ্ট্য বা সিগনেচার আইটেম *' : lang === 'hi' ? 'आपके ब्रांड की मुख्य विशेषताएं या सिग्नेचर आइटम *' : 'Brand Signature Offerings & Specialties *'}
                       </label>
                       <textarea
                         rows={3}
@@ -1643,7 +2514,7 @@ export default function GetStarted() {
                             }
                           })
                         }
-                        placeholder={lang === 'bn' ? 'যেমন: দম বিরিয়ানি, ব্রাইডাল মেকআপ, লাক্সারি স্যুইট' : lang === 'hi' ? 'उदा: दम बिरयानी, ब्राइडल मेकअप, लग्जरी रूम' : 'e.g. Special Dum Biryani / Bridal Glow Package / Luxury Suite Room'}
+                        placeholder={lang === 'bn' ? 'যেমন: দম বিরিয়ানি, ব্রাইডাল মেকআপ, লাক্সারি স্যুইট' : lang === 'hi' ? 'उदा: दम बिरयानी, ब्राइडल मेकअप, लग्जरी रूम' : 'e.g. Special Dum Biryani / Bridal Glow Package / Luxury Suite Room'}
                         className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
                       />
                     </div>
@@ -1819,7 +2690,7 @@ export default function GetStarted() {
                 <div className="space-y-6 animate-fade-in">
                   <StepHeader
                     stepIdx={6}
-                    title={lang === 'bn' ? 'এডমিন প্যানেল ও কন্টেন্ট ম্যানেজমেন্ট (CMS)' : lang === 'hi' ? 'एडमिन पैनल और सामग्री प्रबंधन (CMS)' : 'Admin Panel & Content Management System (CMS)'}
+                    title={lang === 'bn' ? 'অ্যাডমিন প্যানেল ও কনটেন্ট ম্যানেজমেন্ট (CMS)' : lang === 'hi' ? 'एडमिन पैनल और सामग्री प्रबंधन (CMS)' : 'Admin Panel & Content Management System (CMS)'}
                     t={t}
                     lang={lang}
                     onOpenAiSummary={handleOpenStepAiSummary}
@@ -1830,13 +2701,13 @@ export default function GetStarted() {
                       {
                         title: 'Full Dynamic Admin Panel',
                         en: { title: 'Full Dynamic Admin Panel', desc: 'Manage products, prices, leads, callbacks, and reviews yourself with 1-click password protected dashboard.' },
-                        bn: { title: 'সম্পূর্ণ ডায়নামিক এডমিন প্যানেল', desc: 'প্রোডাক্ট, প্রাইস, বুকিং, লিড ও রিভিউ নিজে এডিট ও কন্ট্রোল করার পাসওয়ার্ড প্রটেক্টেড ড্যাশবোর্ড।' },
+                        bn: { title: 'সম্পূর্ণ ডায়নামিক অ্যাডমিন প্যানেল', desc: 'প্রোডাক্ট, প্রাইস, বুকিং, লিড ও রিভিউ নিজে এডিট ও কন্ট্রোল করার পাসওয়ার্ড প্রোটেক্টেড ড্যাশবোর্ড।' },
                         hi: { title: 'पूर्ण गतिशील व्यवस्थापक पैनल', desc: 'पासवर्ड संरक्षित डैशबोर्ड के साथ उत्पाद, मूल्य और लीड स्वयं प्रबंधित करें।' }
                       },
                       {
                         title: 'Turnkey Managed Care',
                         en: { title: 'Turnkey Managed Care', desc: 'LOCAL2BRAND handles all monthly updates, menu changes, and security backups for you.' },
-                        bn: { title: 'টার্নকি ম্যানেজড কেয়ার', desc: 'LOCAL2BRAND আপনার সকল মাসিক মেনু আপডেট, সিকিউরিটি ও ক্লাউড ব্যাকআপ পরিচালনা করবে।' },
+                        bn: { title: 'টার্নকি ম্যানেজড কেয়ার', desc: 'LOCAL2BRAND আপনার সকল মাসিক মেনু আপডেট, সিকিউরিটি ও ক্লাউড ব্যাকআপ পরিচালনা করবে।' },
                         hi: { title: 'टर्नकी प्रबंधित सेवा', desc: 'LOCAL2BRAND आपके सभी मासिक अपडेट, मेनू और सुरक्षा बैकअप संभालेगा।' }
                       },
                       {
@@ -1878,7 +2749,7 @@ export default function GetStarted() {
                 <div className="space-y-6 animate-fade-in">
                   <StepHeader
                     stepIdx={7}
-                    title={lang === 'bn' ? 'হোয়াটসঅ্যাপ ও ইমেইল লিড নোটিফিকেশন' : lang === 'hi' ? 'व्हाट्सएप और ईमेल लीड सूचनाएं' : 'WhatsApp & Email Lead Notifications'}
+                    title={lang === 'bn' ? 'হোয়াটসঅ্যাপ ও ইমেইল লিড নোটিফিকেশন' : lang === 'hi' ? 'व्हाट्सएप और ईमेल लीड सूचनाएं' : 'WhatsApp & Email Lead Notifications'}
                     t={t}
                     lang={lang}
                     onOpenAiSummary={handleOpenStepAiSummary}
@@ -1889,19 +2760,19 @@ export default function GetStarted() {
                       {
                         id: 'float_wa',
                         en: 'WhatsApp Floating Quick Chat Button',
-                        bn: 'হোয়াটসঅ্যাপ ফ্লোটিং কুইক চ্যাট বাটন',
+                        bn: 'হোয়াটসঅ্যাপ ফ্লোটিং কুইক চ্যাট বাটন',
                         hi: 'व्हाट्सएप फ्लोटिंग क्विक चैट बटन'
                       },
                       {
                         id: 'direct_order_wa',
                         en: 'Direct Order / Booking to WhatsApp with Pre-filled Payload',
-                        bn: '১-ক্লিক ডিরেক্ট হোয়াটসঅ্যাপ বুকিং ও অর্ডার পেলোড',
+                        bn: '১-ক্লিক ডিরেক্ট হোয়াটসঅ্যাপ বুকিং ও অর্ডার পেলোড',
                         hi: 'व्हाट्सएप पर डायरेक्ट प्री-फिल्ड ऑर्डर बुकिंग'
                       },
                       {
                         id: 'admin_email',
                         en: 'Instant Admin Email Alert for every submission',
-                        bn: 'প্রতিটি নতুন সাবমিশনের জন্য ইনস্ট্যান্ট এডমিন ইমেইল এলার্ট',
+                        bn: 'প্রতিটি নতুন সাবমিশনের জন্য ইনস্ট্যান্ট অ্যাডমিন ইমেইল অ্যালার্ট',
                         hi: 'प्रत्येक सबमिशन पर त्वरित व्यवस्थापक ईमेल अलर्ट'
                       },
                       {
@@ -1950,7 +2821,7 @@ export default function GetStarted() {
                 <div className="space-y-6 animate-fade-in">
                   <StepHeader
                     stepIdx={8}
-                    title={lang === 'bn' ? 'ডিজাইন ও ভিজ্যুয়াল স্টাইল প্রেফারেন্স' : lang === 'hi' ? 'डिजाइन और दृश्य शैली की प्राथमिकताएं' : 'Design Aesthetics & Visual Style'}
+                    title={lang === 'bn' ? 'ডিজাইন ও ভিজ্যুয়াল স্টাইল প্রেফারেন্স' : lang === 'hi' ? 'डिज़ाइन और दृश्य शैली की प्राथमिकताएं' : 'Design Aesthetics & Visual Style'}
                     t={t}
                     lang={lang}
                     onOpenAiSummary={handleOpenStepAiSummary}
@@ -1959,7 +2830,7 @@ export default function GetStarted() {
                   <div className="space-y-4">
                     <div>
                       <label className="font-bold text-xs text-slate-800 dark:text-slate-200 block mb-1">
-                        {lang === 'bn' ? 'ডিজাইন ল্যাঙ্গুয়েজ' : lang === 'hi' ? 'पसंदीदा डिजाइन शैली' : 'Preferred Design Language'}
+                        {lang === 'bn' ? 'ডিজাইন ল্যাঙ্গুয়েজ' : lang === 'hi' ? 'पसंदीदा डिज़ाइन शैली' : 'Preferred Design Language'}
                       </label>
                       <select
                         value={formData.designStyle}
@@ -2063,7 +2934,7 @@ export default function GetStarted() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="font-bold text-xs text-slate-800 dark:text-slate-200 block mb-1">
-                        {lang === 'bn' ? 'ডোমেন নেম স্ট্যাটাস' : lang === 'hi' ? 'डोमेन नाम सेटअप' : 'Domain Name Setup'}
+                        {lang === 'bn' ? 'ডোমেন নেম সেটআপ' : lang === 'hi' ? 'डोमेन नाम सेटअप' : 'Domain Name Setup'}
                       </label>
                       <select
                         value={formData.domainStatus}
@@ -2133,7 +3004,7 @@ export default function GetStarted() {
                   <div className="p-5 sm:p-6 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 space-y-4 text-xs">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-slate-200/70 dark:border-slate-800 pb-4">
                       <div>
-                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'ব্যবসার নাম' : lang === 'hi' ? 'बिजनेस का नाम' : 'Business Name'}</span>
+                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'ব্যবসার নাম' : lang === 'hi' ? 'बिज़नेस का नाम' : 'Business Name'}</span>
                         <span className="font-black text-slate-900 dark:text-white text-sm">
                           {formData.clientInfo.businessName || 'Not specified'}
                         </span>
@@ -2145,32 +3016,125 @@ export default function GetStarted() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'হোয়াটসঅ্যাপ' : lang === 'hi' ? 'व्हाट्सएप' : 'WhatsApp'}</span>
+                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'হোয়াটসঅ্যাপ' : lang === 'hi' ? 'व्हाट्सएप' : 'WhatsApp'}</span>
                         <span className="font-black text-slate-900 dark:text-white text-sm font-mono">
                           {formData.clientInfo.mobile || 'Not specified'}
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'টাইমলাইন' : lang === 'hi' ? 'टाइमलाइन' : 'Timeline'}</span>
+                        <span className="text-slate-400 block font-bold text-[11px]">lang === 'bn' ? 'টাইমলাইন' : lang === 'hi' ? 'टाइमलाइन' : 'Timeline'</span>
                         <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
                           {formData.timeline}
                         </span>
                       </div>
                     </div>
 
-                    {formData.couponCode && (
-                      <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-700 flex items-center justify-between">
+                    {/* Interactive Discount Coupon & In-Place Autosave Card */}
+                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-500/5 via-amber-500/5 to-pink-500/5 dark:from-purple-950/30 dark:via-slate-900/60 dark:to-amber-950/20 border border-purple-200/80 dark:border-purple-800/80 space-y-3.5 shadow-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-100 dark:border-purple-900/50 pb-3">
                         <div className="flex items-center gap-2">
-                          <Tag className="w-4 h-4 text-amber-600" />
-                          <span className="font-bold text-amber-950 dark:text-amber-200">
-                            Coupon Applied: <strong className="font-mono">{formData.couponCode}</strong> ({formData.discountPercent}% OFF)
-                          </span>
+                          <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 flex items-center justify-center shrink-0">
+                            <Tag className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              <span>{lang === 'bn' ? 'ডিসকাউন্ট কুপন ও অটো-সেভ অপশন' : lang === 'hi' ? 'डिस्काउंट कूपन और ऑटो-सेव' : 'Discount Coupon & Autosave'}</span>
+                              <span className="px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-black">
+                                20% OFF
+                              </span>
+                            </h4>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                              {lang === 'bn' ? 'কুপন প্রয়োগ করুন এবং আপনার ফর্মের তথ্য এখনই সুরক্ষিতভাবে সেভ করে রাখুন।' : 'Apply promo coupons and save your progress in 1-click.'}
+                            </p>
+                          </div>
                         </div>
-                        <span className="text-[11px] font-black text-amber-800 dark:text-amber-300">
-                          Discount Active
-                        </span>
+
+                        {/* Quick Action: In-place Save & Reset */}
+                        <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                          <button
+                            type="button"
+                            onClick={handleManualSave}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+                            title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : 'Save Progress'}
+                          >
+                            <Save className="w-3.5 h-3.5" />
+                            <span>{lang === 'bn' ? 'সেভ করুন' : lang === 'hi' ? 'सेव करें' : 'Save Draft'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleResetForm}
+                            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-600 dark:hover:text-rose-400 text-slate-600 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer active:scale-95"
+                            title={lang === 'bn' ? 'রিসেট করুন' : 'Reset All'}
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>{lang === 'bn' ? 'রিসেট' : lang === 'hi' ? 'रीसेट' : 'Reset'}</span>
+                          </button>
+                        </div>
                       </div>
-                    )}
+
+                      {/* Coupon Input & Quick Pills */}
+                      <div className="space-y-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="relative flex-1">
+                            <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-purple-600" />
+                            <input
+                              type="text"
+                              value={couponInput}
+                              onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
+                              placeholder={formData.couponCode ? `Active: ${formData.couponCode}` : 'e.g. INDIA2025'}
+                              className="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-900 dark:text-white uppercase focus:outline-none focus:border-purple-600"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleApplyCoupon()}
+                            className="px-4 py-2 rounded-xl l2b-gradient-bg text-white text-xs font-black shadow-xs hover:opacity-95 cursor-pointer active:scale-95 transition-all"
+                          >
+                            {lang === 'bn' ? 'কুপন প্রয়োগ' : lang === 'hi' ? 'अप्लाई करें' : 'Apply'}
+                          </button>
+                        </div>
+
+                        {/* Quick Coupon Suggestions */}
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+                          <span className="text-slate-400 font-bold">{lang === 'bn' ? 'জনপ্রিয় কুপন:' : 'Popular:'}</span>
+                          {['INDIA2025', 'STARTUP50', 'FESTIVE25'].map((code) => (
+                            <button
+                              key={code}
+                              type="button"
+                              onClick={() => handleApplyCoupon(code)}
+                              className={`px-2 py-0.5 rounded-lg border font-mono font-bold transition-all cursor-pointer ${
+                                formData.couponCode === code
+                                  ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
+                                  : 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/50'
+                              }`}
+                            >
+                              🏷️ {code} ({code === 'STARTUP50' ? '50% OFF' : code === 'FESTIVE25' ? '25% OFF' : '20% OFF'})
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Active Applied Status */}
+                        {formData.couponCode && (
+                          <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-between text-xs animate-in zoom-in-95">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                              <span className="font-bold text-emerald-950 dark:text-emerald-200">
+                                {lang === 'bn' ? 'কুপন সক্রিয়:' : 'Coupon Active:'} <strong className="font-mono">{formData.couponCode}</strong> ({formData.discountPercent}% OFF Applied)
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleRemoveCoupon}
+                              className="text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:underline cursor-pointer"
+                            >
+                              {lang === 'bn' ? 'সরিয়ে ফেলুন' : 'Remove'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                     <div className="p-3.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/80 text-[11px] text-purple-900 dark:text-purple-200 flex items-center gap-2">
                       <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0" />
@@ -2197,6 +3161,16 @@ export default function GetStarted() {
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span className="hidden xs:inline">{t.previous}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleManualSave}
+                className="px-3.5 py-3 rounded-2xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
+                title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : 'Save Progress'}
+              >
+                <Save className="w-4 h-4 text-emerald-600" />
+                <span className="hidden sm:inline">{lang === 'bn' ? 'সেভ ড্রাফট' : lang === 'hi' ? 'ड्राफ्ट सेव करें' : 'Save Draft'}</span>
               </button>
 
               <div className="text-[11px] font-bold text-slate-400 hidden sm:block">
@@ -2288,7 +3262,7 @@ export default function GetStarted() {
                     }`}
                     title="বাংলায় অনুবাদ করুন"
                   >
-                    🇧🇩 বাংলা
+                    বাংলা
                   </button>
                   <button
                     type="button"
@@ -2300,7 +3274,7 @@ export default function GetStarted() {
                     }`}
                     title="View in English"
                   >
-                    🌐 EN
+                    EN
                   </button>
                   <button
                     type="button"
@@ -2310,9 +3284,9 @@ export default function GetStarted() {
                         ? 'bg-white text-purple-900 shadow-sm scale-102'
                         : 'text-white/80 hover:text-white'
                     }`}
-                    title="हिंदी में देखें"
+                    title="हिंदी में अनुवाद करें"
                   >
-                    🇮🇳 हिंदी
+        : targetLang === 'hi' ? 'हिंदी अनुवाद सक्रिय किया गया'
                   </button>
                 </div>
 
@@ -2441,7 +3415,7 @@ export default function GetStarted() {
                             : 'bg-slate-100 text-slate-400 opacity-40'
                         }`}>
                           {aiAnalysisStage > 1 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
-                          <span>{aiModalLang === 'bn' ? '১. বিজনেস মডেল ও স্পেসিফিকেশন বিশ্লেষণ হচ্ছে...' : aiModalLang === 'hi' ? '1. बिजनेस मॉडल और आवश्यकताओं का विश्लेषण...' : '1. Analyzing business model & requirements...'}</span>
+                          <span>{aiModalLang === 'bn' ? '১. বিজনেস মডেল ও স্পেসিফিকেশন বিশ্লেষণ হচ্ছে...' : aiModalLang === 'hi' ? '1. बिज़नेस मॉडल और आवश्यकताओं का विश्लेषण...' : '1. Analyzing business model & requirements...'}</span>
                         </div>
 
                         <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
@@ -2450,7 +3424,7 @@ export default function GetStarted() {
                             : 'bg-slate-100 text-slate-400 opacity-40'
                         }`}>
                           {aiAnalysisStage > 2 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
-                          <span>{aiModalLang === 'bn' ? '২. ফুল-স্ট্যাক সফটওয়্যার আর্কিটেকচার তৈরি হচ্ছে...' : aiModalLang === 'hi' ? '2. सॉफ्टवेयर आर्किटेक्चर और डेटाबेस संरचना...' : '2. Synthesizing full-stack architecture & modules...'}</span>
+                          <span>{aiModalLang === 'bn' ? '২. ফুল-স্ট্যাক সফটওয়্যার আর্কিটেকচার তৈরি হচ্ছে...' : aiModalLang === 'hi' ? '2. सॉफ्टवेयर आर्किटेक्चर और डेटाबेस संरचना...' : '2. Synthesizing full-stack architecture & modules...'}</span>
                         </div>
 
                         <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
@@ -2502,7 +3476,7 @@ export default function GetStarted() {
                   >
                     <Languages className="w-3.5 h-3.5" />
                     <span>
-                      {aiModalLang === 'bn' ? '🌐 Switch to English' : '🇧🇩 বাংলায় অনুবাদ করুন'}
+                      {aiModalLang === 'bn' ? 'Switch to English' : 'বাংলায় অনুবাদ করুন'}
                     </span>
                   </button>
                 )}
