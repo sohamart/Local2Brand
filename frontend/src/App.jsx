@@ -77,6 +77,7 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }
         <Route path="/demos" element={<Demos />} />
         <Route path="/demos/:slug" element={<LiveDemoViewer />} />
         <Route path="/demo/:slug" element={<LiveDemoViewer />} />
+        <Route path="/live-demo/:slug" element={<LiveDemoViewer />} />
         <Route path="/preview/:templateId" element={<LiveDemoViewer />} />
         <Route path="/live/:templateId" element={<LiveDemoViewer />} />
         <Route path="/details/:slug" element={<LiveDemoViewer />} />

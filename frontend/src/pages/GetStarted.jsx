@@ -57,7 +57,11 @@ import {
   Calendar,
   Scale,
   Heart,
-  Eye
+  Eye,
+  Monitor,
+  Tablet,
+  Smartphone,
+  CheckCircle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -164,133 +168,9 @@ const TRANSLATIONS = {
     ]
   }
 };
-// Presets for Template Auto-Apply
-const FALLBACK_TEMPLATE_SPECS = {
-  restaurant: {
-    slug: 'restaurant',
-    category: 'Restaurant & Dining',
-    categorySlug: 'restaurant',
-    title: 'Royal Nawabi Fine Dining & Table Reservation Hub',
-    price: '₹5,999',
-    turnaround: '2 - 4 Days',
-    liveUrl: 'https://royal-nawabi-demo.vercel.app',
-    heroImage: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=600&auto=format&fit=crop',
-    features: ['Digital Interactive Food Menu', 'Online Table Booking System', 'WhatsApp Takeaway Orders', 'Chef Specials Showcase']
-  },
-  cafe: {
-    slug: 'cafe',
-    category: 'Café & Bakery',
-    categorySlug: 'cafe',
-    title: 'Velvet Roast Artisan Café & Bakery Experience',
-    price: '₹4,999',
-    turnaround: '2 - 3 Days',
-    liveUrl: 'https://velvet-roast-demo.vercel.app',
-    heroImage: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=600&auto=format&fit=crop',
-    features: ['Aesthetic Visual Menu & Coffee Brews', 'Takeout Pickup Ordering', 'Instagram Feed Embed', 'Google Maps Store Locator']
-  },
-  salon: {
-    slug: 'salon',
-    category: 'Salon, Spa & Beauty',
-    categorySlug: 'salon',
-    title: 'Aura Luxe Unisex Luxury Salon & Spa Studio',
-    price: '₹5,499',
-    turnaround: '2 - 4 Days',
-    liveUrl: 'https://aura-luxe-salon-demo.vercel.app',
-    heroImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=600&auto=format&fit=crop',
-    features: ['Stylist Portfolio & Reviews', 'Service Rate-Card with Duration', 'Appointment Booking Calendar', 'WhatsApp Booking Sync']
-  },
-  gym: {
-    slug: 'gym',
-    category: 'Gym & Fitness Hub',
-    categorySlug: 'gym',
-    title: 'IronForge Elite Fitness & CrossFit Club',
-    price: '₹5,999',
-    turnaround: '3 - 5 Days',
-    heroImage: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600&auto=format&fit=crop',
-    features: ['Membership Tier Calculator', 'Live Class Weekly Schedule', 'Trainer Profiles', 'Free 1-Day Trial Pass']
-  },
-  hotel: {
-    slug: 'hotel',
-    category: 'Hotel & Homestay',
-    categorySlug: 'hotel',
-    title: 'Grand Heritage Palace Resort & Luxury Suites',
-    price: '₹8,999',
-    turnaround: '4 - 7 Days',
-    heroImage: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=600&auto=format&fit=crop',
-    features: ['Room Categories & Tariff Grid', 'Virtual 360 Suite Tours', 'Direct Booking Enquiry Form', 'Local Concierge Guide']
-  },
-  real_estate: {
-    slug: 'real_estate',
-    category: 'Real Estate Developer',
-    categorySlug: 'real_estate',
-    title: 'PrimeEstate Luxury Villas & Commercial Realty',
-    price: '₹9,999',
-    turnaround: '4 - 7 Days',
-    heroImage: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop',
-    features: ['Interactive Property Search & Filters', 'High-Res Floor Plans', 'EMI & Loan Calculator', 'Instant Site Visit Booking']
-  },
-  lms: {
-    slug: 'lms',
-    category: 'LMS & Online Courses',
-    categorySlug: 'coaching',
-    title: 'SkillCraft Pro LMS & Online Course Selling Platform',
-    price: '₹6,999',
-    turnaround: '3 - 7 Days',
-    liveUrl: 'https://skillcraft-lms-demo.vercel.app',
-    heroImage: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop',
-    features: ['Full Video Lecture Player', 'Student Dashboard with Progress', '1-Click Course Checkout', 'Certificate Generation']
-  },
-  ecommerce: {
-    slug: 'ecommerce',
-    category: 'E-Commerce Store',
-    categorySlug: 'ecommerce',
-    title: 'NextGen E-Commerce & Direct WhatsApp Shopping',
-    price: '₹7,999',
-    turnaround: '3 - 5 Days',
-    heroImage: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=600&auto=format&fit=crop',
-    features: ['Catalog Management & Filters', 'Cart & Instant Razorpay / COD', 'Direct WhatsApp 1-Click Order', 'Inventory Tracker']
-  },
-  jewellery: {
-    slug: 'jewellery',
-    category: 'Jewellery & Luxury Goods',
-    categorySlug: 'jewellery',
-    title: 'Sparkle Aura Luxury Jewellery & Bridal Lookbook',
-    price: '₹8,499',
-    turnaround: '3 - 5 Days',
-    heroImage: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=600&auto=format&fit=crop',
-    features: ['Gold & Diamond Catalog Showcase', 'Bridal Collection Lookbook', 'Direct WhatsApp Price Quote', 'Certificate Authenticity Verify']
-  },
-  photography: {
-    slug: 'photography',
-    category: 'Photography & Studio',
-    categorySlug: 'photography',
-    title: 'Aesthetic Lens Wedding & Studio Portfolio',
-    price: '₹5,999',
-    turnaround: '2 - 4 Days',
-    heroImage: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?q=80&w=600&auto=format&fit=crop',
-    features: ['High-Res Portfolio Albums', 'Wedding Shoot Packages', 'Date Availability Calendar', 'Client Proofing Gallery']
-  },
-  showroom: {
-    slug: 'showroom',
-    category: 'Automobile & Showroom',
-    categorySlug: 'showroom',
-    title: 'DriveElite Superbike & Automobile Inventory',
-    price: '₹8,999',
-    turnaround: '4 - 6 Days',
-    heroImage: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=600&auto=format&fit=crop',
-    features: ['Vehicle 360 Showcase & Specs', 'EMI Monthly Calculator', 'Instant Test Drive Booking', 'Trade-in Valuation Form']
-  },
-  coaching: {
-    slug: 'coaching',
-    category: 'Coaching & Academy',
-    categorySlug: 'coaching',
-    title: 'Apex Academy Coaching & Online Batch Portal',
-    price: '₹6,499',
-    turnaround: '3 - 5 Days',
-    heroImage: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=600&auto=format&fit=crop',
-    features: ['Batch Schedule & Free Demo Booking', 'Course Syllabus PDF Download', 'Student Testimonials & Results', 'Online Admission Form']
-  }
-};
+
+const FALLBACK_TEMPLATE_SPECS = {};
+
 
 const mapSlugToCategorySlug = (slugOrCat = '') => {
   const s = String(slugOrCat).toLowerCase().trim();
@@ -840,7 +720,7 @@ export default function GetStarted() {
   // AI Modal Tab & Language Selection ('step' | 'full', 'bn' | 'en' | 'hi')
   const [aiModalTab, setAiModalTab] = useState('step');
   const [aiModalStepIndex, setAiModalStepIndex] = useState(0);
-  const [aiModalLang, setAiModalLang] = useState(lang || 'bn');
+  const [aiModalLang, setAiModalLang] = useState(lang || 'en');
 
   const stepScrollContainerRef = useRef(null);
 
@@ -1159,7 +1039,7 @@ export default function GetStarted() {
   };
 
     // Explicit Manual Save Action with Toast Feedback
-  const handleManualSave = () => {
+  const handleManualSave = (silent = false) => {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('l2b_get_started_step', String(currentStepIndex));
@@ -1171,16 +1051,18 @@ export default function GetStarted() {
         const now = new Date();
         const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         setLastSavedTime(timeStr);
-        toast.success(
-          lang === 'bn'
-            ? '✨ আপনার সমস্ত তথ্য ও কুপন সফলভাবে সেভ করা হয়েছে!'
-            : lang === 'hi'
-            ? '✨ आपकी सभी जानकारी और कूपन सफलतापूर्वक सहेजे गए!'
-            : '✨ Progress and coupon saved successfully!'
-        );
+        if (!silent) {
+          toast.success(
+            lang === 'bn'
+              ? '✨ আপনার সমস্ত তথ্য ও কুপন সফলভাবে সেভ করা হয়েছে!'
+              : lang === 'hi'
+              ? '✨ आपकी सभी जानकारी और कूपन सफलतापूर्वक सहेजे गए!'
+              : '✨ Progress and coupon saved successfully!'
+          );
+        }
       } catch (err) {
         console.warn('Manual save error:', err);
-        toast.error('Failed to save progress locally');
+        if (!silent) toast.error('Failed to save progress locally');
       }
     }
   };
@@ -1425,7 +1307,7 @@ export default function GetStarted() {
   const handleOpenStepAiSummary = (stepIdx = currentStepIndex) => {
     setAiModalTab('step');
     setAiModalStepIndex(typeof stepIdx === 'number' ? stepIdx : currentStepIndex);
-    setAiModalLang(lang || 'bn');
+    setAiModalLang(lang || 'en');
     setIsAiModalOpen(true);
   };
 
@@ -1866,19 +1748,17 @@ export default function GetStarted() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-              {appliedTemplate.liveUrl && (
-                <a
-                  href={appliedTemplate.liveUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-all"
-                  title="Open live preview in new tab"
-                >
-                  <Globe className="w-3 h-3" />
-                  <span>{lang === 'bn' ? 'লাইভ প্রিভিউ' : 'Live Preview'}</span>
-                  <ExternalLink className="w-2.5 h-2.5 text-blue-400" />
-                </a>
-              )}
+              <a
+                href={`/demos/${appliedTemplate.slug || 'restaurant'}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs active:scale-95"
+                title="Open live interactive demo preview page"
+              >
+                <Eye className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                <span>{lang === 'bn' ? 'লাইভ প্রিভিউ' : 'Live Preview'}</span>
+                <ExternalLink className="w-3 h-3 opacity-70" />
+              </a>
               <button
                 type="button"
                 onClick={handleManualSave}
@@ -2074,39 +1954,35 @@ export default function GetStarted() {
                   </div>
 
                   
-                  {/* Step 1 Interactive Live Template Gallery */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                      <div>
-                        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
-                          <Sparkles className="w-4 h-4 text-purple-600" />
-                          <span>{lang === 'bn' ? 'রেডিমেড লাইভ ডেমো টেমপ্লেট সিলেক্টর' : lang === 'hi' ? 'लाइव डेमो टेम्पलेट्स चयन' : 'Live Ready-to-Launch Templates'}</span>
-                          <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
-                            {Object.keys(FALLBACK_TEMPLATE_SPECS).length + (databaseDemos?.length || 0)} {lang === 'bn' ? 'টি টেমপ্লেট' : 'Templates'}
-                          </span>
-                        </h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {lang === 'bn' ? 'যেকোনো টেমপ্লেট সিলেক্ট করলে তার সমস্ত ফিচার, পেজ ও স্পেক্স ১-ক্লিকে ফর্মে যুক্ত হয়ে যাবে।' : 'Select any live demo template to auto-populate all features, pages, and specs.'}
-                        </p>
+                  {/* Step 1 Interactive Live Template Gallery - ONLY DATABASE TEMPLATES */}
+                  {databaseDemos && databaseDemos.length > 0 && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-sm">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div>
+                          <h4 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <Sparkles className="w-4 h-4 text-purple-600" />
+                            <span>{lang === 'bn' ? 'ডাটাবেস লাইভ ডেমো টেমপ্লেট' : lang === 'hi' ? 'लाइव डेमो टेम्पलेट्स' : 'Live Ready-to-Launch Templates'}</span>
+                            <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
+                              {databaseDemos.length} {lang === 'bn' ? 'টি টেমপ্লেট' : 'Templates'}
+                            </span>
+                          </h4>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {lang === 'bn' ? 'যেকোনো টেমপ্লেট সিলেক্ট করলে তার সমস্ত ফিচার, পেজ ও স্পেক্স ১-ক্লিকে ফর্মে যুক্ত হয়ে যাবে।' : 'Select any live demo template to auto-populate all features, pages, and specs.'}
+                          </p>
+                        </div>
+
+                        {appliedTemplate && (
+                          <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800 shrink-0">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{lang === 'bn' ? 'টেমপ্লেট সিলেক্টেড' : 'Template Active'}</span>
+                          </div>
+                        )}
                       </div>
 
-                      {appliedTemplate && (
-                        <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800 shrink-0">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>{lang === 'bn' ? 'টেমপ্লেট সিলেক্টেড' : 'Template Active'}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Template Cards Grid */}
-                    {(() => {
-                      // Merge fallback specs and dynamic database demos
-                      const allTemplatesMap = new Map();
-                      Object.values(FALLBACK_TEMPLATE_SPECS).forEach(t => allTemplatesMap.set(t.slug, t));
-                      (databaseDemos || []).forEach(d => {
-                        const s = d.slug || d._id;
-                        allTemplatesMap.set(s, {
-                          slug: s,
+                      {/* Template Cards Grid - STRICTLY ONLY DATABASE DEMOS */}
+                      {(() => {
+                        const allTemplatesList = (databaseDemos || []).map(d => ({
+                          slug: d.slug || d._id,
                           title: d.title,
                           category: d.category || 'Website Template',
                           categorySlug: mapSlugToCategorySlug(d.category || d.slug),
@@ -2115,16 +1991,12 @@ export default function GetStarted() {
                           liveUrl: d.liveUrl || '',
                           heroImage: d.heroImage || d.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop',
                           features: Array.isArray(d.features) ? d.features : []
-                        });
-                      });
+                        }));
+                        const matchingTemplates = allTemplatesList.filter(t => t.categorySlug === formData.websiteType);
+                        const displayList = matchingTemplates.length > 0 ? matchingTemplates : allTemplatesList;
 
-                      const allTemplatesList = Array.from(allTemplatesMap.values());
-                      // Filter by selected category if matching, or show all
-                      const matchingTemplates = allTemplatesList.filter(t => t.categorySlug === formData.websiteType);
-                      const displayList = matchingTemplates.length > 0 ? matchingTemplates : allTemplatesList;
-
-                      return (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           {displayList.map((tpl) => {
                             const isCurrentSelected = appliedTemplate?.slug === tpl.slug || formData.websiteTypeName === tpl.title;
 
@@ -2171,11 +2043,11 @@ export default function GetStarted() {
                                 {/* Action Buttons: Live Demo & Apply */}
                                 <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
                                   <a
-                                    href={tpl.liveUrl || `/live-demo/${tpl.slug}`}
+                                    href={`/demos/${tpl.slug}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex-1 py-2 px-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-                                    title="Open live interactive demo preview"
+                                    className="flex-1 py-2 px-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
+                                    title="Open live interactive demo preview page"
                                   >
                                     <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                                     <span>{lang === 'bn' ? 'লাইভ ডেমো' : lang === 'hi' ? 'लाइव डेमो' : 'Live Demo'}</span>
@@ -2200,7 +2072,7 @@ export default function GetStarted() {
                                         timeline: `⚡ Express Delivery (${tpl.turnaround})`,
                                         selectedFeatures: tpl.features?.length > 0 ? Array.from(new Set([...prev.selectedFeatures, ...tpl.features])) : prev.selectedFeatures
                                       }));
-                                      handleManualSave();
+                                      handleManualSave(true);
                                       toast.success(
                                         lang === 'bn'
                                           ? `🎯 টেমপ্লেট "${tpl.title}" সফলভাবে অ্যাপ্লাই করা হয়েছে!`
@@ -2235,6 +2107,7 @@ export default function GetStarted() {
                       );
                     })()}
                   </div>
+                  )}
 
                   {/* Step 1 Quick Coupon & Autosave Box */}
                   <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-500/5 via-amber-500/5 to-pink-500/5 dark:from-purple-950/30 dark:via-slate-900/60 dark:to-amber-950/20 border border-purple-200/80 dark:border-purple-800/80 space-y-3.5 shadow-xs">
