@@ -57,7 +57,8 @@ const STATUS_BADGES = {
   'Approved': 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-300',
   'In Development': 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-300',
   'Completed': 'bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-teal-300',
-  'Cancelled': 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-300'
+  'Cancelled': 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-300',
+  'Rejected': 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-300'
 };
 
 const TRACKING_STAGES = [
@@ -79,6 +80,7 @@ const getStageProgress = (status) => {
     case 'In Development': return 85;
     case 'Completed': return 100;
     case 'Cancelled': return 0;
+    case 'Rejected': return 0;
     default: return 25;
   }
 };
@@ -93,6 +95,7 @@ const getStageIndex = (status) => {
     case 'In Development': return 3;
     case 'Completed': return 5;
     case 'Cancelled': return -1;
+    case 'Rejected': return -1;
     default: return 0;
   }
 };
@@ -897,6 +900,31 @@ export default function UserDashboard() {
               </button>
             </div>
 
+            {/* Non-Accepted / Rejected Orders Notification Banner */}
+            {requirements.some((r) => r.status === 'Rejected') && (
+              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
+                    <AlertCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-rose-900 dark:text-rose-200">
+                      One or more website project submissions were not accepted
+                    </h4>
+                    <p className="text-xs text-rose-700 dark:text-rose-300 mt-0.5">
+                      Please check your email for the detailed architectural review, or view the reason on the rejected card below.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => openOrderModal()}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-xs cursor-pointer shrink-0 transition-all"
+                >
+                  Start Revised Project
+                </button>
+              </div>
+            )}
+
             {/* Empty State */}
             {requirements.length === 0 && inquiries.length === 0 ? (
               <div className="glass-panel p-8 sm:p-14 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
@@ -955,6 +983,22 @@ export default function UserDashboard() {
                             {req.status || 'Submitted'}
                           </span>
                         </div>
+
+                        {/* Rejection / Non-Acceptance Notice on Card */}
+                        {req.status === 'Rejected' && (
+                          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 space-y-1.5 text-xs">
+                            <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-300 font-extrabold uppercase text-[10px] tracking-wider">
+                              <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                              <span>Project Submission Not Accepted</span>
+                            </div>
+                            <p className="text-slate-800 dark:text-slate-200 font-bold">
+                              {req.rejectionReason ? `Reason: ${req.rejectionReason}` : 'Project parameters could not be accepted. Check your email for details.'}
+                            </p>
+                            <p className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold">
+                              💡 Check your email for full review details or submit a revised project specification.
+                            </p>
+                          </div>
+                        )}
 
                         {/* Spec Key Metrics */}
                         <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-3 sm:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">

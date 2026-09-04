@@ -21,7 +21,8 @@ import {
   DollarSign,
   Lock,
   Activity,
-  BarChart3
+  BarChart3,
+  Cloud
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
@@ -35,6 +36,7 @@ const NAV_ITEMS = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard, exact: true },
   { label: 'Traffic & Live Analytics', href: '/admin/analytics', icon: Activity },
   { label: 'Requirement Submissions', href: '/admin/requirements', icon: Layers },
+  { label: 'Cloudinary Storage', href: '/admin/media', icon: Cloud },
   { label: 'Pricing Packages', href: '/admin/pricing', icon: DollarSign },
   { label: 'Dynamic Form Builder', href: '/admin/form-builder', icon: Sliders },
   { label: 'Project Inquiries', href: '/admin/leads', icon: Inbox },

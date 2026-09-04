@@ -59,6 +59,7 @@ import AdminBroadcast from './pages/Admin/AdminBroadcast';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminReviews from './pages/Admin/AdminReviews';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
+import AdminMedia from './pages/Admin/AdminMedia';
 
 
 function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }) {
@@ -106,7 +107,7 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="requirements" element={<AdminRequirements />} />
           <Route path="pricing" element={<AdminPricing />} />
-
+          <Route path="media" element={<AdminMedia />} />
           <Route path="form-builder" element={<AdminFormBuilder />} />
           <Route path="leads" element={<AdminLeads />} />
           <Route path="callbacks" element={<AdminCallbacks />} />

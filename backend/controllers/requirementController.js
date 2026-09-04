@@ -1,11 +1,13 @@
 import Requirement from '../models/Requirement.js';
 import { dataStore } from '../config/dataAdapter.js';
+import { deleteCloudinaryMedia } from '../config/cloudinary.js';
 import {
   sendRequirementConfirmationEmail,
   sendAdminRequirementAlert,
   sendRequirementStatusUpdateEmail,
   sendOrderDeliveredEmail,
   sendRequirementDeletionEmail,
+  sendRequirementRejectedEmail,
   sendAdminRequirementDeletionAlert
 } from '../utils/email.js';
 
@@ -356,7 +358,20 @@ export const getAllRequirements = async (req, res) => {
 export const updateRequirementStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, internalNotes, quotedAmount } = req.body;
+    const { status, internalNotes, quotedAmount, rejectionReason, reason } = req.body;
+    const finalRejectionReason = rejectionReason || reason || (status === 'Rejected' ? internalNotes : '');
+
+    const updatePayload = {
+      status,
+      internalNotes,
+      quotedAmount,
+      updatedAt: new Date()
+    };
+
+    if (status === 'Rejected' || status === 'Cancelled') {
+      updatePayload.rejectionReason = finalRejectionReason;
+      updatePayload.rejectedAt = new Date();
+    }
 
     let updated = null;
     if (mongoose.connection.readyState === 1) {
@@ -364,7 +379,7 @@ export const updateRequirementStatus = async (req, res) => {
         const { default: Requirement } = await import('../models/Requirement.js');
         updated = await Requirement.findOneAndUpdate(
           { $or: [{ requirementId: id }, ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : [])] },
-          { $set: { status, internalNotes, quotedAmount, updatedAt: new Date() } },
+          { $set: updatePayload },
           { new: true }
         );
       } catch (e) {
@@ -373,26 +388,27 @@ export const updateRequirementStatus = async (req, res) => {
     }
 
     if (!updated) {
-      updated = dataStore.update('requirements', id, { status, internalNotes, quotedAmount, updatedAt: new Date().toISOString() });
+      updated = dataStore.update('requirements', id, { ...updatePayload, updatedAt: new Date().toISOString() });
     }
 
     if (!updated) {
       return res.status(200).json({
         success: true,
         message: `Status updated to ${status}`,
-        requirement: { id, status }
+        requirement: { id, status, rejectionReason: finalRejectionReason }
       });
     }
 
-    // Automatically send appropriate status/delivery email to client
-    if (updated.clientInfo?.email) {
-      if (status === 'Completed' || status === 'Delivered') {
+    // Automatically send appropriate status/delivery/rejection email to client
+    if (updated.clientInfo?.email || updated.email) {
+      if (status === 'Rejected' || status === 'Cancelled') {
+        sendRequirementRejectedEmail(updated, finalRejectionReason).catch((err) => console.warn('Rejection email notice:', err.message));
+      } else if (status === 'Completed' || status === 'Delivered') {
         sendOrderDeliveredEmail(updated).catch((err) => console.warn('Delivery handover email notice:', err.message));
       } else {
         sendRequirementStatusUpdateEmail(updated).catch((err) => console.warn('Status email update notice:', err.message));
       }
     }
-
 
     res.status(200).json({
       success: true,
@@ -411,6 +427,7 @@ export const updateRequirementStatus = async (req, res) => {
 export const deleteRequirement = async (req, res) => {
   try {
     const { id } = req.params;
+    const reason = req.body?.reason || req.query?.reason || '';
     let doc = null;
 
     if (mongoose.connection.readyState === 1) {
@@ -438,19 +455,33 @@ export const deleteRequirement = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Requirement submission not found' });
     }
 
+    // Automatically remove attached photos from Cloudinary
+    try {
+      const allDocImages = [
+        ...(Array.isArray(doc.images) ? doc.images : []),
+        ...(Array.isArray(doc.uploadedImages) ? doc.uploadedImages : []),
+        ...(doc.answers && typeof doc.answers === 'object' && Array.isArray(doc.answers.images) ? doc.answers.images : [])
+      ];
+      if (allDocImages.length > 0) {
+        deleteCloudinaryMedia(allDocImages).catch((err) => console.warn('Cloudinary auto-delete notice:', err.message));
+      }
+    } catch (cloudDelErr) {
+      console.warn('Cloudinary delete error:', cloudDelErr.message);
+    }
+
     // Fire email notifications to user (if email available) and admin
     try {
       if (doc.clientInfo?.email || doc.email) {
-        sendRequirementDeletionEmail(doc).catch((err) => console.warn('Client deletion email error:', err.message));
+        sendRequirementDeletionEmail(doc, reason).catch((err) => console.warn('Client deletion email error:', err.message));
       }
-      sendAdminRequirementDeletionAlert(doc).catch((err) => console.warn('Admin deletion alert error:', err.message));
+      sendAdminRequirementDeletionAlert(doc, reason).catch((err) => console.warn('Admin deletion alert error:', err.message));
     } catch (mailErr) {
       console.warn('Deletion email dispatch error:', mailErr.message);
     }
 
     return res.status(200).json({
       success: true,
-      message: `Requirement submission #${doc.requirementId || id} deleted permanently from database.`,
+      message: `Requirement submission #${doc.requirementId || id} deleted permanently from database and Cloudinary storage.`,
       deletedId: id
     });
   } catch (error) {

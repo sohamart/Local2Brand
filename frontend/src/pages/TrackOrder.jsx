@@ -38,7 +38,8 @@ const STATUS_BADGES = {
   'Approved': 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800',
   'In Development': 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800',
   'Completed': 'bg-teal-100 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 border-teal-300 dark:border-teal-800',
-  'Cancelled': 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800'
+  'Cancelled': 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800',
+  'Rejected': 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800'
 };
 
 const TRACKING_STAGES = [
@@ -60,6 +61,7 @@ const getStageProgress = (status) => {
     case 'In Development': return 85;
     case 'Completed': return 100;
     case 'Cancelled': return 0;
+    case 'Rejected': return 0;
     default: return 25;
   }
 };
@@ -74,6 +76,7 @@ const getStageIndex = (status) => {
     case 'In Development': return 3;
     case 'Completed': return 5;
     case 'Cancelled': return -1;
+    case 'Rejected': return -1;
     default: return 0;
   }
 };
@@ -426,6 +429,33 @@ export default function TrackOrder() {
                     </span>
                   </div>
                 </div>
+
+                {/* Rejection / Non-Acceptance Notice Banner */}
+                {trackedOrder.status === 'Rejected' && (
+                  <div className="p-4 sm:p-5 rounded-2xl bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-800 space-y-3">
+                    <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-extrabold uppercase text-xs tracking-wider">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>Project Requirement Submission Not Accepted</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-rose-100 dark:border-rose-900/60 text-xs sm:text-sm text-slate-800 dark:text-slate-200 shadow-2xs">
+                      <strong className="text-rose-700 dark:text-rose-400 block text-[11px] uppercase font-bold mb-1">Architect Review Reason:</strong>
+                      <p className="font-semibold leading-relaxed">
+                        {trackedOrder.rejectionReason || 'Project parameters could not be approved at this time. Please check your registered email for complete technical feedback from our lead engineer.'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1 text-xs">
+                      <span className="text-slate-600 dark:text-slate-400">
+                        Check your email for details or submit a fresh specification anytime.
+                      </span>
+                      <Link
+                        to="/get-started"
+                        className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-center shadow-xs transition-all cursor-pointer shrink-0"
+                      >
+                        Submit Revised Project 🚀
+                      </Link>
+                    </div>
+                  </div>
+                )}
 
                 {/* Progress Bar */}
                 <div className="space-y-1.5 sm:space-y-2">

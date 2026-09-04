@@ -39,6 +39,7 @@ import reviewRoutes from './routes/reviews.js';
 import chatRoutes from './routes/chat.js';
 import telemetryRoutes from './routes/telemetry.js';
 import analyticsRoutes from './routes/analytics.js';
+import mediaRoutes from './routes/media.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -194,6 +195,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/media', mediaRoutes);
 
 
 

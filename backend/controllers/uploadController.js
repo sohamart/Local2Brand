@@ -29,6 +29,19 @@ export const uploadImage = async (req, res) => {
       }
     }
 
+    if (filesList.length > 1) {
+      const seenFiles = new Set();
+      const uniqueFiles = [];
+      for (const f of filesList) {
+        const fileKey = `${f.originalname || ''}_${f.size || ''}_${f.mimetype || ''}`;
+        if (!seenFiles.has(fileKey)) {
+          seenFiles.add(fileKey);
+          uniqueFiles.push(f);
+        }
+      }
+      filesList = uniqueFiles;
+    }
+
     const uploadedUrls = [];
 
     // 1. Process Multipart Files

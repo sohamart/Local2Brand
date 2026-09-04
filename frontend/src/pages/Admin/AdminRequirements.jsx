@@ -152,25 +152,77 @@ export default function AdminRequirements() {
     }
   };
 
-  const handleDeleteRequirement = async (reqItem, e) => {
+  // Reject / Delete Modal State
+  const [deleteModalReq, setDeleteModalReq] = useState(null);
+  const [deleteActionType, setDeleteActionType] = useState('reject'); // 'reject' | 'delete'
+  const [deleteReason, setDeleteReason] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const QUICK_REJECTION_REASONS = [
+    'Budget mismatch for requested custom modules & complex logic',
+    'Incomplete project specifications or unverified client contact',
+    'Duplicate / test requirement submission',
+    'Outside agency technical scope / unsupported custom engine',
+    'Client requested cancellation / project put on hold'
+  ];
+
+  const handleOpenDeleteModal = (reqItem, e, defaultAction = 'reject') => {
     if (e) e.stopPropagation();
-    const reqId = reqItem.requirementId || reqItem._id;
-    const business = reqItem.clientInfo?.businessName || reqItem.websiteTypeName || 'Project Submission';
-    if (!window.confirm(`⚠️ Are you sure you want to permanently delete Requirement #${reqId} (${business}) from the database?\n\nThis will remove the record completely and dispatch deletion notification emails to the client and admins.`)) {
-      return;
-    }
+    setDeleteModalReq(reqItem);
+    setDeleteActionType(defaultAction);
+    setDeleteReason(reqItem.rejectionReason || '');
+  };
+
+  const handleConfirmAction = async () => {
+    if (!deleteModalReq) return;
+    const reqId = deleteModalReq.requirementId || deleteModalReq._id;
+    setIsDeleting(true);
+
     try {
-      const res = await api.delete(`/requirements/admin/${reqId}`);
-      if (res?.success) {
-        toast.success(`Requirement #${reqId} deleted from database. Notifications sent.`);
-        setRequirements((prev) => prev.filter((r) => r.requirementId !== reqId && r._id !== reqId));
-        if (selectedReq && (selectedReq.requirementId === reqId || selectedReq._id === reqId)) {
-          setSelectedReq(null);
+      if (deleteActionType === 'reject') {
+        // Soft Reject: Update status to 'Rejected' and save reason
+        const res = await api.patch(`/requirements/admin/${reqId}/status`, {
+          status: 'Rejected',
+          rejectionReason: deleteReason,
+          reason: deleteReason
+        });
+        if (res?.success) {
+          toast.success(`Project #${reqId} marked as Rejected. Client notified via email with reason.`);
+          setRequirements((prev) =>
+            prev.map((r) =>
+              (r.requirementId === reqId || r._id === reqId)
+                ? { ...r, status: 'Rejected', rejectionReason: deleteReason }
+                : r
+            )
+          );
+          if (selectedReq && (selectedReq.requirementId === reqId || selectedReq._id === reqId)) {
+            setSelectedReq((prev) => ({ ...prev, status: 'Rejected', rejectionReason: deleteReason }));
+          }
+          setDeleteModalReq(null);
+          setDeleteReason('');
+        }
+      } else {
+        // Permanent Delete: Remove from DB & delete Cloudinary images
+        const res = await api.delete(`/requirements/admin/${reqId}`, { reason: deleteReason });
+        if (res?.success) {
+          toast.success(`Requirement #${reqId} deleted from database and Cloudinary. Notification email dispatched.`);
+          setRequirements((prev) => prev.filter((r) => r.requirementId !== reqId && r._id !== reqId));
+          if (selectedReq && (selectedReq.requirementId === reqId || selectedReq._id === reqId)) {
+            setSelectedReq(null);
+          }
+          setDeleteModalReq(null);
+          setDeleteReason('');
         }
       }
     } catch (err) {
-      toast.error(err.message || 'Failed to delete requirement');
+      toast.error(err.message || 'Action failed. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
+  };
+
+  const handleDeleteRequirement = (reqItem, e) => {
+    handleOpenDeleteModal(reqItem, e, 'delete');
   };
 
   return (
@@ -310,20 +362,31 @@ export default function AdminRequirements() {
                   <span className="text-[11px] text-slate-400">
                     {new Date(req.createdAt || req.submittedAt).toLocaleDateString()}
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
-                      onClick={(e) => handleDeleteRequirement(req, e)}
-                      className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
+                      type="button"
+                      onClick={(e) => handleOpenDeleteModal(req, e, 'reject')}
+                      className="px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 hover:bg-amber-100 border border-amber-200 dark:border-amber-800 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Reject project submission"
+                    >
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Reject</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => handleOpenDeleteModal(req, e, 'delete')}
+                      className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 border border-rose-200 dark:border-rose-800 cursor-pointer transition-colors"
                       title="Delete requirement from database"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => handleOpenDetail(req)}
-                      className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm hover:bg-purple-500 cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-xl bg-purple-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm hover:bg-purple-500 cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>Inspect Answers</span>
+                      <span>Inspect</span>
                     </button>
                   </div>
                 </div>
@@ -378,17 +441,28 @@ export default function AdminRequirements() {
                       {new Date(req.createdAt || req.submittedAt).toLocaleDateString()}
                     </td>
                     <td className="p-4 text-right">
-                      <div className="inline-flex items-center gap-2">
+                      <div className="inline-flex items-center gap-1.5">
                         <button
+                          type="button"
                           onClick={() => handleOpenDetail(req)}
-                          className="px-3.5 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300 hover:bg-purple-100 font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+                          className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 dark:text-purple-300 hover:bg-purple-100 font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs text-xs"
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          <span>Inspect All Answers</span>
+                          <span>Inspect</span>
                         </button>
                         <button
-                          onClick={(e) => handleDeleteRequirement(req, e)}
-                          className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer shadow-xs"
+                          type="button"
+                          onClick={(e) => handleOpenDeleteModal(req, e, 'reject')}
+                          className="px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 hover:bg-amber-100 border border-amber-200 dark:border-amber-800 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors shadow-xs"
+                          title="Reject submission and notify user with reason"
+                        >
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Reject</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleOpenDeleteModal(req, e, 'delete')}
+                          className="p-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer shadow-xs"
                           title="Delete requirement permanently"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -825,24 +899,17 @@ export default function AdminRequirements() {
                     </div>
                   </div>
 
-                  {/* STEP 12: Delivery Speed & Additional Notes */}
+                  {/* STEP 5: Delivery & Budget */}
                   <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
                     <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
-                      <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center font-black text-[10px]">12</span>
-                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">Delivery Timeline &amp; Client Special Notes</h4>
+                      <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center font-black text-[10px]">5</span>
+                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">Delivery Timeline &amp; Budget Tier</h4>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div><span className="text-slate-500 block text-[10px] uppercase font-bold">Target Handover Timeline</span><strong className="text-purple-600 dark:text-purple-400 text-xs">{selectedReq.timeline}</strong></div>
                       <div><span className="text-slate-500 block text-[10px] uppercase font-bold">Selected Investment Tier</span><strong className="text-emerald-600 dark:text-emerald-400 text-xs">{selectedReq.budget}</strong></div>
                     </div>
-                    {selectedReq.additionalNotes && (
-                      <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800">
-                        <span className="text-[10px] font-extrabold uppercase text-purple-700 dark:text-purple-300 block mb-1">Client Special Instructions / Notes:</span>
-                        <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">{selectedReq.additionalNotes}</p>
-                      </div>
-                    )}
                   </div>
-
                 </div>
               )}
 
@@ -865,7 +932,7 @@ export default function AdminRequirements() {
                           onChange={(e) => setEditStatus(e.target.value)}
                           className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-purple-700 dark:text-purple-300 focus:outline-purple-500"
                         >
-                          {['Submitted', 'Under Review', 'Quotation Sent', 'Approved', 'In Development', 'Completed', 'Cancelled'].map((st) => (
+                          {['Submitted', 'Under Review', 'Quotation Sent', 'Approved', 'In Development', 'Completed', 'Rejected', 'Cancelled'].map((st) => (
                             <option key={st} value={st}>{st}</option>
                           ))}
                         </select>
@@ -918,11 +985,11 @@ export default function AdminRequirements() {
               {/* TAB 3: CLIENT CONTACT & SOCIALS */}
               {activeInspectTab === 'client' && (
                 <div className="space-y-4">
-                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-4">
-                    <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-4 text-xs">
+                    <div className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 pb-2">
                       <User className="w-4 h-4 text-purple-600" />
-                      <span>Complete Client Profile &amp; Routing Handles</span>
-                    </h4>
+                      <span>Client Authorized Coordinates</span>
+                    </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div><span className="text-slate-500 block text-[10px] uppercase font-bold">Owner / Contact</span><strong className="text-slate-900 dark:text-white text-xs">{selectedReq.clientInfo?.ownerName || 'N/A'}</strong></div>
@@ -1007,12 +1074,21 @@ export default function AdminRequirements() {
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleDeleteRequirement(selectedReq)}
+                  onClick={(e) => handleOpenDeleteModal(selectedReq, e, 'reject')}
+                  className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+                  title="Reject this submission with reason"
+                >
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>Reject Order</span>
+                </button>
+
+                <button
+                  onClick={(e) => handleOpenDeleteModal(selectedReq, e, 'delete')}
                   className="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
                   title="Delete this order permanently from database"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Delete Order</span>
+                  <span>Delete</span>
                 </button>
 
                 <a
@@ -1022,18 +1098,177 @@ export default function AdminRequirements() {
                   className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500 flex items-center gap-1.5 shadow-xs"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
-                  <span>WhatsApp Client</span>
+                  <span>WhatsApp</span>
                 </a>
 
                 <button
                   onClick={() => setSelectedReq(null)}
                   className="px-5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
                 >
-                  Close Inspect
+                  Close
                 </button>
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* REJECT / DELETE ACTION MODAL WITH REASON PROMPT          */}
+      {/* ======================================================== */}
+      {deleteModalReq && (
+        <div
+          data-lenis-prevent="true"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) setDeleteModalReq(null);
+          }}
+        >
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden space-y-4 p-5 sm:p-6 animate-in zoom-in-95">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shadow-sm shrink-0 ${
+                  deleteActionType === 'reject'
+                    ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700'
+                    : 'bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-700'
+                }`}>
+                  {deleteActionType === 'reject' ? <AlertCircle className="w-5 h-5" /> : <Trash2 className="w-5 h-5" />}
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                    {deleteActionType === 'reject' ? 'Reject / Decline Submission' : 'Permanently Delete Requirement'}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-mono">
+                    Order #{deleteModalReq.requirementId || deleteModalReq._id} • {deleteModalReq.clientInfo?.businessName || 'Client Project'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => !isDeleting && setDeleteModalReq(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Action Switcher Tabs */}
+            <div className="grid grid-cols-2 gap-2 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => setDeleteActionType('reject')}
+                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  deleteActionType === 'reject'
+                    ? 'bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 shadow-sm border border-amber-200 dark:border-amber-900'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                <span>Reject & Archive</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDeleteActionType('delete')}
+                className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  deleteActionType === 'delete'
+                    ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm border border-rose-200 dark:border-rose-900'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <span>Hard Delete</span>
+              </button>
+            </div>
+
+            {/* Info Callout */}
+            <div className={`p-3 rounded-2xl text-xs border ${
+              deleteActionType === 'reject'
+                ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-300'
+                : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-900 dark:text-rose-300'
+            }`}>
+              {deleteActionType === 'reject' ? (
+                <p>
+                  <strong>Notice:</strong> This marks the order status as <strong>"Rejected"</strong>. The client will receive an email stating why it was not accepted, and will see <em>"One project not accepted. Reason: [reason]"</em> in their client portal with an option to start a new project.
+                </p>
+              ) : (
+                <p>
+                  <strong>Warning:</strong> This permanently wipes the submission from MongoDB and <strong>automatically deletes all attached images from Cloudinary storage</strong>. A final deletion notice with your reason will be emailed to the client.
+                </p>
+              )}
+            </div>
+
+            {/* Reason Textarea & Quick Tags */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {deleteActionType === 'reject' ? 'Rejection Reason for Client:' : 'Deletion Reason (Included in Email):'}
+                </label>
+                <span className="text-[10px] text-slate-400">Required for client clarity</span>
+              </div>
+
+              <textarea
+                rows={3}
+                value={deleteReason}
+                onChange={(e) => setDeleteReason(e.target.value)}
+                placeholder="e.g. Budget mismatch for requested complex custom features, or unverified contact details..."
+                className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
+              />
+
+              {/* Quick Reason Suggestion Buttons */}
+              <div className="space-y-1 pt-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Quick Reason Suggestions:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {QUICK_REJECTION_REASONS.map((r, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setDeleteReason(r)}
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-700 dark:hover:bg-purple-950 dark:hover:text-purple-300 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer text-left"
+                    >
+                      + {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions Bottom Bar */}
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setDeleteModalReq(null)}
+                disabled={isDeleting}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmAction}
+                disabled={isDeleting}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-md flex items-center gap-2 cursor-pointer transition-all disabled:opacity-50 ${
+                  deleteActionType === 'reject'
+                    ? 'bg-amber-600 hover:bg-amber-500'
+                    : 'bg-rose-600 hover:bg-rose-500'
+                }`}
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Processing & Notifying...</span>
+                  </>
+                ) : (
+                  <>
+                    {deleteActionType === 'reject' ? <AlertCircle className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
+                    <span>{deleteActionType === 'reject' ? 'Confirm Rejection & Send Email' : 'Delete Permanently & Purge Cloudinary'}</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

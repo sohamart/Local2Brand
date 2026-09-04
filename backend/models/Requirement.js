@@ -79,9 +79,17 @@ const RequirementSchema = new mongoose.Schema({
       'Approved',
       'In Development',
       'Completed',
-      'Cancelled'
+      'Cancelled',
+      'Rejected'
     ],
     default: 'Submitted'
+  },
+  rejectionReason: {
+    type: String,
+    default: ''
+  },
+  rejectedAt: {
+    type: Date
   },
   internalNotes: {
     type: String,

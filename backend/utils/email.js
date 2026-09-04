@@ -3,19 +3,31 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Universal Base URL Resolver (Always respects CLIENT_URL / FRONTEND_URL from .env)
-export const getClientUrl = () => {
-  if (process.env.FRONTEND_URL) return process.env.FRONTEND_URL.replace(/\/$/, '');
-  
-  if (process.env.CLIENT_URL) {
+// Universal Base URL Resolver (Always respects CLIENT_URL / FRONTEND_URL from .env with path appending)
+export const getClientUrl = (path = '') => {
+  let base = '';
+  if (process.env.FRONTEND_URL) {
+    base = process.env.FRONTEND_URL.replace(/\/$/, '');
+  } else if (process.env.CLIENT_URL) {
     const rawUrls = process.env.CLIENT_URL.split(',').map((u) => u.trim().replace(/\/$/, '')).filter(Boolean);
-    // Prioritize production / public domains if configured in CLIENT_URL
-    const publicUrl = rawUrls.find((u) => !u.includes('localhost') && !u.includes('127.0.0.1'));
-    if (publicUrl) return publicUrl;
-    if (rawUrls.length > 0) return rawUrls[0];
+    if (rawUrls.length > 0) {
+      // Prioritize public production domain if available
+      const publicUrl = rawUrls.find((u) => !u.includes('localhost') && !u.includes('127.0.0.1'));
+      if (process.env.NODE_ENV === 'production' && publicUrl) {
+        base = publicUrl;
+      } else {
+        base = rawUrls[0];
+      }
+    }
   }
 
-  return 'https://local2brand.vercel.app';
+  if (!base) {
+    base = 'https://local2brand.vercel.app';
+  }
+
+  if (!path) return base;
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${cleanPath}`;
 };
 
 // Create transporter
@@ -980,7 +992,7 @@ export const sendGameRewardWinEmail = async ({ user, prize }) => {
 };
 
 // 14. Requirement Deletion Notice (to Client)
-export const sendRequirementDeletionEmail = async (reqDoc) => {
+export const sendRequirementDeletionEmail = async (reqDoc, reason = '') => {
   const clientEmail = reqDoc.clientInfo?.email || reqDoc.email;
   if (!clientEmail) return;
 
@@ -999,6 +1011,13 @@ export const sendRequirementDeletionEmail = async (reqDoc) => {
       <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
         This is a notification to confirm that your project requirement submission for <strong>${businessName}</strong> (Ref: <code style="font-family: monospace; font-weight: 800; color: #dc2626;">#${reqId}</code>) has been removed from our active project queue.
       </p>
+
+      ${reason ? `
+        <div class="bg-box border-theme" style="background-color: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 14px 16px; margin: 14px 0;">
+          <div style="font-size: 11px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Reason / Notes:</div>
+          <div style="font-size: 13px; font-weight: 700; color: #881337; line-height: 1.5;">${reason}</div>
+        </div>
+      ` : ''}
 
       <div class="bg-box border-theme" style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 14px 16px; margin: 16px 0;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
@@ -1035,11 +1054,77 @@ export const sendRequirementDeletionEmail = async (reqDoc) => {
     footerNote: 'Need help or want to re-open this? Reply directly to this email.',
   });
 
-  return await sendEmail({ to: clientEmail, subject, html, text: `Your project requirement #${reqId} for ${businessName} has been removed from our queue.` });
+  return await sendEmail({ to: clientEmail, subject, html, text: `Your project requirement #${reqId} for ${businessName} has been removed from our queue. Reason: ${reason || 'N/A'}` });
+};
+
+// 14b. Requirement Rejection Notice (to Client)
+export const sendRequirementRejectedEmail = async (reqDoc, reason = '') => {
+  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email;
+  if (!clientEmail) return;
+
+  const clientUrl = getClientUrl();
+  const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString().slice(-6).toUpperCase() : 'REQ-ID');
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Website Project';
+
+  const subject = `Important Update: Project #${reqId} Not Accepted — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Hi ${clientName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Thank you for submitting your website specifications for <strong>${businessName}</strong> (Ref: <code style="font-family: monospace; font-weight: 800; color: #e11d48;">#${reqId}</code>). After review by our architecture team, we are unable to accept or proceed with this project under the current parameters.
+      </p>
+
+      ${reason ? `
+        <div class="bg-box border-theme" style="background-color: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 14px 16px; margin: 16px 0;">
+          <div style="font-size: 11px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Reason for Non-Acceptance:</div>
+          <div style="font-size: 13px; font-weight: 700; color: #881337; line-height: 1.5;">${reason}</div>
+        </div>
+      ` : ''}
+
+      <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin: 16px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 700; width: 35%;">Submission ID:</td>
+            <td style="padding: 4px 0; color: #0f172a; font-family: monospace; font-weight: 800;">#${reqId}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 700;">Project / Brand:</td>
+            <td style="padding: 4px 0; color: #0f172a; font-weight: 700;">${businessName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 0; color: #64748b; font-weight: 700;">Status:</td>
+            <td style="padding: 4px 0; color: #e11d48; font-weight: 800;">Not Accepted / Rejected</td>
+          </tr>
+        </table>
+      </div>
+
+      <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">
+        If you would like to adjust the specifications, discuss custom requirements with our lead developer, or start a new inquiry, we would love to help you build your dream digital platform.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Important update regarding your project #${reqId} for ${businessName}.`,
+    headerBadge: '⚠️ PROJECT STATUS UPDATE',
+    title: `Project Submission Not Accepted`,
+    subtitle: `Project #${reqId} &bull; ${businessName}`,
+    orderId: reqId,
+    contentHtml,
+    ctaText: 'Submit Revised Requirement Form',
+    ctaUrl: `${clientUrl}/get-started`,
+    footerNote: 'Have questions or want to discuss alternatives? Reply directly to this email.',
+  });
+
+  return await sendEmail({ to: clientEmail, subject, html, text: `Your project requirement #${reqId} for ${businessName} was not accepted. Reason: ${reason || 'Parameters not supported'}` });
 };
 
 // 15. Admin Alert on Requirement Deletion
-export const sendAdminRequirementDeletionAlert = async (reqDoc) => {
+export const sendAdminRequirementDeletionAlert = async (reqDoc, reason = '') => {
   const recipients = ['sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'];
   const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString() : 'REQ-ID');
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Client';
@@ -1054,6 +1139,13 @@ export const sendAdminRequirementDeletionAlert = async (reqDoc) => {
       <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
         A project requirement submission has been permanently deleted from the database via the Admin Console.
       </p>
+
+      ${reason ? `
+        <div class="bg-box border-theme" style="background-color: #fff1f2; border: 1.5px solid #fda4af; border-radius: 12px; padding: 14px 16px; margin: 14px 0;">
+          <div style="font-size: 11px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Deletion Reason:</div>
+          <div style="font-size: 13px; font-weight: 700; color: #881337; line-height: 1.5;">${reason}</div>
+        </div>
+      ` : ''}
 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-top: 12px;">
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
@@ -1087,7 +1179,7 @@ export const sendAdminRequirementDeletionAlert = async (reqDoc) => {
     ctaUrl: `${getClientUrl()}/admin/requirements`,
   });
 
-  return await sendEmail({ to: recipients, subject, html, text: `Requirement #${reqId} for ${businessName} deleted from database.` });
+  return await sendEmail({ to: recipients, subject, html, text: `Requirement #${reqId} for ${businessName} deleted from database. Reason: ${reason || 'N/A'}` });
 };
 
 // 16. Callback Request Deletion Notice (to Client)

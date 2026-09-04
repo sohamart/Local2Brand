@@ -1602,14 +1602,13 @@ export default function GetStarted() {
         const data = new FormData();
         selectedFileObjects.forEach((f) => {
           data.append('images', f);
-          data.append('image', f);
         });
 
         try {
           const uploadRes = await api.post('/upload', data);
           if (uploadRes && uploadRes.success && (uploadRes.urls || uploadRes.url)) {
             const newUrls = uploadRes.urls || [uploadRes.url];
-            finalUploadedUrls = [...finalUploadedUrls, ...newUrls];
+            finalUploadedUrls = Array.from(new Set([...finalUploadedUrls, ...newUrls]));
             toast.update(uploadToastId, {
               render: `${selectedFileObjects.length} photo(s) uploaded successfully! ☁️`,
               type: 'success',

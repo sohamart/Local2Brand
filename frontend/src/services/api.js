@@ -39,7 +39,7 @@ class ApiClient {
       ...options.headers,
     };
 
-    if (!(options.body instanceof FormData)) {
+    if (options.body && !(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
     }
 
@@ -110,7 +110,7 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: 'POST',
-      body: body instanceof FormData ? body : JSON.stringify(body),
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
     });
   }
 
@@ -118,7 +118,7 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: 'PUT',
-      body: body instanceof FormData ? body : JSON.stringify(body),
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
     });
   }
 
@@ -126,12 +126,19 @@ class ApiClient {
     return this.request(endpoint, {
       ...options,
       method: 'PATCH',
-      body: body instanceof FormData ? body : JSON.stringify(body),
+      body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined),
     });
   }
 
-  delete(endpoint, options = {}) {
-    return this.request(endpoint, { ...options, method: 'DELETE' });
+  delete(endpoint, bodyOrOptions = {}) {
+    let finalBody = undefined;
+    let finalOptions = {};
+    if (bodyOrOptions && (bodyOrOptions.headers || bodyOrOptions.signal || bodyOrOptions.timeout)) {
+      finalOptions = bodyOrOptions;
+    } else if (bodyOrOptions && typeof bodyOrOptions === 'object' && Object.keys(bodyOrOptions).length > 0) {
+      finalBody = bodyOrOptions instanceof FormData ? bodyOrOptions : JSON.stringify(bodyOrOptions);
+    }
+    return this.request(endpoint, { ...finalOptions, method: 'DELETE', body: finalBody });
   }
 
   async uploadFile(file) {
