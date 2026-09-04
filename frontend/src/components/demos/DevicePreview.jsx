@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Monitor, Tablet, Smartphone, ExternalLink, ArrowRight, Sparkles, RefreshCw, Share2, ZoomIn, ZoomOut } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
+import { formatPriceByCountry } from '../../data/countryThemes';
 import ShareDemoModal from './ShareDemoModal';
 
 export default function DevicePreview({ demo, image, title, aspectRatio }) {
@@ -10,6 +11,7 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
   const [isInteractive, setIsInteractive] = useState(false);
   const { openOrderModal } = useOrderModal();
 
+  const userCountry = typeof window !== 'undefined' ? (localStorage.getItem('l2b_user_country') || 'India') : 'India';
 
   const stageRef = useRef(null);
   const [scale, setScale] = useState(1);
@@ -17,7 +19,7 @@ export default function DevicePreview({ demo, image, title, aspectRatio }) {
   const activeTitle = demo?.title || title || 'Website Demo';
   const activeCategory = demo?.category || 'Website Demo';
   const activeSlug = demo?.templateId || demo?.slug || 'restaurant';
-  const activePrice = demo?.priceInr || demo?.price || '₹4,999';
+  const activePrice = formatPriceByCountry(demo?.priceInr || demo?.price || 4999, userCountry);
 
   // Target viewport dimensions for authentic emulation (balanced heights)
   const targetWidth = deviceMode === 'desktop' ? 1200 : deviceMode === 'tablet' ? 768 : 375;

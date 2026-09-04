@@ -84,6 +84,7 @@ const CategorySchema = new mongoose.Schema({
   icon: { type: String, default: 'Globe' },
   badge: { type: String, default: '' },
   description: { type: String, default: '' },
+  basePrice: { type: Number, default: 9999 },
   popular: { type: Boolean, default: false },
   enabled: { type: Boolean, default: true },
   order: { type: Number, default: 0 }

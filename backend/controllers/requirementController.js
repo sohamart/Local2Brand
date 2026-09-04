@@ -354,21 +354,25 @@ export const getAllRequirements = async (req, res) => {
   }
 };
 
-// @desc    Update Requirement Status (Admin)
-// @route   PATCH /api/requirements/admin/:id/status
+// @desc    Update Requirement Status & Client Details (Admin)
+// @route   PUT/PATCH /api/requirements/admin/:id
 // @access  Admin
 export const updateRequirementStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, internalNotes, quotedAmount, rejectionReason, reason } = req.body;
+    const { status, internalNotes, quotedAmount, rejectionReason, reason, clientInfo, formData, answers } = req.body;
     const finalRejectionReason = rejectionReason || reason || (status === 'Rejected' ? internalNotes : '');
 
     const updatePayload = {
-      status,
-      internalNotes,
-      quotedAmount,
       updatedAt: new Date()
     };
+
+    if (status !== undefined) updatePayload.status = status;
+    if (internalNotes !== undefined) updatePayload.internalNotes = internalNotes;
+    if (quotedAmount !== undefined) updatePayload.quotedAmount = quotedAmount;
+    if (clientInfo !== undefined) updatePayload.clientInfo = clientInfo;
+    if (formData !== undefined) updatePayload.formData = formData;
+    if (answers !== undefined) updatePayload.answers = answers;
 
     if (status === 'Rejected' || status === 'Cancelled') {
       updatePayload.rejectionReason = finalRejectionReason;

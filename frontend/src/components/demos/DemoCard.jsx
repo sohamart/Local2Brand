@@ -2,12 +2,14 @@ import React, { useState, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ExternalLink, ShoppingBag, Sparkles, Clock, Star, ArrowRight, Share2, Rocket, X, CheckCircle2 } from 'lucide-react';
 import { useOrderModal } from '../../context/OrderModalContext';
+import { formatPriceByCountry } from '../../data/countryThemes';
 import ShareDemoModal from './ShareDemoModal';
 
 function DemoCardComponent({ demo, onShare }) {
   const { openOrderModal } = useOrderModal();
   const navigate = useNavigate();
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const userCountry = typeof window !== 'undefined' ? (localStorage.getItem('l2b_user_country') || 'India') : 'India';
 
   const demoSlug = demo.slug || demo.templateId || demo._id || 'lms';
   const isComingSoon = demo.status === 'coming_soon';
@@ -150,7 +152,7 @@ function DemoCardComponent({ demo, onShare }) {
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Investment</span>
               <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                {demo.priceInr || '₹4,999'} <span className="text-xs font-normal text-slate-400">/ {demo.price || '$99'}</span>
+                {formatPriceByCountry(demo.priceInr || demo.price || 4999, userCountry)}
               </div>
             </div>
 

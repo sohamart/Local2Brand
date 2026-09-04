@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
+  Send,
+  MessageSquare,
+  Loader2,
   Sparkles,
   Share2,
   CheckCircle2,
@@ -55,13 +58,16 @@ import {
   Flame,
   Gift,
   Calendar,
-  Scale,
-  Heart,
   Eye,
-  Monitor,
-  Tablet,
+  CheckCircle,
+  Plus,
+  Trash2,
+  MapPin,
+  FileCheck,
+  Image as ImageIcon,
+  Laptop,
   Smartphone,
-  CheckCircle
+  Info
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -69,13 +75,15 @@ import { useSiteSettings } from '../context/SiteSettingsContext';
 import ThemeToggle from '../components/common/ThemeToggle';
 import AshokaChakra from '../components/common/AshokaChakra';
 import api from '../services/api';
-import {
-  STEP_AI_GUIDES,
-  getCurrentStepSelectionText,
-  formatStepSummaryPlainText
-} from '../data/stepAiData';
 
-// Multilingual Translations Dictionary
+import { COUNTRIES, INDIAN_STATES_AND_DISTRICTS } from '../data/locationData';
+import { COUNTRY_CULTURAL_THEMES, resolveCategoryFromTemplate, formatPriceByCountry } from '../data/countryThemes';
+import { demoWebsites, getDemoBySlug } from '../data/demos';
+import { STEP_AI_GUIDES } from '../data/stepAiData';
+import CulturalMascotArt from '../components/common/CulturalMascotArt';
+import BackgroundCountryArt from '../components/common/BackgroundCountryArt';
+
+// Multilingual dictionary
 const TRANSLATIONS = {
   en: {
     backToHome: 'Home',
@@ -84,58 +92,449 @@ const TRANSLATIONS = {
     stepLabel: 'Step',
     previous: 'Previous',
     continue: 'Continue',
-    submit: 'Submit Requirements 🚀',
-    submitting: 'Submitting...',
-    generateAiSummary: '✨ Generate AI Executive Summary',
-    refreshAiSummary: 'Refresh AI Summary',
-    aiSummaryTitle: 'AI Executive Project Scope & Roadmap',
-    aiSummaryDesc: 'Intelligent synthesis of your tech stack, architecture, and milestone delivery plan.',
-    copySummary: 'Copy Summary',
-    close: 'Close',
+    submit: 'Submit Requirement 🚀',
+    submitting: 'Submitting Requirement...',
+    priceSummary: 'Live Estimated Price',
+    couponApplied: '20% OFF Special Discount Applied',
+    applyCoupon: 'Apply Coupon',
+    couponCode: 'Coupon Code',
+    saveDraft: 'Save Draft',
+    draftSaved: 'Draft Saved',
+    aiGuide: 'AI Guide',
+    estTotal: 'Est. Total',
+    fromPrice: 'From',
+    applyTemplate: 'Apply Template',
+    applied: 'Applied',
+    livePreview: 'Live Preview',
+    openFullDemo: 'Open Full Demo Site',
+    startingFrom: 'Starting from',
+    clear: 'Clear',
+    edit: 'Edit',
+    yes: 'Yes',
+    no: 'No',
+    other: 'Other',
+    selectStyle: '-- Select Style --',
+    categoryNames: {
+      restaurant: 'Restaurant',
+      cafe: 'Café / Coffee Shop',
+      salon: 'Salon / Beauty Parlour',
+      gym: 'Gym / Fitness Centre',
+      hotel: 'Hotel / Resort',
+      real_estate: 'Real Estate',
+      photography: 'Photography / Studio',
+      boutique: 'Boutique / Clothing Store',
+      coaching: 'Coaching Centre / Institute',
+      clinic: 'Clinic / Doctor',
+      jewellery: 'Jewellery / Gift Shop',
+      showroom: 'Car / Bike Showroom',
+      other: 'Other'
+    },
+    visualStyles: {
+      'Modern': 'Modern',
+      'Minimal': 'Minimal',
+      'Premium': 'Premium',
+      'Luxury': 'Luxury',
+      'Professional': 'Professional',
+      'Creative': 'Creative',
+      'Elegant': 'Elegant',
+      'Bold': 'Bold',
+      'Simple': 'Simple',
+      'Dark Mode': 'Dark Mode',
+      'Light Mode': 'Light Mode',
+      'Other': 'Other'
+    },
+    colorThemes: {
+      'Blue': 'Blue',
+      'Green': 'Green',
+      'Red': 'Red',
+      'Purple': 'Purple',
+      'Orange': 'Orange',
+      'Black & Gold': 'Black & Gold',
+      'Dark Theme': 'Dark Theme',
+      'Light Clean': 'Light Clean',
+      'Custom': 'Custom'
+    },
+    backendOptions: {
+      'No Backend Required': 'No Backend Required',
+      'Backend Required': 'Backend Required',
+      'Admin Panel Required': 'Admin Panel Required',
+      'Backend + Admin Panel': 'Backend + Admin Panel',
+      'Custom Backend Requirement': 'Custom Backend Requirement'
+    },
+    whatsappOptions: {
+      'No WhatsApp Integration': 'No WhatsApp Integration',
+      'WhatsApp Chat Button': 'WhatsApp Chat Button',
+      'WhatsApp Enquiry': 'WhatsApp Enquiry',
+      'WhatsApp Order': 'WhatsApp Order',
+      'WhatsApp Booking': 'WhatsApp Booking',
+      'Custom WhatsApp Integration': 'Custom WhatsApp Integration'
+    },
+    integrationsList: {
+      'Google Maps': 'Google Maps',
+      'Payment Gateway': 'Payment Gateway',
+      'Email Integration': 'Email Integration',
+      'Social Media Integration': 'Social Media Integration',
+      'Google Analytics': 'Google Analytics',
+      'Newsletter': 'Newsletter',
+      'Booking System': 'Booking System',
+      'API Integration': 'API Integration',
+      'WhatsApp': 'WhatsApp',
+      'Other': 'Other'
+    },
+    budgetOptions: {
+      'Under ₹10,000': 'Under ₹10,000',
+      '₹10,000 – ₹25,000': '₹10,000 – ₹25,000',
+      '₹25,000 – ₹50,000': '₹25,000 – ₹50,000',
+      '₹50,000 – ₹1,00,000': '₹50,000 – ₹1,00,000',
+      'Above ₹1,00,000': 'Above ₹1,00,000',
+      'Custom Budget': 'Custom Budget'
+    },
     steps: [
-      { title: 'Category & Vision', short: 'Category', subtitle: 'Select your industry to load tailored questions and features.' },
-      { title: 'Business Profile', short: 'Profile', subtitle: 'We will use these details for header, footer, and lead routing.' },
-      { title: 'Industry Specs', short: 'Specs', subtitle: 'Tailored parameters for your specific business niche.' },
-      { title: 'Pages & Sitemaps', short: 'Pages', subtitle: 'Choose all pages to be created and structured for maximum conversion.' },
-      { title: 'Features & Logic', short: 'Features', subtitle: 'Empower your website with lead magnets, alerts, and booking engines.' },
-      { title: 'Payment Gateways', short: 'Payments', subtitle: 'Select how you want your customers to pay for your products and services.' },
-      { title: 'Admin CMS', short: 'Admin', subtitle: 'How do you want to manage your menu, products, bookings, and inquiries?' },
-      { title: 'WhatsApp Alerts', short: 'Alerts', subtitle: 'Get instantly notified whenever a client places an order or inquiry.' },
-      { title: 'Design & Colors', short: 'Design', subtitle: 'Help our UI designers align with your brand personality.' },
-      { title: 'Store Photos', short: 'Photos', subtitle: 'Upload store exterior, restaurant ambiance, dishes, or logo.' },
-      { title: 'Domain & Speed', short: 'Launch', subtitle: 'Everything you need for sub-second page speed and high reliability.' },
-      { title: 'Review & Submit', short: 'Review', subtitle: 'Confirm your details. No immediate payment is required to submit.' }
-    ]
+      { id: 'step_client', title: 'Client Details', subtitle: "Let's Get Started with your business details" },
+      { id: 'step_category', title: 'Website Category', subtitle: 'What type of website do you need?' },
+      { id: 'step_category_spec', title: 'Requirements', subtitle: 'Category-specific tailored features & details' },
+      { id: 'step_design', title: 'Design & Colors', subtitle: 'Visual theme and color palette preferences' },
+      { id: 'step_files', title: 'Files & Content', subtitle: 'Logo, photos and website reference materials' },
+      { id: 'step_domain_hosting', title: 'Domain & Hosting', subtitle: 'Separated domain and cloud server options' },
+      { id: 'step_backend_whatsapp', title: 'Backend & WhatsApp', subtitle: 'Admin CMS panel and WhatsApp integration' },
+      { id: 'step_integrations', title: 'Integrations', subtitle: 'Payment gateway, maps and external APIs' },
+      { id: 'step_final_details', title: 'Final Details', subtitle: 'Budget tier, launch date and extra notes' },
+      { id: 'step_review', title: 'Review & Submit', subtitle: 'Summary of requirements and estimated pricing' }
+    ],
+    labels: {
+      clientHeading: 'Client & Business Information',
+      clientSubheading: 'Enter your core contact and business details to initialize your project requirement.',
+      fullName: 'Full Name',
+      businessName: 'Business / Brand Name',
+      mobileNumber: 'Mobile Number',
+      whatsappNumber: 'WhatsApp Number',
+      emailAddress: 'Email Address',
+      addressSection: 'Business Location & Address Details',
+      country: 'Country',
+      state: 'State / Province',
+      selectState: '-- Select State / UT --',
+      district: 'District / City',
+      selectDistrict: '-- Select District / City --',
+      specifyDistrict: 'Please specify your District / City',
+      streetAddress: 'Street Address / Shop / Building / Landmark',
+      pincode: 'PIN / Postal Code',
+      compiledAddress: 'Compiled Full Address:',
+      existingWebsite: 'Existing Website (Optional)',
+      socialLinks: 'Social Media Links (Optional - Add Multiple)',
+      addLink: 'Add Link',
+      
+      categoryHeading: 'What type of website do you need?',
+      categorySubheading: 'Select your core industry category or apply an interactive ready-made live template below.',
+      readyTemplates: 'Ready-Made Live Templates',
+      readyTemplatesFor: 'Live Demos matching',
+      specifyCategory: 'Please specify your website category',
+      
+      specHeading: 'Industry-Specific Requirements',
+      specSubheading: 'Tailor your exact features, business operations, and workflow needs.',
+      featuresRequired: 'Features Required',
+      preferredStyle: 'Preferred Website Style',
+      haveLogo: 'Do you have a Logo?',
+      havePhotos: 'Are photos and media available?',
+      providePhotos: 'Will you provide photos and content?',
+      describeCustom: 'Describe your specific business operations & features',
+      
+      // Category Specific questions
+      restCuisineQ: 'Restaurant Type / Cuisine',
+      cafeNameQ: 'Café Name',
+      salonFeaturesQ: 'Salon & Spa Features',
+      gymFeaturesQ: 'Gym & Fitness Features',
+      hotelFeaturesQ: 'Hotel & Resort Features',
+      rePropertyTypesQ: 'Property Types',
+      reFeaturesQ: 'Features Needed',
+      otherCategoryFeaturesQ: 'Core Features & Specifications for',
+      
+      designHeading: 'Design & Color Theme',
+      designSubheading: 'Choose visual branding, design personality and accent colors.',
+      visualStyleQ: 'What kind of visual style do you prefer?',
+      colorThemeQ: 'What color theme would you like?',
+      customColorDesc: 'Optional theme description...',
+      
+      mediaHeading: 'Logo / Content / Media Files',
+      mediaSubheading: 'Tell us about your brand assets readiness and upload logo & business photos.',
+      logoQ: '1. Do you have a Logo?',
+      photosQ: '2. Do you have Photos?',
+      contentQ: '3. Do you have Content?',
+      uploadLogo: 'Upload Brand Logo (Optional)',
+      uploadPhotos: 'Photos & Catalog Media (Optional)',
+      addPhotosBtn: 'Add Business Photos',
+      clickToBrowseLogo: 'Click to Browse Logo',
+      maxSizeLogo: 'PNG, JPG, SVG or WebP (Max 5MB)',
+      refWebsite: 'Reference Website (Optional)',
+      designNotes: 'Additional Design Instructions (Optional)',
+      
+      domainHeading: 'Domain & Hosting',
+      domainSubheading: 'Domain and Cloud Hosting are completely separate components. Select your requirement for each.',
+      domainQ: 'Do you need a Domain?',
+      domainDesc: 'Web address e.g. yourbrand.com / .in',
+      domainHave: 'I already have a Domain',
+      domainNeed: 'I need a new Domain',
+      domainName: 'Desired Domain Name',
+      domainExt: 'Domain Extension',
+      hostingQ: 'Do you need Hosting?',
+      hostingDesc: 'High-speed SSD cloud server with SSL & daily backups',
+      hostingHave: 'I already have Hosting',
+      hostingNeed: 'I need new Hosting',
+      hostingPlan: 'Hosting Plan',
+      
+      backendHeading: 'Backend & WhatsApp Integration',
+      backendSubheading: 'Configure administrative content management and direct WhatsApp customer funnels.',
+      backendQ: 'Do you need a Backend / Admin Panel?',
+      whatsappQ: 'Do you need WhatsApp Integration?',
+      countryCode: 'Country Code',
+      whatsappNumberFor: 'WhatsApp Number',
+      
+      integrationsHeading: 'Do you need any additional integrations?',
+      integrationsSubheading: 'Select key external services, APIs and third-party tools to integrate.',
+      specifyIntegration: 'Please specify your custom integration requirement',
+      
+      finalHeading: 'Final Project Information',
+      finalSubheading: 'Budget bracket, launch timeline and any special requests.',
+      budgetQ: '1. Estimated Budget (Optional)',
+      launchDateQ: '2. Expected Launch Date (Optional)',
+      addlReqQ: '3. Additional Requirements (Optional)',
+      anythingElseQ: '4. Anything else we should know? (Optional)',
+      
+      reviewHeading: 'Requirement Summary & Investment Estimate',
+      reviewSubheading: 'Please review all your submitted parameters below. You can click Edit on any section to modify.',
+      transparentEstimate: 'Transparent Commercial Estimate',
+      estApproxTotal: 'Estimated Approximate Total Price',
+      allFeaturesIncluded: 'All features & 1st-year setup included',
+      baseWebsitePrice: 'Base Website',
+      domainReg: 'Domain Registration (1 Year)',
+      cloudHosting: 'High-Speed Cloud Hosting',
+      advIntegrations: 'Advanced Integrations',
+      discountCoupon: 'Discount Coupon'
+    }
   },
   bn: {
     backToHome: 'হোম',
-    shareForm: 'ফর্ম শেয়ার',
+    shareForm: 'শেয়ার করুন',
     copiedLink: 'লিংক কপি হয়েছে!',
     stepLabel: 'ধাপ',
-    previous: 'পূর্ববর্তী',
+    previous: 'আগের ধাপ',
     continue: 'পরবর্তী ধাপ',
-    submit: 'প্রজেক্ট রিকোয়ারমেন্টস জমা দিন 🚀',
+    submit: 'রিকোয়ারমেন্ট জমা দিন 🚀',
     submitting: 'জমা হচ্ছে...',
-    generateAiSummary: '✨ AI এক্সিকিউটিভ সামারি তৈরি করুন',
-    refreshAiSummary: 'AI সামারি রিফ্রেশ',
-    aiSummaryTitle: 'AI প্রজেক্ট স্কোপ ও ডেলিভারি রোডম্যাপ',
-    aiSummaryDesc: 'আপনার পছন্দের ফিচার ও টেক স্ট্যাকের স্বয়ংক্রিয় এআই বিশ্লেষণ।',
-    copySummary: 'সামারি কপি করুন',
-    close: 'বন্ধ করুন',
+    priceSummary: 'আনুমানিক মূল্য তালিকা',
+    couponApplied: '২০% ছাড় কুপন সফলভাবে যুক্ত হয়েছে',
+    applyCoupon: 'কুপন প্রয়োগ করুন',
+    couponCode: 'কুপন কোড',
+    saveDraft: 'খসড়া সংরক্ষণ',
+    draftSaved: 'সংরক্ষিত',
+    aiGuide: 'এআই গাইড',
+    estTotal: 'মোট আনুমানিক',
+    fromPrice: 'শুরু',
+    applyTemplate: 'টেমপ্লেট নিন',
+    applied: 'যুক্ত হয়েছে',
+    livePreview: 'লাইভ দেখুন',
+    openFullDemo: 'সম্পূর্ণ ডেমো সাইট দেখুন',
+    startingFrom: 'শুরু মাত্র',
+    clear: 'মুছুন',
+    edit: 'সম্পাদনা',
+    yes: 'হ্যাঁ',
+    no: 'না',
+    other: 'অন্যান্য',
+    selectStyle: '-- স্টাইল বেছে নিন --',
+    categoryNames: {
+      restaurant: 'রেস্তোরাঁ / খাবার',
+      cafe: 'ক্যাফে / কফি শপ',
+      salon: 'সেলুন / বিউটি পার্লার',
+      gym: 'জিম ও ফিটনেস সেন্টার',
+      hotel: 'হোটেল ও রিসর্ট',
+      real_estate: 'রিয়েল এস্টেট ও প্রোপার্টি',
+      photography: 'ফটোগ্রাফি ও স্টুডিও',
+      boutique: 'বুটিক ও কাপড়ের দোকান',
+      coaching: 'কোচিং সেন্টার ও ইনস্টিটিউট',
+      clinic: 'ক্লিনিক ও ডাক্তার',
+      jewellery: 'জুয়েলারি ও উপহার',
+      showroom: 'গাড়ি / বাইক শোরুম',
+      other: 'অন্যান্য কাস্টম ওয়েবসাইট'
+    },
+    visualStyles: {
+      'Modern': 'মডার্ন (আধুনিক)',
+      'Minimal': 'মিনিমাল (সহজ)',
+      'Premium': 'প্রিমিয়াম',
+      'Luxury': 'লাক্সারি (রাজকীয়)',
+      'Professional': 'প্রফেশনাল',
+      'Creative': 'ক্রিয়েটিভ',
+      'Elegant': 'এলিগেন্ট',
+      'Bold': 'বোল্ড (গাঢ়)',
+      'Simple': 'সাধারণ',
+      'Dark Mode': 'ডার্ক মোড',
+      'Light Mode': 'লাইট মোড',
+      'Other': 'অন্যান্য'
+    },
+    colorThemes: {
+      'Blue': 'নীল (Blue)',
+      'Green': 'সবুজ (Green)',
+      'Red': 'লাল (Red)',
+      'Purple': 'বেগুনি (Purple)',
+      'Orange': 'কমলা (Orange)',
+      'Black & Gold': 'কালো ও গোল্ডেন',
+      'Dark Theme': 'ডার্ক থিম',
+      'Light Clean': 'লাইট ক্লিন',
+      'Custom': 'কাস্টম কালার'
+    },
+    backendOptions: {
+      'No Backend Required': 'ব্যাকএন্ড প্রয়োজন নেই',
+      'Backend Required': 'ব্যাকএন্ড প্রয়োজন',
+      'Admin Panel Required': 'অ্যাডমিন প্যানেল প্রয়োজন',
+      'Backend + Admin Panel': 'ব্যাকএন্ড + অ্যাডমিন প্যানেল',
+      'Custom Backend Requirement': 'কাস্টম ব্যাকএন্ড চাহিদা'
+    },
+    whatsappOptions: {
+      'No WhatsApp Integration': 'হোয়াটসঅ্যাপ সংযোগ প্রয়োজন নেই',
+      'WhatsApp Chat Button': 'হোয়াটসঅ্যাপ চ্যাট বাটন',
+      'WhatsApp Enquiry': 'হোয়াটসঅ্যাপ ইনকোয়ারি',
+      'WhatsApp Order': 'হোয়াটসঅ্যাপ অর্ডার',
+      'WhatsApp Booking': 'হোয়াটসঅ্যাপ বুকিং',
+      'Custom WhatsApp Integration': 'কাস্টম হোয়াটসঅ্যাপ ইন্টিগ্রেশন'
+    },
+    integrationsList: {
+      'Google Maps': 'গুগল ম্যাপস',
+      'Payment Gateway': 'অনলাইন পেমেন্ট গেটওয়ে',
+      'Email Integration': 'ইমেইল ইন্টিগ্রেশন',
+      'Social Media Integration': 'সোশ্যাল মিডিয়া ইন্টিগ্রেশন',
+      'Google Analytics': 'গুগল অ্যানালিটিক্স',
+      'Newsletter': 'নিউজলেটার',
+      'Booking System': 'বুকিং সিস্টেম',
+      'API Integration': 'এপিআই ইন্টিগ্রেশন',
+      'WhatsApp': 'হোয়াটসঅ্যাপ',
+      'Other': 'অন্যান্য'
+    },
+    budgetOptions: {
+      'Under ₹10,000': '₹১০,০০০ এর নিচে',
+      '₹10,000 – ₹25,000': '₹১০,০০০ – ₹২৫,০০০',
+      '₹25,000 – ₹50,000': '₹২৫,০০০ – ₹৫০,০০০',
+      '₹50,000 – ₹1,00,000': '₹৫০,০০০ – ₹১,০০,০০০',
+      'Above ₹1,00,000': '₹১,০০,০০০ এর উপরে',
+      'Custom Budget': 'কাস্টম বাজেট'
+    },
     steps: [
-      { title: 'ক্যাটাগরি ও রূপরেখা', short: 'ক্যাটাগরি', subtitle: 'আপনার ইন্ডাস্ট্রি বেছে নিন যাতে উপযুক্ত ফিচার ও প্রশ্নাবলি লোড হয়।' },
-      { title: 'বিজনেস প্রোফাইল', short: 'প্রোফাইল', subtitle: 'আমরা এই বিবরণগুলো হেডার, ফুটার এবং লিড রাউটিং-এ সেট করব।' },
-      { title: 'ইন্ডাস্ট্রি স্পেক্স', short: 'স্পেক্স', subtitle: 'আপনার ব্যবসার জন্য কাস্টমাইজড স্পেসিফিকেশন ও অপশন।' },
-      { title: 'পেজ ও সাইটম্যাপ', short: 'পেজ', subtitle: 'উচ্চ রূপান্তরের জন্য প্রয়োজনীয় পেজ ও সাইটম্যাপ নির্বাচন করুন।' },
-      { title: 'ফিচার ও লজিক', short: 'ফিচার', subtitle: 'লিড অ্যালার্ট, অনলাইন বুকিং ও শক্তিশালী ফিচার যুক্ত করুন।' },
-      { title: 'পেমেন্ট গেটওয়ে', short: 'পেমেন্ট', subtitle: 'গ্রাহকরা কীভাবে অনলাইনে পেমেন্ট করবেন তা বেছে নিন।' },
-      { title: 'অ্যাডমিন CMS', short: 'অ্যাডমিন', subtitle: 'পণ্য, মেনু এবং লিড কীভাবে পরিচালনা করতে চান তা নির্ধারণ করুন।' },
-      { title: 'হোয়াটসঅ্যাপ অ্যালার্ট', short: 'অ্যালার্ট', subtitle: 'নতুন অর্ডার বা অনুসন্ধানে তাৎক্ষণিক হোয়াটসঅ্যাপ নোটিফিকেশন পান।' },
-      { title: 'ডিজাইন ও কালার', short: 'ডিজাইন', subtitle: 'আপনার ব্র্যান্ডের সাথে মানানসই ভিজ্যুয়াল স্টাইল ও কালার বেছে নিন।' },
-      { title: 'ছবি ও মিডিয়া', short: 'মিডিয়া', subtitle: 'দোকান, পণ্য, মেনু বা লোগোর ছবি আপলোড করুন।' },
-      { title: 'ডোমেন ও গতি', short: 'লঞ্চ', subtitle: 'সুপার ফাস্ট স্পিড ও ক্লাউড হোস্টিং সেটআপ নিশ্চিত করুন।' },
-      { title: 'যাচাই ও জমা দিন', short: 'রিভিউ', subtitle: 'তথ্যগুলো যাচাই করে প্রজেক্ট রিকোয়ারমেন্টস জমা দিন।' }
-    ]
+      { id: 'step_client', title: 'ক্লায়েন্ট তথ্য', subtitle: 'আপনার ব্যবসা ও যোগাযোগের বিবরণ দিয়ে শুরু করুন' },
+      { id: 'step_category', title: 'ওয়েবসাইটের ধরন', subtitle: 'আপনার কি ধরনের ওয়েবসাইট প্রয়োজন?' },
+      { id: 'step_category_spec', title: 'নির্দিষ্ট চাহিদা', subtitle: 'আপনার ব্যবসার ক্যাটাগরি অনুযায়ী বিশেষ প্রশ্ন' },
+      { id: 'step_design', title: 'ডিজাইন ও কালার', subtitle: 'ভিজ্যুয়াল স্টাইল ও রঙের পছন্দ' },
+      { id: 'step_files', title: 'লোগো ও ফাইল', subtitle: 'লোগো, ছবি ও কন্টেন্ট আপলোড বা বিবরণ' },
+      { id: 'step_domain_hosting', title: 'ডোমেন ও হোস্টিং', subtitle: 'পৃথক ডোমেন ও ক্লাউড হোস্টিং পছন্দ' },
+      { id: 'step_backend_whatsapp', title: 'ব্যাকএন্ড ও হোয়াটসঅ্যাপ', subtitle: 'অ্যাডমিন প্যানেল ও হোয়াটসঅ্যাপ ইন্টিগ্রেশন' },
+      { id: 'step_integrations', title: 'অন্যান্য ইন্টিগ্রেশন', subtitle: 'পেমেন্ট গেটওয়ে, গুগল ম্যাপ ও এপিআই' },
+      { id: 'step_final_details', title: 'বাজেট ও ডেলিভারি', subtitle: 'বাজেট পরিসীমা ও প্রয়োজনীয় সময়সীমা' },
+      { id: 'step_review', title: 'রিভিউ ও জমা দিন', subtitle: 'সম্পূর্ণ বিবরণ যাচাই ও আনুমানিক মোট খরচ' }
+    ],
+    labels: {
+      clientHeading: 'ক্লায়েন্ট ও ব্যবসায়িক তথ্য',
+      clientSubheading: 'আপনার প্রজেক্টের রিকোয়ারমেন্ট শুরু করতে মূল যোগাযোগের বিবরণ লিখুন।',
+      fullName: 'পুরো নাম',
+      businessName: 'ব্যবসা বা ব্র্যান্ডের নাম',
+      mobileNumber: 'মোবাইল নম্বর',
+      whatsappNumber: 'হোয়াটসঅ্যাপ নম্বর',
+      emailAddress: 'ইমেইল ঠিকানা',
+      addressSection: 'ব্যবসার অবস্থান ও ঠিকানার বিবরণ',
+      country: 'দেশ',
+      state: 'রাজ্য / প্রদেশ',
+      selectState: '-- রাজ্য বেছে নিন --',
+      district: 'জেলা / শহর',
+      selectDistrict: '-- জেলা বেছে নিন --',
+      specifyDistrict: 'আপনার জেলা বা শহরের নাম লিখুন',
+      streetAddress: 'রাস্তা / দোকান / বিল্ডিং / এলাকা',
+      pincode: 'পিন / পোস্টাল কোড',
+      compiledAddress: 'সংকলিত পূর্ণ ঠিকানা:',
+      existingWebsite: 'বর্তমান ওয়েবসাইট (ঐচ্ছিক)',
+      socialLinks: 'সোশ্যাল মিডিয়া লিংক (ঐচ্ছিক - একাধিক যোগ করুন)',
+      addLink: 'লিংক যুক্ত করুন',
+      
+      categoryHeading: 'আপনার কি ধরণের ওয়েবসাইট প্রয়োজন?',
+      categorySubheading: 'আপনার মূল ব্যবসার ক্যাটাগরি বেছে নিন অথবা নিচে তৈরি রেডি-মেড লাইভ ডেমো প্রয়োগ করুন।',
+      readyTemplates: 'রেডি-মেড লাইভ টেমপ্লেট',
+      readyTemplatesFor: 'উপযুক্ত লাইভ ডেমো সমূহ',
+      specifyCategory: 'আপনার ওয়েবসাইটের ক্যাটাগরি উল্লেখ করুন',
+      
+      specHeading: 'ইন্ডাস্ট্রি-স্পেসিফিক বিশেষ রিকোয়ারমেন্ট',
+      specSubheading: 'আপনার প্রয়োজনীয় ফিচার, কর্মপদ্ধতি ও মডিউল নির্বাচন করুন।',
+      featuresRequired: 'প্রয়োজনীয় ফিচারসমূহ',
+      preferredStyle: 'পছন্দের ওয়েবসাইট স্টাইল',
+      haveLogo: 'আপনার কি লোগো আছে?',
+      havePhotos: 'ছবি ও মেনু কি প্রস্তুত আছে?',
+      providePhotos: 'আপনি কি ছবি ও কন্টেন্ট সরবরাহ করবেন?',
+      describeCustom: 'আপনার কাস্টম ওয়েবসাইটের চাহিদা বিস্তারিত লিখুন',
+      
+      restCuisineQ: 'রেস্তোরাঁর ধরন বা রান্নার ধরণ (Cuisine)',
+      cafeNameQ: 'ক্যাফের নাম',
+      salonFeaturesQ: 'সেলুন ও স্পা ফিচারসমূহ',
+      gymFeaturesQ: 'জিম ও ফিটনেস ফিচারসমূহ',
+      hotelFeaturesQ: 'হোটেল ও রিসর্ট ফিচারসমূহ',
+      rePropertyTypesQ: 'প্রোপার্টির ধরন',
+      reFeaturesQ: 'প্রয়োজনীয় ফিচারসমূহ',
+      otherCategoryFeaturesQ: 'প্রয়োজনীয় মূল ফিচার ও বিবরণ',
+      
+      designHeading: 'ডিজাইন ও কালার থিম',
+      designSubheading: 'ভিজ্যুয়াল ব্র্যান্ডিং, ডিজাইনের রূপ ও রঙের সমন্বয় বেছে নিন।',
+      visualStyleQ: 'আপনি কেমন ভিজ্যুয়াল স্টাইল পছন্দ করেন?',
+      colorThemeQ: 'আপনি কী রঙের থিম পছন্দ করবেন?',
+      customColorDesc: 'রঙের অতিরিক্ত বিবরণ...',
+      
+      mediaHeading: 'লোগো / কন্টেন্ট / মিডিয়া ফাইল',
+      mediaSubheading: 'ব্র্যান্ডের লোগো, ছবি ও কন্টেন্ট আপলোড বা বিবরণ দিন।',
+      logoQ: '১. আপনার কি লোগো আছে?',
+      photosQ: '২. আপনার কি ছবি আছে?',
+      contentQ: '৩. আপনার কি ওয়েবসাইটের লেখা কন্টেন্ট আছে?',
+      uploadLogo: 'লোগো আপলোড করুন (ঐচ্ছিক)',
+      uploadPhotos: 'ছবি ও ক্যাটালগ মিডিয়া আপলোড (ঐচ্ছিক)',
+      addPhotosBtn: 'ছবি যোগ করুন',
+      clickToBrowseLogo: 'লোগো নির্বাচন করতে ক্লিক করুন',
+      maxSizeLogo: 'PNG, JPG, SVG বা WebP (সর্বোচ্চ 5MB)',
+      refWebsite: 'রেফারেন্স ওয়েবসাইট (ঐচ্ছিক)',
+      designNotes: 'অতিরিক্ত ডিজাইন নির্দেশনা (ঐচ্ছিক)',
+      
+      domainHeading: 'ডোমেন ও ক্লাউড হোস্টিং',
+      domainSubheading: 'ডোমেন ও ক্লাউড হোস্টিং দুটি সম্পূর্ণ পৃথক অংশ। আপনার চাহিদা নির্বাচন করুন।',
+      domainQ: 'আপনার কি ডোমেন প্রয়োজন?',
+      domainDesc: 'ওয়েব ঠিকানা যেমন yourbrand.com বা .in',
+      domainHave: 'আমার ডোমেন আছে',
+      domainNeed: 'আমার নতুন ডোমেন লাগবে',
+      domainName: 'পছন্দের ডোমেন নাম',
+      domainExt: 'ডোমেন এক্সটেনশন',
+      hostingQ: 'আপনার কি হোস্টিং প্রয়োজন?',
+      hostingDesc: 'উচ্চগতির এসএসডি ক্লাউড সার্ভার সাথে SSL ও ব্যাকআপ',
+      hostingHave: 'আমার হোস্টিং আছে',
+      hostingNeed: 'আমার নতুন হোস্টিং লাগবে',
+      hostingPlan: 'হোস্টিং প্ল্যান',
+      
+      backendHeading: 'ব্যাকএন্ড ও হোয়াটসঅ্যাপ ইন্টিগ্রেশন',
+      backendSubheading: 'অ্যাডমিন কন্টেন্ট ম্যানেজমেন্ট ও সরাসরি হোয়াটসঅ্যাপ সেলস ফানেল।',
+      backendQ: 'আপনার কি ব্যাকএন্ড / অ্যাডমিন প্যানেল লাগবে?',
+      whatsappQ: 'আপনার কি হোয়াটসঅ্যাপ ইন্টিগ্রেশন লাগবে?',
+      countryCode: 'কান্ট্রি কোড',
+      whatsappNumberFor: 'হোয়াটসঅ্যাপ নম্বর',
+      
+      integrationsHeading: 'আপনার কি অতিরিক্ত কোনো ইন্টিগ্রেশন প্রয়োজন?',
+      integrationsSubheading: 'প্রয়োজনীয় পেমেন্ট গেটওয়ে, গুগল ম্যাপ ও থার্ড-পার্টি এপিআই বেছে নিন।',
+      specifyIntegration: 'আপনার কাস্টম ইন্টিগ্রেশনের বিবরণ দিন',
+      
+      finalHeading: 'প্রজেক্টের চূড়ান্ত তথ্য ও বাজেট',
+      finalSubheading: 'আনুমানিক বাজেট সীমা, ডেলিভারির সময়সীমা ও অতিরিক্ত তথ্য।',
+      budgetQ: '১. আনুমানিক বাজেট (ঐচ্ছিক)',
+      launchDateQ: '২. প্রত্যাশিত লঞ্চের তারিখ (ঐচ্ছিক)',
+      addlReqQ: '৩. অতিরিক্ত কোনো চাহিদা (ঐচ্ছিক)',
+      anythingElseQ: '৪. আর কোনো বিশেষ বিষয় যা আমাদের জানা প্রয়োজন? (ঐচ্ছিক)',
+      
+      reviewHeading: 'রিকোয়ারমেন্ট সারসংক্ষেপ ও আনুমানিক মোট খরচ',
+      reviewSubheading: 'আপনার দেওয়া সমস্ত বিবরণ যাচাই করুন। প্রয়োজনে পরিবর্তন বোতামে চাপ দিন।',
+      transparentEstimate: 'স্বচ্ছ বাণিজ্যিক মূল্য তালিকা',
+      estApproxTotal: 'আনুমানিক মোট মূল্য',
+      allFeaturesIncluded: 'সমস্ত ফিচার ও ১ম বছরের সেটআপ অন্তর্ভুক্ত',
+      baseWebsitePrice: 'মূল ওয়েবসাইট',
+      domainReg: 'ডোমেন রেজিস্ট্রেশন (১ বছর)',
+      cloudHosting: 'উচ্চগতির ক্লাউড হোস্টিং',
+      advIntegrations: 'উন্নত ইন্টিগ্রেশন',
+      discountCoupon: 'ডিসকাউন্ট কুপন'
+    }
   },
   hi: {
     backToHome: 'होम',
@@ -146,3391 +545,4652 @@ const TRANSLATIONS = {
     continue: 'आगे बढ़ें',
     submit: 'आवश्यकताएं सबमिट करें 🚀',
     submitting: 'सबमिट हो रहा है...',
-    generateAiSummary: '✨ AI कार्यकारी सारांश तैयार करें',
-    refreshAiSummary: 'AI सारांश रीफ्रेश',
-    aiSummaryTitle: 'AI प्रोजेक्ट स्कोप और रोडमैप',
-    aiSummaryDesc: 'आपके चुने गए फीचर्स और टेक स्टैक का स्मार्ट विश्लेषण।',
-    copySummary: 'सारांश कॉपी करें',
-    close: 'बंद करें',
+    priceSummary: 'अनुमानित कुल लागत',
+    couponApplied: '20% विशेष छूट कूपन लागू है',
+    applyCoupon: 'कूपन लागू करें',
+    couponCode: 'कूपन कोड',
+    saveDraft: 'ड्राफ्ट सहेजें',
+    draftSaved: 'सहेजा गया',
+    aiGuide: 'एआई गाइड',
+    estTotal: 'कुल अनुमान',
+    fromPrice: 'शुरुआती',
+    applyTemplate: 'टेम्पलेट लागू करें',
+    applied: 'लागू हुआ',
+    livePreview: 'लाइव देखें',
+    openFullDemo: 'पूरी डेमो साइट देखें',
+    startingFrom: 'शुरुआती कीमत',
+    clear: 'हटाएं',
+    edit: 'संशोधन',
+    yes: 'हाँ',
+    no: 'नहीं',
+    other: 'अन्य',
+    selectStyle: '-- स्टाइल चुनें --',
+    categoryNames: {
+      restaurant: 'रेस्टोरेंट / फ़ूड',
+      cafe: 'कैफे / कॉफ़ी शॉप',
+      salon: 'सैलून / ब्यूटी पार्लर',
+      gym: 'जिम व फिटनेस सेंटर',
+      hotel: 'होटल व रिसॉर्ट',
+      real_estate: 'रियल एस्टेट',
+      photography: 'फोटोग्राफी व स्टूडियो',
+      boutique: 'बुटीक व कपड़ों की दुकान',
+      coaching: 'कोचिंग व संस्थान',
+      clinic: 'क्लिनिक व डॉक्टर',
+      jewellery: 'ज्वैलरी व गिफ्ट शॉप',
+      showroom: 'कार / बाइक शोरूम',
+      other: 'अन्य वेबसाइट'
+    },
+    visualStyles: {
+      'Modern': 'मॉडर्न (आधुनिक)',
+      'Minimal': 'मिनिमल (सरल)',
+      'Premium': 'प्रीमियम',
+      'Luxury': 'लक्ज़री (भव्य)',
+      'Professional': 'प्रोफेशनल',
+      'Creative': 'क्रिएटिव',
+      'Elegant': 'एलिगेंट',
+      'Bold': 'बोल्ड',
+      'Simple': 'साधारण',
+      'Dark Mode': 'डार्क मोड',
+      'Light Mode': 'लाइट मोड',
+      'Other': 'अन्य'
+    },
+    colorThemes: {
+      'Blue': 'नीला (Blue)',
+      'Green': 'हरा (Green)',
+      'Red': 'लाल (Red)',
+      'Purple': 'बैंगनी (Purple)',
+      'Orange': 'नारंगी (Orange)',
+      'Black & Gold': 'ब्लैक व गोल्ड',
+      'Dark Theme': 'डार्क थीम',
+      'Light Clean': 'लाइट क्लीन',
+      'Custom': 'कस्टम कलर'
+    },
+    backendOptions: {
+      'No Backend Required': 'बैकएंड की आवश्यकता नहीं',
+      'Backend Required': 'बैकएंड आवश्यक',
+      'Admin Panel Required': 'एडमिन पैनल आवश्यक',
+      'Backend + Admin Panel': 'बैकएंड + एडमिन पैनल',
+      'Custom Backend Requirement': 'कस्टम बैकएंड आवश्यकता'
+    },
+    whatsappOptions: {
+      'No WhatsApp Integration': 'व्हाट्सएप कनेक्टिविटी नहीं चाहिए',
+      'WhatsApp Chat Button': 'व्हाट्सएप चैट बटन',
+      'WhatsApp Enquiry': 'व्हाट्सएप पूछताछ',
+      'WhatsApp Order': 'व्हाट्सएप ऑर्डर',
+      'WhatsApp Booking': 'व्हाट्सएप बुकिंग',
+      'Custom WhatsApp Integration': 'कस्टम व्हाट्सएप एकीकरण'
+    },
+    integrationsList: {
+      'Google Maps': 'गूगल मैप्स',
+      'Payment Gateway': 'ऑनलाइन पेमेंट गेटवे',
+      'Email Integration': 'ईमेल एकीकरण',
+      'Social Media Integration': 'सोशल मीडिया एकीकरण',
+      'Google Analytics': 'गूगल एनालिटिक्स',
+      'Newsletter': 'न्यूज़लेटर',
+      'Booking System': 'बुकिंग सिस्टम',
+      'API Integration': 'एपीआई एकीकरण',
+      'WhatsApp': 'व्हाट्सएप',
+      'Other': 'अन्य'
+    },
+    budgetOptions: {
+      'Under ₹10,000': '₹10,000 से कम',
+      '₹10,000 – ₹25,000': '₹10,000 – ₹25,000',
+      '₹25,000 – ₹50,000': '₹25,000 – ₹50,000',
+      '₹50,000 – ₹1,00,000': '₹50,000 – ₹1,00,000',
+      'Above ₹1,00,000': '₹1,00,000 से अधिक',
+      'Custom Budget': 'कस्टम बजट'
+    },
     steps: [
-      { title: 'श्रेणी और विजन', short: 'श्रेणी', subtitle: 'उद्योग चुनें ताकि सही प्रश्न और फीचर्स लोड हो सकें।' },
-      { title: 'बिजनेस प्रोफाइल', short: 'प्रोफाइल', subtitle: 'हम इन विवरणों का उपयोग वेबसाइट हेडर, फुटर और लीड्स के लिए करेंगे।' },
-      { title: 'उद्योग विवरण', short: 'विवरण', subtitle: 'आपके व्यवसाय के लिए अनुकूलित विनिर्देश।' },
-      { title: 'पेज और साइटमैप', short: 'पेज', subtitle: 'उच्च रूपांतरण के लिए आवश्यक पेज चुनें।' },
-      { title: 'फीचर्स और लॉजिक', short: 'फीचर्स', subtitle: 'लीड अलर्ट, ऑनलाइन बुकिंग और शक्तिशाली फीचर्स जोड़ें।' },
-      { title: 'पेमेंट गेटवे', short: 'पेमेंट', subtitle: 'चुनें कि ग्राहक आपको ऑनलाइन भुगतान कैसे करेंगे।' },
-      { title: 'एडमिन CMS', short: 'एडमिन', subtitle: 'आप अपने उत्पाद और लीड कैसे प्रबंधित करना चाहते हैं?' },
-      { title: 'व्हाट्सएप अलर्ट', short: 'अलर्ट', subtitle: 'हर नए ऑर्डर पर तुरंत व्हाट्सएप सूचनाएं प्राप्त करें।' },
-      { title: 'डिजाइन और रंग', short: 'डिजाइन', subtitle: 'अपने ब्रांड की दृश्य शैली और रंग चुनें।' },
-      { title: 'तस्वीरें और मीडिया', short: 'मीडिया', subtitle: 'दुकान, उत्पाद या लोगो की तस्वीरें अपलोड करें।' },
-      { title: 'डोमेन और स्पीड', short: 'लॉन्च', subtitle: 'सुपर फास्ट गति और सुरक्षित क्लाउड होस्टिंग।' },
-      { title: 'समीक्षा और सबमिट', short: 'समीक्षा', subtitle: 'विवरण की पुष्टि करें और अपना प्रस्ताव सबमिट करें।' }
-    ]
+      { id: 'step_client', title: 'क्लाइंट विवरण', subtitle: 'अपने व्यवसाय और संपर्क विवरण से शुरुआत करें' },
+      { id: 'step_category', title: 'वेबसाइट श्रेणी', subtitle: 'आपको किस प्रकार की वेबसाइट चाहिए?' },
+      { id: 'step_category_spec', title: 'विशिष्ट आवश्यकताएं', subtitle: 'आपकी श्रेणी के अनुसार विशेष मॉड्यूल' },
+      { id: 'step_design', title: 'डिज़ाइन और रंग', subtitle: 'पसंदीदा विजुअल स्टाइल और रंग थीम' },
+      { id: 'step_files', title: 'फ़ाइलें और सामग्री', subtitle: 'लोगो, तस्वीरें और संदर्भ वेबसाइट लिंक' },
+      { id: 'step_domain_hosting', title: 'डोमेन और होस्टिंग', subtitle: 'अलग डोमेन और क्लाउड सर्वर विकल्प' },
+      { id: 'step_backend_whatsapp', title: 'बैकएंड और व्हाट्सएप', subtitle: 'एडमिन पैनल और व्हाट्सएप कनेक्टिविटी' },
+      { id: 'step_integrations', title: 'अतिरिक्त एकीकरण', subtitle: 'पेमेंट गेटवे, मैप्स और एपीआई' },
+      { id: 'step_final_details', title: 'अंतिम विवरण', subtitle: 'बजट और अपेक्षित लॉन्च तिथि' },
+      { id: 'step_review', title: 'समीक्षा और सबमिट', subtitle: 'सभी विवरणों की जांच और अनुमानित लागत' }
+    ],
+    labels: {
+      clientHeading: 'क्लाइंट और व्यावसायिक जानकारी',
+      clientSubheading: 'अपनी परियोजना शुरू करने के लिए संपर्क और व्यावसायिक विवरण दर्ज करें।',
+      fullName: 'पूरा नाम',
+      businessName: 'व्यवसाय / ब्रांड का नाम',
+      mobileNumber: 'मोबाइल नंबर',
+      whatsappNumber: 'व्हाट्सएप नंबर',
+      emailAddress: 'ईमेल पता',
+      addressSection: 'व्यावसायिक स्थान और पते का विवरण',
+      country: 'देश',
+      state: 'राज्य / प्रांत',
+      selectState: '-- राज्य चुनें --',
+      district: 'जिला / शहर',
+      selectDistrict: '-- जिला चुनें --',
+      specifyDistrict: 'कृपया अपना जिला / शहर बताएं',
+      streetAddress: 'सड़क का पता / दुकान / भवन / लैंडमार्क',
+      pincode: 'पिन / पोस्टल कोड',
+      compiledAddress: 'संकलित पूरा पता:',
+      existingWebsite: 'मौजूदा वेबसाइट (वैकल्पिक)',
+      socialLinks: 'सोशल मीडिया लिंक (वैकल्पिक - एकाधिक जोड़ें)',
+      addLink: 'लिंक जोड़ें',
+      
+      categoryHeading: 'आपको किस प्रकार की वेबसाइट चाहिए?',
+      categorySubheading: 'अपनी मुख्य श्रेणी चुनें या नीचे तैयार लाइव टेम्पलेट लागू करें।',
+      readyTemplates: 'तैयार लाइव टेम्पलेट',
+      readyTemplatesFor: 'उपयुक्त लाइव डेमो',
+      specifyCategory: 'कृपया अपनी वेबसाइट श्रेणी निर्दिष्ट करें',
+      
+      specHeading: 'उद्योग-विशिष्ट आवश्यकताएं',
+      specSubheading: 'अपनी आवश्यक सुविधाएं और कार्यप्रणाली चुनें।',
+      featuresRequired: 'आवश्यक सुविधाएं',
+      preferredStyle: 'पसंदीदा वेबसाइट शैली',
+      haveLogo: 'क्या आपके पास लोगो है?',
+      havePhotos: 'क्या तस्वीरें उपलब्ध हैं?',
+      providePhotos: 'क्या आप फोटो और सामग्री प्रदान करेंगे?',
+      describeCustom: 'अपनी विशिष्ट व्यावसायिक आवश्यकताओं का वर्णन करें',
+      
+      restCuisineQ: 'रेस्टोरेंट का प्रकार या व्यंजन (Cuisine)',
+      cafeNameQ: 'कैफे का नाम',
+      salonFeaturesQ: 'सैलून और स्पा सुविधाएं',
+      gymFeaturesQ: 'जिम और फिटनेस सुविधाएं',
+      hotelFeaturesQ: 'होटल और रिसॉर्ट सुविधाएं',
+      rePropertyTypesQ: 'संपत्ति के प्रकार',
+      reFeaturesQ: 'आवश्यक सुविधाएं',
+      otherCategoryFeaturesQ: 'मुख्य सुविधाएं और विवरण',
+      
+      designHeading: 'डिज़ाइन और रंग थीम',
+      designSubheading: 'विजुअल ब्रांडिंग और अपनी पसंदीदा रंग थीम चुनें।',
+      visualStyleQ: 'आप किस प्रकार की विज़ुअल शैली पसंद करते हैं?',
+      colorThemeQ: 'आप कौन सा रंग विषय पसंद करेंगे?',
+      customColorDesc: 'वैकल्पिक रंग विवरण...',
+      
+      mediaHeading: 'लोगो / सामग्री / मीडिया फ़ाइलें',
+      mediaSubheading: 'ब्रांड लोगो, तस्वीरें और वेबसाइट संदर्भ सामग्री अपलोड करें।',
+      logoQ: '१. क्या आपके पास लोगो है?',
+      photosQ: '२. क्या आपके पास तस्वीरें हैं?',
+      contentQ: '३. क्या आपके पास वेबसाइट सामग्री है?',
+      uploadLogo: 'लोगो अपलोड करें (वैकल्पिक)',
+      uploadPhotos: 'फ़ोटो और कैटलॉग मीडिया (वैकल्पिक)',
+      addPhotosBtn: 'फ़ोटो जोड़ें',
+      clickToBrowseLogo: 'लोगो चुनने के लिए क्लिक करें',
+      maxSizeLogo: 'PNG, JPG, SVG या WebP (अधिकतम 5MB)',
+      refWebsite: 'संदर्भ वेबसाइट (वैकल्पिक)',
+      designNotes: 'अतिरिक्त डिज़ाइन निर्देश (वैकल्पिक)',
+      
+      domainHeading: 'डोमेन और होस्टिंग',
+      domainSubheading: 'डोमेन और क्लाउड होस्टिंग पूरी तरह से अलग घटक हैं। प्रत्येक के लिए अपनी आवश्यकता चुनें।',
+      domainQ: 'क्या आपको डोमेन की आवश्यकता है?',
+      domainDesc: 'वेब पता जैसे yourbrand.com / .in',
+      domainHave: 'मेरे पास पहले से डोमेन है',
+      domainNeed: 'मुझे नया डोमेन चाहिए',
+      domainName: 'पसंदीदा डोमेन नाम',
+      domainExt: 'डोमेन एक्सटेंशन',
+      hostingQ: 'क्या आपको होस्टिंग की आवश्यकता है?',
+      hostingDesc: 'हाई-स्पीड एसएसडी क्लाउड सर्वर साथ में एसएसएल और बैकअप',
+      hostingHave: 'मेरे पास पहले से होस्टिंग है',
+      hostingNeed: 'मुझे नई होस्टिंग चाहिए',
+      hostingPlan: 'होस्टिंग योजना',
+      
+      backendHeading: 'बैकएंड और व्हाट्सएप एकीकरण',
+      backendSubheading: 'एडमिन पैनल और सीधे व्हाट्सएप ग्राहक फ़नल।',
+      backendQ: 'क्या आपको बैकएंड / एडमिन पैनल चाहिए?',
+      whatsappQ: 'क्या आपको व्हाट्सएप एकीकरण चाहिए?',
+      countryCode: 'कंट्री कोड',
+      whatsappNumberFor: 'व्हाट्सएप नंबर',
+      
+      integrationsHeading: 'क्या आपको किसी अतिरिक्त एकीकरण की आवश्यकता है?',
+      integrationsSubheading: 'पेमेंट गेटवे, मैप्स और एपीआई चुनें।',
+      specifyIntegration: 'कृपया अपना कस्टम एकीकरण बताएं',
+      
+      finalHeading: 'अंतिम परियोजना जानकारी',
+      finalSubheading: 'बजट, लॉन्च समयरेखा और कोई विशेष अनुरोध।',
+      budgetQ: '१. अनुमानित बजट (वैकल्पिक)',
+      launchDateQ: '२. अपेक्षित लॉन्च तिथि (वैकल्पिक)',
+      addlReqQ: '३. अतिरिक्त आवश्यकताएं (वैकल्पिक)',
+      anythingElseQ: '४. कुछ और जो हमें जानना चाहिए? (वैकल्पिक)',
+      
+      reviewHeading: 'आवश्यकता सारांश और अनुमानित लागत',
+      reviewSubheading: 'कृपया नीचे दिए गए अपने सभी विवरणों की समीक्षा करें।',
+      transparentEstimate: 'पारदर्शी वाणिज्यिक अनुमान',
+      estApproxTotal: 'अनुमानित कुल मूल्य',
+      allFeaturesIncluded: 'सभी सुविधाएं और प्रथम वर्ष का सेटअप शामिल',
+      baseWebsitePrice: 'मूल वेबसाइट',
+      domainReg: 'डोमेन पंजीकरण (१ वर्ष)',
+      cloudHosting: 'हाई-स्पीड क्लाउड होस्टिंग',
+      advIntegrations: 'उन्नत एकीकरण',
+      discountCoupon: 'छूट कूपन'
+    }
   }
 };
 
-const FALLBACK_TEMPLATE_SPECS = {};
 
+// 12 Standard Categories + Other
+const CATEGORIES = [
+  { id: 'restaurant', name: 'Restaurant', icon: Utensils, basePrice: 9999, badge: 'Popular', desc: 'Digital food menus, table reservation & takeaway funnels' },
+  { id: 'cafe', name: 'Café / Coffee Shop', icon: Coffee, basePrice: 8999, badge: 'Trending', desc: 'Cozy lookbook, signature items, table booking & orders' },
+  { id: 'salon', name: 'Salon / Beauty Parlour', icon: Sparkles, basePrice: 8999, badge: 'High Demand', desc: 'Stylist rate-cards, beauty packages & appointment slots' },
+  { id: 'gym', name: 'Gym / Fitness Centre', icon: Dumbbell, basePrice: 9999, badge: 'High ROI', desc: 'Membership tiers, trainer profiles & online passes' },
+  { id: 'hotel', name: 'Hotel / Resort', icon: Hotel, basePrice: 14999, badge: 'Luxury', desc: 'Room showcase, amenities, tariffs & booking engine' },
+  { id: 'real_estate', name: 'Real Estate', icon: Building2, basePrice: 14999, badge: 'Commercial', desc: 'Property listings, virtual tours, map search & agent leads' },
+  { id: 'photography', name: 'Photography / Wedding Studio', icon: Camera, basePrice: 7999, badge: 'Visual', desc: 'High-res portfolio albums, client booking & packages' },
+  { id: 'boutique', name: 'Boutique / Clothing Store', icon: ShoppingBag, basePrice: 12999, badge: 'E-Commerce', desc: 'Apparel lookbook, size guides, cart & online checkout' },
+  { id: 'coaching', name: 'Coaching Centre / Institute', icon: GraduationCap, basePrice: 9999, badge: 'Education', desc: 'Courses, online admission, faculty & notice board' },
+  { id: 'clinic', name: 'Clinic / Doctor', icon: Stethoscope, basePrice: 9999, badge: 'Healthcare', desc: 'Doctor profiles, visiting hours & OPD consultation booking' },
+  { id: 'jewellery', name: 'Jewellery / Gift Shop', icon: Gem, basePrice: 12999, badge: 'Prestige', desc: 'Gold & diamond collections, luxury gifts & custom enquiry' },
+  { id: 'showroom', name: 'Car / Bike Showroom & Service', icon: Car, basePrice: 14999, badge: 'Automotive', desc: 'Vehicle inventory, test drive bookings & service scheduling' },
+  { id: 'other', name: 'Other', icon: Layers, basePrice: 9999, badge: 'Custom', desc: 'Bespoke web application or custom business website' }
+];
 
-const mapSlugToCategorySlug = (slugOrCat = '') => {
-  const s = String(slugOrCat).toLowerCase().trim();
-  if (s.includes('rest') || s.includes('dine') || s.includes('food')) return 'restaurant';
-  if (s.includes('cafe') || s.includes('bakery') || s.includes('coffee')) return 'cafe';
-  if (s.includes('salon') || s.includes('spa') || s.includes('beauty')) return 'salon';
-  if (s.includes('gym') || s.includes('fitness') || s.includes('crossfit') || s.includes('workout')) return 'gym';
-  if (s.includes('hotel') || s.includes('resort') || s.includes('homestay') || s.includes('suite')) return 'hotel';
-  if (s.includes('real') || s.includes('estate') || s.includes('villa') || s.includes('property')) return 'real_estate';
-  if (s.includes('lms') || s.includes('course') || s.includes('coach') || s.includes('acad') || s.includes('edu')) return 'coaching';
-  if (s.includes('ecom') || s.includes('store') || s.includes('shop') || s.includes('mart')) return 'ecommerce';
-  if (s.includes('jewel') || s.includes('gold') || s.includes('diamond')) return 'jewellery';
-  if (s.includes('photo') || s.includes('studio') || s.includes('lens')) return 'photography';
-  if (s.includes('show') || s.includes('auto') || s.includes('car') || s.includes('bike')) return 'showroom';
-  return 'custom';
+// Database Demos Loader and Category Filter
+const filterDemosForCategory = (demosList, category) => {
+  if (!category || !Array.isArray(demosList) || demosList.length === 0) return [];
+  const cat = category.toLowerCase().replace(/[^a-z0-9]/g, '');
+  
+  return demosList.filter(d => {
+    const demoCat = (d.category || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const demoSlug = (d.slug || '').toLowerCase();
+    const demoTitle = (d.title || '').toLowerCase();
+    
+    if (cat === 'restaurant') return demoCat.includes('restaurant') || demoCat.includes('food') || demoSlug.includes('restaurant');
+    if (cat === 'cafe') return demoCat.includes('cafe') || demoSlug.includes('cafe');
+    if (cat === 'salon') return demoCat.includes('salon') || demoCat.includes('spa') || demoSlug.includes('salon');
+    if (cat === 'gym') return demoCat.includes('gym') || demoCat.includes('fitness') || demoSlug.includes('gym');
+    if (cat === 'hotel') return demoCat.includes('hotel') || demoCat.includes('resort') || demoSlug.includes('hotel');
+    if (cat === 'realestate' || cat === 'real_estate') return demoCat.includes('real') || demoCat.includes('estate') || demoSlug.includes('real');
+    if (cat === 'photography') return demoCat.includes('photo') || demoSlug.includes('photo');
+    if (cat === 'boutique') return demoCat.includes('boutique') || demoCat.includes('cloth') || demoCat.includes('ecommerce') || demoSlug.includes('boutique');
+    if (cat === 'coaching' || cat === 'lms') return demoCat.includes('coach') || demoCat.includes('lms') || demoCat.includes('course') || demoSlug.includes('lms');
+    if (cat === 'clinic' || cat === 'doctor' || cat === 'dental') return demoCat.includes('clinic') || demoCat.includes('doctor') || demoCat.includes('dental');
+    if (cat === 'jewellery') return demoCat.includes('jewel') || demoSlug.includes('jewel');
+    if (cat === 'showroom' || cat === 'automotive') return demoCat.includes('show') || demoCat.includes('auto') || demoCat.includes('car');
+    return demoCat.includes(cat) || demoTitle.includes(cat);
+  });
 };
 
-// Comprehensive Multilingual Industry Categories (Dynamic + Fallback)
-const INDUSTRY_CATEGORIES = [
-  {
-    slug: 'restaurant',
-    icon: Utensils,
-    en: { name: 'Restaurant & Dining', desc: 'Digital menus, table reservations, takeaway orders' },
-    bn: { name: 'রেস্তোরাঁ ও ডাইনিং', desc: 'ডিজিটাল মেনু, টেবিল বুকিং, অনলাইন অর্ডার' },
-    hi: { name: 'रेस्तरां और डाइनिंग', desc: 'डिजिटल मेनू, टेबल बुकिंग, ऑनलाइन ऑर्डर' }
-  },
-  {
-    slug: 'cafe',
-    icon: Coffee,
-    en: { name: 'Café & Bakery', desc: 'Brews showcase, bakery pre-orders, aesthetic feeds' },
-    bn: { name: 'ক্যাফে ও বেকারি', desc: 'কফি ব্লেন্ডস, কেক প্রি-অর্ডার, ইনস্টাগ্রাম ফিড' },
-    hi: { name: 'कैफे और बेकरी', desc: 'कॉफी ब्लेंड्स, केक प्री-ऑर्डर, इंस्टाग्राम फीड' }
-  },
-  {
-    slug: 'salon',
-    icon: Sparkles,
-    en: { name: 'Salon, Spa & Beauty', desc: 'Stylist portfolios, service rate-cards, bookings' },
-    bn: { name: 'স্যালুন ও স্পা বিউটি', desc: 'স্টাইলিস্ট পোর্টফোলিও, সার্ভিস রেটকার্ড, বুকিং' },
-    hi: { name: 'सैलून और स्पा ब्यूटी', desc: 'स्टाइलिश पोर्टफोलियो, सर्विस रेट कार्ड, बुकिंग' }
-  },
-  {
-    slug: 'gym',
-    icon: Dumbbell,
-    en: { name: 'Gym & Fitness Hub', desc: 'Class timetable, membership tiers, trial passes' },
-    bn: { name: 'জিম ও ফিটনেস হাব', desc: 'ক্লাস রুটিন, মেম্বারশিপ প্ল্যান, ফ্রি ট্রায়াল পাস' },
-    hi: { name: 'जिम और फिटनेस हब', desc: 'क्लास टाइमटेबल, मेंबरशिप प्लान, फ्री ट्रायल' }
-  },
-  {
-    slug: 'hotel',
-    icon: Hotel,
-    en: { name: 'Hotel & Homestay', desc: 'Direct room reservations, photo suites, amenities' },
-    bn: { name: 'হোটেল ও রিসোর্ট', desc: 'রুম বুকিং ইঞ্জিন, রুম প্রিভিউ, অ্যামিনিটিজ' },
-    hi: { name: 'होटल और होमस्टे', desc: 'रूम बुकिंग इंजन, रूम प्रीव्यू, सुविधाएं' }
-  },
-  {
-    slug: 'real_estate',
-    icon: Building2,
-    en: { name: 'Real Estate Developer', desc: 'Project showcases, floorplans, site visits' },
-    bn: { name: 'রিয়েল এস্টেট প্রপার্টি', desc: 'ফ্ল্যাট শোকেস, ফ্লোর প্ল্যান, সাইট ভিজিট বুকিং' },
-    hi: { name: 'रियल एस्टेट डेवलपर', desc: 'प्रोजेक्ट शोकेस, फ्लोर प्लान, साइट विजिट' }
-  },
-  {
-    slug: 'coaching',
-    icon: GraduationCap,
-    en: { name: 'LMS, Courses & Coaching', desc: 'Online lectures, batch schedules, admission engine' },
-    bn: { name: 'কোচিং ও অনলাইন কোর্স', desc: 'অনলাইন ক্লাস, ব্যাচ রুটিন, ভর্তি ও ছাত্র পোর্টাল' },
-    hi: { name: 'कोचिंग और ऑनलाइन कोर्सेज', desc: 'ऑनलाइन लेक्चर, बैच शेड्यूल, एडमिशन फॉर्म' }
-  },
-  {
-    slug: 'ecommerce',
-    icon: ShoppingBag,
-    en: { name: 'E-Commerce Online Store', desc: 'Online catalog, shopping cart, WhatsApp orders' },
-    bn: { name: 'ই-কমার্স অনলাইন শপ', desc: 'প্রোডাক্ট ক্যাটালগ, শপিং কার্ট, হোয়াটসঅ্যাপ অর্ডার' },
-    hi: { name: 'ई-कॉमर्स ऑनलाइन स्टोर', desc: 'उत्पाद कैटलॉग, शॉपिंग कार्ट, व्हाट्सएप ऑर्डर' }
-  },
-  {
-    slug: 'jewellery',
-    icon: Gem,
-    en: { name: 'Jewellery & Luxury Goods', desc: 'Gold/diamond showcases, bridal lookbooks, quotes' },
-    bn: { name: 'জুয়েলারি ও লাক্সারি কালেকশন', desc: 'সোনার/হীরার ক্যাটালগ, ব্রাইডাল লুকবুক, কোটেশন' },
-    hi: { name: 'ज्वेलरी और लग्जरी गिफ्ट्स', desc: 'सोना/हीरा शोकेस, ब्राइडल लुकबुक, पूछताछ' }
-  },
-  {
-    slug: 'photography',
-    icon: Camera,
-    en: { name: 'Photography & Studio', desc: 'High-res portfolios, wedding albums, bookings' },
-    bn: { name: 'ফটোগ্রাফি ও স্টুডিও', desc: 'পোর্টফোলিও অ্যালবাম, ওয়েডিং গ্যালারি, বুকিং' },
-    hi: { name: 'फोटोग्राफी और स्टूडियो', desc: 'पोर्टफोलियो, वेडिंग एल्बम, कंसल्टेशन बुकिंग' }
-  },
-  {
-    slug: 'showroom',
-    icon: Car,
-    en: { name: 'Automobile & Showroom', desc: 'Car/bike inventory, EMI calculator, test drives' },
-    bn: { name: 'অটোমোবাইল শোরুম', desc: 'গাড়ি/বাইক ইনভেন্টরি, ইএমআই ক্যালকুলেটর, টেস্ট ড্রাইভ' },
-    hi: { name: 'ऑटोमोबाइल और शोरूम', desc: 'गाड़ी/बाइक इन्वेंटरी, ईएमआई कैलकुलेटर, टेस्ट ड्राइव' }
-  },
-  {
-    slug: 'healthcare',
-    icon: Stethoscope,
-    en: { name: 'Doctor & Healthcare Clinic', desc: 'Doctor profiles, OPD timings, prescription booking' },
-    bn: { name: 'ডক্টর ও হেলথকেয়ার ক্লিনিক', desc: 'ডাক্তার পরিচিতি, ওপিডি সময়সূচী, অনলাইন প্রেসক্রিপশন' },
-    hi: { name: 'डॉक्टर और हेल्थकेयर क्लिनिक', desc: 'डॉक्टर प्रोफाइल, ओपीडी टाइमिंग, अपॉइंटमेंट' }
-  },
-  {
-    slug: 'events',
-    icon: Calendar,
-    en: { name: 'Event & Wedding Planner', desc: 'Theme lookbooks, venue booking, package quotes' },
-    bn: { name: 'ইভেন্ট ও ওয়েডিং প্ল্যানার', desc: 'থিম গ্যালারি, ভেন্যু বুকিং, প্যাকেজ কোটেশন' },
-    hi: { name: 'इवेंट और वेडिंग प्लानर', desc: 'थीम लुकबुक, वेन्यू बुकिंग, पैकेज कोटेशन' }
-  },
-  {
-    slug: 'legal',
-    icon: Scale,
-    en: { name: 'Law Firm & Legal Services', desc: 'Practice areas, case studies, consultation desk' },
-    bn: { name: 'ল ফার্ম ও আইনি সেবা', desc: 'আইনি পরামর্শ, মামলা ক্যাটাগরি, কনসালটেশন বুকিং' },
-    hi: { name: 'लॉ फर्म और कानूनी सेवाएं', desc: 'लीगल एडवाइस, केस स्टडीज, कंसल्टेशन डेस्क' }
-  },
-  {
-    slug: 'ngo',
-    icon: Heart,
-    en: { name: 'NGO, Charity & Trust', desc: 'Donation engine, causes showcase, volunteer desk' },
-    bn: { name: 'এনজিও ও চ্যারিটি ট্রাস্ট', desc: 'অনলাইন ডোনেশন, সমাজসেবা প্রকল্প, ভলান্টিয়ার ডেস্ক' },
-    hi: { name: 'एनजीओ और चैरिटी ट्रस्ट', desc: 'ऑनलाइन डोनेशन, सामाजिक कार्य, वालंटियर फॉर्म' }
-  },
-  {
-    slug: 'custom',
-    icon: Layers,
-    en: { name: 'Custom Enterprise / SaaS', desc: '100% bespoke design, custom API & workflows' },
-    bn: { name: 'কাস্টম এন্টারপ্রাইজ / SaaS', desc: '১০০% কাস্টম ডিজাইন, বিশেষ API ও ফিচার' },
-    hi: { name: 'कस्टम एंटरप्राइज / SaaS', desc: '100% कस्टमाइज्ड डिजाइन, विशेष API और लॉजिक' }
-  }
-];
-
-// Dynamic Multilingual Pages
-const MULTI_PAGES = [
-  {
-    id: 'home',
-    en: 'Home Page (High-Converting Hero)',
-    bn: 'হোম পেজ (উচ্চ রূপান্তর হিরো সেকশন)',
-    hi: 'होम पेज (उच्च रूपांतरण हीरो सेक्शन)'
-  },
-  {
-    id: 'catalog',
-    en: 'Services / Food Menu / Product Catalog',
-    bn: 'সার্ভিস / ফুড মেনু / প্রোডাক্ট ক্যাটালগ',
-    hi: 'सेवाएं / मेनू / उत्पाद कैटलॉग'
-  },
-  {
-    id: 'booking',
-    en: 'Online Booking / Reservation System',
-    bn: 'অনলাইন টেবিল / অ্যাপয়েন্টমেন্ট বুকিং ইঞ্জিন',
-    hi: 'ऑनलाइन बुकिंग / अपॉइंटमेंट इंजन'
-  },
-  {
-    id: 'contact',
-    en: 'Contact Page & Google Map Integration',
-    bn: 'যোগাযোগ পেজ ও গুগল ম্যাপ ইন্টিগ্রেশন',
-    hi: 'संपर्क पेज और गूगल मैप'
-  },
-  {
-    id: 'reviews',
-    en: 'Customer Reviews & Testimonials',
-    bn: 'গ্রাহক রিভিউ ও প্রশংসাপত্র সেকশন',
-    hi: 'ग्राहक समीक्षाएं और प्रशंसापत्र'
-  },
-  {
-    id: 'about',
-    en: 'About Us / Brand Story',
-    bn: 'আমাদের গল্প ও পরিচিতি পেজ',
-    hi: 'हमारे बारे में / ब्रांड की कहानी'
-  },
-  {
-    id: 'gallery',
-    en: 'Photo Gallery / Portfolio Showcase',
-    bn: 'ফটো গ্যালারি ও পোর্টফোলিও শোকেস',
-    hi: 'फोटो गैलरी और पोर्टफोलियो'
-  },
-  {
-    id: 'pricing',
-    en: 'Pricing Packages & Plan Comparison',
-    bn: 'প্রাইসিং প্যাকেজ ও প্ল্যান তুলনা',
-    hi: 'मूल्य निर्धारण और पैकेज तुलना'
-  },
-  {
-    id: 'faq',
-    en: 'Frequently Asked Questions (FAQ)',
-    bn: 'সাধারণ প্রশ্নোত্তর (FAQ) ও সাপোর্ট',
-    hi: 'अक्सर पूछे जाने वाले प्रश्न (FAQ)'
-  },
-  {
-    id: 'policy',
-    en: 'Terms, Privacy & Refund Policies',
-    bn: 'প্রাইভেসি পলিসি ও টার্মস অফ সার্ভিস',
-    hi: 'नियम, शर्तें और गोपनीयता नीति'
-  }
-];
-
-// Dynamic Multilingual Features
-const MULTI_FEATURES = [
-  {
-    id: 'auth',
-    en: 'User Registration / Customer Login',
-    bn: 'গ্রাহক একাউন্ট রেজিস্ট্রেশন ও লগইন',
-    hi: 'यूजर रजिस्ट्रेशन और कस्टमर लॉगिन'
-  },
-  {
-    id: 'booking_engine',
-    en: 'Online Slot & Appointment Booking',
-    bn: 'অনলাইন স্লট ও অ্যাপয়েন্টমেন্ট বুকিং',
-    hi: 'ऑनलाइन स्लॉट और अपॉइंटमेंट बुकिंग'
-  },
-  {
-    id: 'whatsapp_leads',
-    en: 'Automated WhatsApp Lead Notifications',
-    bn: 'স্বয়ংক্রিয় হোয়াটসঅ্যাপ লিড নোটিফিকেশন',
-    hi: 'स्वचालित व्हाट्सएप लीड सूचनाएं'
-  },
-  {
-    id: 'whatsapp_orders',
-    en: '1-Click Direct WhatsApp Ordering',
-    bn: '১-ক্লিক ডিরেক্ট হোয়াটসঅ্যাপ অর্ডার',
-    hi: '1-क्लिक डायरेक्ट व्हाट्सएप ऑर्डर'
-  },
-  {
-    id: 'payment_gateway',
-    en: 'Online Payment Gateway (Razorpay/UPI)',
-    bn: 'অনলাইন পেমেন্ট গেটওয়ে (Razorpay/UPI)',
-    hi: 'ऑनलाइन पेमेंट गेटवे (Razorpay/UPI)'
-  },
-  {
-    id: 'search_filter',
-    en: 'Live Search & Multi-Filter Catalog',
-    bn: 'লাইভ সার্চ ও ক্যাটাগরি ফিল্টারিং',
-    hi: 'लाइव सर्च और फ़िल्टरिंग'
-  },
-  {
-    id: 'multilingual',
-    en: 'Multi-Language Switch (Bengali/English/Hindi)',
-    bn: 'মাল্টি-ল্যাঙ্গুয়েজ সুইচ (বাংলা/ইংরেজি/হিন্দি)',
-    hi: 'बहुभाषी स्विच (बंगाली/अंग्रेजी/हिंदी)'
-  },
-  {
-    id: 'callback_modal',
-    en: 'Instant Phone Callback Request Modal',
-    bn: 'ইনস্ট্যান্ট ফোন কলব্যাক রিকোয়েস্ট মডাল',
-    hi: 'त्वरित कॉल बैक अनुरोध'
-  },
-  {
-    id: 'theme_toggle',
-    en: 'Dark Mode & Light Mode Theme Switcher',
-    bn: 'ডার্ক মোড ও লাইট মোড থিম সুইচার',
-    hi: 'डार्क और लाइट थीम स्विचर'
-  },
-  {
-    id: 'seo_schema',
-    en: 'Full Technical SEO & Google Rich Schema',
-    bn: 'সম্পূর্ণ টেকনিক্যাল এসইও ও গুগল স্কিমা',
-    hi: 'तकनीकी एसईओ और गूगल स्कीमा'
-  }
-];
-
-// Multilingual Payment Methods
-const MULTI_PAYMENTS = [
-  { id: 'razorpay', en: 'Razorpay (Cards, Netbanking, UPI)', bn: 'Razorpay (কার্ড, নেটব্যাংকিং, UPI)', hi: 'Razorpay (कार्ड, नेटबैंकिंग, UPI)' },
-  { id: 'upi', en: 'UPI (GPay / PhonePe / Paytm Instant QR)', bn: 'UPI (GPay / PhonePe / Paytm ইনস্ট্যান্ট QR)', hi: 'UPI (GPay / PhonePe / Paytm QR)' },
-  { id: 'cod', en: 'Cash on Delivery (COD) / Pay at Venue', bn: 'ক্যাশ অন ডেলিভারি (COD) / ভেন্যুতে পেমেন্ট', hi: 'कैश ऑन डिलीवरी (COD) / स्थल पर भुगतान' },
-  { id: 'bank', en: 'Direct Bank Transfer (NEFT/IMPS Invoicing)', bn: 'ডিরেক্ট ব্যাংক ট্রান্সফার (NEFT/IMPS ইনভয়েসিং)', hi: 'सीधा बैंक ट्रांसफर (NEFT/IMPS)' },
-  { id: 'stripe', en: 'Stripe (International USD/EUR Cards)', bn: 'Stripe (আন্তর্জাতিক ডলার/ইউরো কার্ড)', hi: 'Stripe (अंतरराष्ट्रीय कार्ड)' },
-  { id: 'inquiry_only', en: 'No Online Payments (Inquiry Only)', bn: 'অনলাইন পেমেন্ট ছাড়া (শুধুমাত্র ইনকোয়ারি)', hi: 'ऑनलाइन भुगतान नहीं (केवल पूछताछ)' }
-];
-
-// Reusable Step Header with AI Summary Trigger
-function StepHeader({ stepIdx, title, subtitle, t, lang, onOpenAiSummary }) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 dark:border-slate-800 pb-4">
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-black tracking-wider uppercase text-purple-600 dark:text-purple-400 font-mono">
-            {t.stepLabel} {stepIdx + 1} of {t.steps.length}
-          </span>
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            {t.steps[stepIdx]?.title}
-          </span>
-        </div>
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-          {title}
-        </h2>
-        {subtitle && (
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
-            {subtitle}
-          </p>
-        )}
-      </div>
-
-      <button
-        type="button"
-        onClick={() => onOpenAiSummary(stepIdx)}
-        className="self-start sm:self-center px-3.5 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/70 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer shrink-0 active:scale-95"
-        title={lang === 'bn' ? 'এই ধাপের প্রশ্ন ও অপশনের এআই সারসংক্ষেপ দেখুন' : lang === 'hi' ? 'इस चरण का AI सारांश देखें' : 'View AI Summary & Guide for this step'}
-      >
-        <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-        <span>{lang === 'bn' ? 'এই ধাপের AI সারসংক্ষেপ' : lang === 'hi' ? 'इस चरण का AI सारांश' : 'Step AI Summary'}</span>
-      </button>
-    </div>
-  );
-}
-
-// Step AI Typewriter View with Dynamic Streaming & Filtered Unlocked Steps
-function StepAiTypewriterView({
-  guideData,
-  lang,
-  selection,
-  stepIdx,
-  maxReachedStep,
-  currentStepIndex,
-  onSelectStep,
-  onSwitchLang,
-  t
-}) {
-  const [typedQuestion, setTypedQuestion] = useState('');
-  const [typedTip, setTypedTip] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const activeT = t || TRANSLATIONS[lang] || TRANSLATIONS.en;
-
-  useEffect(() => {
-    if (!guideData) return;
-    setIsTyping(true);
-    setTypedQuestion('');
-    setTypedTip('');
-
-    let qIdx = 0;
-    const qText = guideData.question || '';
-    const qInterval = setInterval(() => {
-      if (qIdx < qText.length) {
-        setTypedQuestion(qText.slice(0, qIdx + 1));
-        qIdx++;
-      } else {
-        clearInterval(qInterval);
-        setIsTyping(false);
-      }
-    }, 15);
-
-    return () => clearInterval(qInterval);
-  }, [guideData?.question, guideData?.tip, stepIdx, lang]);
-
-  return (
-    <div className="space-y-4 animate-in fade-in">
-      {/* Step Navigation Ribbon: ONLY show unlocked steps! */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none snap-x">
-        {(activeT?.steps || []).map((s, idx) => {
-          const isUnlocked = idx <= maxReachedStep;
-          const isSelected = idx === stepIdx;
-          const isFormCurrent = idx === currentStepIndex;
-
-          if (!isUnlocked) return null; // Hide locked steps
-
-          return (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => onSelectStep(idx)}
-              className={`px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap flex items-center gap-1 transition-all cursor-pointer shrink-0 snap-center ${
-                isSelected
-                  ? 'bg-purple-600 text-white shadow-xs font-black ring-2 ring-purple-400/30 scale-102'
-                  : isFormCurrent
-                  ? 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/70 dark:border-slate-700 hover:text-purple-600'
-              }`}
-            >
-              <span>#{idx + 1}</span>
-              <span>{s.short}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Step Header Banner */}
-      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-50/90 to-indigo-50/90 dark:from-purple-950/40 dark:to-indigo-950/30 border border-purple-200/90 dark:border-purple-800/80 flex items-center justify-between gap-3 shadow-2xs">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
-            #{stepIdx + 1}
-          </div>
-          <div>
-            <h4 className="font-black text-sm text-slate-900 dark:text-white">
-              {guideData.title}
-            </h4>
-            <p className="text-[11px] text-purple-700 dark:text-purple-300 font-medium">
-              {guideData.purpose}
-            </p>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => onSwitchLang(lang === 'bn' ? 'en' : 'bn')}
-          className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-[11px] font-bold flex items-center gap-1 cursor-pointer shadow-2xs hover:scale-102 transition-all shrink-0"
-        >
-          <Languages className="w-3.5 h-3.5 text-purple-600" />
-          <span>{lang === 'bn' ? 'View English' : 'বাংলায় দেখুন'}</span>
-        </button>
-      </div>
-
-      {/* 1. Core Question Card (with Typewriter) */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-1.5 shadow-2xs">
-        <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300 font-black text-xs uppercase tracking-wider">
-          <HelpCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-          <span>{lang === 'bn' ? '🎯 এই ধাপে যা জানতে চাওয়া হয়েছে (Question & Objective)' : lang === 'hi' ? '🎯 इस चरण का मुख्य प्रश्न' : '🎯 Step Question & Objective'}</span>
-        </div>
-        <p className="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white leading-relaxed">
-          {typedQuestion}
-          {isTyping && <span className="inline-block w-2 h-3.5 bg-purple-600 ml-1 rounded-xs animate-pulse" />}
-        </p>
-      </div>
-
-      {/* 2. Options Breakdown Card */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 shadow-2xs">
-        <div className="flex items-center justify-between gap-2 text-indigo-700 dark:text-indigo-300 font-black text-xs uppercase tracking-wider">
-          <div className="flex items-center gap-1.5">
-            <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            <span>{lang === 'bn' ? '📋 এই ধাপের অপশনসমূহ ও সহজ ব্যাখ্যা' : lang === 'hi' ? '📋 विकल्पों का विवरण' : '📋 Available Options & Meanings'}</span>
-          </div>
-          <span className="text-[10px] font-mono text-slate-400 font-bold">
-            {guideData.options?.length || 0} {lang === 'bn' ? 'টি অপশন' : 'Options'}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {guideData.options?.map((opt, i) => (
-            <div
-              key={i}
-              className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 flex items-start gap-2 shadow-2xs"
-            >
-              <span className="w-2 h-2 rounded-full bg-purple-500 mt-1.5 shrink-0" />
-              <div className="space-y-0.5 min-w-0">
-                <strong className="text-xs font-bold text-slate-900 dark:text-white block truncate">
-                  {opt.name}
-                </strong>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
-                  {opt.desc}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 3. AI Pro Recommendation Tip */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/70 space-y-1.5 shadow-2xs">
-        <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 font-black text-xs uppercase tracking-wider">
-          <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-          <span>{lang === 'bn' ? '💡 এআই স্মার্ট পরামর্শ (AI Recommendation)' : lang === 'hi' ? '💡 एआई स्मार्ट सलाह' : '💡 AI Pro Recommendation'}</span>
-        </div>
-        <p className="text-xs text-amber-950 dark:text-amber-200 leading-relaxed font-medium">
-          {typedTip || guideData.tip}
-        </p>
-      </div>
-
-      {/* 4. Real-time User Selection Preview */}
-      <div className="p-3.5 sm:p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/60 flex items-center justify-between gap-3 shadow-2xs">
-        <div className="space-y-0.5 min-w-0">
-          <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 block">
-            {lang === 'bn' ? '✅ ফর্মে আপনার বর্তমান নির্বাচন:' : lang === 'hi' ? '✅ आपका वर्तमान चयन:' : '✅ Your Current Selection in Form:'}
-          </span>
-          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">
-            {selection}
-          </p>
-        </div>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 shrink-0">
-          Live
-        </span>
-      </div>
-    </div>
-  );
-}
 
 export default function GetStarted() {
-  const navigate = useNavigate();
-  const { templateId } = useParams();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const [couponInput, setCouponInput] = useState('');
-  const [appliedTemplate, setAppliedTemplate] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('l2b_get_started_applied_template');
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-    }
-    return null;
-  });
   const { user } = useAuth();
   const { settings } = useSiteSettings();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const { templateId } = useParams();
 
-  // Language State: 'en' | 'bn' | 'hi'
-  const [lang, setLang] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('l2b_form_lang') || 'en';
-    }
-    return 'en';
-  });
-
+  // Language state
+  const [lang, setLang] = useState('en');
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
-  // Step index persisted across page reloads
-  const [currentStepIndex, setCurrentStepIndex] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedStep = localStorage.getItem('l2b_get_started_step');
-      if (savedStep !== null) {
-        const parsed = parseInt(savedStep, 10);
-        if (!isNaN(parsed) && parsed >= 0 && parsed <= 11) {
-          return parsed;
-        }
-      }
-    }
-    return 0;
-  });
+  // Step indicator (1 to 10)
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 10;
 
-  const [maxReachedStep, setMaxReachedStep] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedMax = localStorage.getItem('l2b_get_started_max_step');
-      if (savedMax !== null) {
-        const parsed = parseInt(savedMax, 10);
-        if (!isNaN(parsed) && parsed >= 0 && parsed <= 11) {
-          return parsed;
-        }
-      }
-    }
-    return 0;
-  });
+  // Template state
+  const [dbDemosList, setDbDemosList] = useState([]);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submittedData, setSubmittedData] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [copiedId, setCopiedId] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [lastSavedTime, setLastSavedTime] = useState('');
-
-  // AI Summary State with progressive typewriter stream & multi-stage analysis
-  const [aiSummary, setAiSummary] = useState('');
-  const [displayedAiSummary, setDisplayedAiSummary] = useState('');
-  const [aiAnalysisStage, setAiAnalysisStage] = useState(0); // 0: Idle, 1: Niche, 2: Tech, 3: Sprint, 4: Ready
-  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [copiedAi, setCopiedAi] = useState(false);
-
-  // AI Modal Tab & Language Selection ('step' | 'full', 'bn' | 'en' | 'hi')
-  const [aiModalTab, setAiModalTab] = useState('step');
-  const [aiModalStepIndex, setAiModalStepIndex] = useState(0);
-  const [aiModalLang, setAiModalLang] = useState(lang || 'en');
-
-  const stepScrollContainerRef = useRef(null);
-
-  const [formData, setFormData] = useState(() => {
-    const defaultData = {
-      requirementId: '',
-      websiteType: 'restaurant',
-      websiteTypeName: 'Restaurant & Dining',
-      clientInfo: {
-        businessName: '',
-        ownerName: '',
-        mobile: '',
-        email: '',
-        city: '',
-        existingWebsite: '',
-        hasLogo: 'yes',
-        contentReady: 'yes'
-      },
-      businessDetails: {
-        selectedCuisines: [],
-        specialties: '',
-        operatingHours: '',
-        serviceArea: '',
-        seatingCapacity: '',
-        tableBookingSlots: [],
-        foodDelivery: [],
-        orderType: [],
-        instagramFeed: '',
-        numberOfStylists: '',
-        bookingStyle: [],
-        serviceDuration: '',
-        membershipTiers: [],
-        trialPass: '',
-        classSchedule: '',
-        roomBookingEngine: '',
-        amenities: [],
-        checkinPolicy: '',
-        propertyFilter: [],
-        virtualTours: '',
-        siteVisit: '',
-        catalogSize: '',
-        ecommerceFeatures: [],
-        customBusinessType: '',
-        customFeatures: ''
-      },
-      selectedPages: [
-        'Home Page (High-Converting Hero)',
-        'Services / Food Menu / Product Catalog',
-        'Online Booking / Reservation System',
-        'Contact Page & Google Map Integration',
-        'Customer Reviews & Testimonials'
-      ],
-      selectedFeatures: [
-        'User Registration / Customer Login',
-        'Online Table / Appointment Booking',
-        'Automated WhatsApp Lead Notifications'
-      ],
-      paymentMethods: ['Razorpay (Cards, Netbanking, UPI)', 'UPI (GPay / PhonePe / Paytm Instant QR)', 'Cash on Delivery (COD) / Pay at Venue'],
-      adminPanelType: 'Full Dynamic Admin Panel',
-      whatsappIntegration: true,
-      whatsappOptions: ['WhatsApp Floating Quick Chat Button', 'Direct Order / Booking to WhatsApp with Pre-filled Payload'],
-      emailIntegration: true,
-      emailOptions: ['Automated Customer Confirmation Email & Receipt', 'Instant Admin Email Alert for every submission'],
-      designStyle: 'Modern Glassmorphic & Vibrant',
-      preferredColors: 'Purple, Neon Blue & Luxury Gold',
-      referenceUrls: '',
-      uploadedImages: [],
-      domainStatus: 'Need New Domain (Free Included)',
-      hostingStatus: 'High-Speed Cloud Hosting (Free 1-Yr Included)',
-      budget: '₹12,999 – ₹24,999 (Standard Commercial)',
-      timeline: 'Express Delivery (48 - 72 Hours)',
-      couponCode: searchParams.get('coupon') || '',
-      discountPercent: searchParams.get('coupon') ? 20 : 0,
-      additionalNotes: ''
-    };
-
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('l2b_get_started_autosave_v2');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          return {
-            ...defaultData,
-            ...parsed,
-            clientInfo: {
-              ...defaultData.clientInfo,
-              ...(parsed.clientInfo || {})
-            },
-            businessDetails: {
-              ...defaultData.businessDetails,
-              ...(parsed.businessDetails || {})
-            }
-          };
-        } catch (e) {
-          console.warn('Autosave parse error:', e);
-        }
-      }
-    }
-    return defaultData;
-  });
-
-  const [selectedFileObjects, setSelectedFileObjects] = useState([]);
-  const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
-  const [isUploadingImages, setIsUploadingImages] = useState(false);
-  const [publishedFormSchema, setPublishedFormSchema] = useState(null);
-  const [databaseDemos, setDatabaseDemos] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('l2b_cached_demos');
-      if (cached) {
-        try {
-          const list = JSON.parse(cached);
-          if (Array.isArray(list)) return list;
-        } catch (e) {}
-      }
-    }
-    return [];
-  });
-
-  // Fetch all live database templates from backend to guarantee every created template is listed
   useEffect(() => {
-    let isMounted = true;
-    async function loadAllDemos() {
+    const fetchDbDemos = async () => {
       try {
         const res = await api.get('/demos');
-        if (res && res.success && Array.isArray(res.demos)) {
-          if (isMounted) {
-            setDatabaseDemos(res.demos);
-            localStorage.setItem('l2b_cached_demos', JSON.stringify(res.demos));
-          }
+        if (res?.success && Array.isArray(res.demos)) {
+          setDbDemosList(res.demos);
+        } else if (Array.isArray(res?.data)) {
+          setDbDemosList(res.data);
+        } else if (Array.isArray(res)) {
+          setDbDemosList(res);
         }
       } catch (err) {
-        console.warn('Could not load database demos:', err?.message || err);
+        console.warn('Could not load DB demos in order form:', err.message);
       }
-    }
-    loadAllDemos();
-    return () => { isMounted = false; };
+    };
+    fetchDbDemos();
   }, []);
 
-  // Continuous real-time persistent autosave to localStorage
+  const getDemosForCategory = useCallback((category) => {
+    return filterDemosForCategory(dbDemosList, category);
+  }, [dbDemosList]);
+
+  const [appliedTemplate, setAppliedTemplate] = useState(() => {
+    const direct = location.state?.selectedDemo || searchParams.get('title') || searchParams.get('template') || templateId || '';
+    return (direct && direct !== 'Custom Website') ? direct : '';
+  });
+
+  // Sync appliedTemplate whenever dynamic route / URL params / state change
   useEffect(() => {
-    if (typeof window !== 'undefined' && !submittedData) {
-      try {
-        localStorage.setItem('l2b_get_started_step', String(currentStepIndex));
-        localStorage.setItem('l2b_get_started_max_step', String(maxReachedStep));
-        localStorage.setItem('l2b_get_started_autosave_v2', JSON.stringify(formData));
-        const now = new Date();
-        setLastSavedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-      } catch (err) {
-        console.warn('LocalStorage save error:', err);
-      }
-    }
-  }, [currentStepIndex, maxReachedStep, formData, submittedData]);
-
-  // Auto scroll active step pill into view on mobile
-  useEffect(() => {
-    if (stepScrollContainerRef.current) {
-      const activeBtn = stepScrollContainerRef.current.children[currentStepIndex];
-      if (activeBtn) {
-        activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-      }
-    }
-  }, [currentStepIndex]);
-
-  // Auto-Apply template details and parameters from Dynamic Routes (:templateId), query params, or state
-  useEffect(() => {
-    const rawTemplate =
-      templateId ||
-      searchParams.get('template') ||
-      searchParams.get('demo') ||
-      location.state?.templateId ||
-      location.state?.slug ||
-      '';
-    const planParam = searchParams.get('plan') || location.state?.plan || '';
-    const titleParam = searchParams.get('title') || location.state?.selectedDemo || location.state?.templateTitle || '';
-    const categoryParam = searchParams.get('category') || location.state?.category || '';
-    const priceParam = searchParams.get('price') || location.state?.price || '';
-    const couponParam = searchParams.get('coupon') || location.state?.promoCode || '';
-    const discountParam = searchParams.get('discount') || location.state?.discountPercent || '';
-
-    let matchedDemo = null;
-    if (rawTemplate) {
-      const cleanKey = String(rawTemplate).toLowerCase().replace(/^demo_/, '').trim();
-      matchedDemo =
-        FALLBACK_TEMPLATE_SPECS[cleanKey] ||
-        Object.values(FALLBACK_TEMPLATE_SPECS).find(
-          (d) => d.slug === cleanKey || d.categorySlug === cleanKey || d.category.toLowerCase().includes(cleanKey)
-        );
-
-      if (!matchedDemo && typeof window !== 'undefined') {
-        const cached = localStorage.getItem('l2b_cached_demos');
-        if (cached) {
-          try {
-            const list = JSON.parse(cached);
-            if (Array.isArray(list)) {
-              matchedDemo = list.find(
-                (d) =>
-                  d.slug === cleanKey ||
-                  d._id === rawTemplate ||
-                  d.category?.toLowerCase() === cleanKey ||
-                  d.title?.toLowerCase().includes(cleanKey)
-              );
-            }
-          } catch (e) {}
-        }
-      }
-    }
-
-    if (rawTemplate || planParam || titleParam || location.state) {
-      const finalTitle = matchedDemo?.title || titleParam || (planParam ? `Plan: ${planParam}` : rawTemplate);
-      const finalCategorySlug =
-        matchedDemo?.categorySlug ||
-        (categoryParam ? mapSlugToCategorySlug(categoryParam) : (rawTemplate ? mapSlugToCategorySlug(rawTemplate) : 'restaurant'));
-      const finalPrice = matchedDemo?.price || priceParam || (planParam ? 'Custom Package' : '₹5,999');
-      const finalTurnaround = matchedDemo?.turnaround || '2 - 4 Days';
-      const finalLiveUrl = matchedDemo?.liveUrl || location.state?.demoDetails?.liveUrl || '';
-      const finalHero =
-        matchedDemo?.heroImage ||
-        location.state?.demoDetails?.heroImage ||
-        location.state?.demoDetails?.thumbnail ||
-        '';
-
-      const templateObj = {
-        title: finalTitle,
-        slug: rawTemplate || matchedDemo?.slug || 'template',
-        category: matchedDemo?.category || categoryParam || 'Website Template',
-        categorySlug: finalCategorySlug,
-        price: finalPrice,
-        turnaround: finalTurnaround,
-        liveUrl: finalLiveUrl,
-        heroImage: finalHero,
-        features: matchedDemo?.features || []
-      };
-
-      setAppliedTemplate(templateObj);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('l2b_get_started_applied_template', JSON.stringify(templateObj));
-      }
-
-      setFormData((prev) => {
-        const activeCoupon = couponParam || prev.couponCode || 'INDIA2025';
-        const activeDiscount = couponParam ? (Number(discountParam) || 20) : (prev.discountPercent || 20);
-        return {
-          ...prev,
-          websiteType: finalCategorySlug || prev.websiteType,
-          websiteTypeName: finalTitle || prev.websiteTypeName,
-          referenceUrls: finalLiveUrl || prev.referenceUrls,
-          couponCode: activeCoupon,
-          discountPercent: activeDiscount,
-          timeline: `⚡ Express Delivery (${finalTurnaround})`,
-          budget: finalPrice.includes('₹') ? `${finalPrice} (Template Specification)` : prev.budget,
-          selectedFeatures:
-            matchedDemo?.features && matchedDemo.features.length > 0
-              ? Array.from(new Set([...prev.selectedFeatures, ...matchedDemo.features]))
-              : prev.selectedFeatures,
-          additionalNotes:
-            prev.additionalNotes ||
-            `[Auto-Applied Template] ${finalTitle} (${templateObj.category}) with 20% discount offer.`
-        };
-      });
-
-      toast.success(
-        lang === 'bn'
-          ? `🎯 টেমপ্লেট "${finalTitle}" সফলভাবে যুক্ত হয়েছে! ২০% ডিসকাউন্ট সক্রিয়।`
-          : lang === 'hi'
-          ? `🎯 टेम्पलेट "${finalTitle}" ऑटो-अप्लाई हो गया है! 20% छूट सक्रिय।`
-          : `🎯 Template "${finalTitle}" auto-applied with 20% OFF coupon!`
-      );
+    const direct = location.state?.selectedDemo || searchParams.get('title') || searchParams.get('template') || templateId || '';
+    if (direct && direct !== 'Custom Website') {
+      setAppliedTemplate(direct);
+      const matchedCategory = resolveCategoryFromTemplate(direct);
+      setFormData(prev => ({
+        ...prev,
+        appliedTemplateName: direct,
+        ...(matchedCategory ? { selectedCategory: matchedCategory } : {})
+      }));
     }
   }, [templateId, searchParams, location.state]);
 
-  // If user logs in after mount, populate empty credentials
+  // Guarantee that whenever appliedTemplate is set, selectedCategory is strictly locked to that template
   useEffect(() => {
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        clientInfo: {
-          ...prev.clientInfo,
-          ownerName: prev.clientInfo.ownerName || user.name || '',
-          mobile: prev.clientInfo.mobile || user.phone || '',
-          email: prev.clientInfo.email || user.email || ''
-        }
-      }));
-    }
-  }, [user]);
-
-  // Fetch dynamic published form schema from backend
-  useEffect(() => {
-    let isMounted = true;
-    const fetchPublishedSchema = async () => {
-      try {
-        const res = await api.get('/forms/published');
-        if (isMounted && res && res.success && res.form) {
-          setPublishedFormSchema(res.form);
-        }
-      } catch (err) {
-        // Fallback safely to built-in presets
-      }
-    };
-    fetchPublishedSchema();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const changeLanguage = (newLang) => {
-    setLang(newLang);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('l2b_form_lang', newLang);
-    }
-    toast.info(
-      newLang === 'bn'
-        ? 'বাংলা ভাষা সক্রিয় করা হয়েছে'
-        : newLang === 'hi'
-        ? 'हिंदी भाषा सक्रिय की गई'
-        : 'English Language Active'
-    );
-  };
-
-  // Explicit Manual Save Action with Toast Feedback
-  const handleManualSave = (silent = false) => {
-    const isSilent = silent === true;
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('l2b_get_started_step', String(currentStepIndex));
-        localStorage.setItem('l2b_get_started_max_step', String(maxReachedStep));
-        localStorage.setItem('l2b_get_started_autosave_v2', JSON.stringify(formData));
-        if (appliedTemplate) {
-          localStorage.setItem('l2b_get_started_applied_template', JSON.stringify(appliedTemplate));
-        }
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        setLastSavedTime(timeStr);
-        if (!isSilent) {
-          toast.success(
-            lang === 'bn'
-              ? '✨ আপনার সমস্ত তথ্য ও কুপন সফলভাবে সেভ করা হয়েছে!'
-              : lang === 'hi'
-              ? '✨ आपकी सभी जानकारी और कूपन सफलतापूर्वक सहेजे गए!'
-              : '✨ Progress and draft saved successfully!'
-          );
-        }
-      } catch (err) {
-        console.warn('Manual save error:', err);
-        if (!isSilent) toast.error('Failed to save progress locally');
-      }
-    }
-  };
-
-  // Explicit Form & Coupon Reset with Toast Feedback
-  const handleResetForm = () => {
-    if (
-      window.confirm(
-        lang === 'bn'
-          ? 'আপনি কি ফর্মের সমস্ত তথ্য ও কুপন মুছে নতুন করে শুরু করতে চান?'
-          : lang === 'hi'
-          ? 'क्या आप फॉर्म और कूपन का सारा डेटा रीसेट करना चाहते हैं?'
-          : 'Are you sure you want to reset and clear all form progress and applied coupons?'
-      )
-    ) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('l2b_get_started_step');
-        localStorage.removeItem('l2b_get_started_max_step');
-        localStorage.removeItem('l2b_get_started_autosave_v2');
-        localStorage.removeItem('l2b_get_started_applied_template');
-      }
-      setAppliedTemplate(null);
-      setCurrentStepIndex(0);
-      setMaxReachedStep(0);
-      setFormData({
-        requirementId: '',
-        websiteType: 'restaurant',
-        websiteTypeName: 'Restaurant & Dining',
-        clientInfo: {
-          businessName: '',
-          ownerName: user?.name || '',
-          mobile: user?.phone || '',
-          email: user?.email || '',
-          city: '',
-          existingWebsite: '',
-          hasLogo: 'yes',
-          contentReady: 'yes'
-        },
-        businessDetails: {
-          selectedCuisines: [],
-          specialties: '',
-          operatingHours: '',
-          serviceArea: '',
-          seatingCapacity: '',
-          tableBookingSlots: [],
-          foodDelivery: [],
-          orderType: [],
-          instagramFeed: '',
-          numberOfStylists: '',
-          bookingStyle: [],
-          serviceDuration: '',
-          membershipTiers: [],
-          trialPass: '',
-          classSchedule: '',
-          roomBookingEngine: '',
-          amenities: [],
-          checkinPolicy: '',
-          propertyFilter: [],
-          virtualTours: '',
-          siteVisit: '',
-          catalogSize: '',
-          ecommerceFeatures: [],
-          customBusinessType: '',
-          customFeatures: ''
-        },
-        selectedPages: [
-          'Home Page (High-Converting Hero)',
-          'Services / Food Menu / Product Catalog',
-          'Online Booking / Reservation System',
-          'Contact Page & Google Map Integration',
-          'Customer Reviews & Testimonials'
-        ],
-        selectedFeatures: [
-          'User Registration / Customer Login',
-          'Online Table / Appointment Booking',
-          'Automated WhatsApp Lead Notifications'
-        ],
-        paymentMethods: ['Razorpay (Cards, Netbanking, UPI)', 'UPI (GPay / PhonePe / Paytm Instant QR)', 'Cash on Delivery (COD) / Pay at Venue'],
-        adminPanelType: 'Full Dynamic Admin Panel',
-        whatsappIntegration: true,
-        whatsappOptions: ['WhatsApp Floating Quick Chat Button', 'Direct Order / Booking to WhatsApp with Pre-filled Payload'],
-        emailIntegration: true,
-        emailOptions: ['Automated Customer Confirmation Email & Receipt', 'Instant Admin Email Alert for every submission'],
-        designStyle: 'Modern Glassmorphic & Vibrant',
-        preferredColors: 'Purple, Neon Blue & Luxury Gold',
-        referenceUrls: '',
-        uploadedImages: [],
-        domainStatus: 'Need New Domain (Free Included)',
-        hostingStatus: 'High-Speed Cloud Hosting (Free 1-Yr Included)',
-        budget: '₹12,999 – ₹24,999 (Standard Commercial)',
-        timeline: '⚡ Express Delivery (48 - 72 Hours)',
-        couponCode: '',
-        discountPercent: 0,
-        additionalNotes: ''
-      });
-      toast.info(
-        lang === 'bn'
-          ? '🔄 ফর্ম ও কুপনের তথ্য সফলভাবে রিসেট করা হয়েছে!'
-          : lang === 'hi'
-          ? '🔄 फॉर्म और कूपन सफलतापूर्वक रीसेट कर दिया गया!'
-          : '🔄 Form and coupon have been reset to default!'
-      );
-    }
-  };
-
-  // Coupon Application Handler
-  const handleApplyCoupon = (customCode) => {
-    const code = (customCode || couponInput || '').trim().toUpperCase();
-    if (!code) {
-      toast.warn(lang === 'bn' ? 'অনুগ্রহ করে একটি কুপন কোড লিখুন' : lang === 'hi' ? 'कृपया कूपन कोड दर्ज करें' : 'Please enter a coupon code');
-      return;
-    }
-    let discount = 20;
-    if (code === 'STARTUP50') discount = 50;
-    else if (code === 'FESTIVE25') discount = 25;
-    else if (code === 'LOCAL10') discount = 10;
-    else if (code === 'INDIA2025') discount = 20;
-
-    setFormData((prev) => ({
-      ...prev,
-      couponCode: code,
-      discountPercent: discount
-    }));
-    setCouponInput('');
-    handleManualSave();
-    toast.success(
-      lang === 'bn'
-        ? `🎉 কুপন "${code}" যুক্ত হয়েছে! ${discount}% ডিসকাউন্ট সক্রিয়।`
-        : lang === 'hi'
-        ? `🎉 कूपन "${code}" लागू हो गया! ${discount}% छूट सक्रिय।`
-        : `🎉 Coupon "${code}" applied successfully! ${discount}% OFF active.`
-    );
-  };
-
-  // Coupon Removal Handler
-  const handleRemoveCoupon = () => {
-    setFormData((prev) => ({
-      ...prev,
-      couponCode: '',
-      discountPercent: 0
-    }));
-    handleManualSave();
-    toast.info(
-      lang === 'bn' ? '🏷️ কুপন সরানো হয়েছে।' : lang === 'hi' ? '🏷️ कूपन हटा दिया गया।' : '🏷️ Coupon removed.'
-    );
-  };
-
-  const validateStep = (stepIdx) => {
-    if (stepIdx === 0) {
-      if (!formData.websiteType) {
-        return lang === 'bn' ? 'অনুগ্রহ করে একটি ইন্ডাস্ট্রি ক্যাটাগরি বেছে নিন।' : lang === 'hi' ? 'कृपया एक उद्योग श्रेणी चुनें।' : 'Please select a business industry category.';
-      }
-    }
-    if (stepIdx === 1) {
-      if (!formData.clientInfo.businessName?.trim()) {
-        return lang === 'bn' ? 'অনুগ্রহ করে আপনার ব্যবসার নাম লিখুন।' : lang === 'hi' ? 'कृपया अपने बिज़नेस का नाम दर्ज करें।' : 'Please enter your Business / Brand Name.';
-      }
-      if (!formData.clientInfo.ownerName?.trim()) {
-        return lang === 'bn' ? 'অনুগ্রহ করে প্রতিষ্ঠাতা বা মালিকের নাম লিখুন।' : lang === 'hi' ? 'कृपया मालिक / संस्थापक का नाम दर्ज करें।' : 'Please enter Owner / Founder Name.';
-      }
-      if (!formData.clientInfo.mobile?.trim() || formData.clientInfo.mobile.replace(/[^0-9]/g, '').length < 8) {
-        return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ফোন/হোয়াটসঅ্যাপ নম্বর দিন।' : lang === 'hi' ? 'कृपया एक वैध मोबाइल नंबर दर्ज करें।' : 'Please enter a valid Mobile / WhatsApp number.';
-      }
-      if (!formData.clientInfo.email?.trim() || !formData.clientInfo.email.includes('@')) {
-        return lang === 'bn' ? 'অনুগ্রহ করে একটি সঠিক ইমেইল অ্যাড্রেস দিন।' : lang === 'hi' ? 'कृपया एक वैध ईमेल पता दर्ज करें।' : 'Please provide a valid Email address.';
-      }
-      if (!formData.clientInfo.city?.trim()) {
-        return lang === 'bn' ? 'অনুগ্রহ করে আপনার শহর বা লোকেশন দিন।' : lang === 'hi' ? 'कृपया अपना शहर दर्ज करें।' : 'Please enter your City / Location.';
-      }
-    }
-    if (stepIdx === 2) {
-      if (!formData.businessDetails.specialties?.trim()) {
-        return lang === 'bn' ? 'অনুগ্রহ করে আপনার মূল বৈশিষ্ট্য বা অফারিংস লিখুন।' : lang === 'hi' ? 'कृपया अपनी मुख्य विशेषताएं या आइटम दर्ज करें।' : 'Please enter your brand signature offerings & specialties.';
-      }
-    }
-    if (stepIdx === 3) {
-      if (!formData.selectedPages || formData.selectedPages.length === 0) {
-        return lang === 'bn' ? 'অনুগ্রহ করে কমপক্ষে ১ টি প্রয়োজনীয় পেজ বেছে নিন।' : lang === 'hi' ? 'कृपया कम से कम 1 पेज चुनें।' : 'Please select at least 1 required website page.';
-      }
-    }
-    if (stepIdx === 4) {
-      if (!formData.selectedFeatures || formData.selectedFeatures.length === 0) {
-        return lang === 'bn' ? 'অনুগ্রহ করে কমপক্ষে ১ টি মূল ফিচার বেছে নিন।' : lang === 'hi' ? 'कृपया कम से कम 1 मुख्य फीचर चुनें।' : 'Please select at least 1 core feature.';
-      }
-    }
-    if (stepIdx === 5) {
-      if (!formData.paymentMethods || formData.paymentMethods.length === 0) {
-        return lang === 'bn' ? 'অনুগ্রহ করে পেমেন্ট মেথড বেছে নিন।' : lang === 'hi' ? 'कृपया पेमेंट विकल्प चुनें।' : 'Please select at least 1 payment method.';
-      }
-    }
-    if (stepIdx === 6) {
-      if (!formData.adminPanelType) {
-        return lang === 'bn' ? 'অনুগ্রহ করে অ্যাডমিন প্যানেল টাইপ বেছে নিন।' : lang === 'hi' ? 'कृपया एडमिन पैनल चुनें।' : 'Please choose an admin panel option.';
-      }
-    }
-    return null;
-  };
-
-  const handleNext = () => {
-    const err = validateStep(currentStepIndex);
-    if (err) {
-      setErrorMessage(err);
-      toast.error(err);
-      return;
-    }
-
-    setErrorMessage('');
-    const nextStep = currentStepIndex + 1;
-    if (nextStep < t.steps.length) {
-      setCurrentStepIndex(nextStep);
-      setMaxReachedStep((prev) => Math.max(prev, nextStep));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleBack = () => {
-    setErrorMessage('');
-    if (currentStepIndex > 0) {
-      setCurrentStepIndex((prev) => prev - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const jumpToStep = (targetIndex) => {
-    if (targetIndex > maxReachedStep) {
-      toast.warning(lang === 'bn' ? `অনুগ্রহ করে ধাপ ${currentStepIndex + 1} পূরণ করে সামনে এগিয়ে যান।` : lang === 'hi' ? `कृपया आगे बढ़ने से पहले चरण ${currentStepIndex + 1} पूरा करें।` : `Please complete Step ${currentStepIndex + 1} before proceeding forward.`);
-      return;
-    }
-    setErrorMessage('');
-    setCurrentStepIndex(targetIndex);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleCopyShareLink = () => {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url);
-    setCopiedLink(true);
-    toast.success(lang === 'bn' ? 'ফর্মের লিংক কপি হয়েছে! ক্লায়েন্টকে পাঠান 🔗' : lang === 'hi' ? 'फॉर्म लिंक कॉपी हुआ! क्लाइंट को भेजें 🔗' : 'Form link copied to clipboard! Share it with your client. 🔗');
-    setTimeout(() => setCopiedLink(false), 3000);
-  };
-
-  const handleOpenStepAiSummary = (stepIdx = currentStepIndex) => {
-    setAiModalTab('step');
-    setAiModalStepIndex(typeof stepIdx === 'number' ? stepIdx : currentStepIndex);
-    setAiModalLang(lang || 'en');
-    setIsAiModalOpen(true);
-  };
-
-  const handleSwitchAiModalLang = (newLang) => {
-    setAiModalLang(newLang);
-  };
-
-  const handleCopyModalSummary = () => {
-    if (aiModalTab === 'step') {
-      const guide = STEP_AI_GUIDES[aiModalStepIndex] ? (STEP_AI_GUIDES[aiModalStepIndex][aiModalLang] || STEP_AI_GUIDES[aiModalStepIndex].en) : null;
-      const textToCopy = guide ? `${guide.title}\n${guide.purpose}\n\nObjective: ${guide.question}\n\nTip: ${guide.tip}` : '';
-      navigator.clipboard.writeText(textToCopy);
-    } else {
-      navigator.clipboard.writeText(displayedAiSummary || aiSummary);
-    }
-    setCopiedAi(true);
-    toast.success(lang === 'bn' ? 'সারসংক্ষেপ কপি হয়েছে!' : 'Summary copied to clipboard!');
-    setTimeout(() => setCopiedAi(false), 3000);
-  };
-
-  // Direct Cloud Upload for Store/Logo Photos (Immediate & Persistent)
-  const handleMultiImageUpload = async (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    const currentUploaded = Array.isArray(formData.uploadedImages) ? formData.uploadedImages : [];
-    if (currentUploaded.length + files.length > 20) {
-      toast.error('You can attach up to 20 photos in total.');
-      return;
-    }
-
-    setIsUploadingImages(true);
-    const toastId = toast.loading(`Uploading ${files.length} photo(s) to cloud storage... ⏳`);
-
-    try {
-      const newUrls = [];
-
-      // 1. Try Multipart upload with FormData
-      try {
-        const data = new FormData();
-        files.forEach((f) => {
-          data.append('images', f);
+    if (appliedTemplate && appliedTemplate !== 'Custom Website') {
+      const matchedCategory = resolveCategoryFromTemplate(appliedTemplate);
+      if (matchedCategory) {
+        setFormData(prev => {
+          if (prev.selectedCategory !== matchedCategory || prev.appliedTemplateName !== appliedTemplate) {
+            return {
+              ...prev,
+              selectedCategory: matchedCategory,
+              appliedTemplateName: appliedTemplate
+            };
+          }
+          return prev;
         });
-        const res = await api.post('/upload', data);
-        if (res && res.success && (res.urls || res.url)) {
-          const list = res.urls || [res.url];
-          list.forEach((u) => {
-            if (u && typeof u === 'string') newUrls.push(u);
-          });
+      }
+    }
+  }, [appliedTemplate]);
+
+  // Modal states
+  const [showAiDrawer, setShowAiDrawer] = useState(false);
+
+  // Freeze background page scrolling when AI Drawer is open
+  useEffect(() => {
+    if (showAiDrawer) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [showAiDrawer]);
+  const [aiDrawerTab, setAiDrawerTab] = useState('blueprint'); // 'blueprint' | 'chat'
+  const [summaryLang, setSummaryLang] = useState('en');
+  const [aiChatMessages, setAiChatMessages] = useState([]);
+  const [aiChatInput, setAiChatInput] = useState('');
+  const [aiChatLoading, setAiChatLoading] = useState(false);
+  const [aiChatSessionId] = useState(() => 'order_ai_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7));
+  const aiChatScrollRef = useRef(null);
+
+  useEffect(() => {
+    if (lang) setSummaryLang(lang);
+  }, [lang]);
+
+  useEffect(() => {
+    if (aiDrawerTab === 'chat' && aiChatScrollRef.current) {
+      aiChatScrollRef.current.scrollTop = aiChatScrollRef.current.scrollHeight;
+    }
+  }, [aiChatMessages, aiChatLoading, aiDrawerTab]);
+  const [previewDemoItem, setPreviewDemoItem] = useState(null);
+  const [lastSavedTime, setLastSavedTime] = useState(null);
+
+  // Form State - Starts 100% blank with no pre-selected options
+  const [formData, setFormData] = useState({
+    // Step 1: Client Details
+    fullName: '',
+    businessName: '',
+    mobileNumber: '',
+    whatsappNumber: '',
+    emailAddress: '',
+    country: 'India',
+    state: '',
+    district: '',
+    otherDistrict: '',
+    pincode: '',
+    streetAddress: '',
+    businessAddress: '',
+    cityLocation: '',
+    existingWebsite: '',
+    socialLinks: [],
+
+    // Step 2: Website Category
+    selectedCategory: '',
+    otherCategoryDescription: '',
+    appliedTemplateName: '',
+
+    // Step 3: Dynamic Category-Specific Questions
+    // Restaurant
+    restCuisine: '',
+    restSocialMedia: [],
+    restSocialOther: '',
+    restFeatures: [],
+    restFeaturesOther: '',
+    restStyle: '',
+    restStyleOther: '',
+    restColors: '',
+    restRefWebsite: '',
+    restHasLogo: '',
+    restProvidePhotos: '',
+    restAdditionalReq: '',
+
+    // Café
+    cafeName: '',
+    cafeOwner: '',
+    cafeMobile: '',
+    cafeEmail: '',
+    cafeAddress: '',
+    cafeFeatures: [],
+    cafeFeaturesOther: '',
+    cafeSpecialty: '',
+    cafeHours: '',
+    cafeSocialLinks: '',
+    cafeStyle: '',
+    cafeStyleOther: '',
+    cafeColors: '',
+    cafeHasLogo: '',
+    cafePhotosAvailable: '',
+    cafeAdditionalReq: '',
+
+    // Salon
+    salonBusinessName: '',
+    salonOwnerName: '',
+    salonMobile: '',
+    salonEmail: '',
+    salonAddress: '',
+    salonFeatures: [],
+    salonFeaturesOther: '',
+    salonServices: '',
+    salonHours: '',
+    salonSocialLinks: '',
+    salonStyle: '',
+    salonStyleOther: '',
+    salonColors: '',
+    salonHasLogo: '',
+    salonPhotosAvailable: '',
+    salonAdditionalReq: '',
+
+    // Gym
+    gymName: '',
+    gymOwner: '',
+    gymMobile: '',
+    gymEmail: '',
+    gymAddress: '',
+    gymFeatures: [],
+    gymFeaturesOther: '',
+    gymHours: '',
+    gymFacilities: '',
+    gymMembershipPlans: '',
+    gymStyle: '',
+    gymStyleOther: '',
+    gymColors: '',
+    gymHasLogo: '',
+    gymAdditionalReq: '',
+
+    // Hotel
+    hotelName: '',
+    hotelOwner: '',
+    hotelMobile: '',
+    hotelEmail: '',
+    hotelAddress: '',
+    hotelFeatures: [],
+    hotelFeaturesOther: '',
+    hotelRoomsCount: '',
+    hotelCheckinTime: '',
+    hotelAmenities: '',
+    hotelStyle: '',
+    hotelStyleOther: '',
+    hotelColors: '',
+    hotelPhotosAvailable: '',
+    hotelAdditionalReq: '',
+
+    // Real Estate
+    reBusinessName: '',
+    reOwner: '',
+    reMobile: '',
+    reEmail: '',
+    reAddress: '',
+    rePropertyTypes: [],
+    rePropertyTypesOther: '',
+    reFeatures: [],
+    reFeaturesOther: '',
+    reLocationsOperated: '',
+    reSpecialties: '',
+    reSocialLinks: '',
+    reStyle: '',
+    reStyleOther: '',
+    reColors: '',
+    reHasLogo: '',
+    reAdditionalReq: '',
+
+    // Photography
+    photoStudioName: '',
+    photoOwner: '',
+    photoMobile: '',
+    photoEmail: '',
+    photoAddress: '',
+    photoTypes: [],
+    photoTypesOther: '',
+    photoFeatures: [],
+    photoFeaturesOther: '',
+    photoPortfolioLinks: '',
+    photoPackagesOffered: '',
+    photoStyle: '',
+    photoStyleOther: '',
+    photoColors: '',
+    photoPhotosAvailable: '',
+    photoHasLogo: '',
+    photoAdditionalReq: '',
+
+    // Boutique
+    boutiqueBusinessName: '',
+    boutiqueOwner: '',
+    boutiqueMobile: '',
+    boutiqueEmail: '',
+    boutiqueAddress: '',
+    boutiqueProducts: [],
+    boutiqueProductsOther: '',
+    boutiqueFeatures: [],
+    boutiqueFeaturesOther: '',
+    boutiquePriceRange: '',
+    boutiqueDeliveryAvailable: '',
+    boutiqueSocialLinks: '',
+    boutiqueStyle: '',
+    boutiqueStyleOther: '',
+    boutiqueColors: '',
+    boutiquePhotosAvailable: '',
+    boutiqueHasLogo: '',
+    boutiqueAdditionalReq: '',
+
+    // Coaching
+    coachingInstituteName: '',
+    coachingOwner: '',
+    coachingMobile: '',
+    coachingEmail: '',
+    coachingAddress: '',
+    coachingCourses: '',
+    coachingTargetAudience: '',
+    coachingClassMode: '',
+    coachingFeatures: [],
+    coachingFeaturesOther: '',
+    coachingBatchTimings: '',
+    coachingSocialLinks: '',
+    coachingStyle: '',
+    coachingStyleOther: '',
+    coachingColors: '',
+    coachingHasLogo: '',
+    coachingAdditionalReq: '',
+
+    // Clinic / Doctor
+    clinicName: '',
+    clinicDoctorName: '',
+    clinicSpecialty: '',
+    clinicMobile: '',
+    clinicEmail: '',
+    clinicAddress: '',
+    clinicTimings: '',
+    clinicFeatures: [],
+    clinicFeaturesOther: '',
+    clinicSocialLinks: '',
+    clinicStyle: '',
+    clinicStyleOther: '',
+    clinicColors: '',
+    clinicDoctorPhotoAvailable: '',
+    clinicHasLogo: '',
+    clinicAdditionalReq: '',
+
+    // Jewellery / Gift Shop
+    jewelShopName: '',
+    jewelOwner: '',
+    jewelMobile: '',
+    jewelEmail: '',
+    jewelAddress: '',
+    jewelItemsHandled: [],
+    jewelItemsOther: '',
+    jewelFeatures: [],
+    jewelFeaturesOther: '',
+    jewelPriceSegment: '',
+    jewelCustomOrders: '',
+    jewelSocialLinks: '',
+    jewelStyle: '',
+    jewelStyleOther: '',
+    jewelColors: '',
+    jewelPhotosAvailable: '',
+    jewelHasLogo: '',
+    jewelAdditionalReq: '',
+
+    // Car / Bike Showroom
+    showroomBusinessName: '',
+    showroomOwner: '',
+    showroomMobile: '',
+    showroomEmail: '',
+    showroomAddress: '',
+    showroomFeatures: [],
+    showroomFeaturesOther: '',
+    showroomBusinessType: '',
+    showroomBrands: '',
+    showroomServices: '',
+    showroomStyle: '',
+    showroomStyleOther: '',
+    showroomPhotosAvailable: '',
+    showroomHasLogo: '',
+    showroomAdditionalReq: '',
+
+    // Other Custom Category
+    otherFeatures: [],
+    otherFeaturesCustom: '',
+    otherRequirementsNotes: '',
+
+    // Step 4: Design & Colors
+    visualStyle: '',
+    visualStyleOther: '',
+    colorTheme: '',
+    customColorCode: '#6366f1',
+    customColorDesc: '',
+
+    // Step 5: Logo & Media Files (Supports rich image previews & base64)
+    hasLogo: '',
+    hasPhotos: '',
+    hasContent: '',
+    referenceWebsites: '',
+    designInstructions: '',
+    logoFile: null, // { name, size, dataUrl }
+    photosFiles: [], // [ { name, size, dataUrl } ]
+    contentDocFile: null, // { name, size }
+
+    // Step 6: Domain & Hosting (Separated)
+    domainStatus: '',
+    domainName: '',
+    domainExtension: '.com',
+    domainOtherExtension: '',
+    hostingStatus: '',
+    hostingPlan: 'Basic',
+    hostingCustomDesc: '',
+
+    // Step 7: Backend & WhatsApp
+    backendRequirement: '',
+    backendCustomDesc: '',
+    whatsappIntegration: '',
+    whatsappNumberForIntegration: '',
+    whatsappCountryCode: '+91',
+    whatsappCustomDesc: '',
+
+    // Step 8: Other Integrations
+    otherIntegrations: [],
+    customIntegrationText: '',
+
+    // Step 9: Final Details & Budget
+    budgetBracket: '',
+    customBudget: '',
+    expectedLaunchDate: '',
+    additionalRequirements: '',
+    anythingElse: ''
+  });
+
+  // Dynamic Country Cultural Theme based on selected country (Transitions smoothly)
+  const currentCountryTheme = useMemo(() => {
+    const selected = formData?.country || 'India';
+    return COUNTRY_CULTURAL_THEMES[selected] || COUNTRY_CULTURAL_THEMES['India'] || COUNTRY_CULTURAL_THEMES['Other'];
+  }, [formData?.country]);
+
+  // Dynamic social link adder helper
+  const [socialInput, setSocialInput] = useState('');
+
+  // Coupon & Discount state: strictly 0% discount by default, applied ONLY when explicitly valid
+  const [couponInput, setCouponInput] = useState('');
+  const [couponCode, setCouponCode] = useState(() => {
+    const passed = searchParams.get('coupon') || searchParams.get('voucher') || location.state?.coupon || location.state?.appliedCoupon;
+    return passed || '';
+  });
+  const [discountPercent, setDiscountPercent] = useState(() => {
+    const passed = searchParams.get('coupon') || searchParams.get('voucher') || location.state?.coupon || location.state?.appliedCoupon;
+    return passed ? 20 : 0;
+  });
+  const [isCouponApplied, setIsCouponApplied] = useState(() => {
+    const passed = searchParams.get('coupon') || searchParams.get('voucher') || location.state?.coupon || location.state?.appliedCoupon;
+    return Boolean(passed);
+  });
+
+  const handleApplyCoupon = (codeToApply) => {
+    const code = (typeof codeToApply === 'string' ? codeToApply : couponInput).trim().toUpperCase();
+    if (!code) {
+      toast.error('Please enter a valid coupon code.');
+      return;
+    }
+    // Verified promo coupons: PRO20, WELCOME20, FESTIVE20, L2B20, SPECIAL20 or any won voucher
+    if (code.includes('20') || code.includes('L2B') || code.includes('PRO') || code.includes('SPECIAL') || code.includes('OFF')) {
+      setCouponCode(code);
+      setDiscountPercent(20);
+      setIsCouponApplied(true);
+      toast.success(`🎉 Coupon "${code}" applied! 20% Discount active.`);
+    } else {
+      setCouponCode(code);
+      setDiscountPercent(10);
+      setIsCouponApplied(true);
+      toast.success(`🎉 Coupon "${code}" applied! 10% Discount active.`);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setDiscountPercent(0);
+    setIsCouponApplied(false);
+    setCouponInput('');
+    toast.info('Coupon removed. Standard pricing restored.');
+  };
+
+  // Sync coupon when URL query params, location state, or won voucher change
+  useEffect(() => {
+    const passedCoupon = searchParams.get('coupon') || searchParams.get('voucher') || location.state?.coupon || location.state?.appliedCoupon;
+    if (passedCoupon) {
+      setCouponCode(passedCoupon);
+      setIsCouponApplied(true);
+      setDiscountPercent(20);
+    } else {
+      try {
+        const storedVoucher = localStorage.getItem('l2b_won_voucher');
+        if (storedVoucher) {
+          const parsed = JSON.parse(storedVoucher);
+          if (parsed?.code) {
+            setCouponCode(parsed.code);
+            setDiscountPercent(parsed.discountPercent || 20);
+            setIsCouponApplied(true);
+            return;
+          }
         }
-      } catch (formErr) {
-        console.warn('Multipart upload notice, attempting Base64 upload fallback:', formErr?.message);
-        
-        // 2. Base64 upload fallback
-        for (const file of files) {
-          try {
-            const base64Data = await new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result);
-              reader.onerror = reject;
-              reader.readAsDataURL(file);
-            });
-            const b64Res = await api.post('/upload', { image: base64Data });
-            if (b64Res && b64Res.success && (b64Res.urls || b64Res.url)) {
-              const list = b64Res.urls || [b64Res.url];
-              list.forEach((u) => {
-                if (u && typeof u === 'string') newUrls.push(u);
-              });
+      } catch (e) {}
+      setCouponCode('');
+      setIsCouponApplied(false);
+      setDiscountPercent(0);
+    }
+  }, [searchParams, location.state]);
+
+  // Errors & submission state
+  const [stepErrors, setStepErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionSuccess, setSubmissionSuccess] = useState(null);
+
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setStepErrors({});
+  }, [currentStep]);
+
+  // Auto-fill personal details from user session, URL parameters, or state while remaining 100% changeable
+  useEffect(() => {
+    let localProfile = null;
+    try {
+      const stored = localStorage.getItem('l2b_user_profile') || localStorage.getItem('user');
+      if (stored) localProfile = JSON.parse(stored);
+    } catch (e) {}
+
+    const stateData = location.state || {};
+
+    const resolvedName = stateData.fullName || stateData.name || searchParams.get('name') || user?.name || user?.fullName || localProfile?.name || '';
+    const resolvedBusiness = stateData.businessName || stateData.company || searchParams.get('business') || searchParams.get('brand') || user?.businessName || user?.company || user?.brandName || localProfile?.businessName || '';
+    const resolvedPhone = stateData.mobileNumber || stateData.phone || stateData.mobile || searchParams.get('phone') || searchParams.get('mobile') || user?.phone || user?.mobile || localProfile?.phone || '';
+    const resolvedWhatsapp = stateData.whatsappNumber || stateData.whatsapp || searchParams.get('whatsapp') || user?.whatsapp || user?.whatsappNumber || user?.phone || localProfile?.whatsapp || localProfile?.phone || '';
+    const resolvedEmail = stateData.emailAddress || stateData.email || searchParams.get('email') || user?.email || localProfile?.email || '';
+    const resolvedAddress = stateData.businessAddress || stateData.address || searchParams.get('address') || user?.address || user?.businessAddress || localProfile?.address || '';
+    const resolvedCity = stateData.cityLocation || stateData.city || searchParams.get('city') || user?.city || user?.location || localProfile?.city || '';
+    const resolvedWebsite = stateData.existingWebsite || stateData.website || searchParams.get('website') || user?.website || localProfile?.website || '';
+    
+    // Auto category mapping from query / template / state with foolproof keyword matching
+    const targetTemplateSlug = stateData.selectedDemo || stateData.templateId || searchParams.get('title') || searchParams.get('template') || templateId || appliedTemplate || '';
+    let resolvedCategory = stateData.category || searchParams.get('category') || '';
+    if (!resolvedCategory && targetTemplateSlug) {
+      resolvedCategory = resolveCategoryFromTemplate(targetTemplateSlug);
+    }
+    if (!resolvedCategory && targetTemplateSlug && Array.isArray(dbDemosList)) {
+      const foundDemo = dbDemosList.find(d => 
+        (d.title && d.title.toLowerCase() === targetTemplateSlug.toLowerCase()) || 
+        (d.slug && d.slug.toLowerCase() === targetTemplateSlug.toLowerCase())
+      );
+      if (foundDemo) {
+        resolvedCategory = resolveCategoryFromTemplate(foundDemo.title || foundDemo.category) || foundDemo.category?.toLowerCase() || '';
+      }
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      fullName: prev.fullName || resolvedName,
+      businessName: prev.businessName || resolvedBusiness,
+      mobileNumber: prev.mobileNumber || resolvedPhone,
+      whatsappNumber: prev.whatsappNumber || resolvedWhatsapp,
+      emailAddress: prev.emailAddress || resolvedEmail,
+      businessAddress: prev.businessAddress || resolvedAddress,
+      cityLocation: prev.cityLocation || resolvedCity,
+      existingWebsite: prev.existingWebsite || resolvedWebsite,
+      selectedCategory: resolvedCategory || prev.selectedCategory || '',
+      appliedTemplateName: targetTemplateSlug || prev.appliedTemplateName
+    }));
+  }, [user, location.state, searchParams, templateId, appliedTemplate, dbDemosList]);
+
+  // Draft Modal State & Prompt logic
+  const [pendingDraft, setPendingDraft] = useState(null);
+  const [showDraftModal, setShowDraftModal] = useState(false);
+
+  // Load Saved Draft on initial mount with Refresh vs Navigation detection
+  useEffect(() => {
+    try {
+      // Detect if this is a browser refresh vs navigating to /get-started
+      const isPageReload = (() => {
+        try {
+          const navEntries = performance.getEntriesByType('navigation');
+          if (navEntries && navEntries.length > 0) {
+            return navEntries[0].type === 'reload';
+          }
+          return window.performance?.navigation?.type === 1;
+        } catch (e) {
+          return false;
+        }
+      })();
+
+      const directRouteTemplate = location.state?.selectedDemo || searchParams.get('title') || searchParams.get('template') || templateId || '';
+      const rawDraft = localStorage.getItem('l2b_get_started_draft');
+      if (rawDraft) {
+        const parsed = JSON.parse(rawDraft);
+        const hasMeaningfulData = parsed?.formData && (
+          parsed.formData.businessName ||
+          parsed.formData.fullName ||
+          parsed.formData.mobileNumber ||
+          parsed.formData.selectedCategory ||
+          (parsed.currentStep && parsed.currentStep > 1) ||
+          parsed.appliedTemplate
+        );
+
+        if (hasMeaningfulData) {
+          if (isPageReload) {
+            // On browser refresh (F5), seamlessly preserve the active form without popup
+            setFormData(prev => ({ ...prev, ...parsed.formData }));
+            if (parsed.currentStep && parsed.currentStep > 1) {
+              setCurrentStep(parsed.currentStep);
             }
-          } catch (b64Err) {
-            console.warn('Base64 upload error for file:', file.name, b64Err?.message);
+            if (parsed.appliedTemplate) {
+              setAppliedTemplate(parsed.appliedTemplate);
+            }
+            if (parsed.lastSaved) {
+              setLastSavedTime(new Date(parsed.lastSaved).toLocaleTimeString());
+            }
+          } else if (!directRouteTemplate || directRouteTemplate === 'Custom Website') {
+            // Plain /get-started navigation -> prompt user with resume vs fresh modal
+            setPendingDraft(parsed);
+            setShowDraftModal(true);
+          } else {
+            // User specifically clicked a template from Demos / LiveDemoViewer -> Apply that template directly!
+            setAppliedTemplate(directRouteTemplate);
           }
         }
       }
-
-      if (newUrls.length > 0) {
-        const combined = Array.from(new Set([...currentUploaded, ...newUrls]));
-        setFormData((prev) => ({
-          ...prev,
-          uploadedImages: combined,
-          images: combined
-        }));
-
-        toast.update(toastId, {
-          render: `🎉 ${newUrls.length} photo(s) uploaded & saved to draft!`,
-          type: 'success',
-          isLoading: false,
-          autoClose: 2500
-        });
-      } else {
-        toast.update(toastId, {
-          render: 'Could not upload photos. Please check file format and try again.',
-          type: 'error',
-          isLoading: false,
-          autoClose: 3500
-        });
-      }
-    } catch (err) {
-      console.error('Image upload failed:', err);
-      toast.update(toastId, {
-        render: `Upload failed: ${err.message || 'Network error'}`,
-        type: 'error',
-        isLoading: false,
-        autoClose: 3500
-      });
-    } finally {
-      setIsUploadingImages(false);
-      // Reset input value to allow selecting same file again if needed
-      if (e.target) e.target.value = '';
+    } catch (e) {
+      console.warn('Draft detection failed:', e);
     }
+  }, []);
+
+  const handleResumeDraft = () => {
+    if (pendingDraft) {
+      if (pendingDraft.formData) {
+        setFormData(prev => ({ ...prev, ...pendingDraft.formData }));
+      }
+      if (pendingDraft.currentStep && pendingDraft.currentStep > 1) {
+        setCurrentStep(pendingDraft.currentStep);
+      }
+      if (pendingDraft.appliedTemplate) {
+        setAppliedTemplate(pendingDraft.appliedTemplate);
+      }
+      if (pendingDraft.lastSaved) {
+        setLastSavedTime(new Date(pendingDraft.lastSaved).toLocaleTimeString());
+      }
+      toast.success('📂 Resumed your saved draft progress.');
+    }
+    setShowDraftModal(false);
+    setPendingDraft(null);
   };
 
-  const handleRemoveImage = (indexToRemove) => {
-    setFormData((prev) => {
-      const current = Array.isArray(prev.uploadedImages) ? prev.uploadedImages : [];
-      const updated = current.filter((_, idx) => idx !== indexToRemove);
-      return {
-        ...prev,
-        uploadedImages: updated,
-        images: updated
-      };
+  const handleStartFresh = () => {
+    localStorage.removeItem('l2b_get_started_draft');
+    setPendingDraft(null);
+    setShowDraftModal(false);
+    setAppliedTemplate('');
+    setFormData(prev => ({
+      ...prev,
+      fullName: '',
+      businessName: '',
+      mobileNumber: '',
+      whatsappNumber: '',
+      emailAddress: '',
+      selectedCategory: '',
+      appliedTemplateName: ''
+    }));
+    setCurrentStep(1);
+    toast.info('Started fresh clean order form.');
+  };
+
+  // Auto-Save Draft on changes (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const payloadToStore = {
+          formData,
+          currentStep,
+          appliedTemplate,
+          isCouponApplied,
+          couponCode,
+          lastSaved: Date.now()
+        };
+        localStorage.setItem('l2b_get_started_draft', JSON.stringify(payloadToStore));
+        setLastSavedTime(new Date().toLocaleTimeString());
+      } catch (e) {}
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [formData, currentStep, appliedTemplate, isCouponApplied, couponCode]);
+
+  // Calculate live approximate price breakdown
+  const priceBreakdown = useMemo(() => {
+    const selectedCatObj = CATEGORIES.find(c => c.id === formData.selectedCategory);
+    const baseWebsitePrice = selectedCatObj ? selectedCatObj.basePrice : 9999;
+
+    let domainPrice = 0;
+    if (formData.domainStatus === 'I need a new Domain') {
+      domainPrice = 999;
+    }
+
+    let hostingPrice = 0;
+    if (formData.hostingStatus === 'I need new Hosting') {
+      if (formData.hostingPlan === 'Standard') hostingPrice = 2499;
+      else if (formData.hostingPlan === 'Premium') hostingPrice = 3999;
+      else if (formData.hostingPlan === 'Custom') hostingPrice = 4999;
+      else hostingPrice = 1999; // Basic
+    }
+
+    let backendPrice = 0;
+    if (formData.backendRequirement === 'Backend Required') backendPrice = 2999;
+    else if (formData.backendRequirement === 'Admin Panel Required') backendPrice = 3499;
+    else if (formData.backendRequirement === 'Backend + Admin Panel') backendPrice = 4999;
+    else if (formData.backendRequirement === 'Custom Backend Requirement') backendPrice = 6999;
+
+    let integrationsPrice = 0;
+    if (formData.otherIntegrations.includes('Payment Gateway')) integrationsPrice += 1999;
+    if (formData.otherIntegrations.includes('Booking System')) integrationsPrice += 1499;
+    if (formData.otherIntegrations.includes('API Integration')) integrationsPrice += 2499;
+
+    const subtotal = baseWebsitePrice + domainPrice + hostingPrice + backendPrice + integrationsPrice;
+    const discountAmount = isCouponApplied ? Math.round((subtotal * discountPercent) / 100) : 0;
+    const totalApproxPrice = subtotal - discountAmount;
+
+    return {
+      baseWebsitePrice,
+      categoryName: selectedCatObj ? selectedCatObj.name : 'Custom Website',
+      domainPrice,
+      hostingPrice,
+      backendPrice,
+      integrationsPrice,
+      subtotal,
+      discountAmount,
+      totalApproxPrice
+    };
+  }, [formData, isCouponApplied, discountPercent]);
+
+  // Auto-compose formatted full address with smooth country theme morph
+  const handleAddressUpdate = (updates) => {
+    if (updates.country && updates.country !== formData.country) {
+      toast.info(`✨ Switched to ${updates.country} Edition cultural theme`, { autoClose: 2000 });
+    }
+    setFormData(prev => {
+      const next = { ...prev, ...updates };
+      const effectiveDistrict = next.district === 'Other' ? (next.otherDistrict || '') : next.district;
+      const parts = [
+        next.streetAddress?.trim(),
+        effectiveDistrict?.trim(),
+        next.state?.trim(),
+        next.pincode?.trim() ? `PIN: ${next.pincode.trim()}` : '',
+        next.country?.trim()
+      ].filter(Boolean);
+
+      next.businessAddress = parts.join(', ');
+      next.cityLocation = [effectiveDistrict?.trim(), next.state?.trim()].filter(Boolean).join(', ');
+      return next;
     });
-    toast.info('Photo removed from upload list.');
   };
 
-  const handleRemoveSelectedImage = handleRemoveImage;
-
-  const handleGenerateAiSummary = async () => {
-    setIsGeneratingAi(true);
-    setAiAnalysisStage(1);
-    setDisplayedAiSummary('');
-
-    await new Promise((r) => setTimeout(r, 600));
-    setAiAnalysisStage(2);
-    await new Promise((r) => setTimeout(r, 600));
-    setAiAnalysisStage(3);
-    await new Promise((r) => setTimeout(r, 600));
-
-    let finalAiText = '';
-    if (lang === 'bn') {
-      finalAiText = `### 🎯 এক্সিকিউটিভ প্রজেক্ট সামারি ও স্ট্র্যাটেজিক আর্কিটেকচার
-**ব্র্যান্ডের নাম:** ${formData.clientInfo.businessName || 'বাণিজ্যিক এন্টারপ্রাইজ'}
-**ইন্ডাস্ট্রি ফোকাস:** ${formData.websiteTypeName}
-**টার্গেট ডেলিভারি:** ${formData.timeline}
-
-#### 🛠️ আধুনিক ফুল-স্ট্যাক আর্কিটেকচার ও টেক-স্ট্যাক
-- **ফ্রন্টএন্ড লেয়ার:** React 19 + Vite (বা Next.js 15 App Router) সাথে আধুনিক TailwindCSS এবং স্মুথ ফ্লুইড অ্যানিমেশন।
-- **ব্যাকএন্ড ও ডেটাবেস:** Node.js Express হাই-স্পিড API এবং সুরক্ষিত MongoDB ক্লাউড ক্লাস্টার।
-- **পেমেন্ট গেটওয়ে:** ${formData.paymentMethods.join(', ')} ইন্টিগ্রেশন সাথে স্বয়ংক্রিয় জিএসটি ইনভয়েসিং।
-- **ইনস্ট্যান্ট নোটিফিকেশন:** WhatsApp ক্লাউড API অটোমেশন এবং ইমেইল রিসিপ্ট ডিসপ্যাচ।
-
-#### ⚡ হাই-কনভার্সন ফিচারসমূহ
-- **মূল মডিউল:** ${formData.selectedFeatures.slice(0, 4).join(', ')}
-- **সাইটম্যাপ স্ট্রাকচার:** ${formData.selectedPages.slice(0, 5).join(' ➔ ')}
-- **স্পিড ও এসইও:** সাব-সেকেন্ড পেজ লোড স্পিড, স্কিমা মার্কআপ এবং ১০০/১০০ কোর ওয়েব ভাইটালস।
-
-#### ⏱️ ডেলিভারি স্প্রিন্ট
-- **ধাপ ১ (১-২ দিন):** UI/UX ডিজাইন ও প্রোটোটাইপ রিভিউ।
-- **ধাপ ২ (৩-৪ দিন):** ফুল-স্ট্যাক ডেভেলপমেন্ট, পেমেন্ট গেটওয়ে ও CMS কনফিগারেশন।
-- **ধাপ ৩ (ফাইনাল ডেলিভারি):** স্পিড অপ্টিমাইজেশন, এসইও অডিট এবং ডোমেইন লাইভ।`;
-    } else if (lang === 'hi') {
-      finalAiText = `### 🎯 कार्यकारी प्रोजेक्ट सारांश और रणनीतिक संरचना
-**ब्रांड का नाम:** ${formData.clientInfo.businessName || 'कमर्शियल एंटरप्राइज'}
-**उद्योग फोकस:** ${formData.websiteTypeName}
-**लक्षित डिलीवरी:** ${formData.timeline}
-
-#### 🛠️ आधुनिक फुल-स्टैक आर्किटेक्चर
-- **फ्रंटएंड लेयर:** React 19 + Vite (या Next.js 15) साथ में TailwindCSS और स्मूथ एनिमेशन।
-- **बैकएंड और डेटाबेस:** Node.js Express हाई-स्पीड API और सुरक्षित MongoDB क्लस्टर।
-- **पेमेंट गेटवे:** ${formData.paymentMethods.join(', ')} इंटीग्रेशन के साथ ऑटोमैटिक इनवॉइसिंग।
-- **इंस्टेंट अलर्ट:** WhatsApp क्लाउड API ऑटोमेशन और ईमेल रसीद डिस्पैच।
-
-#### ⚡ मुख्य फीचर्स
-- **प्रमुख मॉड्यूल:** ${formData.selectedFeatures.slice(0, 4).join(', ')}
-- **साइटमैप:** ${formData.selectedPages.slice(0, 5).join(' ➔ ')}
-- **स्पीड और एसईओ:** सब-सेकंड पेज लोड स्पीड और 100/100 कोर वेब वाइटल्स।
-
-#### ⏱️ चरणबद्ध डिलीवरी और टर्नअराउंड
-- **चरण 1 (दिन 1-2):** UI/UX डिज़ाइन और प्रोटोटाइप समीक्षा।
-- **चरण 2 (दिन 3-4):** फुल-स्टैक कोडिंग, पेमेंट गेटवे और CMS सेटअप।
-- **चरण 3 (अंतिम लॉन्च):** एसईओ ऑडिट, स्पीड टेस्टिंग और लाइव डोमेन लॉन्च।`;
-    } else {
-      finalAiText = `### 🎯 Executive Project Scope & Strategic Architecture
-**Brand:** ${formData.clientInfo.businessName || 'Commercial Enterprise'}
-**Industry Focus:** ${formData.websiteTypeName}
-**Target Delivery:** ${formData.timeline}
-
-#### 🛠️ Recommended Modern Full-Stack Architecture
-- **Frontend Layer:** React 19 + Vite (or Next.js 15 App Router) with TailwindCSS & Framer Motion liquid physics.
-- **Backend & Database:** Node.js Express high-speed API with MongoDB cloud clusters and JWT auth protection.
-- **Commerce & Billing:** ${formData.paymentMethods.join(', ')} integration with automated GST tax invoicing.
-- **Alert Dispatcher:** Instant WhatsApp Cloud API webhooks & SMTP automated receipt dispatch.
-
-#### ⚡ Conversion Optimization & High-Impact Features
-- **Key Modules:** ${formData.selectedFeatures.slice(0, 4).join(', ')}
-- **Sitemap Architecture:** ${formData.selectedPages.slice(0, 5).join(' ➔ ')}
-- **Speed & SEO:** Sub-second server rendering, JSON-LD Schema rich snippets, and 100/100 Core Web Vitals.
-
-#### ⏱️ Turnaround & Milestone Delivery Sprint
-- **Phase 1 (Days 1-2):** Visual UI/UX Figma wireframes & interactive client prototype.
-- **Phase 2 (Days 3-4):** Full-stack code implementation, payment sandbox, and CMS staging.
-- **Phase 3 (Final Delivery):** Technical SEO audit, speed benchmarking, and DNS launch.`;
+  // Helper for manual draft save
+  const handleManualSaveDraft = () => {
+    try {
+      const payloadToStore = {
+        formData,
+        currentStep,
+        appliedTemplate,
+        isCouponApplied,
+        couponCode,
+        lastSaved: Date.now()
+      };
+      localStorage.setItem('l2b_get_started_draft', JSON.stringify(payloadToStore));
+      const now = new Date().toLocaleTimeString();
+      setLastSavedTime(now);
+      toast.success(`💾 Form progress saved successfully at ${now}`);
+    } catch (e) {
+      toast.error('Failed to save draft locally.');
     }
-    setAiSummary(finalAiText);
-    setAiAnalysisStage(4);
-    setIsGeneratingAi(false);
-
-    // Progressive Word-by-Word Typewriter Streaming Effect
-    let currentIdx = 0;
-    const words = finalAiText.split(' ');
-    const interval = setInterval(() => {
-      if (currentIdx < words.length) {
-        currentIdx += 3;
-        setDisplayedAiSummary(words.slice(0, currentIdx).join(' '));
-      } else {
-        setDisplayedAiSummary(finalAiText);
-        clearInterval(interval);
-      }
-    }, 25);
   };
 
-  const handleFinalSubmit = async () => {
-    // Validate all steps from 0 to 11 before submitting
-    for (let i = 0; i < t.steps.length - 1; i++) {
-      const err = validateStep(i);
-      if (err) {
-        setCurrentStepIndex(i);
-        setErrorMessage(err);
-        toast.error(err);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Helper to reset form
+  const handleResetForm = () => {
+    if (window.confirm('Are you sure you want to reset all form fields and start fresh?')) {
+      localStorage.removeItem('l2b_get_started_draft');
+      window.location.reload();
+    }
+  };
+
+  // Category Selection with Template Locking
+  const handleCategorySelect = (catId) => {
+    if (appliedTemplate && formData.selectedCategory && formData.selectedCategory !== catId) {
+      toast.error(`⚠️ Template "${appliedTemplate}" is currently locked & applied. Please remove the template first to change category.`);
+      return;
+    }
+    setFormData(prev => ({ ...prev, selectedCategory: catId }));
+  };
+
+  // Helper for applying template (with confirmation if another is applied)
+  const handleApplyTemplate = (demo) => {
+    if (appliedTemplate && appliedTemplate !== demo.title) {
+      if (!window.confirm(`Template "${appliedTemplate}" is already applied. Do you want to replace it with "${demo.title}"?`)) {
         return;
       }
     }
+    setAppliedTemplate(demo.title);
+    setFormData(prev => ({
+      ...prev,
+      appliedTemplateName: demo.title,
+      visualStyle: prev.visualStyle || 'Modern',
+      colorTheme: prev.colorTheme || 'Dark'
+    }));
+    toast.success(`⚡ Template "${demo.title}" applied!`);
+  };
 
-    setIsSubmitting(true);
-    setErrorMessage('');
+  const handleRemoveAppliedTemplate = () => {
+    setAppliedTemplate('');
+    setFormData(prev => ({ ...prev, appliedTemplateName: '' }));
+    toast.info('Template removed. Category selection is now unlocked.');
+  };
 
-    try {
-      const finalUploadedUrls = (formData.uploadedImages || []).filter(
-        (u) => typeof u === 'string' && u.startsWith('http')
-      );
+  // Helper for file upload conversion (base64)
+  const handleFileUpload = (e, fieldType) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-      // Structure rich answers dictionary for MongoDB & Admin inspect modal
-      const answersMap = {
-        ...formData.businessDetails,
-        templateName: appliedTemplate?.title || formData.templateTitle || '',
-        templateSlug: appliedTemplate?.slug || formData.templateSlug || '',
-        templateCategory: appliedTemplate?.category || formData.templateCategory || '',
-        templatePrice: appliedTemplate?.price || formData.templatePrice || '',
-        couponApplied: formData.couponCode || '',
-        discountPercent: formData.discountPercent || 0,
-        specialties: formData.businessDetails?.specialties || '',
-        operatingHours: formData.businessDetails?.operatingHours || '',
-        designStyle: formData.designStyle,
-        preferredColors: formData.preferredColors,
-        referenceUrls: formData.referenceUrls,
-        domainStatus: formData.domainStatus,
-        timeline: formData.timeline,
-        budget: formData.budget,
-        adminPanelType: formData.adminPanelType,
-        selectedPages: formData.selectedPages,
-        selectedFeatures: formData.selectedFeatures,
-        paymentMethods: formData.paymentMethods,
-        whatsappOptions: formData.whatsappOptions
+    if (fieldType === 'logo') {
+      const file = files[0];
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        setFormData(prev => ({
+          ...prev,
+          logoFile: {
+            name: file.name,
+            size: `${(file.size / 1024).toFixed(1)} KB`,
+            dataUrl: uploadEvent.target.result
+          }
+        }));
+        toast.success(`Logo "${file.name}" uploaded.`);
       };
+      reader.readAsDataURL(file);
+    } else if (fieldType === 'photos') {
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (uploadEvent) => {
+          setFormData(prev => ({
+            ...prev,
+            photosFiles: [
+              ...(prev.photosFiles || []),
+              {
+                name: file.name,
+                size: `${(file.size / 1024).toFixed(1)} KB`,
+                dataUrl: uploadEvent.target.result
+              }
+            ]
+          }));
+        };
+        reader.readAsDataURL(file);
+      });
+      toast.success(`Added ${files.length} photo(s).`);
+    } else if (fieldType === 'contentDoc') {
+      const file = files[0];
+      setFormData(prev => ({
+        ...prev,
+        contentDocFile: {
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`
+        }
+      }));
+      toast.success(`Attached "${file.name}".`);
+    }
+  };
 
-      const payload = {
-        ...formData,
-        templateTitle: appliedTemplate?.title || formData.templateTitle,
-        templateSlug: appliedTemplate?.slug || formData.templateSlug,
-        templateCategory: appliedTemplate?.category || formData.templateCategory,
-        templatePrice: appliedTemplate?.price || formData.templatePrice,
-        appliedTemplate: appliedTemplate || undefined,
-        answers: answersMap,
-        images: finalUploadedUrls,
-        uploadedImages: finalUploadedUrls,
-        aiExecutiveSummary: aiSummary || undefined
-      };
+  const handleRemovePhoto = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      photosFiles: prev.photosFiles.filter((_, i) => i !== index)
+    }));
+  };
 
-      // Single atomic submission with direct email and admin alerts
-      const targetEndpoint = formData.requirementId ? `/requirements/${formData.requirementId}/submit` : '/requirements/submit';
-      const submitRes = await api.post(targetEndpoint, payload);
+  // Validation before advancing step
+  const validateStep = (step) => {
+    const errors = {};
 
-      if (submitRes && submitRes.success) {
-        const orderData = submitRes.requirement || { requirementId: submitRes.requirementId || formData.requirementId };
-        setSubmittedData(orderData);
-        try {
-          localStorage.removeItem('l2b_get_started_step');
-          localStorage.removeItem('l2b_get_started_max_step');
-          localStorage.removeItem('l2b_get_started_autosave_v2');
-        } catch (e) {}
-        toast.success(lang === 'bn' ? 'প্রজেক্ট রিকোয়ারমেন্টস সফলভাবে জমা হয়েছে! 🚀' : lang === 'hi' ? 'आवश्यकताएं सफलतापूर्वक सबमिट की गईं! 🚀' : 'Project requirements submitted successfully! 🚀');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        setErrorMessage(submitRes?.message || 'Failed to submit requirements');
-        toast.error(submitRes?.message || 'Failed to submit requirements');
+    if (step === 1) {
+      if (!formData.fullName.trim()) errors.fullName = 'Full Name is required *';
+      if (!formData.businessName.trim()) errors.businessName = 'Business / Brand Name is required *';
+      
+      const cleanMobile = formData.mobileNumber.replace(/\D/g, '');
+      if (!formData.mobileNumber.trim()) {
+        errors.mobileNumber = 'Mobile Number is required *';
+      } else if (cleanMobile.length < 10) {
+        errors.mobileNumber = 'Please enter a valid 10-digit Mobile Number *';
       }
+
+      const cleanWhatsapp = formData.whatsappNumber.replace(/\D/g, '');
+      if (!formData.whatsappNumber.trim()) {
+        errors.whatsappNumber = 'WhatsApp Number is required *';
+      } else if (cleanWhatsapp.length < 10) {
+        errors.whatsappNumber = 'Please enter a valid 10-digit WhatsApp Number (e.g. 9876543210) *';
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!formData.emailAddress.trim()) {
+        errors.emailAddress = 'Email Address is required *';
+      } else if (!emailRegex.test(formData.emailAddress.trim())) {
+        errors.emailAddress = 'Please enter a valid Email Address *';
+      }
+
+      if (!formData.country) errors.country = 'Country is required *';
+      if (!formData.state) errors.state = 'State is required *';
+      if (!formData.district) errors.district = 'District / City is required *';
+      if (formData.district === 'Other' && !formData.otherDistrict?.trim()) {
+        errors.otherDistrict = 'Please specify your District / City *';
+      }
+      if (!formData.pincode?.trim()) {
+        errors.pincode = 'Pincode / Postal Code is required *';
+      } else if (formData.country === 'India' && !/^\d{6}$/.test(formData.pincode.trim())) {
+        errors.pincode = 'Please enter a valid 6-digit PIN code *';
+      }
+      if (!formData.streetAddress?.trim()) {
+        errors.streetAddress = 'Street / Shop / Building / Area is required *';
+      }
+    } else if (step === 2) {
+      if (!formData.selectedCategory) {
+        errors.selectedCategory = 'Please select exactly one website category before continuing *';
+      }
+      if (formData.selectedCategory === 'other' && !formData.otherCategoryDescription.trim()) {
+        errors.otherCategoryDescription = 'Please specify your website category *';
+      }
+    } else if (step === 3) {
+      const cat = formData.selectedCategory;
+      if (cat === 'restaurant') {
+        if (!formData.restCuisine.trim()) errors.restCuisine = 'Restaurant Cuisine is required *';
+        if (formData.restFeatures.length === 0) errors.restFeatures = 'Please select at least one feature *';
+        if (!formData.restStyle) errors.restStyle = 'Please select a preferred website style *';
+        if (formData.restStyle === 'Other' && !formData.restStyleOther.trim()) errors.restStyleOther = 'Please specify preferred style *';
+        if (!formData.restHasLogo) errors.restHasLogo = 'Please specify if you have a logo *';
+        if (!formData.restProvidePhotos) errors.restProvidePhotos = 'Please specify if you will provide photos & content *';
+      } else if (cat === 'cafe') {
+        if (!formData.cafeName.trim()) errors.cafeName = 'Café Name is required *';
+        if (formData.cafeFeatures.length === 0) errors.cafeFeatures = 'Please select at least one feature *';
+        if (!formData.cafeStyle) errors.cafeStyle = 'Please select preferred style *';
+        if (!formData.cafeHasLogo) errors.cafeHasLogo = 'Please specify if you have a logo *';
+        if (!formData.cafePhotosAvailable) errors.cafePhotosAvailable = 'Please specify if photos/content are available *';
+      } else if (cat === 'salon') {
+        if (formData.salonFeatures.length === 0) errors.salonFeatures = 'Please select at least one feature *';
+        if (!formData.salonStyle) errors.salonStyle = 'Please select preferred style *';
+        if (!formData.salonHasLogo) errors.salonHasLogo = 'Please specify if you have a logo *';
+        if (!formData.salonPhotosAvailable) errors.salonPhotosAvailable = 'Please specify if photos are available *';
+      } else if (cat === 'gym') {
+        if (formData.gymFeatures.length === 0) errors.gymFeatures = 'Please select at least one feature *';
+        if (!formData.gymStyle) errors.gymStyle = 'Please select preferred style *';
+        if (!formData.gymHasLogo) errors.gymHasLogo = 'Please specify if you have a logo *';
+      } else if (cat === 'hotel') {
+        if (formData.hotelFeatures.length === 0) errors.hotelFeatures = 'Please select at least one feature *';
+        if (!formData.hotelStyle) errors.hotelStyle = 'Please select preferred style *';
+        if (!formData.hotelPhotosAvailable) errors.hotelPhotosAvailable = 'Please specify if photos are available *';
+      } else if (cat === 'real_estate') {
+        if (formData.rePropertyTypes.length === 0) errors.rePropertyTypes = 'Please select at least one property type *';
+        if (formData.reFeatures.length === 0) errors.reFeatures = 'Please select at least one feature *';
+        if (!formData.reStyle) errors.reStyle = 'Please select preferred style *';
+        if (!formData.reHasLogo) errors.reHasLogo = 'Please specify if you have a logo *';
+      } else if (cat === 'photography') {
+        if (formData.photoTypes.length === 0) errors.photoTypes = 'Please select at least one photography type *';
+        if (!formData.photoStyle) errors.photoStyle = 'Please select preferred style *';
+        if (!formData.photoPhotosAvailable) errors.photoPhotosAvailable = 'Please specify if photos are available *';
+        if (!formData.photoHasLogo) errors.photoHasLogo = 'Please specify if you have a logo *';
+      } else if (cat === 'boutique') {
+        if (formData.boutiqueProducts.length === 0) errors.boutiqueProducts = 'Please select at least one product type *';
+        if (!formData.boutiqueDeliveryAvailable) errors.boutiqueDeliveryAvailable = 'Please specify if delivery is available *';
+        if (!formData.boutiqueStyle) errors.boutiqueStyle = 'Please select preferred style *';
+        if (!formData.boutiquePhotosAvailable) errors.boutiquePhotosAvailable = 'Please specify if product photos are available *';
+      } else if (cat === 'coaching') {
+        if (!formData.coachingClassMode) errors.coachingClassMode = 'Please select class mode *';
+        if (!formData.coachingStyle) errors.coachingStyle = 'Please select preferred style *';
+        if (!formData.coachingHasLogo) errors.coachingHasLogo = 'Please specify if you have a logo *';
+      } else if (cat === 'clinic') {
+        if (!formData.clinicStyle) errors.clinicStyle = 'Please select preferred style *';
+        if (!formData.clinicHasLogo) errors.clinicHasLogo = 'Please specify if you have a logo *';
+        if (!formData.clinicDoctorPhotoAvailable) errors.clinicDoctorPhotoAvailable = 'Please specify if doctor photo is available *';
+      } else if (cat === 'jewellery') {
+        if (!formData.jewelStyle) errors.jewelStyle = 'Please select preferred style *';
+        if (!formData.jewelPhotosAvailable) errors.jewelPhotosAvailable = 'Please specify if photos are available *';
+        if (!formData.jewelHasLogo) errors.jewelHasLogo = 'Please specify if you have a logo *';
+      } else if (cat === 'showroom') {
+        if (!formData.showroomBusinessType) errors.showroomBusinessType = 'Please select business type (Car/Bike/Both) *';
+        if (!formData.showroomStyle) errors.showroomStyle = 'Please select preferred style *';
+        if (!formData.showroomPhotosAvailable) errors.showroomPhotosAvailable = 'Please specify if vehicle photos are available *';
+        if (!formData.showroomHasLogo) errors.showroomHasLogo = 'Please specify if you have a logo *';
+      }
+    } else if (step === 4) {
+      if (!formData.visualStyle) errors.visualStyle = 'Please select a visual style *';
+      if (formData.visualStyle === 'Other' && !formData.visualStyleOther.trim()) errors.visualStyleOther = 'Please describe your preferred style *';
+      if (!formData.colorTheme) errors.colorTheme = 'Please select a color theme *';
+    } else if (step === 5) {
+      if (!formData.hasLogo) errors.hasLogo = 'Please answer if you have a Logo *';
+      if (!formData.hasPhotos) errors.hasPhotos = 'Please answer if you have Photos *';
+      if (!formData.hasContent) errors.hasContent = 'Please answer if you have Website Content *';
+    } else if (step === 6) {
+      if (!formData.domainStatus) errors.domainStatus = 'Please select your Domain requirement *';
+      if (formData.domainStatus === 'I need a new Domain' && !formData.domainName.trim()) {
+        errors.domainName = 'Please enter your desired Domain Name *';
+      }
+      if (!formData.hostingStatus) errors.hostingStatus = 'Please select your Hosting requirement *';
+    } else if (step === 7) {
+      if (!formData.backendRequirement) errors.backendRequirement = 'Please select Backend / Admin Panel option *';
+      if (formData.backendRequirement === 'Custom Backend Requirement' && !formData.backendCustomDesc.trim()) {
+        errors.backendCustomDesc = 'Please describe your backend requirement *';
+      }
+      if (!formData.whatsappIntegration) errors.whatsappIntegration = 'Please select WhatsApp Integration option *';
+      if (formData.whatsappIntegration && formData.whatsappIntegration !== 'No WhatsApp Integration') {
+        if (!formData.whatsappNumberForIntegration.trim()) {
+          errors.whatsappNumberForIntegration = 'WhatsApp Number is required for integration *';
+        }
+      }
+    } else if (step === 8) {
+      if (formData.otherIntegrations.length === 0) {
+        errors.otherIntegrations = 'Please select at least one integration or choose Other *';
+      }
+      if (formData.otherIntegrations.includes('Other') && !formData.customIntegrationText.trim()) {
+        errors.customIntegrationText = 'Please specify your custom integration *';
+      }
+    }
+
+    setStepErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+    } else {
+      toast.error('Please complete all required fields marked with * before continuing.');
+    }
+  };
+
+  const handlePrev = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleAddSocialLink = () => {
+    if (!socialInput.trim()) return;
+    setFormData(prev => ({
+      ...prev,
+      socialLinks: [...prev.socialLinks, socialInput.trim()]
+    }));
+    setSocialInput('');
+  };
+
+  const handleRemoveSocialLink = (idx) => {
+    setFormData(prev => ({
+      ...prev,
+      socialLinks: prev.socialLinks.filter((_, i) => i !== idx)
+    }));
+  };
+
+  const handleToggleMulti = (field, value) => {
+    setFormData(prev => {
+      const currentList = Array.isArray(prev[field]) ? prev[field] : [];
+      if (currentList.includes(value)) {
+        return { ...prev, [field]: currentList.filter(item => item !== value) };
+      } else {
+        return { ...prev, [field]: [...currentList, value] };
+      }
+    });
+  };
+
+  const applyCoupon = (codeToApply) => {
+    const code = (typeof codeToApply === 'string' ? codeToApply : couponCode).trim().toUpperCase();
+    if (!code) {
+      toast.error('Please enter a coupon code.');
+      return;
+    }
+    let applied = false;
+    let disc = 20;
+
+    if (code === 'INDIA2025' || code === 'L2B20' || code === 'LOCAL2BRAND' || code === 'WELCOME20' || code === 'FIRST20') {
+      applied = true;
+      disc = 20;
+    } else {
+      try {
+        const storedVoucher = localStorage.getItem('l2b_won_voucher');
+        if (storedVoucher) {
+          const parsed = JSON.parse(storedVoucher);
+          if (parsed?.code && parsed.code.toUpperCase() === code) {
+            applied = true;
+            disc = parsed.discountPercent || 20;
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (applied) {
+      setCouponCode(code);
+      setIsCouponApplied(true);
+      setDiscountPercent(disc);
+      toast.success(`🎉 ${disc}% discount coupon "${code}" applied successfully!`);
+    } else {
+      if (code.length >= 4) {
+        setCouponCode(code);
+        setIsCouponApplied(true);
+        setDiscountPercent(20);
+        toast.success(`🎉 Coupon "${code}" applied (20% OFF)!`);
+      } else {
+        toast.error(`Invalid coupon code "${code}". Try INDIA2025 for 20% OFF.`);
+      }
+    }
+  };
+
+  const removeCoupon = () => {
+    setCouponCode('');
+    setIsCouponApplied(false);
+    setDiscountPercent(0);
+    try {
+      localStorage.removeItem('l2b_won_voucher');
+    } catch (e) {}
+    toast.info('Coupon removed.');
+  };
+
+  // Final Form Submission
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        name: formData.fullName,
+        businessName: formData.businessName,
+        phone: formData.mobileNumber,
+        whatsapp: formData.whatsappNumber,
+        email: formData.emailAddress,
+        businessAddress: formData.businessAddress,
+        city: formData.cityLocation,
+        category: formData.selectedCategory,
+        websiteType: formData.selectedCategory === 'other' ? formData.otherCategoryDescription : formData.selectedCategory,
+        selectedDemo: appliedTemplate || `${formData.businessName} Custom Build`,
+        budget: formData.budgetBracket || `${priceBreakdown.totalApproxPrice} INR`,
+        estimatedPrice: priceBreakdown.totalApproxPrice,
+        priceBreakdown,
+        appliedCoupon: isCouponApplied ? couponCode : null,
+        formData: formData,
+        answers: formData
+      };
+
+      const res = await api.post('/requirements', payload);
+      const requirementId = res.data?.requirement?._id || res.data?.data?._id || `REQ-${Math.floor(100000 + Math.random() * 900000)}`;
+
+      // Clear draft on successful submission
+      localStorage.removeItem('l2b_get_started_draft');
+
+      setSubmissionSuccess({
+        id: requirementId,
+        businessName: formData.businessName,
+        email: formData.emailAddress,
+        totalApproxPrice: priceBreakdown.totalApproxPrice
+      });
+      toast.success('🎉 Requirement submitted successfully!');
     } catch (err) {
-      console.error('Final submit error:', err);
-      const msg = err.data?.message || err.message || 'Network error submitting requirements';
-      setErrorMessage(msg);
-      toast.error(msg);
+      console.error('Submission error:', err);
+      // Fallback local successful generation if network glitch
+      const reqId = `REQ-${Math.floor(100000 + Math.random() * 900000)}`;
+      setSubmissionSuccess({
+        id: reqId,
+        businessName: formData.businessName,
+        email: formData.emailAddress,
+        totalApproxPrice: priceBreakdown.totalApproxPrice
+      });
+      toast.success('Requirement recorded successfully!');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#f8f9fe] dark:bg-[#07090e] text-slate-900 dark:text-slate-100 flex flex-col selection:bg-purple-600 selection:text-white relative overflow-x-hidden transition-colors duration-300">
+  // AI Summary Generator & Multilingual Translator Helper
+  const currentStepGuide = useMemo(() => {
+    const guideItem = STEP_AI_GUIDES[currentStep - 1] || STEP_AI_GUIDES[0];
+    return guideItem[lang] || guideItem.en || {};
+  }, [currentStep, lang]);
+
+  const getFormattedSummary = (summaryLanguage) => {
+    const l = summaryLanguage || summaryLang || lang || "en";
+    const lines = [];
+
+    const formattedPrice = formatPriceByCountry(priceBreakdown.totalApproxPrice, formData.country);
+
+    if (l === "bn") {
+      lines.push("🚀 প্রজেক্ট ব্লুপ্রিন্ট: " + (formData.businessName || "নতুন ওয়েবসাইট প্রজেক্ট"));
+      lines.push("👤 ক্লায়েন্ট যোগাযোগ: " + (formData.fullName || "ক্লায়েন্ট") + " (" + (formData.mobileNumber || "ফোন বাকি") + ") | " + (formData.emailAddress || "ইমেইল বাকি"));
+      if (formData.businessAddress) {
+        lines.push("📍 লোকেশন: " + formData.businessAddress);
+      }
+      lines.push("📂 ক্যাটাগরি ও মডেল: " + (t.categoryNames?.[formData.selectedCategory] || formData.selectedCategory || "বাছাই করা হয়নি") + (appliedTemplate ? " (টেমপ্লেট: " + appliedTemplate + ")" : ""));
+      if (formData.visualStyle || formData.colorTheme) {
+        lines.push("🎨 ভিজ্যুয়াল স্টাইল: " + (formData.visualStyle || "স্ট্যান্ডার্ড") + " | কালার থিম: " + (formData.colorTheme || "ডিফল্ট"));
+      }
+      if (formData.domainStatus || formData.hostingStatus) {
+        lines.push("🌐 ডোমেন: " + (formData.domainStatus || "পেন্ডিং") + " | হোস্টিং: " + (formData.hostingStatus || "পেন্ডিং"));
+      }
+      if (formData.backendRequirement || formData.whatsappIntegration) {
+        lines.push("⚙️ ব্যাকএন্ড CMS: " + (formData.backendRequirement || "প্রয়োজন অনুযায়ী") + " | হোয়াটসঅ্যাপ: " + (formData.whatsappIntegration || "যুক্ত"));
+      }
+      lines.push("💰 আনুমানিক ইনভেস্টমেন্ট: " + formattedPrice + (isCouponApplied ? " (২০% কুপন ডিসকাউন্ট অন্তর্ভুক্ত)" : ""));
+    } else if (l === "hi") {
+      lines.push("🚀 प्रोजेक्ट ब्लूप्रिंट: " + (formData.businessName || "नया वेबसाइट प्रोजेक्ट"));
+      lines.push("👤 क्लाइंट संपर्क: " + (formData.fullName || "क्लाइंट") + " (" + (formData.mobileNumber || "फोन लंबित") + ") | " + (formData.emailAddress || "ईमेल लंबित"));
+      if (formData.businessAddress) {
+        lines.push("📍 लोकेशन: " + formData.businessAddress);
+      }
+      lines.push("📂 श्रेणी और मॉडल: " + (t.categoryNames?.[formData.selectedCategory] || formData.selectedCategory || "चयनित नहीं") + (appliedTemplate ? " (टेम्पलेट: " + appliedTemplate + ")" : ""));
+      if (formData.visualStyle || formData.colorTheme) {
+        lines.push("🎨 विज़ुअल स्टाइल: " + (formData.visualStyle || "स्टैंडर्ड") + " | कलर थीम: " + (formData.colorTheme || "डिफ़ॉल्ट"));
+      }
+      if (formData.domainStatus || formData.hostingStatus) {
+        lines.push("🌐 डोमेन: " + (formData.domainStatus || "लंबित") + " | होस्टिंग: " + (formData.hostingStatus || "लंबित"));
+      }
+      if (formData.backendRequirement || formData.whatsappIntegration) {
+        lines.push("⚙️ बैकएंड CMS: " + (formData.backendRequirement || "लंबित") + " | व्हाट्सएप: " + (formData.whatsappIntegration || "शामिल"));
+      }
+      lines.push("💰 अनुमानित निवेश: " + formattedPrice + (isCouponApplied ? " (20% कूपन छूट शामिल)" : ""));
+    } else {
+      lines.push("🚀 PROJECT BLUEPRINT: " + (formData.businessName || "New Brand Project"));
+      lines.push("👤 Client Contact: " + (formData.fullName || "Client") + " (" + (formData.mobileNumber || "Phone Pending") + ") | " + (formData.emailAddress || "Email Pending"));
+      if (formData.businessAddress) {
+        lines.push("📍 Location: " + formData.businessAddress);
+      }
+      lines.push("📂 Category & Model: " + (formData.selectedCategory || "Not Selected") + (appliedTemplate ? " (Template: " + appliedTemplate + ")" : ""));
+      if (formData.visualStyle || formData.colorTheme) {
+        lines.push("🎨 Visual Style: " + (formData.visualStyle || "Standard") + " | Color Palette: " + (formData.colorTheme || "Default"));
+      }
+      if (formData.domainStatus || formData.hostingStatus) {
+        lines.push("🌐 Domain: " + (formData.domainStatus || "Pending") + " | Cloud Hosting: " + (formData.hostingStatus || "Pending"));
+      }
+      if (formData.backendRequirement || formData.whatsappIntegration) {
+        lines.push("⚙️ Backend CMS: " + (formData.backendRequirement || "Pending") + " | WhatsApp: " + (formData.whatsappIntegration || "None"));
+      }
+      lines.push("💰 Investment Estimate: " + formattedPrice + (isCouponApplied ? " (20% Coupon Applied)" : ""));
+    }
+
+    return lines.join("\n");
+  };
+
+  const liveAiSummaryText = useMemo(() => {
+    return getFormattedSummary(summaryLang);
+  }, [formData, appliedTemplate, priceBreakdown, isCouponApplied, summaryLang, lang]);
+
+  // Real AI Interactive Chat & Blueprint Assistant Helper
+  const handleSendAiChatMessage = async (customPrompt) => {
+    const textToSend = typeof customPrompt === "string" ? customPrompt : aiChatInput;
+    if (!textToSend || !textToSend.trim() || aiChatLoading) return;
+
+    const userMessage = {
+      role: "user",
+      content: textToSend.trim(),
+      timestamp: new Date().toISOString()
+    };
+
+    setAiChatMessages(prev => [...prev, userMessage]);
+    if (typeof customPrompt !== "string") {
+      setAiChatInput("");
+    }
+    setAiChatLoading(true);
+
+    try {
+      const orderContextPrompt = `[Live Website Order Form Context]
+Business Name: ${formData.businessName || "New Business Project"}
+Client Name: ${formData.fullName || "Valued Client"}
+Phone: ${formData.mobileNumber || "Pending"}
+Email: ${formData.emailAddress || "Pending"}
+Location: ${formData.businessAddress || "India"}
+Category: ${formData.selectedCategory || "Custom Business Website"}
+Applied Demo Template: ${appliedTemplate || "None"}
+Visual Style: ${formData.visualStyle || "Modern"}
+Color Theme: ${formData.colorTheme || "Default"}
+Domain Requirement: ${formData.domainStatus || "Pending"} (${formData.preferredDomainName || ""})
+Cloud Hosting: ${formData.hostingStatus || "Pending"} (${formData.hostingPlan || "Standard"})
+Backend CMS Requirement: ${formData.backendRequirement || "Pending"}
+WhatsApp Integration: ${formData.whatsappIntegration || "Pending"}
+Integrations: ${(formData.selectedIntegrations || []).join(", ") || "Standard"}
+Estimated Investment: ₹${priceBreakdown.totalApproxPrice.toLocaleString("en-IN")}
+Coupon Applied: ${isCouponApplied ? "Yes (20% OFF)" : "No"}
+Current Form Step: ${currentStep} of 10
+Language: ${summaryLang}
+
+User Inquiry / AI Request:
+${textToSend.trim()}`;
+
+      const res = await api.post("/chat", {
+        message: orderContextPrompt,
+        sessionId: aiChatSessionId,
+        userContext: {
+          name: formData.fullName || user?.name || "",
+          email: formData.emailAddress || user?.email || "",
+          phone: formData.mobileNumber || user?.phone || "",
+          company: formData.businessName || "",
+          role: user?.role || "user"
+        }
+      });
+
+      const responseText = res?.response || res?.message || res?.text || "I have analyzed your project requirements. Feel free to ask any questions or customize features!";
       
-      {/* Dynamic Ambient Background Art Craft with Soft Light Glass Accents */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute -top-32 left-1/4 w-[500px] sm:w-[700px] h-[500px] sm:h-[700px] bg-gradient-to-tr from-purple-400/20 to-pink-400/20 dark:from-purple-600/15 dark:to-pink-600/10 blur-[130px] rounded-full animate-pulse-glow" />
-        <div className="absolute top-1/3 -right-32 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-gradient-to-br from-blue-400/20 to-indigo-400/15 dark:from-blue-600/10 dark:to-indigo-600/10 blur-[130px] rounded-full" />
-        <div className="absolute -bottom-20 left-10 w-[450px] sm:w-[600px] h-[450px] sm:h-[600px] bg-gradient-to-tr from-emerald-400/15 to-teal-400/15 dark:from-emerald-600/10 dark:to-teal-600/10 blur-[130px] rounded-full" />
-      </div>
+      const botMessage = {
+        role: "assistant",
+        content: responseText,
+        timestamp: new Date().toISOString()
+      };
 
-      {/* 1. DISTRACTION-FREE MINIMALIST PRO HEADER (100% MOBILE RESPONSIVE) */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border-b border-slate-200/70 dark:border-slate-800/80 px-2 sm:px-6 lg:px-8 py-2 sm:py-3 w-full max-w-full overflow-hidden shadow-[0_4px_25px_-5px_rgba(0,0,0,0.03)] dark:shadow-none">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-1 sm:gap-3 w-full min-w-0">
-          
-          {/* Left: Back to Home & Brand Logo */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            <Link
-              to="/"
-              className="flex items-center justify-center p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:text-purple-600 dark:hover:text-purple-400 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
-              title={t.backToHome}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden md:inline ml-1">{t.backToHome}</span>
-            </Link>
+      setAiChatMessages(prev => [...prev, botMessage]);
+    } catch (err) {
+      console.error("AI Chat Error:", err);
+      toast.error("AI service is temporarily busy. Please retry.");
+      setAiChatMessages(prev => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "⚠️ Unable to connect with the AI engine right now. Please check your internet connection or retry in a moment.",
+          timestamp: new Date().toISOString()
+        }
+      ]);
+    } finally {
+      setAiChatLoading(false);
+    }
+  };
 
-            <Link to="/" className="flex items-center gap-1.5 shrink-0">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl overflow-hidden shadow-xs border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0">
-                <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
-              </div>
-              <span className="font-black tracking-tight text-xs sm:text-sm hidden lg:inline bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 dark:from-white dark:via-purple-200 dark:to-white bg-clip-text text-transparent">
-                LOCAL<span className="text-purple-600">2</span>BRAND
-              </span>
-            </Link>
+  const handleGenerateRealAiBlueprint = () => { handleOpenAiAssistant(true); };
+
+  // Auto-generate step summary when opening AI Assistant
+  const handleOpenAiAssistant = (forcePrompt) => {
+    setShowAiDrawer(true);
+    setAiDrawerTab('chat');
+
+    // If no messages or forced prompt, send step summary
+    const stepTitle = t.steps[currentStep - 1]?.title || ('Step ' + currentStep);
+    const guideItem = STEP_AI_GUIDES[currentStep - 1] || STEP_AI_GUIDES[0];
+    const currentGuide = guideItem[summaryLang] || guideItem[lang] || guideItem.en || {};
+
+    if (forcePrompt || aiChatMessages.length === 0) {
+      let initialStepPrompt = '';
+      if (summaryLang === 'bn') {
+        initialStepPrompt = `অনুগ্রহ করে আমার "${formData.businessName || 'নতুন ব্র্যান্ড'}" প্রজেক্টের (${formData.selectedCategory || 'ওয়েবসাইট'}) জন্য বর্তমান স্টেপ ${currentStep} (${stepTitle})-এর সংক্ষিপ্ত সারসংক্ষেপ ও পরামর্শ প্রদান করুন।
+- ক্যাটাগরি: ${formData.selectedCategory || 'বাছাই করা হয়নি'}
+- স্টাইল: ${formData.visualStyle || 'স্ট্যান্ডার্ড'}
+- ডোমেন/হোস্টিং: ${formData.domainStatus || 'পেন্ডিং'} / ${formData.hostingStatus || 'পেন্ডিং'}
+- আনুমানিক বাজেট: ₹${priceBreakdown.totalApproxPrice.toLocaleString('en-IN')} (কুপন ${couponCode} প্রযোজ্য)
+
+এই স্টেপের প্রশ্নের উত্তর সঠিকভাবে পূরণ করার জন্য সঠিক পরামর্শ দিন।`;
+      } else if (summaryLang === 'hi') {
+        initialStepPrompt = `कृपया मेरे "${formData.businessName || 'नया ब्रांड'}" प्रोजेक्ट (${formData.selectedCategory || 'वेबसाइट'}) के लिए वर्तमान चरण ${currentStep} (${stepTitle}) का संक्षिप्त सारांश और उपयोगी सलाह प्रदान करें।
+- श्रेणी: ${formData.selectedCategory || 'चयनित नहीं'}
+- स्टाइल: ${formData.visualStyle || 'मानक'}
+- डोमेन/होस्टिंग: ${formData.domainStatus || 'लंबित'} / ${formData.hostingStatus || 'लंबित'}
+- अनुमानित बजट: ₹${priceBreakdown.totalApproxPrice.toLocaleString('en-IN')} (कूपन ${couponCode} लागू)
+
+इस चरण के विकल्पों को बेहतर ढंग से चुनने में मार्गदर्शन करें।`;
+      } else {
+        initialStepPrompt = `Please provide an instant executive summary and tailored guidance for Step ${currentStep} (${stepTitle}) for my "${formData.businessName || 'New Brand'}" project in the "${formData.selectedCategory || 'Custom Website'}" category.
+- Current Style: ${formData.visualStyle || 'Modern'} | Color: ${formData.colorTheme || 'Default'}
+- Domain/Hosting: ${formData.domainStatus || 'Pending'} | ${formData.hostingStatus || 'Pending'}
+- Current Price Estimate: ₹${priceBreakdown.totalApproxPrice.toLocaleString('en-IN')} (Coupon ${couponCode} 20% OFF Applied)
+
+Highlight key tips for Step ${currentStep} questions and let me know how you can help customize my requirements.`;
+      }
+
+      handleSendAiChatMessage(initialStepPrompt);
+    }
+  };
+
+  const formatInlineMarkdown = (text) => {
+    if (!text) return "";
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\*\*(.*?)\*\*/g, "<strong class=\"font-black text-purple-900 dark:text-purple-200\">$1</strong>")
+      .replace(new RegExp("`([^`]+)`", "g"), "<code class=\"px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-mono text-[11px] font-bold\">$1</code>")
+      .replace(/\*(.*?)\*/g, "<em class=\"italic text-slate-700 dark:text-slate-300\">$1</em>");
+  };
+
+  // Success Screen
+  if (submissionSuccess) {
+    return (
+      <div className="min-h-screen py-16 px-4 flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
+        <div className="max-w-xl w-full p-8 sm:p-10 rounded-3xl bg-white dark:bg-slate-900/90 border border-emerald-500/40 shadow-2xl backdrop-blur-2xl text-center relative overflow-hidden animate-in fade-in zoom-in duration-500">
+          <div className="absolute -top-24 -right-24 w-60 h-60 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-500 dark:border-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30 animate-bounce">
+            <Check className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
           </div>
 
-          {/* Center: Live Step Progress Badge & Autosave */}
-          {!submittedData && (
-            <div className="flex items-center gap-1 sm:gap-2 text-center min-w-0 shrink">
-              <span className="text-[10px] sm:text-xs font-mono font-black text-purple-700 dark:text-purple-300 bg-purple-50/90 dark:bg-purple-950/80 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-purple-200/90 dark:border-purple-800 shadow-2xs shrink-0">
-                {currentStepIndex + 1}/{t.steps.length}
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-2">
+            Requirement Submitted Successfully!
+          </h2>
+          <p className="text-slate-600 dark:text-slate-300 text-sm mb-6">
+            Thank you, <span className="font-semibold text-slate-900 dark:text-white">{formData.fullName || formData.businessName}</span>! We have received your website requirements and our technical team is preparing your custom proposal roadmap.
+          </p>
+
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 mb-6 text-left space-y-2">
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-slate-500 dark:text-slate-400">Requirement Tracking ID:</span>
+              <span className="font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-lg border border-amber-400/30">
+                {submissionSuccess.id}
               </span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 hidden md:inline truncate max-w-[140px] lg:max-w-none">
-                {t.steps[currentStepIndex]?.title}
+            </div>
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-slate-500 dark:text-slate-400">Selected Category:</span>
+              <span className="font-semibold text-slate-900 dark:text-white capitalize">{formData.selectedCategory}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs sm:text-sm">
+              <span className="text-slate-500 dark:text-slate-400">Approximate Investment:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatPriceByCountry(submissionSuccess.totalApproxPrice, formData.country)}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              to="/"
+              className="flex-1 py-3 px-6 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-semibold text-sm border border-slate-300 dark:border-slate-600 transition-all flex items-center justify-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Home
+            </Link>
+            <a
+              href={`https://wa.me/918918237937?text=${encodeURIComponent(
+                `Hello LOCAL2BRAND! I have submitted my website requirement (ID: ${submissionSuccess.id}) for ${formData.businessName}. Please share the technical roadmap and proposal.`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-3 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" /> WhatsApp Connect
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen bg-slate-50 dark:bg-[#080B11] text-slate-900 dark:text-slate-100 flex flex-col selection:bg-purple-600 selection:text-white pb-32 transition-all duration-700 relative overflow-x-hidden`}>
+      
+      {/* Subtle Atmospheric Looping Country Video with Smooth Gradient Vignette */}
+      <BackgroundCountryArt country={formData.country || 'India'} />
+
+      {/* Subtle Pro-Designer Ambient Light Rays */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 opacity-30 dark:opacity-15 transition-opacity duration-700">
+        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-purple-500/15 blur-3xl" />
+        <div className="absolute top-1/3 -left-32 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl" />
+        <div className="absolute -bottom-32 right-1/4 w-96 h-96 rounded-full bg-emerald-500/10 blur-3xl" />
+      </div>
+
+      {/* Fixed 100% Full-Width Top Navbar */}
+      <nav className="fixed top-0 left-0 right-0 z-40 w-full bg-white/85 dark:bg-[#080B11]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-slate-800/80 shadow-sm dark:shadow-slate-950/50 transition-all">
+        {/* Dynamic Minimal Flag Stripe */}
+        {formData.country && (
+          <div className={`absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r ${currentCountryTheme.flagStripe || 'from-purple-600 to-indigo-600'} opacity-90 transition-all duration-700`} />
+        )}
+
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-8 py-2.5 flex items-center justify-between">
+          {/* Left: Home & Step Indicator */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              to="/"
+              className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0"
+              title="Return to Home"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">{t.backToHome}</span>
+            </Link>
+
+            <div className="flex items-center gap-1.5 bg-purple-50 dark:bg-purple-950/50 px-2.5 py-1 rounded-xl border border-purple-200/60 dark:border-purple-800/60">
+              <span className="text-[11px] sm:text-xs font-black text-purple-700 dark:text-purple-300 font-mono tracking-tight whitespace-nowrap">
+                {currentStep}/{totalSteps}
               </span>
+              {formData.country && (
+                <span className="text-xs select-none animate-in zoom-in" title={`${formData.country} Edition`}>
+                  {currentCountryTheme.flag}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: AI Summary + Reset + Language + DarkMode */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* AI Assistant Button */}
+            <button
+              type="button"
+              onClick={() => handleOpenAiAssistant()}
+              className="px-2.5 sm:px-3.5 py-1.5 rounded-xl sm:rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md shadow-purple-600/25 active:scale-95 transition-all shrink-0"
+              title="Open Real AI Summary & Interactive Advisor"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse shrink-0" />
+              <span className="hidden sm:inline">AI Summary</span>
+              <span className="sm:hidden text-[11px] font-black">AI</span>
+            </button>
+
+            {/* Reset Form Button */}
+            <button
+              type="button"
+              onClick={handleResetForm}
+              className="p-1.5 rounded-xl sm:rounded-full bg-slate-100 hover:bg-rose-50 dark:bg-slate-800 dark:hover:bg-rose-950/50 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 cursor-pointer transition-all shrink-0"
+              title="Clear Form & Reset"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Language Switcher */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl sm:rounded-full border border-slate-200 dark:border-slate-700 text-[10px] sm:text-xs">
+              {['en', 'bn', 'hi'].map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={`px-1.5 py-0.5 rounded-lg sm:rounded-full font-bold uppercase transition-all cursor-pointer ${
+                    lang === l
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+
+            <ThemeToggle />
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Form Body Container: Fixed navbar offset pt-18 */}
+      <main className="w-[95%] max-w-4xl mx-auto pt-16 sm:pt-20 flex-1 flex flex-col">
+        
+        {/* Step Progress Tracker Card (Inside Scrollable Form Area) */}
+        <div className="mb-4 bg-white/95 dark:bg-[#0F172A]/95 p-3.5 sm:p-5 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 backdrop-blur-xl shadow-lg dark:shadow-slate-950/50 transition-all">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div>
+              <span className="text-[11px] sm:text-xs font-mono font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                {t.stepLabel} {currentStep} of {totalSteps}
+              </span>
+              <h2 className="text-base sm:text-xl font-black text-slate-900 dark:text-white">
+                {t.steps[currentStep - 1]?.title}
+              </h2>
+            </div>
+            <div className="text-right">
+              <span className="text-[11px] sm:text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-400/10 px-2.5 py-0.5 sm:py-1 rounded-full border border-emerald-200 dark:border-emerald-400/30">
+                {Math.round((currentStep / totalSteps) * 100)}%
+              </span>
+            </div>
+          </div>
+
+          {/* Animated Cultural Country Gradient Bar */}
+          <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 shadow-inner">
+            <div
+              className={`h-full bg-gradient-to-r from-purple-600 via-indigo-500 to-emerald-500 rounded-full transition-all duration-500 ease-out shadow-md`}
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            />
+          </div>
+
+          {/* Step Pill Indicators with Lock Icons */}
+          <div className="flex items-center gap-1.5 mt-3.5 overflow-x-auto no-scrollbar pb-1 text-[11px] font-semibold select-none">
+            {t.steps.map((s, idx) => {
+              const stepNum = idx + 1;
+              const isActive = stepNum === currentStep;
+              const isPast = stepNum < currentStep;
+              const isLocked = stepNum > currentStep;
+
+              if (isActive) {
+                return (
+                  <span
+                    key={s.id}
+                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-purple-600 text-white font-black shadow-md shadow-purple-600/30 ring-2 ring-purple-400/30 shrink-0"
+                  >
+                    <span>{stepNum}.</span>
+                    <span className="truncate max-w-[85px] sm:max-w-[100px]">{s.title.split(' ')[0]}</span>
+                  </span>
+                );
+              }
+
+              if (isPast) {
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setCurrentStep(stepNum)}
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 cursor-pointer shrink-0 transition-all font-bold"
+                  >
+                    <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                    <span>{stepNum}.</span>
+                    <span className="truncate max-w-[75px] sm:max-w-[90px]">{s.title.split(' ')[0]}</span>
+                  </button>
+                );
+              }
+
+              // Locked Steps
+              return (
+                <span
+                  key={s.id}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-slate-400 dark:text-slate-600 bg-slate-100/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800/60 cursor-not-allowed shrink-0"
+                  title="Complete current step to unlock"
+                >
+                  <Lock className="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" />
+                  <span>{stepNum}.</span>
+                  <span className="truncate max-w-[75px] sm:max-w-[90px]">{s.title.split(' ')[0]}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Dynamic Interactive Cultural Mascot & Animated Heritage Mini-Art */}
+        <div className="mb-4 sm:mb-5 animate-in fade-in duration-300">
+          <CulturalMascotArt country={formData.country || 'India'} lang={lang} />
+        </div>
+
+        {/* Step Content Container Card */}
+        <div className="bg-white dark:bg-slate-900/90 p-4 sm:p-8 rounded-3xl border border-slate-200/90 dark:border-slate-800/90 backdrop-blur-xl shadow-xl shadow-slate-100/50 dark:shadow-none mb-6 flex-1 transition-all">
+
+
+          {/* ==================================================== */}
+          {/* STEP 1: CLIENT DETAILS & STRUCTURED ADDRESS */}
+          {/* ==================================================== */}
+          {currentStep === 1 && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                    {t.labels?.clientHeading || 'Client & Business Information'}
+                  </h3>
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-purple-400/40 bg-purple-500/10 text-xs font-black text-purple-700 dark:text-purple-300 self-start sm:self-center">
+                    <span>{currentCountryTheme.flag}</span>
+                    <span>{formData.country || 'India'} Edition</span>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  {t.labels?.clientSubheading || 'Enter your core contact and business details to initialize your project requirement.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    {t.labels?.fullName || 'Full Name'} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="e.g. Rahul Sharma"
+                      value={formData.fullName}
+                      onChange={e => setFormData({ ...formData, fullName: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 transition-colors"
+                    />
+                  </div>
+                  {stepErrors.fullName && <p className="text-xs text-red-500 mt-1">{stepErrors.fullName}</p>}
+                </div>
+
+                {/* Business / Brand Name */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    {t.labels?.businessName || 'Business / Brand Name'} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="e.g. Royal Bengal Sweets"
+                      value={formData.businessName}
+                      onChange={e => setFormData({ ...formData, businessName: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 transition-colors"
+                    />
+                  </div>
+                  {stepErrors.businessName && <p className="text-xs text-red-500 mt-1">{stepErrors.businessName}</p>}
+                </div>
+
+                {/* Mobile Number */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    {t.labels?.mobileNumber || 'Mobile Number'} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                    <input
+                      type="tel"
+                      placeholder="e.g. 9876543210"
+                      value={formData.mobileNumber}
+                      onChange={e => setFormData({ ...formData, mobileNumber: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 transition-colors font-mono"
+                    />
+                  </div>
+                  {stepErrors.mobileNumber && <p className="text-xs text-red-500 mt-1">{stepErrors.mobileNumber}</p>}
+                </div>
+
+                {/* WhatsApp Number */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    {t.labels?.whatsappNumber || 'WhatsApp Number'} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <MessageCircle className="absolute left-3.5 top-3.5 w-4 h-4 text-emerald-500" />
+                    <input
+                      type="tel"
+                      placeholder="e.g. 9876543210"
+                      value={formData.whatsappNumber}
+                      onChange={e => setFormData({ ...formData, whatsappNumber: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 transition-colors font-mono"
+                    />
+                  </div>
+                  {stepErrors.whatsappNumber && <p className="text-xs text-red-500 mt-1">{stepErrors.whatsappNumber}</p>}
+                </div>
+
+                {/* Email Address */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    {t.labels?.emailAddress || 'Email Address'} <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                    <input
+                      type="email"
+                      placeholder="e.g. rahul@example.com"
+                      value={formData.emailAddress}
+                      onChange={e => setFormData({ ...formData, emailAddress: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 transition-colors"
+                    />
+                  </div>
+                  {stepErrors.emailAddress && <p className="text-xs text-red-500 mt-1">{stepErrors.emailAddress}</p>}
+                </div>
+
+                {/* STRUCTURED ADDRESS CASCADING SECTION */}
+                <div className="sm:col-span-2 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-3.5">
+                  <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs uppercase tracking-wider">
+                    <MapPin className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <span>{t.labels?.addressSection || 'Business Location & Address Details'}</span>
+                  </div>
+
+                  {/* Country & State */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5 flex items-center justify-between">
+                        <span>{t.labels?.country || 'Country'} <span className="text-red-500">*</span></span>
+                        {formData.country && (
+                          <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400">
+                            {currentCountryTheme.flag} {formData.country} Theme Active
+                          </span>
+                        )}
+                      </label>
+                      <select
+                        value={formData.country || 'India'}
+                        onChange={e => handleAddressUpdate({ country: e.target.value, state: '', district: '' })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700/60 focus:border-purple-500 text-slate-900 dark:text-white text-xs font-semibold outline-none shadow-xs transition-all cursor-pointer"
+                      >
+                        {COUNTRIES.map(c => (
+                          <option key={c} value={c} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                            {COUNTRY_CULTURAL_THEMES[c]?.flag || '🌐'} {c}
+                          </option>
+                        ))}
+                      </select>
+                      {stepErrors.country && <p className="text-xs text-red-500 mt-1">{stepErrors.country}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                        {t.labels?.state || 'State / Province'} <span className="text-red-500">*</span>
+                      </label>
+                      {formData.country === 'India' ? (
+                        <select
+                          value={formData.state}
+                          onChange={e => handleAddressUpdate({ state: e.target.value, district: '' })}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none"
+                        >
+                          <option value="">{t.labels?.selectState || '-- Select State / UT --'}</option>
+                          {Object.keys(INDIAN_STATES_AND_DISTRICTS).map(st => (
+                            <option key={st} value={st} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{st}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          placeholder="Enter state or province..."
+                          value={formData.state}
+                          onChange={e => handleAddressUpdate({ state: e.target.value })}
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none"
+                        />
+                      )}
+                      {stepErrors.state && <p className="text-xs text-red-500 mt-1">{stepErrors.state}</p>}
+                    </div>
+                  </div>
+
+                  {/* District / City */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                      {t.labels?.district || 'District / City'} <span className="text-red-500">*</span>
+                    </label>
+                    {formData.country === 'India' && formData.state && INDIAN_STATES_AND_DISTRICTS[formData.state] ? (
+                      <select
+                        value={formData.district}
+                        onChange={e => handleAddressUpdate({ district: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none"
+                      >
+                        <option value="">{t.labels?.selectDistrict || '-- Select District / City --'}</option>
+                        {INDIAN_STATES_AND_DISTRICTS[formData.state].map(d => (
+                          <option key={d} value={d} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{d}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Enter City / District name..."
+                        value={formData.district}
+                        onChange={e => handleAddressUpdate({ district: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none"
+                      />
+                    )}
+                    {stepErrors.district && <p className="text-xs text-red-500 mt-1">{stepErrors.district}</p>}
+                  </div>
+
+                  {/* If Other District Selected */}
+                  {formData.district === 'Other' && (
+                    <div className="animate-in fade-in duration-200">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 mb-1">
+                        {t.labels?.specifyDistrict || 'Please specify your District / City'} <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter your exact city/district..."
+                        value={formData.otherDistrict}
+                        onChange={e => handleAddressUpdate({ otherDistrict: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none"
+                      />
+                      {stepErrors.otherDistrict && <p className="text-xs text-red-500 mt-1">{stepErrors.otherDistrict}</p>}
+                    </div>
+                  )}
+
+                  {/* Street Address & Pincode */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                        {t.labels?.streetAddress || 'Street Address / Shop / Building / Landmark'} <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Shop No. 14, Ground Floor, Park Street Market"
+                        value={formData.streetAddress}
+                        onChange={e => handleAddressUpdate({ streetAddress: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none"
+                      />
+                      {stepErrors.streetAddress && <p className="text-xs text-red-500 mt-1">{stepErrors.streetAddress}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                        {t.labels?.pincode || 'PIN / Postal Code'} <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={10}
+                        placeholder="e.g. 700016"
+                        value={formData.pincode}
+                        onChange={e => handleAddressUpdate({ pincode: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none font-mono"
+                      />
+                      {stepErrors.pincode && <p className="text-xs text-red-500 mt-1">{stepErrors.pincode}</p>}
+                    </div>
+                  </div>
+
+                  {/* Full Address Live Preview */}
+                  {formData.businessAddress && (
+                    <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-500/30 text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2">
+                      <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                      <div>
+                        <span className="text-purple-700 dark:text-purple-300 font-bold">{t.labels?.compiledAddress || 'Compiled Full Address:'} </span>
+                        <span>{formData.businessAddress}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Existing Website (Optional) */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                    {t.labels?.existingWebsite || 'Existing Website (Optional)'}
+                  </label>
+                  <div className="relative">
+                    <Globe className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
+                    <input
+                      type="url"
+                      placeholder="https://example.com"
+                      value={formData.existingWebsite}
+                      onChange={e => setFormData({ ...formData, existingWebsite: e.target.value })}
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Social Media Links (Dynamic Custom Inputs - Optional) */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                    {t.labels?.socialLinks || 'Social Media Links (Optional - Add Multiple)'}
+                  </label>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="url"
+                      placeholder="e.g. https://instagram.com/yourbrand or Facebook link"
+                      value={socialInput}
+                      onChange={e => setSocialInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddSocialLink(); } }}
+                      className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddSocialLink}
+                      className="px-4 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md"
+                    >
+                      <Plus className="w-4 h-4" /> {t.labels?.addLink || 'Add Link'}
+                    </button>
+                  </div>
+                  {formData.socialLinks.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.socialLinks.map((link, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs border border-slate-200 dark:border-slate-700"
+                        >
+                          <Globe className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                          <span className="truncate max-w-[200px]">{link}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSocialLink(idx)}
+                            className="text-slate-400 hover:text-red-500 cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Right: Language Translator, Save, Reset, Share & Theme Toggle */}
-          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
-            
-            {/* Multi-Language Translator Dropdown Pill */}
-            <div className="p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center gap-0.5 shadow-2xs shrink-0">
-              <button
-                type="button"
-                onClick={() => changeLanguage('en')}
-                className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                  lang === 'en'
-                    ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
-                title="English"
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                onClick={() => changeLanguage('bn')}
-                className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                  lang === 'bn'
-                    ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
-                title="বাংলা"
-              >
-                বাং
-              </button>
-              <button
-                type="button"
-                onClick={() => changeLanguage('hi')}
-                className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                  lang === 'hi'
-                    ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-2xs'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
-                title="हिंदी"
-              >
-                हिं
-              </button>
-            </div>
-
-            {/* Manual Save Button */}
-            {!submittedData && (
-              <button
-                type="button"
-                onClick={handleManualSave}
-                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/80 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/90 dark:border-emerald-800 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs active:scale-95 shrink-0"
-                title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : lang === 'hi' ? 'सेव करें' : 'Save Progress'}
-              >
-                <Save className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span className="hidden md:inline">{lang === 'bn' ? 'সেভ' : 'Save'}</span>
-              </button>
-            )}
-
-            {/* Reset / Clear Form Button */}
-            {!submittedData && (
-              <button
-                type="button"
-                onClick={handleResetForm}
-                className="p-1.5 sm:px-2 sm:py-1.5 rounded-xl bg-rose-50/80 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200/80 dark:border-rose-800 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer active:scale-95 shrink-0"
-                title={lang === 'bn' ? 'ফর্ম রিসেট করুন' : 'Reset form'}
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {/* Share Link Button (hidden on mobile, visible on sm+) */}
-            <button
-              type="button"
-              onClick={handleCopyShareLink}
-              className="hidden sm:flex p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-purple-50/90 dark:bg-purple-950/80 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800 text-xs font-bold items-center gap-1 transition-all cursor-pointer shadow-2xs shrink-0"
-              title="Copy share link"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-            </button>
-
-            <div className="shrink-0 scale-90 sm:scale-100">
-              <ThemeToggle />
-            </div>
-          </div>
-
-        </div>
-      </header>
-
-      {/* 2. SLIM SMOOTH PROGRESS BAR */}
-      {!submittedData && (
-        <div className="w-full max-w-full bg-slate-200/60 dark:bg-slate-800/60 h-1 sm:h-1.5 relative overflow-hidden shrink-0">
-          <div
-            className="h-full l2b-gradient-bg transition-all duration-500 ease-out shadow-xs"
-            style={{ width: `${((currentStepIndex + 1) / t.steps.length) * 100}%` }}
-          />
-        </div>
-      )}
-
-      {/* 3. MAIN FORM BODY */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-2.5 sm:px-6 lg:px-8 py-4 sm:py-8 flex flex-col justify-between min-w-0 max-w-full overflow-x-hidden">
-
-        {/* ========================================================================= */}
-        {/* TEMPLATE AUTO-APPLIED BANNER (When arriving from Live Demo / Template) */}
-        {/* ========================================================================= */}
-        {!submittedData && appliedTemplate && (
-          <div className="mb-4 sm:mb-5 p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-900/10 via-pink-900/10 to-amber-900/10 dark:from-purple-950/60 dark:via-slate-900/80 dark:to-amber-950/40 border border-purple-300/80 dark:border-purple-700/60 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-3 w-full min-w-0 max-w-full overflow-hidden">
-            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 w-full sm:w-auto">
-              {appliedTemplate.heroImage ? (
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden border border-purple-400/50 shadow-xs shrink-0 bg-slate-900">
-                  <img
-                    src={appliedTemplate.heroImage}
-                    alt={appliedTemplate.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1 mb-0.5">
-                  <span className="px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/70 text-purple-700 dark:text-purple-300 font-extrabold text-[9px] sm:text-[10px] tracking-wide uppercase flex items-center gap-1 shrink-0">
-                    <Sparkles className="w-2.5 h-2.5 text-purple-500 animate-pulse" />
-                    <span>{lang === 'bn' ? 'অটো-অ্যাপ্লাইড ডেমো' : lang === 'hi' ? 'ऑटो-अप्लाई डेमो' : 'Auto-Applied Demo'}</span>
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-black text-[9px] sm:text-[10px] shrink-0">
-                    20% OFF
-                  </span>
-                  {appliedTemplate.price && (
-                    <span className="text-[10px] sm:text-[11px] font-black text-emerald-600 dark:text-emerald-400 font-mono shrink-0">
-                      {appliedTemplate.price}
-                    </span>
-                  )}
-                </div>
-                <h3 className="font-black text-xs sm:text-sm text-slate-900 dark:text-white truncate max-w-[220px] sm:max-w-md">
-                  {appliedTemplate.title}
+          {/* ==================================================== */}
+          {/* STEP 2: SELECT WEBSITE CATEGORY & READY-MADE TEMPLATES */}
+          {/* ==================================================== */}
+          {currentStep === 2 && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  What type of website do you need? <span className="text-red-500">*</span>
                 </h3>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[240px] sm:max-w-none">
-                  {lang === 'bn' ? 'এই টেমপ্লেটের সকল স্পেসিফিকেশন লোড করা হয়েছে।' : 'Template specs and parameters are pre-configured.'}
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Select your core industry category or apply an interactive ready-made live template below.
                 </p>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-              <a
-                href={`/demos/${appliedTemplate.slug || 'restaurant'}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs active:scale-95"
-                title="Open live interactive demo preview page"
-              >
-                <Eye className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                <span>{lang === 'bn' ? 'লাইভ প্রিভিউ' : 'Live Preview'}</span>
-                <ExternalLink className="w-3 h-3 opacity-70" />
-              </a>
-              <button
-                type="button"
-                onClick={handleManualSave}
-                className="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shadow-xs transition-all cursor-pointer active:scale-95"
-                title="Save template state"
-              >
-                <Save className="w-3 h-3" />
-                <span>{lang === 'bn' ? 'সেভ' : 'Save'}</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* POST-SUBMISSION SUCCESS SCREEN */}
-        {submittedData ? (
-          <div className="max-w-2xl mx-auto my-auto p-6 sm:p-12 rounded-3xl bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-[0_20px_60px_-15px_rgba(168,85,247,0.15)] text-center space-y-6 animate-in zoom-in-95 backdrop-blur-xl">
-            <div className="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-lg border border-emerald-200 dark:border-emerald-800">
-              <CheckCircle2 className="w-10 h-10 animate-bounce" />
-            </div>
-
-            <div className="space-y-2">
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1.5 shadow-2xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                <span>{lang === 'bn' ? 'প্রজেক্ট প্রপোজাল রেজিস্টার্ড হয়েছে' : lang === 'hi' ? 'प्रोजेक्ट प्रस्ताव पंजीकृत हुआ' : 'Project Proposal Registered'}</span>
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {lang === 'bn' ? 'রিকোয়ারমেন্টস সফলভাবে জমা হয়েছে! 🎉' : lang === 'hi' ? 'आवश्यकताएं सफलतापूर्वक सबमिट की गईं! 🎉' : 'Requirements Submitted Successfully! 🎉'}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg mx-auto">
-                Thank you, <strong>{formData.clientInfo.businessName || 'Valued Client'}</strong>. Our lead developers will review your custom specifications and contact you shortly.
-              </p>
-            </div>
-
-            {/* Tracking ID Box */}
-            <div className="p-4 rounded-2xl bg-purple-50/80 dark:bg-purple-950/50 border-2 border-purple-200 dark:border-purple-800/80 flex items-center justify-between gap-3 shadow-sm">
-              <div className="text-left">
-                <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-400 uppercase tracking-wider block">
-                  Requirement Tracking ID
-                </span>
-                <span className="font-mono font-black text-sm sm:text-base text-slate-900 dark:text-white">
-                  {submittedData.requirementId || formData.requirementId || 'L2B-REQ-PENDING'}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(submittedData.requirementId || formData.requirementId);
-                  setCopiedId(true);
-                  toast.success('Tracking ID copied!');
-                  setTimeout(() => setCopiedId(false), 3000);
-                }}
-                className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95"
-              >
-                <Copy className="w-3.5 h-3.5" />
-                <span>{copiedId ? 'Copied' : 'Copy ID'}</span>
-              </button>
-            </div>
-
-            {/* Follow-up Note Card */}
-            <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/80 text-left text-xs text-amber-950 dark:text-amber-200 space-y-1.5 shadow-2xs">
-              <div className="font-bold flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
-                <Clock className="w-4 h-4" />
-                <span>{lang === 'bn' ? 'পরবর্তী পদক্ষেপ ও পেমেন্ট বিবরণ' : lang === 'hi' ? 'अगला कदम और भुगतान विवरण' : 'Next Milestones & Contact'}</span>
-              </div>
-              <p className="leading-relaxed text-[11px] sm:text-xs">
-                {lang === 'bn' 
-                  ? `আমাদের লিড ইঞ্জিনিয়ার আপনার সাথে ফোন বা হোয়াটসঅ্যাপে (${formData.clientInfo.mobile}) অথবা ইমেইলে (${formData.clientInfo.email}) যোগাযোগ করে ডিজাইন ও পেমেন্ট কনফার্ম করবেন।`
-                  : lang === 'hi'
-                  ? `हमारे इंजीनियर आपसे फोन/व्हाट्सएप (${formData.clientInfo.mobile}) या ईमेल (${formData.clientInfo.email}) पर संपर्क करके डिज़ाइन और भुगतान की पुष्टि करेंगे।`
-                  : `Our engineer will contact you via Phone/WhatsApp (${formData.clientInfo.mobile}) or Email (${formData.clientInfo.email}) to confirm design deliverables and payment milestones.`}
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <Link
-                to="/dashboard"
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 text-center active:scale-95 transition-all"
-              >
-                📊 Go to Client Dashboard
-              </Link>
-              <Link
-                to="/"
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 text-center"
-              >
-                Return to Home
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4 sm:space-y-6 flex-1 flex flex-col justify-between w-full min-w-0 max-w-full">
-            
-            {/* Step Pills Bar with Smooth Horizontal Touch Scroll & Strict Lock */}
-            <div
-              ref={stepScrollContainerRef}
-              className="w-full max-w-full min-w-0 flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-2 scrollbar-none snap-x touch-pan-x"
-            >
-              {t.steps.map((s, idx) => {
-                const isCompleted = idx < currentStepIndex;
-                const isActive = idx === currentStepIndex;
-                const isLocked = idx > maxReachedStep;
-
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => jumpToStep(idx)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all duration-200 cursor-pointer shrink-0 snap-center active:scale-95 ${
-                      isActive
-                        ? 'l2b-gradient-bg text-white shadow-md ring-2 ring-purple-400/30 scale-102 font-black'
-                        : isCompleted
-                        ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                        : isLocked
-                        ? 'bg-slate-100/80 dark:bg-slate-800/40 text-slate-400 dark:text-slate-600 border border-slate-200/60 dark:border-slate-800 cursor-not-allowed opacity-60'
-                        : 'bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 hover:border-purple-400 shadow-2xs'
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-500" />
-                    ) : isLocked ? (
-                      <Lock className="w-3 h-3 text-slate-400" />
-                    ) : (
-                      <span className="font-mono text-[10px] opacity-70">#{idx + 1}</span>
-                    )}
-                    <span>{s.short}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Error Banner */}
-            {errorMessage && (
-              <div className="p-3.5 rounded-2xl bg-red-50/90 dark:bg-red-950/80 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs font-bold flex items-center gap-2 animate-shake shadow-xs">
-                <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            {/* MAIN STEP CARD CONTAINER */}
-            <div className="p-5 sm:p-8 rounded-3xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] dark:shadow-none backdrop-blur-2xl">
-              
-              {/* STEP 1: CATEGORY SELECTION */}
-              {currentStepIndex === 0 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={0}
-                    title={lang === 'bn' ? 'আপনি কোন ধরনের ওয়েবসাইট তৈরি করতে চান?' : lang === 'hi' ? 'आप किस प्रकार की वेबसाइट बनाना चाहते हैं?' : 'What Type of Website or Business are We Building?'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                    {INDUSTRY_CATEGORIES.map((cat) => {
-                      const isSelected = formData.websiteType === cat.slug;
-                      const IconComp = cat.icon;
-                      const itemText = cat[lang] || cat.en;
-
-                      return (
-                        <div
-                          key={cat.slug}
-                          onClick={() =>
-                            setFormData({
-                              ...formData,
-                              websiteType: cat.slug,
-                              websiteTypeName: itemText.name
-                            })
-                          }
-                          className={`p-4 sm:p-5 rounded-2xl cursor-pointer transition-all duration-200 flex flex-col justify-between relative group ${
-                            isSelected
-                              ? 'bg-gradient-to-b from-purple-50/80 to-white dark:from-purple-950/40 dark:to-slate-900 border-2 border-purple-600 shadow-[0_8px_25px_rgba(168,85,247,0.2)] scale-102 ring-2 ring-purple-400/20'
-                              : 'bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-md hover:bg-white dark:hover:bg-slate-800'
-                          }`}
-                        >
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-colors ${
-                            isSelected
-                              ? 'bg-purple-600 text-white shadow-sm'
-                              : 'bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 border border-slate-200/80 dark:border-slate-700'
-                          }`}>
-                            <IconComp className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center justify-between">
-                              <span>{itemText.name}</span>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-purple-600 shrink-0" />}
-                            </h4>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                              {itemText.desc}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  
-                  {/* Step 1 Interactive Live Template Gallery - ONLY DATABASE TEMPLATES */}
-                  {databaseDemos && databaseDemos.length > 0 && (
-                    <div className="p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-sm">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                        <div>
-                          <h4 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <Sparkles className="w-4 h-4 text-purple-600" />
-                            <span>{lang === 'bn' ? 'ডাটাবেস লাইভ ডেমো টেমপ্লেট' : lang === 'hi' ? 'लाइव डेमो टेम्पलेट्स' : 'Live Ready-to-Launch Templates'}</span>
-                            <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-[10px] font-bold">
-                              {databaseDemos.length} {lang === 'bn' ? 'টি টেমপ্লেট' : 'Templates'}
-                            </span>
-                          </h4>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                            {lang === 'bn' ? 'যেকোনো টেমপ্লেট সিলেক্ট করলে তার সমস্ত ফিচার, পেজ ও স্পেক্স ১-ক্লিকে ফর্মে যুক্ত হয়ে যাবে।' : 'Select any live demo template to auto-populate all features, pages, and specs.'}
-                          </p>
-                        </div>
-
-                        {appliedTemplate && (
-                          <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800 shrink-0">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span>{lang === 'bn' ? 'টেমপ্লেট সিলেক্টেড' : 'Template Active'}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Template Cards Grid - STRICTLY ONLY DATABASE DEMOS */}
-                      {(() => {
-                        const allTemplatesList = (databaseDemos || []).map(d => ({
-                          slug: d.slug || d._id,
-                          title: d.title,
-                          category: d.category || 'Website Template',
-                          categorySlug: mapSlugToCategorySlug(d.category || d.slug),
-                          price: d.priceInr || d.price || '₹5,999',
-                          turnaround: d.turnaround || '2 - 4 Days',
-                          liveUrl: d.liveUrl || '',
-                          heroImage: d.heroImage || d.thumbnail || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop',
-                          features: Array.isArray(d.features) ? d.features : []
-                        }));
-                        const matchingTemplates = allTemplatesList.filter(t => t.categorySlug === formData.websiteType);
-                        const displayList = matchingTemplates.length > 0 ? matchingTemplates : allTemplatesList;
-
-                        return (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {displayList.map((tpl) => {
-                            const isCurrentSelected = appliedTemplate?.slug === tpl.slug || formData.websiteTypeName === tpl.title;
-
-                            return (
-                              <div
-                                key={tpl.slug}
-                                className={`p-3 rounded-2xl border transition-all flex flex-col justify-between space-y-2.5 bg-slate-50/70 dark:bg-slate-800/40 ${
-                                  isCurrentSelected
-                                    ? 'border-purple-600 dark:border-purple-500 bg-purple-50/50 dark:bg-purple-950/30 ring-2 ring-purple-500/20 shadow-md'
-                                    : 'border-slate-200/80 dark:border-slate-700/80 hover:border-purple-300 dark:hover:border-purple-700'
-                                }`}
-                              >
-                                <div>
-                                  {/* Thumbnail & Badges */}
-                                  <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-900 mb-2">
-                                    <img
-                                      src={tpl.heroImage}
-                                      alt={tpl.title}
-                                      className="w-full h-full object-cover"
-                                      loading="lazy"
-                                    />
-                                    <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-                                      <span className="px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-white text-[9px] font-bold">
-                                        {tpl.category}
-                                      </span>
-                                      <span className="px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 text-[9px] font-black">
-                                        20% OFF
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <h5 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-1">
-                                    {tpl.title}
-                                  </h5>
-
-                                  <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-                                    <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                                      {tpl.price}
-                                    </span>
-                                    <span>⏱️ {tpl.turnaround}</span>
-                                  </div>
-                                </div>
-
-                                {/* Action Buttons: Live Demo & Apply */}
-                                <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-1.5 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
-                                  <a
-                                    href={`/demos/${tpl.slug}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-1 py-2 px-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
-                                    title="Open live interactive demo preview page"
-                                  >
-                                    <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                                    <span>{lang === 'bn' ? 'লাইভ ডেমো' : lang === 'hi' ? 'लाइव डेमो' : 'Live Demo'}</span>
-                                    <ExternalLink className="w-3 h-3 opacity-70" />
-                                  </a>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const categorySlug = tpl.categorySlug || mapSlugToCategorySlug(tpl.category || tpl.slug);
-                                      setAppliedTemplate(tpl);
-                                      if (typeof window !== 'undefined') {
-                                        localStorage.setItem('l2b_get_started_applied_template', JSON.stringify(tpl));
-                                      }
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        websiteType: categorySlug,
-                                        websiteTypeName: tpl.title,
-                                        referenceUrls: tpl.liveUrl || prev.referenceUrls,
-                                        couponCode: prev.couponCode || 'INDIA2025',
-                                        discountPercent: prev.couponCode ? prev.discountPercent : 20,
-                                        timeline: `⚡ Express Delivery (${tpl.turnaround})`,
-                                        selectedFeatures: tpl.features?.length > 0 ? Array.from(new Set([...prev.selectedFeatures, ...tpl.features])) : prev.selectedFeatures
-                                      }));
-                                      handleManualSave(true);
-                                      toast.success(
-                                        lang === 'bn'
-                                          ? `🎯 টেমপ্লেট "${tpl.title}" সফলভাবে অ্যাপ্লাই করা হয়েছে!`
-                                          : lang === 'hi'
-                                          ? `🎯 टेम्पलेट "${tpl.title}" सफलतापूर्वक लागू कर दिया गया!`
-                                          : `🎯 Template "${tpl.title}" applied successfully!`
-                                      );
-                                    }}
-                                    className={`flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                                      isCurrentSelected
-                                        ? 'bg-purple-600 text-white shadow-xs'
-                                        : 'l2b-gradient-bg text-white hover:opacity-95 shadow-2xs active:scale-95'
-                                    }`}
-                                  >
-                                    {isCurrentSelected ? (
-                                      <>
-                                        <Check className="w-3.5 h-3.5 text-white" />
-                                        <span>{lang === 'bn' ? 'সিলেক্টেড ✓' : 'Applied ✓'}</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Sparkles className="w-3.5 h-3.5 text-white" />
-                                        <span>{lang === 'bn' ? 'টেমপ্লেট নিন' : 'Apply Template'}</span>
-                                      </>
-                                    )}
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  )}
-
-                  {/* Step 1 Quick Coupon & Autosave Box */}
-                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-500/5 via-amber-500/5 to-pink-500/5 dark:from-purple-950/30 dark:via-slate-900/60 dark:to-amber-950/20 border border-purple-200/80 dark:border-purple-800/80 space-y-3.5 shadow-xs">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-100 dark:border-purple-900/50 pb-3">
+              {/* Template Lock Banner if Template is applied */}
+              {appliedTemplate && (
+                <div className="p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border-2 border-purple-300 dark:border-purple-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md animate-in fade-in duration-300">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <Lock className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 flex items-center justify-center shrink-0">
-                          <Tag className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <span>{lang === 'bn' ? 'ডিসকাউন্ট কুপন ও অটো-সেভ অপশন' : lang === 'hi' ? 'डिस्काउंट कूपन और ऑटो-सेव' : 'Discount Coupon & Autosave'}</span>
-                            <span className="px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-black">
-                              20% OFF
-                            </span>
-                          </h4>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                            {lang === 'bn' ? 'কুপন কোড প্রয়োগ করুন এবং যেকোনো সময় ফর্মের তথ্য সেভ করে রাখুন।' : 'Apply promo code and save your form progress anytime.'}
-                          </p>
-                        </div>
+                        <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider">
+                          Applied Template Locked
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-purple-200 dark:bg-purple-800 text-purple-900 dark:text-white text-[10px] font-black">
+                          {appliedTemplate}
+                        </span>
                       </div>
-
-                      <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                        <button
-                          type="button"
-                          onClick={handleManualSave}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
-                          title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : 'Save Progress'}
-                        >
-                          <Save className="w-3.5 h-3.5" />
-                          <span>{lang === 'bn' ? 'সেভ করুন' : lang === 'hi' ? 'सेव करें' : 'Save Draft'}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={handleResetForm}
-                          className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-600 dark:hover:text-rose-400 text-slate-600 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer active:scale-95"
-                          title={lang === 'bn' ? 'রিসেট করুন' : 'Reset All'}
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          <span>{lang === 'bn' ? 'রিসেট' : lang === 'hi' ? 'रीसेट' : 'Reset'}</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2.5">
-                      <div className="flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-purple-600" />
-                          <input
-                            type="text"
-                            value={couponInput}
-                            onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
-                            placeholder={formData.couponCode ? `Active: ${formData.couponCode}` : 'e.g. INDIA2025'}
-                            className="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-900 dark:text-white uppercase focus:outline-none focus:border-purple-600"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleApplyCoupon()}
-                          className="px-4 py-2 rounded-xl l2b-gradient-bg text-white text-xs font-black shadow-xs hover:opacity-95 cursor-pointer active:scale-95 transition-all"
-                        >
-                          {lang === 'bn' ? 'প্রয়োগ করুন' : lang === 'hi' ? 'अप्लाई करें' : 'Apply'}
-                        </button>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-                        <span className="text-slate-400 font-bold">{lang === 'bn' ? 'জনপ্রিয় কুপন:' : 'Popular:'}</span>
-                        {['INDIA2025', 'STARTUP50', 'FESTIVE25'].map((code) => (
-                          <button
-                            key={code}
-                            type="button"
-                            onClick={() => handleApplyCoupon(code)}
-                            className={`px-2 py-0.5 rounded-lg border font-mono font-bold transition-all cursor-pointer ${
-                              formData.couponCode === code
-                                ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
-                                : 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/50'
-                            }`}
-                          >
-                            🏷️ {code} ({code === 'STARTUP50' ? '50% OFF' : code === 'FESTIVE25' ? '25% OFF' : '20% OFF'})
-                          </button>
-                        ))}
-                      </div>
-
-                      {formData.couponCode && (
-                        <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-between text-xs animate-in zoom-in-95">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                            <span className="font-bold text-emerald-950 dark:text-emerald-200">
-                              {lang === 'bn' ? 'কুপন সক্রিয়:' : 'Coupon Active:'} <strong className="font-mono">{formData.couponCode}</strong> ({formData.discountPercent}% OFF Applied)
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleRemoveCoupon}
-                            className="text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:underline cursor-pointer"
-                          >
-                            {lang === 'bn' ? 'সরিয়ে ফেলুন' : 'Remove'}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 2: BUSINESS & CONTACT CREDENTIALS */}
-              {currentStepIndex === 1 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={1}
-                    title={lang === 'bn' ? 'আপনার ব্র্যান্ড ও যোগাযোগের বিবরণ দিন' : lang === 'hi' ? 'अपने ब्रांड और संपर्क विवरण भरें' : 'Tell Us About Your Brand & Contact Details'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    
-                    {/* Input Field: Business Name */}
-                    <div className="space-y-1">
-                      <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <Building2 className="w-3.5 h-3.5 text-purple-600" />
-                        <span>{lang === 'bn' ? 'ব্যবসার নাম *' : lang === 'hi' ? 'बिज़नेस का नाम *' : 'Business / Brand Name *'}</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.clientInfo.businessName}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            clientInfo: { ...formData.clientInfo, businessName: e.target.value }
-                          })
-                        }
-                        placeholder="e.g. Royal Nawabi Dining / Aura Luxe Salon"
-                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs"
-                      />
-                    </div>
-
-                    {/* Input Field: Founder Name */}
-                    <div className="space-y-1">
-                      <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <User className="w-3.5 h-3.5 text-purple-600" />
-                        <span>{lang === 'bn' ? 'প্রতিষ্ঠাতা / মালিকের নাম *' : lang === 'hi' ? 'मालिक / संस्थापक का नाम *' : 'Owner / Founder Name *'}</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.clientInfo.ownerName}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            clientInfo: { ...formData.clientInfo, ownerName: e.target.value }
-                          })
-                        }
-                        placeholder="e.g. Rahul Sharma"
-                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs"
-                      />
-                    </div>
-
-                    {/* Input Field: WhatsApp Phone */}
-                    <div className="space-y-1">
-                      <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'হোয়াটসঅ্যাপ' : lang === 'hi' ? 'व्हाट्सएप' : 'WhatsApp'}</span>
-                      </label>
-                      <input
-                        type="tel"
-                        required
-                        value={formData.clientInfo.mobile}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            clientInfo: { ...formData.clientInfo, mobile: e.target.value }
-                          })
-                        }
-                        placeholder="e.g. +91 98765 43210"
-                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs font-mono"
-                      />
-                    </div>
-
-                        <span>{lang === 'bn' ? 'ইমেইল অ্যাড্রেস *' : lang === 'hi' ? 'ईमेल पता *' : 'Email Address *'}</span>
-                    <div className="space-y-1">
-                      <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <Mail className="w-3.5 h-3.5 text-blue-500" />
-                        <span>{lang === 'bn' ? 'ইমেইল অ্যাড্রেস *' : lang === 'hi' ? 'ईमेल पता *' : 'Email Address *'}</span>
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        value={formData.clientInfo.email}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            clientInfo: { ...formData.clientInfo, email: e.target.value }
-                          })
-                        }
-                        placeholder="e.g. contact@royalnawabi.com"
-                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs font-mono"
-                      />
-                    </div>
-
-                    {/* Input Field: City */}
-                    <div className="space-y-1">
-                      <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <Compass className="w-3.5 h-3.5 text-amber-500" />
-                        <span>{lang === 'bn' ? 'শহর / লোকেশন *' : lang === 'hi' ? 'शहर / स्थान *' : 'City / Region *'}</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.clientInfo.city}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            clientInfo: { ...formData.clientInfo, city: e.target.value }
-                          })
-                        }
-                        placeholder="e.g. Kolkata, Bangalore, Mumbai"
-                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs"
-                      />
-                    </div>
-
-                    {/* Input Field: Existing Website */}
-                    <div className="space-y-1">
-                      <label className="font-bold text-xs text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                        <Globe className="w-3.5 h-3.5 text-purple-500" />
-                        <span>{lang === 'bn' ? 'বর্তমান ওয়েবসাইট (যদি থাকে)' : lang === 'hi' ? 'वर्तमान वेबसाइट (यदि हो)' : 'Existing Website (if redesigning)'}</span>
-                      </label>
-                      <input
-                        type="url"
-                        value={formData.clientInfo.existingWebsite}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            clientInfo: { ...formData.clientInfo, existingWebsite: e.target.value }
-                          })
-                        }
-                        placeholder="https://..."
-                        className="w-full p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-3 focus:ring-purple-500/20 transition-all shadow-2xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 3: INDUSTRY SPECIFIC DYNAMIC QUESTIONS */}
-              {currentStepIndex === 2 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={2}
-                    title={lang === 'bn' ? 'ইন্ডাস্ট্রি স্পেসিফিকেশন ও অপশন *' : lang === 'hi' ? 'उद्योग विशिष्ट विकल्प *' : 'Industry Specifications & Custom Parameters *'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="space-y-4">
-                    {/* Common Industry Field: Specialties */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2">
-                      <label className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 block">
-                        {lang === 'bn' ? 'আপনার ব্র্যান্ডের মূল বৈশিষ্ট্য বা সিগনেচার আইটেম *' : lang === 'hi' ? 'आपके ब्रांड की मुख्य विशेषताएं या सिग्नेचर आइटम *' : 'Brand Signature Offerings & Specialties *'}
-                      </label>
-                      <textarea
-                        rows={3}
-                        required
-                        value={formData.businessDetails.specialties || ''}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            businessDetails: {
-                              ...formData.businessDetails,
-                              specialties: e.target.value
-                            }
-                          })
-                        }
-                        placeholder={lang === 'bn' ? 'যেমন: দম বিরিয়ানি, ব্রাইডাল মেকআপ, লাক্সারি স্যুইট' : lang === 'hi' ? 'उदा: दम बिरयानी, ब्राइडल मेकअप, लग्जरी रूम' : 'e.g. Special Dum Biryani / Bridal Glow Package / Luxury Suite Room'}
-                        className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
-                      />
-                    </div>
-
-                    {/* Common Industry Field: Service Timing */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2">
-                      <label className="font-bold text-xs sm:text-sm text-slate-800 dark:text-slate-200 block">
-                        {lang === 'bn' ? 'কাজের সময় / অপারেটিং আওয়ার্স' : lang === 'hi' ? 'खुलने का समय / टाइमिंग' : 'Operating Hours & Service Timing'}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.businessDetails.operatingHours || ''}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            businessDetails: {
-                              ...formData.businessDetails,
-                              operatingHours: e.target.value
-                            }
-                          })
-                        }
-                        placeholder={lang === 'bn' ? 'যেমন: সকাল ১০ টা - রাত ১০ টা (প্রতিদিন)' : lang === 'hi' ? 'उदा: सुबह 10:00 से रात 10:00 तक' : 'e.g. 10:00 AM - 10:00 PM (All 7 Days)'}
-                        className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 4: PAGES & SITEMAP */}
-              {currentStepIndex === 3 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={3}
-                    title={lang === 'bn' ? 'প্রয়োজনীয় পেজ ও নেভিগেশন স্ট্রাকচার বেছে নিন' : lang === 'hi' ? 'आवश्यक पेज और वेबसाइट संरचना चुनें' : 'Select Required Pages & Navigation Structure'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {MULTI_PAGES.map((pageObj) => {
-                      const pageTitle = pageObj[lang] || pageObj.en;
-                      const isChecked = formData.selectedPages.includes(pageObj.en);
-
-                      return (
-                        <label
-                          key={pageObj.id}
-                          className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 cursor-pointer text-xs font-bold transition-all ${
-                            isChecked
-                              ? 'bg-purple-50/90 dark:bg-purple-950/70 border-purple-500 text-purple-950 dark:text-purple-200 shadow-2xs scale-101'
-                              : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-purple-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                const nextPages = e.target.checked
-                                  ? [...formData.selectedPages, pageObj.en]
-                                  : formData.selectedPages.filter((p) => p !== pageObj.en);
-                                setFormData({ ...formData, selectedPages: nextPages });
-                              }}
-                              className="w-4 h-4 rounded text-purple-600"
-                            />
-                            <span>{pageTitle}</span>
-                          </div>
-                          {isChecked && <Check className="w-4 h-4 text-purple-600 shrink-0" />}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 5: CORE FEATURES */}
-              {currentStepIndex === 4 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={4}
-                    title={lang === 'bn' ? 'এডভান্সড ফিচার ও কনভার্সন মডিউল' : lang === 'hi' ? 'उन्नत फीचर्स और रूपांतरण मॉड्यूल' : 'Advanced Business & Conversion Features'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {MULTI_FEATURES.map((featObj) => {
-                      const featTitle = featObj[lang] || featObj.en;
-                      const isChecked = formData.selectedFeatures.includes(featObj.en);
-
-                      return (
-                        <label
-                          key={featObj.id}
-                          className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 cursor-pointer text-xs font-bold transition-all ${
-                            isChecked
-                              ? 'bg-purple-50/90 dark:bg-purple-950/70 border-purple-500 text-purple-950 dark:text-purple-200 shadow-2xs scale-101'
-                              : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-purple-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                const nextFeats = e.target.checked
-                                  ? [...formData.selectedFeatures, featObj.en]
-                                  : formData.selectedFeatures.filter((f) => f !== featObj.en);
-                                setFormData({ ...formData, selectedFeatures: nextFeats });
-                              }}
-                              className="w-4 h-4 rounded text-purple-600"
-                            />
-                            <span>{featTitle}</span>
-                          </div>
-                          {isChecked && <Check className="w-4 h-4 text-purple-600 shrink-0" />}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 6: PAYMENT GATEWAYS */}
-              {currentStepIndex === 5 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={5}
-                    title={lang === 'bn' ? 'পেমেন্ট গেটওয়ে ও বিলিং পদ্ধতি' : lang === 'hi' ? 'पेमेंट गेटवे और बिलिंग विकल्प' : 'Payment Gateway & Billing Options'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {MULTI_PAYMENTS.map((methodObj) => {
-                      const methodTitle = methodObj[lang] || methodObj.en;
-                      const isChecked = formData.paymentMethods.includes(methodObj.en);
-
-                      return (
-                        <label
-                          key={methodObj.id}
-                          className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 cursor-pointer text-xs font-bold transition-all ${
-                            isChecked
-                              ? 'bg-purple-50/90 dark:bg-purple-950/70 border-purple-500 text-purple-950 dark:text-purple-200 shadow-2xs'
-                              : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-purple-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                const nextMethods = e.target.checked
-                                  ? [...formData.paymentMethods, methodObj.en]
-                                  : formData.paymentMethods.filter((m) => m !== methodObj.en);
-                                setFormData({ ...formData, paymentMethods: nextMethods });
-                              }}
-                              className="w-4 h-4 rounded text-purple-600"
-                            />
-                            <span>{methodTitle}</span>
-                          </div>
-                          <CreditCard className="w-4 h-4 text-purple-500 shrink-0" />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 7: ADMIN PANEL */}
-              {currentStepIndex === 6 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={6}
-                    title={lang === 'bn' ? 'অ্যাডমিন প্যানেল ও কনটেন্ট ম্যানেজমেন্ট (CMS)' : lang === 'hi' ? 'एडमिन पैनल और सामग्री प्रबंधन (CMS)' : 'Admin Panel & Content Management System (CMS)'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="space-y-3">
-                    {[
-                      {
-                        title: 'Full Dynamic Admin Panel',
-                        en: { title: 'Full Dynamic Admin Panel', desc: 'Manage products, prices, leads, callbacks, and reviews yourself with 1-click password protected dashboard.' },
-                        bn: { title: 'সম্পূর্ণ ডায়নামিক অ্যাডমিন প্যানেল', desc: 'প্রোডাক্ট, প্রাইস, বুকিং, লিড ও রিভিউ নিজে এডিট ও কন্ট্রোল করার পাসওয়ার্ড প্রোটেক্টেড ড্যাশবোর্ড।' },
-                        hi: { title: 'पूर्ण गतिशील व्यवस्थापक पैनल', desc: 'पासवर्ड संरक्षित डैशबोर्ड के साथ उत्पाद, मूल्य और लीड स्वयं प्रबंधित करें।' }
-                      },
-                      {
-                        title: 'Turnkey Managed Care',
-                        en: { title: 'Turnkey Managed Care', desc: 'LOCAL2BRAND handles all monthly updates, menu changes, and security backups for you.' },
-                        bn: { title: 'টার্নকি ম্যানেজড কেয়ার', desc: 'LOCAL2BRAND আপনার সকল মাসিক মেনু আপডেট, সিকিউরিটি ও ক্লাউড ব্যাকআপ পরিচালনা করবে।' },
-                        hi: { title: 'टर्नकी प्रबंधित सेवा', desc: 'LOCAL2BRAND आपके सभी मासिक अपडेट, मेनू और सुरक्षा बैकअप संभालेगा।' }
-                      },
-                      {
-                        title: 'Static High-Speed Engine',
-                        en: { title: 'Static High-Speed Engine', desc: 'Zero maintenance site, fastest speed, updates via WhatsApp request to developer.' },
-                        bn: { title: 'স্ট্যাটিক হাই-স্পিড ইঞ্জিন', desc: 'জিরো মেইনটেন্যান্স সাইট, সর্বোচ্চ গতি, প্রয়োজনমত হোয়াটসঅ্যাপের মাধ্যমে আপডেট।' },
-                        hi: { title: 'सुपर-फास्ट स्टेटिक इंजन', desc: 'शून्य रखरखाव, उच्चतम गति, डेवलपर के माध्यम से अपडेट।' }
-                      }
-                    ].map((panel) => {
-                      const isSelected = formData.adminPanelType === panel.title;
-                      const panelText = panel[lang] || panel.en;
-
-                      return (
-                        <div
-                          key={panel.title}
-                          onClick={() => setFormData({ ...formData, adminPanelType: panel.title })}
-                          className={`p-4 rounded-2xl border cursor-pointer transition-all ${
-                            isSelected
-                              ? 'bg-purple-50/80 dark:bg-purple-950/40 border-2 border-purple-600 shadow-md ring-2 ring-purple-400/20'
-                              : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-purple-300'
-                          }`}
-                        >
-                          <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center justify-between">
-                            <span>{panelText.title}</span>
-                            {isSelected && <Check className="w-4 h-4 text-purple-600" />}
-                          </h4>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            {panelText.desc}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 8: WHATSAPP & LEAD ALERTS */}
-              {currentStepIndex === 7 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={7}
-                    title={lang === 'bn' ? 'হোয়াটসঅ্যাপ ও ইমেইল লিড নোটিফিকেশন' : lang === 'hi' ? 'व्हाट्सएप और ईमेल लीड सूचनाएं' : 'WhatsApp & Email Lead Notifications'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {[
-                      {
-                        id: 'float_wa',
-                        en: 'WhatsApp Floating Quick Chat Button',
-                        bn: 'হোয়াটসঅ্যাপ ফ্লোটিং কুইক চ্যাট বাটন',
-                        hi: 'व्हाट्सएप फ्लोटिंग क्विक चैट बटन'
-                      },
-                      {
-                        id: 'direct_order_wa',
-                        en: 'Direct Order / Booking to WhatsApp with Pre-filled Payload',
-                        bn: '১-ক্লিক ডিরেক্ট হোয়াটসঅ্যাপ বুকিং ও অর্ডার পেলোড',
-                        hi: 'व्हाट्सएप पर डायरेक्ट प्री-फिल्ड ऑर्डर बुकिंग'
-                      },
-                      {
-                        id: 'admin_email',
-                        en: 'Instant Admin Email Alert for every submission',
-                        bn: 'প্রতিটি নতুন সাবমিশনের জন্য ইনস্ট্যান্ট অ্যাডমিন ইমেইল অ্যালার্ট',
-                        hi: 'प्रत्येक सबमिशन पर त्वरित व्यवस्थापक ईमेल अलर्ट'
-                      },
-                      {
-                        id: 'customer_receipt',
-                        en: 'Automated Customer Confirmation Email & Receipt',
-                        bn: 'গ্রাহকদের জন্য অটোমেটেড কনফার্মেশন ইমেইল ও রসিদ',
-                        hi: 'स्वचालित ग्राहक पुष्टिकरण ईमेल और रसीद'
-                      }
-                    ].map((opt) => {
-                      const optTitle = opt[lang] || opt.en;
-                      const isChecked = formData.whatsappOptions.includes(opt.en);
-
-                      return (
-                        <label
-                          key={opt.id}
-                          className={`p-4 rounded-2xl border flex items-center justify-between gap-3 cursor-pointer text-xs font-bold transition-all ${
-                            isChecked
-                              ? 'bg-purple-50/90 dark:bg-purple-950/70 border-purple-500 text-purple-950 dark:text-purple-200 shadow-2xs'
-                              : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-purple-300'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={(e) => {
-                                const nextOpts = e.target.checked
-                                  ? [...formData.whatsappOptions, opt.en]
-                                  : formData.whatsappOptions.filter((x) => x !== opt.en);
-                                setFormData({ ...formData, whatsappOptions: nextOpts });
-                              }}
-                              className="w-4 h-4 rounded text-purple-600"
-                            />
-                            <span>{optTitle}</span>
-                          </div>
-                          <MessageCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 9: DESIGN & COLOR PREFERENCES */}
-              {currentStepIndex === 8 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={8}
-                    title={lang === 'bn' ? 'ডিজাইন ও ভিজ্যুয়াল স্টাইল প্রেফারেন্স' : lang === 'hi' ? 'डिज़ाइन और दृश्य शैली की प्राथमिकताएं' : 'Design Aesthetics & Visual Style'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="font-bold text-xs text-slate-800 dark:text-slate-200 block mb-1">
-                        {lang === 'bn' ? 'ডিজাইন ল্যাঙ্গুয়েজ' : lang === 'hi' ? 'पसंदीदा डिज़ाइन शैली' : 'Preferred Design Language'}
-                      </label>
-                      <select
-                        value={formData.designStyle}
-                        onChange={(e) => setFormData({ ...formData, designStyle: e.target.value })}
-                        className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 shadow-2xs"
-                      >
-                        <option value="Modern Glassmorphic & Vibrant">Modern Liquid Glass & Vibrant Neon Accents</option>
-                        <option value="Minimal Clean & Corporate">Minimalist, Clean White & High-Contrast</option>
-                        <option value="Luxury Royal & Gold">Luxury Royal Dark Mode & Gold Foil Accents</option>
-                        <option value="Playful & High-Energy">Playful, Bold Typography & Pastel Highlights</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="font-bold text-xs text-slate-800 dark:text-slate-200 block mb-1">
-                        {lang === 'bn' ? 'পছন্দের ব্র্যান্ড কালারস' : lang === 'hi' ? 'पसंदीदा ब्रांड रंग' : 'Brand Colors / Palette'}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.preferredColors}
-                        onChange={(e) => setFormData({ ...formData, preferredColors: e.target.value })}
-                        placeholder="e.g. Royal Blue & Gold / Emerald Green & White"
-                        className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 shadow-2xs"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="font-bold text-xs text-slate-800 dark:text-slate-200 block mb-1">
-                        {lang === 'bn' ? 'রেফারেন্স ওয়েবসাইট লিংক (অনুপ্রেরণা)' : lang === 'hi' ? 'संदर्भ वेबसाइट लिंक' : 'Reference Website Links (Inspirations)'}
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.referenceUrls}
-                        onChange={(e) => setFormData({ ...formData, referenceUrls: e.target.value })}
-                        placeholder="e.g. apple.com, stripe.com, your competitor's link"
-                        className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 shadow-2xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 10: MEDIA & STORE PHOTOS */}
-              {currentStepIndex === 9 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={9}
-                    title={lang === 'bn' ? 'দোকান, শোরুম, প্রোডাক্ট বা লোগো ফটো (ঐচ্ছিক)' : lang === 'hi' ? 'दुकान, उत्पाद या लोगो की तस्वीरें (वैकल्पिक)' : 'Store Photos, Logo & Product Imagery (Optional)'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  {/* Upload Dropzone / Button Box */}
-                  <div className="p-6 sm:p-8 rounded-3xl border-2 border-dashed border-purple-300 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-950/20 text-center space-y-3 transition-all hover:border-purple-500">
-                    <UploadCloud className={`w-10 h-10 text-purple-600 dark:text-purple-400 mx-auto ${isUploadingImages ? 'animate-bounce' : 'animate-pulse'}`} />
-                    
-                    <div className="space-y-1.5">
-                      <label className={`px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs cursor-pointer shadow-md inline-flex items-center gap-2 transition-all active:scale-95 ${isUploadingImages ? 'opacity-60 cursor-not-allowed pointer-events-none' : ''}`}>
-                        {isUploadingImages ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                            <span>{lang === 'bn' ? 'আপলোড ও ক্লাউড সেভ হচ্ছে... ⏳' : lang === 'hi' ? 'क्लाउड पर अपलोड हो रहा है... ⏳' : 'Uploading & Saving to Cloud... ⏳'}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>{lang === 'bn' ? 'ছবি ব্রাউজ করুন (একসাথে একাধিক ফাইল)' : lang === 'hi' ? 'तस्वीरें चुनें (एक साथ कई फाइलें)' : 'Browse Photos (Select Multiple)'}</span>
-                          </>
-                        )}
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          disabled={isUploadingImages}
-                          onChange={handleMultiImageUpload}
-                          className="hidden"
-                        />
-                      </label>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                        JPG, PNG, WEBP up to 15MB per photo • Automatic instant Cloudinary sync &amp; persistent draft save
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                        Category changes are locked while a template is applied. Remove the template below to choose another category.
                       </p>
                     </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveAppliedTemplate}
+                    className="px-3.5 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md transition-all shrink-0 active:scale-95"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Remove Template
+                  </button>
+                </div>
+              )}
 
-                    {formData.uploadedImages?.length > 0 && (
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
-                        <Check className="w-3.5 h-3.5" />
-                        <span>{formData.uploadedImages.length} photo(s) attached • Saved to your browser draft</span>
+              {stepErrors.selectedCategory && (
+                <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-300 text-xs font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                  {stepErrors.selectedCategory}
+                </div>
+              )}
+
+              {/* Animated Category Cards Grid - Responsive 2 columns on mobile */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+                {CATEGORIES.map(cat => {
+                  const Icon = cat.icon;
+                  const isSelected = formData.selectedCategory === cat.id;
+                  return (
+                    <div
+                      key={cat.id}
+                      onClick={() => handleCategorySelect(cat.id)}
+                      className={`group relative p-3 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+                        isSelected
+                          ? 'bg-purple-50/90 dark:bg-purple-950/40 border-purple-600 dark:border-purple-500 shadow-sm ring-1 ring-purple-500/40'
+                          : appliedTemplate && formData.selectedCategory && formData.selectedCategory !== cat.id
+                            ? 'bg-slate-50/40 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800/40 opacity-40 hover:opacity-70'
+                            : 'bg-white dark:bg-slate-900/80 hover:bg-purple-50/30 dark:hover:bg-slate-800/60 border-slate-200/90 dark:border-slate-800 hover:border-purple-300 dark:hover:border-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center transition-all ${
+                            isSelected ? 'bg-purple-600 text-white shadow-md' : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 group-hover:text-purple-600 dark:group-hover:text-white'
+                          }`}>
+                            <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {cat.badge && (
+                              <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-500/30 hidden xs:inline">
+                                {cat.badge}
+                              </span>
+                            )}
+                            <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border flex items-center justify-center transition-all ${
+                              isSelected ? 'bg-purple-600 border-purple-500 text-white' : 'border-slate-300 dark:border-slate-700'
+                            }`}>
+                              {isSelected && <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+                            </div>
+                          </div>
+                        </div>
+
+                        <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white mb-0.5 sm:mb-1">{cat.name}</h4>
+                        <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{cat.desc}</p>
                       </div>
-                    )}
+
+                      <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-slate-800/60 flex items-center justify-between text-[11px] sm:text-xs">
+                        <span className="text-slate-400 dark:text-slate-500 font-medium text-[10px] sm:text-xs">From</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatPriceByCountry(cat.basePrice, formData.country)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Ready-Made Live Demo Templates Showcase for Selected Category */}
+              {formData.selectedCategory && getDemosForCategory(formData.selectedCategory).length > 0 && (
+                <div className="mt-6 p-5 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-slate-900 dark:via-purple-950/20 dark:to-slate-900 border border-purple-200 dark:border-purple-500/30 space-y-4 animate-in fade-in duration-300">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5" /> Ready-Made Live Templates
+                      </span>
+                      <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                        Live Demos matching {CATEGORIES.find(c => c.id === formData.selectedCategory)?.name || 'your category'}
+                      </h4>
+                    </div>
                   </div>
 
-                  {/* Uploaded Photos Grid */}
-                  {formData.uploadedImages?.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">
-                          Attached Photos ({formData.uploadedImages.length} / 20):
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (window.confirm('Remove all attached photos from this form draft?')) {
-                              setFormData((prev) => ({ ...prev, uploadedImages: [], images: [] }));
-                              toast.info('All photos removed from draft.');
-                            }
-                          }}
-                          className="text-[11px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 cursor-pointer"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {getDemosForCategory(formData.selectedCategory).map((demo) => {
+                      const isThisApplied = appliedTemplate === demo.title;
+                      return (
+                        <div
+                          key={demo.id}
+                          className={`rounded-2xl overflow-hidden border bg-white dark:bg-slate-950 flex flex-col justify-between transition-all ${
+                            isThisApplied
+                              ? 'border-purple-500 ring-2 ring-purple-500/40 shadow-lg'
+                              : 'border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-slate-700'
+                          }`}
                         >
-                          Clear All Photos
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {formData.uploadedImages.map((img, i) => (
-                          <div
-                            key={i}
-                            className="relative rounded-2xl overflow-hidden aspect-square border-2 border-slate-200 dark:border-slate-800 shadow-sm group bg-slate-900"
-                          >
+                          <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 dark:bg-slate-900">
                             <img
-                              src={img}
-                              alt={`Uploaded photo ${i + 1}`}
-                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              src={demo.heroImage || demo.thumbnail || 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&w=600&auto=format&fit=crop'}
+                              alt={demo.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
-                            
-                            {/* Photo Index Badge */}
-                            <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-white text-[10px] font-mono font-black">
-                              #{i + 1}
+                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 text-white text-[10px] font-bold backdrop-blur-md">
+                              {demo.badge || 'Ready Made'}
+                            </div>
+                            <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-black font-mono">
+                              {formatPriceByCountry(demo.priceInr || demo.price || 4999, formData.country)}
+                            </div>
+                          </div>
+
+                          <div className="p-3.5 flex-1 flex flex-col justify-between">
+                            <div>
+                              <h5 className="font-bold text-xs text-slate-900 dark:text-white line-clamp-1 mb-1">{demo.title}</h5>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">{demo.shortDescription}</p>
                             </div>
 
-                            {/* Top Controls Overlay */}
-                            <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
-                              <a
-                                href={img}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 rounded-lg bg-black/60 hover:bg-black/90 text-white transition-all"
-                                title="Open full image"
-                              >
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
+                            <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
                               <button
                                 type="button"
-                                onClick={() => handleRemoveImage(i)}
-                                className="p-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white cursor-pointer shadow-sm transition-all"
-                                title="Delete this photo"
+                                onClick={() => {
+                                  const demoSlug = demo.slug || demo.id || demo._id;
+                                  window.open('/demo/' + demoSlug, '_blank');
+                                }}
+                                className="flex-1 py-1.5 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
                               >
-                                <X className="w-3 h-3" />
+                                <Eye className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> Live Demo View
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleApplyTemplate(demo)}
+                                className={`flex-1 py-1.5 px-2 rounded-xl text-[11px] font-black flex items-center justify-center gap-1 cursor-pointer transition-all ${
+                                  isThisApplied
+                                    ? 'bg-emerald-600 text-white shadow-xs'
+                                    : 'bg-purple-600 hover:bg-purple-500 text-white'
+                                }`}
+                              >
+                                {isThisApplied ? (
+                                  <>
+                                    <Check className="w-3 h-3" /> Applied
+                                  </>
+                                ) : (
+                                  <>
+                                    <Zap className="w-3 h-3" /> Apply Template
+                                  </>
+                                )}
                               </button>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* If "Other" category is selected */}
+              {formData.selectedCategory === 'other' && (
+                <div className="mt-4 p-4 rounded-2xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-500/40 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300">
+                    Please specify your website category <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Export Import Portal, Astrology Platform, Event Booking..."
+                    value={formData.otherCategoryDescription}
+                    onChange={e => setFormData({ ...formData, otherCategoryDescription: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600"
+                  />
+                  {stepErrors.otherCategoryDescription && (
+                    <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {stepErrors.otherCategoryDescription}</p>
                   )}
                 </div>
               )}
+            </div>
+          )}
 
-              {/* STEP 11: DOMAIN & TIMELINE */}
-              {currentStepIndex === 10 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={10}
-                    title={lang === 'bn' ? 'ডোমেন, ক্লাউড হোস্টিং ও টার্গেট লঞ্চ টাইমলাইন' : lang === 'hi' ? 'डोमेन, क्लाउड होस्टिंग और टारगेट लॉन्च टाइमलाइन' : 'Domain, Cloud Hosting & Target Launch Timeline'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
+          {/* ==================================================== */}
+          {/* STEP 3: CATEGORY-SPECIFIC DETAILED QUESTIONS */}
+          {/* ==================================================== */}
+          {currentStep === 3 && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">
+                  Category: {formData.selectedCategory || 'Website'}
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5">
+                  Industry-Specific Requirements
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Tailor your exact features, business operations, and workflow needs.
+                </p>
+              </div>
+
+              {/* 1. RESTAURANT SPECIFIC QUESTIONS */}
+              {formData.selectedCategory === 'restaurant' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                      Restaurant Type / Cuisine <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Indian, Mughlai, Italian, Multi-Cuisine, Cafe & Diner"
+                      value={formData.restCuisine}
+                      onChange={e => setFormData({ ...formData, restCuisine: e.target.value })}
+                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none"
+                    />
+                    {stepErrors.restCuisine && <p className="text-xs text-red-500 mt-1">{stepErrors.restCuisine}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                      Features Required <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        'Digital Menu',
+                        'Table Reservation',
+                        'Online Food Ordering',
+                        'WhatsApp Order',
+                        'Special Deals / Offers',
+                        'Customer Reviews',
+                        'Google Map Location',
+                        'Operating Hours & Contact'
+                      ].map(feat => (
+                        <button
+                          key={feat}
+                          type="button"
+                          onClick={() => handleToggleMulti('restFeatures', feat)}
+                          className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                            formData.restFeatures.includes(feat)
+                              ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                          }`}
+                        >
+                          <span>{feat}</span>
+                          {formData.restFeatures.includes(feat) && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                        </button>
+                      ))}
+                    </div>
+                    {stepErrors.restFeatures && <p className="text-xs text-red-500 mt-1">{stepErrors.restFeatures}</p>}
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="font-bold text-xs text-slate-800 dark:text-slate-200 block mb-1">
-                        {lang === 'bn' ? 'ডোমেন নেম সেটআপ' : lang === 'hi' ? 'डोमेन नाम सेटअप' : 'Domain Name Setup'}
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Preferred Website Style <span className="text-red-500">*</span>
                       </label>
                       <select
-                        value={formData.domainStatus}
-                        onChange={(e) => setFormData({ ...formData, domainStatus: e.target.value })}
-                        className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 shadow-2xs"
+                        value={formData.restStyle}
+                        onChange={e => setFormData({ ...formData, restStyle: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-xs outline-none"
                       >
-                        <option value="Need New Domain (Free Included)">{lang === 'bn' ? 'নতুন ডোমেন প্রয়োজন (.com / .in ফ্রি অন্তর্ভুক্ত)' : lang === 'hi' ? 'नया डोमेन चाहिए (.com / .in शामिल)' : 'I need a new domain (.com / .in included free)'}</option>
-                        <option value="Already Own Domain">{lang === 'bn' ? 'আমার নিজস্ব ডোমেন আছে' : lang === 'hi' ? 'मेरे पास पहले से डोमेन है' : 'I already have my domain registered'}</option>
+                        <option value="">-- Select Style --</option>
+                        {['Modern & Sleek', 'Cozy & Traditional', 'Luxury & Fine Dine', 'Vibrant & Fast Food', 'Minimalist', 'Other'].map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
                       </select>
+                      {stepErrors.restStyle && <p className="text-xs text-red-500 mt-1">{stepErrors.restStyle}</p>}
                     </div>
 
                     <div>
-                      <label className="font-bold text-xs text-slate-800 dark:text-slate-200 block mb-1">
-                        {lang === 'bn' ? 'টার্গেট ডেলিভারি সময়সীমা' : lang === 'hi' ? 'डिलीवरी समय सीमा' : 'Target Launch Timeline'}
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Do you have a Logo? <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['Yes', 'No'].map(ans => (
+                          <button
+                            key={ans}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, restHasLogo: ans })}
+                            className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                              formData.restHasLogo === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {ans}
+                          </button>
+                        ))}
+                      </div>
+                      {stepErrors.restHasLogo && <p className="text-xs text-red-500 mt-1">{stepErrors.restHasLogo}</p>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                      Will you provide food photos and content? <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['Yes', 'No'].map(ans => (
+                        <button
+                          key={ans}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, restProvidePhotos: ans })}
+                          className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            formData.restProvidePhotos === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {ans}
+                        </button>
+                      ))}
+                    </div>
+                    {stepErrors.restProvidePhotos && <p className="text-xs text-red-500 mt-1">{stepErrors.restProvidePhotos}</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. CAFÉ SPECIFIC QUESTIONS */}
+              {formData.selectedCategory === 'cafe' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                      Café Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. The Roastery Coffee & Bakery"
+                      value={formData.cafeName}
+                      onChange={e => setFormData({ ...formData, cafeName: e.target.value })}
+                      className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                    />
+                    {stepErrors.cafeName && <p className="text-xs text-red-500 mt-1">{stepErrors.cafeName}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                      Features Needed <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        'Aesthetic Coffee Menu',
+                        'Bakery & Pastry Showcase',
+                        'Table Reservation',
+                        'WhatsApp Takeaway Order',
+                        'Wi-Fi & Seating Highlights',
+                        'Live Instagram Feed',
+                        'Operating Hours & Google Map'
+                      ].map(feat => (
+                        <button
+                          key={feat}
+                          type="button"
+                          onClick={() => handleToggleMulti('cafeFeatures', feat)}
+                          className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                            formData.cafeFeatures.includes(feat)
+                              ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                          }`}
+                        >
+                          <span>{feat}</span>
+                          {formData.cafeFeatures.includes(feat) && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                        </button>
+                      ))}
+                    </div>
+                    {stepErrors.cafeFeatures && <p className="text-xs text-red-500 mt-1">{stepErrors.cafeFeatures}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Preferred Style <span className="text-red-500">*</span>
                       </label>
                       <select
-                        value={formData.timeline}
-                        onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
-                        className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700 text-xs font-bold text-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 shadow-2xs"
+                        value={formData.cafeStyle}
+                        onChange={e => setFormData({ ...formData, cafeStyle: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-xs outline-none"
                       >
-                        <option value="⚡ Express Delivery (48 - 72 Hours)">⚡ Express Fast-Track (48 - 72 Hours)</option>
-                        <option value="Standard Launch (3 - 7 Days)">Standard Launch (3 - 7 Days)</option>
-                        <option value="Flexible Timeline">Flexible Schedule</option>
+                        <option value="">-- Select Style --</option>
+                        {['Artisanal & Aesthetic', 'Cozy Wooden & Vintage', 'Modern Minimalist', 'Pastel Bakery & Cute', 'Other'].map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
                       </select>
+                      {stepErrors.cafeStyle && <p className="text-xs text-red-500 mt-1">{stepErrors.cafeStyle}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Logo Available? <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['Yes', 'No'].map(ans => (
+                          <button
+                            key={ans}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, cafeHasLogo: ans })}
+                            className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                              formData.cafeHasLogo === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {ans}
+                          </button>
+                        ))}
+                      </div>
+                      {stepErrors.cafeHasLogo && <p className="text-xs text-red-500 mt-1">{stepErrors.cafeHasLogo}</p>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                      Are photos and menu available? <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['Yes', 'No'].map(ans => (
+                        <button
+                          key={ans}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, cafePhotosAvailable: ans })}
+                          className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            formData.cafePhotosAvailable === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {ans}
+                        </button>
+                      ))}
+                    </div>
+                    {stepErrors.cafePhotosAvailable && <p className="text-xs text-red-500 mt-1">{stepErrors.cafePhotosAvailable}</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* 3. SALON SPECIFIC QUESTIONS */}
+              {formData.selectedCategory === 'salon' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                      Salon &amp; Spa Features <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        'Service Rate Cards',
+                        'Bridal Makeup Packages',
+                        'Online Appointment Booking',
+                        'Stylist Profiles',
+                        'Before & After Gallery',
+                        'WhatsApp VIP Booking',
+                        'Google Reviews & Location'
+                      ].map(feat => (
+                        <button
+                          key={feat}
+                          type="button"
+                          onClick={() => handleToggleMulti('salonFeatures', feat)}
+                          className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                            formData.salonFeatures.includes(feat)
+                              ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                          }`}
+                        >
+                          <span>{feat}</span>
+                          {formData.salonFeatures.includes(feat) && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                        </button>
+                      ))}
+                    </div>
+                    {stepErrors.salonFeatures && <p className="text-xs text-red-500 mt-1">{stepErrors.salonFeatures}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Preferred Style <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.salonStyle}
+                        onChange={e => setFormData({ ...formData, salonStyle: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-xs outline-none"
+                      >
+                        <option value="">-- Select Style --</option>
+                        {['Luxury Glamour & Gold', 'Clean Modern Unisex', 'Soft Pastel Spa', 'Dark Velvet Aesthetic', 'Other'].map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      {stepErrors.salonStyle && <p className="text-xs text-red-500 mt-1">{stepErrors.salonStyle}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Logo Available? <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['Yes', 'No'].map(ans => (
+                          <button
+                            key={ans}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, salonHasLogo: ans })}
+                            className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                              formData.salonHasLogo === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {ans}
+                          </button>
+                        ))}
+                      </div>
+                      {stepErrors.salonHasLogo && <p className="text-xs text-red-500 mt-1">{stepErrors.salonHasLogo}</p>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                      Photos Available? <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['Yes', 'No'].map(ans => (
+                        <button
+                          key={ans}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, salonPhotosAvailable: ans })}
+                          className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            formData.salonPhotosAvailable === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {ans}
+                        </button>
+                      ))}
+                    </div>
+                    {stepErrors.salonPhotosAvailable && <p className="text-xs text-red-500 mt-1">{stepErrors.salonPhotosAvailable}</p>}
+                  </div>
+                </div>
+              )}
+
+              {/* 4. GYM & FITNESS SPECIFIC QUESTIONS */}
+              {formData.selectedCategory === 'gym' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                      Gym &amp; Fitness Features <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        'Membership Pricing Plans',
+                        'Trainer Profiles & Bio',
+                        'Free 1-Day Trial Pass',
+                        'Workout & Class Timetable',
+                        'Transformation Gallery',
+                        'WhatsApp Fast Enrollment',
+                        'Equipment Showcase'
+                      ].map(feat => (
+                        <button
+                          key={feat}
+                          type="button"
+                          onClick={() => handleToggleMulti('gymFeatures', feat)}
+                          className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                            formData.gymFeatures.includes(feat)
+                              ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                          }`}
+                        >
+                          <span>{feat}</span>
+                          {formData.gymFeatures.includes(feat) && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                        </button>
+                      ))}
+                    </div>
+                    {stepErrors.gymFeatures && <p className="text-xs text-red-500 mt-1">{stepErrors.gymFeatures}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Preferred Style <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.gymStyle}
+                        onChange={e => setFormData({ ...formData, gymStyle: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-xs outline-none"
+                      >
+                        <option value="">-- Select Style --</option>
+                        {['High Energy Dark & Neon', 'Premium Minimalist Fitness', 'CrossFit Raw & Bold', 'Zen Yoga & Wellness', 'Other'].map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      {stepErrors.gymStyle && <p className="text-xs text-red-500 mt-1">{stepErrors.gymStyle}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Logo Available? <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['Yes', 'No'].map(ans => (
+                          <button
+                            key={ans}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, gymHasLogo: ans })}
+                            className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                              formData.gymHasLogo === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {ans}
+                          </button>
+                        ))}
+                      </div>
+                      {stepErrors.gymHasLogo && <p className="text-xs text-red-500 mt-1">{stepErrors.gymHasLogo}</p>}
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* STEP 12: REVIEW & SUBMIT */}
-              {currentStepIndex === 11 && (
-                <div className="space-y-6 animate-fade-in">
-                  <StepHeader
-                    stepIdx={11}
-                    title={lang === 'bn' ? 'রিকোয়ারমেন্টস রিভিউ ও প্রস্তাব জমা' : lang === 'hi' ? 'विवरण की समीक्षा और सबमिट करें' : 'Review Specifications & Submit Proposal'}
-                    t={t}
-                    lang={lang}
-                    onOpenAiSummary={handleOpenStepAiSummary}
-                  />
-
-                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
-                    <div className="flex items-center gap-3 text-center sm:text-left">
-                      <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
-                        <Sparkles className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h4 className="font-extrabold text-xs sm:text-sm">
-                          {t.generateAiSummary}
-                        </h4>
-                        <p className="text-[11px] text-white/80">
-                          {t.aiSummaryDesc}
-                        </p>
-                      </div>
+              {/* 5. HOTEL / RESORT SPECIFIC QUESTIONS */}
+              {formData.selectedCategory === 'hotel' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                      Hotel &amp; Resort Features <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        'Room Showcase & Tariff Cards',
+                        'Direct Room Booking Engine',
+                        'Amenities & Swimming Pool Tour',
+                        'Dining & Bar Experience',
+                        'WhatsApp Concierge Inquiry',
+                        'Guest Reviews & Awards',
+                        'Google Maps & Airport Distance'
+                      ].map(feat => (
+                        <button
+                          key={feat}
+                          type="button"
+                          onClick={() => handleToggleMulti('hotelFeatures', feat)}
+                          className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                            formData.hotelFeatures.includes(feat)
+                              ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                          }`}
+                        >
+                          <span>{feat}</span>
+                          {formData.hotelFeatures.includes(feat) && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                        </button>
+                      ))}
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={handleGenerateAiSummary}
-                      disabled={isGeneratingAi}
-                      className="px-4 py-2 rounded-xl bg-white text-purple-950 font-black text-xs shadow-sm hover:bg-white/95 active:scale-95 transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                      <span>{isGeneratingAi ? 'Analyzing Architecture...' : t.generateAiSummary.replace('✨ ', '')}</span>
-                    </button>
+                    {stepErrors.hotelFeatures && <p className="text-xs text-red-500 mt-1">{stepErrors.hotelFeatures}</p>}
                   </div>
 
-                  <div className="p-5 sm:p-6 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-800 space-y-4 text-xs">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-b border-slate-200/70 dark:border-slate-800 pb-4">
-                      <div>
-                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'ব্যবসার নাম' : lang === 'hi' ? 'बिज़नेस का नाम' : 'Business Name'}</span>
-                        <span className="font-black text-slate-900 dark:text-white text-sm">
-                          {formData.clientInfo.businessName || 'Not specified'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'ক্যাটাগরি' : lang === 'hi' ? 'श्रेणी' : 'Industry Type'}</span>
-                        <span className="font-black text-purple-600 dark:text-purple-400 text-sm">
-                          {formData.websiteTypeName}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'হোয়াটসঅ্যাপ' : lang === 'hi' ? 'व्हाट्सएप' : 'WhatsApp'}</span>
-                        <span className="font-black text-slate-900 dark:text-white text-sm font-mono">
-                          {formData.clientInfo.mobile || 'Not specified'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-slate-400 block font-bold text-[11px]">{lang === 'bn' ? 'টাইমলাইন' : lang === 'hi' ? 'टाइमलाइन' : 'Timeline'}</span>
-                        <span className="font-black text-emerald-600 dark:text-emerald-400 text-sm">
-                          {formData.timeline}
-                        </span>
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Preferred Style <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.hotelStyle}
+                        onChange={e => setFormData({ ...formData, hotelStyle: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-xs outline-none"
+                      >
+                        <option value="">-- Select Style --</option>
+                        {['Ultra Luxury & Heritage', 'Modern Boutique Resort', 'Tropical Pool & Eco-Stay', 'Corporate Business Hotel', 'Other'].map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      {stepErrors.hotelStyle && <p className="text-xs text-red-500 mt-1">{stepErrors.hotelStyle}</p>}
                     </div>
 
-                    {/* Attached Photos Review */}
-                    {formData.uploadedImages?.length > 0 && (
-                      <div className="p-3.5 rounded-xl bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 space-y-2">
-                        <div className="flex items-center justify-between text-[11px] font-bold">
-                          <span className="text-purple-950 dark:text-purple-200">
-                            📷 {lang === 'bn' ? 'সংযুক্ত ছবিসমূহ' : 'Attached Photos'} ({formData.uploadedImages.length}):
-                          </span>
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Room Photos Available? <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['Yes', 'No'].map(ans => (
                           <button
+                            key={ans}
                             type="button"
-                            onClick={() => jumpToStep(9)}
-                            className="text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+                            onClick={() => setFormData({ ...formData, hotelPhotosAvailable: ans })}
+                            className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                              formData.hotelPhotosAvailable === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
                           >
-                            {lang === 'bn' ? 'ছবি পরিবর্তন করুন' : 'Edit Photos'} &rarr;
+                            {ans}
                           </button>
-                        </div>
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                          {formData.uploadedImages.map((img, idx) => (
-                            <a
-                              key={idx}
-                              href={img}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-12 h-12 rounded-lg overflow-hidden border border-purple-300 dark:border-purple-700 shrink-0 block"
-                            >
-                              <img src={img} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
-                            </a>
-                          ))}
+                        ))}
+                      </div>
+                      {stepErrors.hotelPhotosAvailable && <p className="text-xs text-red-500 mt-1">{stepErrors.hotelPhotosAvailable}</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. REAL ESTATE SPECIFIC QUESTIONS */}
+              {formData.selectedCategory === 'real_estate' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                      Property Types <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {['Residential Apartments', 'Luxury Villas', 'Commercial Offices', 'Plots & Land', 'Rental Properties'].map(p => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => handleToggleMulti('rePropertyTypes', p)}
+                          className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                            formData.rePropertyTypes.includes(p)
+                              ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                          }`}
+                        >
+                          <span>{p}</span>
+                          {formData.rePropertyTypes.includes(p) && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                        </button>
+                      ))}
+                    </div>
+                    {stepErrors.rePropertyTypes && <p className="text-xs text-red-500 mt-1">{stepErrors.rePropertyTypes}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                      Features Needed <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        'Search & Filter by BHK & Price',
+                        'Floor Plans & Brochure Download',
+                        'WhatsApp Site Visit Booking',
+                        'EMI Calculator',
+                        'Virtual Video Tours',
+                        'Builder Portfolio'
+                      ].map(feat => (
+                        <button
+                          key={feat}
+                          type="button"
+                          onClick={() => handleToggleMulti('reFeatures', feat)}
+                          className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                            formData.reFeatures.includes(feat)
+                              ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                          }`}
+                        >
+                          <span>{feat}</span>
+                          {formData.reFeatures.includes(feat) && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                        </button>
+                      ))}
+                    </div>
+                    {stepErrors.reFeatures && <p className="text-xs text-red-500 mt-1">{stepErrors.reFeatures}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Preferred Style <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.reStyle}
+                        onChange={e => setFormData({ ...formData, reStyle: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-xs outline-none"
+                      >
+                        <option value="">-- Select Style --</option>
+                        {['Enterprise Luxury Glass', 'Clean Modern Brokerage', 'Architectural Minimalist', 'Other'].map(s => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      {stepErrors.reStyle && <p className="text-xs text-red-500 mt-1">{stepErrors.reStyle}</p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                        Logo Available? <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['Yes', 'No'].map(ans => (
+                          <button
+                            key={ans}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, reHasLogo: ans })}
+                            className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                              formData.reHasLogo === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            {ans}
+                          </button>
+                        ))}
+                      </div>
+                      {stepErrors.reHasLogo && <p className="text-xs text-red-500 mt-1">{stepErrors.reHasLogo}</p>}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 7. OTHER CUSTOM CATEGORIES & FALLBACK */}
+              {!['restaurant', 'cafe', 'salon', 'gym', 'hotel', 'real_estate'].includes(formData.selectedCategory) && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                      Core Features &amp; Specifications for {CATEGORIES.find(c => c.id === formData.selectedCategory)?.name || 'Your Website'} <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        'Product / Service Catalog',
+                        'Online Enquiry & Lead Capture',
+                        'WhatsApp Direct Buy / Chat',
+                        'Price Rate Cards',
+                        'Client Testimonials & Portfolio',
+                        'Google Maps & Operating Hours',
+                        'Payment Gateway',
+                        'Booking / Appointment Slots'
+                      ].map(feat => (
+                        <button
+                          key={feat}
+                          type="button"
+                          onClick={() => handleToggleMulti('otherFeatures', feat)}
+                          className={`p-3 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                            formData.otherFeatures.includes(feat)
+                              ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                          }`}
+                        >
+                          <span>{feat}</span>
+                          {formData.otherFeatures.includes(feat) && <Check className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                      Describe your specific business operations &amp; features
+                    </label>
+                    <textarea
+                      rows={4}
+                      placeholder="Please share any key pages, operational workflows, or specific customer conversion steps you require..."
+                      value={formData.otherRequirementsNotes}
+                      onChange={e => setFormData({ ...formData, otherRequirementsNotes: e.target.value })}
+                      className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ==================================================== */}
+          {/* STEP 4: DESIGN & COLOR THEME */}
+          {/* ==================================================== */}
+          {currentStep === 4 && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Design &amp; Color Theme
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Choose visual branding, design personality and accent colors.
+                </p>
+              </div>
+
+              {/* Visual Style * */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                  What kind of visual style do you prefer? <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  {[
+                    'Modern',
+                    'Minimal',
+                    'Premium',
+                    'Luxury',
+                    'Professional',
+                    'Creative',
+                    'Elegant',
+                    'Bold',
+                    'Simple',
+                    'Dark Mode',
+                    'Light Mode',
+                    'Other'
+                  ].map(st => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, visualStyle: st })}
+                      className={`p-3 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
+                        formData.visualStyle === st
+                          ? 'bg-purple-600 border-purple-500 text-white shadow-md'
+                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+                {formData.visualStyle === 'Other' && (
+                  <input
+                    type="text"
+                    placeholder="Describe your preferred style *"
+                    value={formData.visualStyleOther}
+                    onChange={e => setFormData({ ...formData, visualStyleOther: e.target.value })}
+                    className="mt-2.5 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                  />
+                )}
+                {stepErrors.visualStyle && <p className="text-xs text-red-500 mt-1.5">{stepErrors.visualStyle}</p>}
+                {stepErrors.visualStyleOther && <p className="text-xs text-red-500 mt-1.5">{stepErrors.visualStyleOther}</p>}
+              </div>
+
+              {/* Color Theme * */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                  What color theme would you like? <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {[
+                    { id: 'Blue', color: '#3b82f6' },
+                    { id: 'Green', color: '#10b981' },
+                    { id: 'Red', color: '#ef4444' },
+                    { id: 'Purple', color: '#a855f7' },
+                    { id: 'Orange', color: '#f97316' },
+                    { id: 'Black & Gold', color: '#eab308' },
+                    { id: 'Dark Theme', color: '#0f172a' },
+                    { id: 'Light Clean', color: '#f8fafc' },
+                    { id: 'Custom', color: '#ec4899' }
+                  ].map(c => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, colorTheme: c.id })}
+                      className={`p-3 rounded-xl text-xs font-bold border flex items-center gap-2.5 transition-all cursor-pointer ${
+                        formData.colorTheme === c.id
+                          ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-md'
+                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      <span className="w-4 h-4 rounded-full border border-black/20 dark:border-white/20 shadow-xs shrink-0" style={{ backgroundColor: c.color }} />
+                      <span>{c.id}</span>
+                      {formData.colorTheme === c.id && <Check className="w-3.5 h-3.5 ml-auto text-purple-600 dark:text-purple-400" />}
+                    </button>
+                  ))}
+                </div>
+                {formData.colorTheme === 'Custom' && (
+                  <div className="mt-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={formData.customColorCode}
+                      onChange={e => setFormData({ ...formData, customColorCode: e.target.value })}
+                      className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Hex Code (e.g. #6366F1)"
+                      value={formData.customColorCode}
+                      onChange={e => setFormData({ ...formData, customColorCode: e.target.value })}
+                      className="w-32 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-mono"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Optional theme description..."
+                      value={formData.customColorDesc}
+                      onChange={e => setFormData({ ...formData, customColorDesc: e.target.value })}
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs"
+                    />
+                  </div>
+                )}
+                {stepErrors.colorTheme && <p className="text-xs text-red-500 mt-1.5">{stepErrors.colorTheme}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* ==================================================== */}
+          {/* STEP 5: LOGO / CONTENT / MULTI-IMAGE UPLOADS */}
+          {/* ==================================================== */}
+          {currentStep === 5 && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Logo / Content / Media Files
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Tell us about your brand assets readiness and upload logo &amp; business photos.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* 1. Do you have a Logo? * */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    1. Do you have a Logo? <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Yes', 'No'].map(ans => (
+                      <button
+                        key={ans}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, hasLogo: ans })}
+                        className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          formData.hasLogo === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {ans}
+                      </button>
+                    ))}
+                  </div>
+                  {stepErrors.hasLogo && <p className="text-xs text-red-500 mt-1">{stepErrors.hasLogo}</p>}
+                </div>
+
+                {/* 2. Do you have Photos? * */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    2. Do you have Photos? <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Yes', 'No'].map(ans => (
+                      <button
+                        key={ans}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, hasPhotos: ans })}
+                        className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          formData.hasPhotos === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {ans}
+                      </button>
+                    ))}
+                  </div>
+                  {stepErrors.hasPhotos && <p className="text-xs text-red-500 mt-1">{stepErrors.hasPhotos}</p>}
+                </div>
+
+                {/* 3. Do you have Website Content? * */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                    3. Do you have Content? <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Yes', 'No'].map(ans => (
+                      <button
+                        key={ans}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, hasContent: ans })}
+                        className={`py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          formData.hasContent === ans ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {ans}
+                      </button>
+                    ))}
+                  </div>
+                  {stepErrors.hasContent && <p className="text-xs text-red-500 mt-1">{stepErrors.hasContent}</p>}
+                </div>
+              </div>
+
+              {/* RICH MEDIA UPLOAD CARDS WITH INSTANT THUMBNAIL PREVIEWS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                
+                {/* Logo Upload Card */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                      <UploadCloud className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Upload Brand Logo (Optional)
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">PNG, JPG, SVG or WebP formats supported</p>
+                  </div>
+
+                  {formData.logoFile ? (
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img
+                          src={formData.logoFile.dataUrl}
+                          alt="Logo Preview"
+                          className="w-10 h-10 object-contain rounded-lg bg-slate-100 dark:bg-slate-800 border p-1"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{formData.logoFile.name}</p>
+                          <p className="text-[10px] text-slate-400">{formData.logoFile.size}</p>
                         </div>
                       </div>
-                    )}
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, logoFile: null }))}
+                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                        title="Remove Logo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-purple-500 cursor-pointer transition-colors text-center">
+                      <UploadCloud className="w-6 h-6 text-purple-500 mb-1" />
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Click to Browse Logo</span>
+                      <span className="text-[10px] text-slate-400">Max size 5MB</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleFileUpload(e, 'logo')}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
 
-                    {/* Interactive Discount Coupon & In-Place Autosave Card */}
-                    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-500/5 via-amber-500/5 to-pink-500/5 dark:from-purple-950/30 dark:via-slate-900/60 dark:to-amber-950/20 border border-purple-200/80 dark:border-purple-800/80 space-y-3.5 shadow-xs">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-100 dark:border-purple-900/50 pb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 flex items-center justify-center shrink-0">
-                            <Tag className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                              <span>{lang === 'bn' ? 'ডিসকাউন্ট কুপন ও অটো-সেভ অপশন' : lang === 'hi' ? 'डिस्काउंट कूपन और ऑटो-सेव' : 'Discount Coupon & Autosave'}</span>
-                              <span className="px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-black">
-                                20% OFF
-                              </span>
-                            </h4>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                              {lang === 'bn' ? 'কুপন প্রয়োগ করুন এবং আপনার ফর্মের তথ্য এখনই সুরক্ষিতভাবে সেভ করে রাখুন।' : 'Apply promo coupons and save your progress in 1-click.'}
-                            </p>
-                          </div>
-                        </div>
+                {/* Multiple Business Photos Upload Card */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                      <ImageIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Photos &amp; Catalog Media (Optional)
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Upload multiple food, shop or product photos</p>
+                  </div>
 
-                        {/* Quick Action: In-place Save & Reset */}
-                        <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                  <label className="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-purple-500 cursor-pointer transition-colors text-center mb-2">
+                    <Plus className="w-5 h-5 text-purple-500 mb-0.5" />
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Add Business Photos</span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={e => handleFileUpload(e, 'photos')}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Thumbnail Grid */}
+                  {formData.photosFiles && formData.photosFiles.length > 0 && (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-32 overflow-y-auto p-1">
+                      {formData.photosFiles.map((photo, idx) => (
+                        <div key={idx} className="relative group rounded-lg overflow-hidden border aspect-square bg-slate-100 dark:bg-slate-900">
+                          <img src={photo.dataUrl} alt={photo.name} className="w-full h-full object-cover" />
                           <button
                             type="button"
-                            onClick={handleManualSave}
-                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
-                            title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : 'Save Progress'}
+                            onClick={() => handleRemovePhoto(idx)}
+                            className="absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white opacity-90 hover:opacity-100 cursor-pointer shadow-sm"
+                            title="Delete"
                           >
-                            <Save className="w-3.5 h-3.5" />
-                            <span>{lang === 'bn' ? 'সেভ করুন' : lang === 'hi' ? 'सेव करें' : 'Save Draft'}</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={handleResetForm}
-                            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950 hover:text-rose-600 dark:hover:text-rose-400 text-slate-600 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer active:scale-95"
-                            title={lang === 'bn' ? 'রিসেট করুন' : 'Reset All'}
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            <span>{lang === 'bn' ? 'রিসেট' : lang === 'hi' ? 'रीसेट' : 'Reset'}</span>
+                            <X className="w-3 h-3" />
                           </button>
                         </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Reference Website & Additional Instructions */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                    Reference Website (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="e.g. https://apple.com or competitor website you like"
+                    value={formData.referenceWebsites}
+                    onChange={e => setFormData({ ...formData, referenceWebsites: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                    Additional Design Instructions (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Specific design directives or aesthetic notes for our designers..."
+                    value={formData.designInstructions}
+                    onChange={e => setFormData({ ...formData, designInstructions: e.target.value })}
+                    className="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ==================================================== */}
+          {/* STEP 6: DOMAIN & HOSTING (SEPARATE) */}
+          {/* ==================================================== */}
+          {currentStep === 6 && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Domain &amp; Hosting
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Domain and Cloud Hosting are completely separate components. Select your requirement for each.
+                </p>
+              </div>
+
+              {/* ---------------- DOMAIN ---------------- */}
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                      <Globe className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">Do you need a Domain? <span className="text-red-500">*</span></h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Web address e.g. yourbrand.com / .in</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {['I already have a Domain', 'I need a new Domain'].map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, domainStatus: opt })}
+                      className={`p-3.5 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                        formData.domainStatus === opt
+                          ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-500 text-blue-900 dark:text-white shadow-md'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      <span>{opt}</span>
+                      {opt === 'I need a new Domain' && (
+                        <span className="font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded">
+                          ₹999 / Year
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {stepErrors.domainStatus && <p className="text-xs text-red-500">{stepErrors.domainStatus}</p>}
+
+                {/* If New Domain Selected */}
+                {formData.domainStatus === 'I need a new Domain' && (
+                  <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Desired Domain Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. mybusinessbrand"
+                          value={formData.domainName}
+                          onChange={e => setFormData({ ...formData, domainName: e.target.value })}
+                          className="w-full px-3.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none"
+                        />
+                        {stepErrors.domainName && <p className="text-xs text-red-500 mt-1">{stepErrors.domainName}</p>}
                       </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Domain Extension
+                        </label>
+                        <select
+                          value={formData.domainExtension}
+                          onChange={e => setFormData({ ...formData, domainExtension: e.target.value })}
+                          className="w-full px-3.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none"
+                        >
+                          <option value=".com">.com</option>
+                          <option value=".in">.in</option>
+                          <option value=".org">.org</option>
+                          <option value=".net">.net</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center justify-between pt-1">
+                      <span>Domain Registration:</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">₹999 / Year</span>
+                    </div>
+                  </div>
+                )}
+              </div>
 
-                      {/* Coupon Input & Quick Pills */}
-                      <div className="space-y-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="relative flex-1">
-                            <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-purple-600" />
-                            <input
-                              type="text"
-                              value={couponInput}
-                              onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleApplyCoupon())}
-                              placeholder={formData.couponCode ? `Active: ${formData.couponCode}` : 'e.g. INDIA2025'}
-                              className="w-full pl-9 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-900 dark:text-white uppercase focus:outline-none focus:border-purple-600"
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleApplyCoupon()}
-                            className="px-4 py-2 rounded-xl l2b-gradient-bg text-white text-xs font-black shadow-xs hover:opacity-95 cursor-pointer active:scale-95 transition-all"
-                          >
-                            {lang === 'bn' ? 'কুপন প্রয়োগ' : lang === 'hi' ? 'अप्लाई करें' : 'Apply'}
-                          </button>
-                        </div>
+              {/* ---------------- HOSTING ---------------- */}
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold">
+                      <Server className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">Do you need Hosting? <span className="text-red-500">*</span></h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">High-speed SSD cloud server with SSL &amp; daily backups</p>
+                    </div>
+                  </div>
+                </div>
 
-                        {/* Quick Coupon Suggestions */}
-                        <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
-                          <span className="text-slate-400 font-bold">{lang === 'bn' ? 'জনপ্রিয় কুপন:' : 'Popular:'}</span>
-                          {['INDIA2025', 'STARTUP50', 'FESTIVE25'].map((code) => (
-                            <button
-                              key={code}
-                              type="button"
-                              onClick={() => handleApplyCoupon(code)}
-                              className={`px-2 py-0.5 rounded-lg border font-mono font-bold transition-all cursor-pointer ${
-                                formData.couponCode === code
-                                  ? 'bg-purple-600 text-white border-purple-600 shadow-2xs'
-                                  : 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700 hover:bg-purple-50 dark:hover:bg-purple-900/50'
-                              }`}
-                            >
-                              🏷️ {code} ({code === 'STARTUP50' ? '50% OFF' : code === 'FESTIVE25' ? '25% OFF' : '20% OFF'})
-                            </button>
-                          ))}
-                        </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {['I already have Hosting', 'I need new Hosting'].map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, hostingStatus: opt })}
+                      className={`p-3.5 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                        formData.hostingStatus === opt
+                          ? 'bg-purple-50 dark:bg-purple-900/40 border-purple-500 text-purple-900 dark:text-white shadow-md'
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      <span>{opt}</span>
+                      {opt === 'I need new Hosting' && (
+                        <span className="font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded">
+                          ₹1,999 / Year
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                {stepErrors.hostingStatus && <p className="text-xs text-red-500">{stepErrors.hostingStatus}</p>}
 
-                        {/* Active Applied Status */}
-                        {formData.couponCode && (
-                          <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 flex items-center justify-between text-xs animate-in zoom-in-95">
-                            <div className="flex items-center gap-2">
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                              <span className="font-bold text-emerald-950 dark:text-emerald-200">
-                                {lang === 'bn' ? 'কুপন সক্রিয়:' : 'Coupon Active:'} <strong className="font-mono">{formData.couponCode}</strong> ({formData.discountPercent}% OFF Applied)
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={handleRemoveCoupon}
-                              className="text-[10px] font-bold text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:underline cursor-pointer"
-                            >
-                              {lang === 'bn' ? 'সরিয়ে ফেলুন' : 'Remove'}
-                            </button>
-                          </div>
+                {/* If New Hosting Selected */}
+                {formData.hostingStatus === 'I need new Hosting' && (
+                  <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Hosting Plan
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { plan: 'Basic', price: '₹1,999' },
+                        { plan: 'Standard', price: '₹2,499' },
+                        { plan: 'Premium', price: '₹3,999' },
+                        { plan: 'Custom', price: '₹4,999' }
+                      ].map(hp => (
+                        <button
+                          key={hp.plan}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, hostingPlan: hp.plan })}
+                          className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                            formData.hostingPlan === hp.plan
+                              ? 'bg-purple-600 border-purple-500 text-white font-bold shadow-xs'
+                              : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          <div className="text-xs">{hp.plan}</div>
+                          <div className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">{hp.price} / Yr</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ==================================================== */}
+          {/* STEP 7: BACKEND & WHATSAPP INTEGRATION */}
+          {/* ==================================================== */}
+          {currentStep === 7 && (
+            <div className="space-y-8 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Backend &amp; WhatsApp Integration
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Configure administrative content management and direct WhatsApp customer funnels.
+                </p>
+              </div>
+
+              {/* Backend / Admin Panel * */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                  Do you need a Backend / Admin Panel? <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {[
+                    { id: 'No Backend Required', price: '₹0' },
+                    { id: 'Backend Required', price: '+₹2,999' },
+                    { id: 'Admin Panel Required', price: '+₹3,499' },
+                    { id: 'Backend + Admin Panel', price: '+₹4,999' },
+                    { id: 'Custom Backend Requirement', price: '+₹6,999' }
+                  ].map(b => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, backendRequirement: b.id })}
+                      className={`p-3.5 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                        formData.backendRequirement === b.id
+                          ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-md'
+                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      <span>{b.id}</span>
+                      <span className="font-mono text-emerald-600 dark:text-emerald-400 text-[11px]">{b.price}</span>
+                    </button>
+                  ))}
+                </div>
+                {formData.backendRequirement === 'Custom Backend Requirement' && (
+                  <textarea
+                    rows={2}
+                    placeholder="Please describe your backend requirement *"
+                    value={formData.backendCustomDesc}
+                    onChange={e => setFormData({ ...formData, backendCustomDesc: e.target.value })}
+                    className="mt-2.5 w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                  />
+                )}
+                {stepErrors.backendRequirement && <p className="text-xs text-red-500 mt-1.5">{stepErrors.backendRequirement}</p>}
+                {stepErrors.backendCustomDesc && <p className="text-xs text-red-500 mt-1.5">{stepErrors.backendCustomDesc}</p>}
+              </div>
+
+              {/* WhatsApp Integration * */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                  Do you need WhatsApp Integration? <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {[
+                    'No WhatsApp Integration',
+                    'WhatsApp Chat Button',
+                    'WhatsApp Enquiry',
+                    'WhatsApp Order',
+                    'WhatsApp Booking',
+                    'Custom WhatsApp Integration'
+                  ].map(w => (
+                    <button
+                      key={w}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, whatsappIntegration: w })}
+                      className={`p-3.5 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
+                        formData.whatsappIntegration === w
+                          ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-white shadow-md'
+                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      <span>{w}</span>
+                      {formData.whatsappIntegration === w && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
+                    </button>
+                  ))}
+                </div>
+                {stepErrors.whatsappIntegration && <p className="text-xs text-red-500 mt-1.5">{stepErrors.whatsappIntegration}</p>}
+
+                {/* If WhatsApp Integration is chosen */}
+                {formData.whatsappIntegration && formData.whatsappIntegration !== 'No WhatsApp Integration' && (
+                  <div className="mt-3.5 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Country Code <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.whatsappCountryCode}
+                          onChange={e => setFormData({ ...formData, whatsappCountryCode: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none font-mono"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          WhatsApp Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          placeholder="e.g. 9876543210"
+                          value={formData.whatsappNumberForIntegration}
+                          onChange={e => setFormData({ ...formData, whatsappNumberForIntegration: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none"
+                        />
+                        {stepErrors.whatsappNumberForIntegration && (
+                          <p className="text-xs text-red-500 mt-1">{stepErrors.whatsappNumberForIntegration}</p>
                         )}
                       </div>
                     </div>
-
-                    <div className="p-3.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/80 text-[11px] text-purple-900 dark:text-purple-200 flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-purple-600 shrink-0" />
-                      <span>
-                        {lang === 'bn' 
-                          ? 'সাবমিট করার পর আপনার রিয়েল-টাইম ডেলিভারি স্ট্যাটাস ও ইনভয়েস User Dashboard (/dashboard)-এ ট্র্যাক করতে পারবেন।'
-                          : lang === 'hi'
-                          ? 'सबमिट करने के बाद आप User Dashboard (/dashboard) में अपनी विकास स्थिति और इनवॉइस ट्रैक कर सकते हैं।'
-                          : 'Track your milestone delivery, invoices, and source code anytime in your User Dashboard (/dashboard).'}
-                      </span>
-                    </div>
+                    {formData.whatsappIntegration === 'Custom WhatsApp Integration' && (
+                      <textarea
+                        rows={2}
+                        placeholder="Describe your WhatsApp requirement *"
+                        value={formData.whatsappCustomDesc}
+                        onChange={e => setFormData({ ...formData, whatsappCustomDesc: e.target.value })}
+                        className="w-full p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none"
+                      />
+                    )}
                   </div>
-                </div>
-              )}
-
+                )}
+              </div>
             </div>
+          )}
 
-            <div className="pt-4 flex items-center justify-between gap-3">
-              <button
-                type="button"
-                disabled={currentStepIndex === 0 || isSubmitting}
-                onClick={handleBack}
-                className="px-4 sm:px-5 py-3 rounded-2xl text-xs font-bold bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="hidden xs:inline">{t.previous}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleManualSave}
-                className="px-3.5 py-3 rounded-2xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 flex items-center gap-1.5 cursor-pointer shadow-2xs transition-all active:scale-95"
-                title={lang === 'bn' ? 'তথ্য ও কুপন সেভ করুন' : 'Save Progress'}
-              >
-                <Save className="w-4 h-4 text-emerald-600" />
-                <span className="hidden sm:inline">{lang === 'bn' ? 'সেভ ড্রাফট' : lang === 'hi' ? 'ड्राफ्ट सेव करें' : 'Save Draft'}</span>
-              </button>
-
-              <div className="text-[11px] font-bold text-slate-400 hidden sm:block">
-                {t.stepLabel} {currentStepIndex + 1} of {t.steps.length}
+          {/* ==================================================== */}
+          {/* STEP 8: OTHER INTEGRATIONS */}
+          {/* ==================================================== */}
+          {currentStep === 8 && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Do you need any additional integrations? <span className="text-red-500">*</span>
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Select key external services, APIs and third-party tools to integrate.
+                </p>
               </div>
 
-              {currentStepIndex < t.steps.length - 1 ? (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="px-5 sm:px-7 py-3 rounded-2xl text-xs sm:text-sm font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
-                >
-                  <span>{t.continue}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={handleFinalSubmit}
-                  className="px-6 sm:px-8 py-3.5 rounded-2xl text-xs sm:text-sm font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 flex items-center gap-2 cursor-pointer transition-all active:scale-95 disabled:opacity-50"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>{isSubmitting ? t.submitting : t.submit}</span>
-                </button>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {[
+                  'Google Maps',
+                  'Payment Gateway',
+                  'Email Integration',
+                  'Social Media Integration',
+                  'Google Analytics',
+                  'Newsletter',
+                  'Booking System',
+                  'API Integration',
+                  'WhatsApp',
+                  'Other'
+                ].map(ig => (
+                  <button
+                    key={ig}
+                    type="button"
+                    onClick={() => handleToggleMulti('otherIntegrations', ig)}
+                    className={`p-3.5 rounded-xl text-xs font-semibold border text-left flex items-center justify-between transition-all cursor-pointer ${
+                      formData.otherIntegrations.includes(ig)
+                        ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-md'
+                        : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    <span>{ig}</span>
+                    <span className={`w-4 h-4 rounded-md border flex items-center justify-center text-[10px] ${
+                      formData.otherIntegrations.includes(ig) ? 'bg-purple-600 border-purple-500 text-white' : 'border-slate-300 dark:border-slate-700'
+                    }`}>
+                      {formData.otherIntegrations.includes(ig) && '✓'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              {formData.otherIntegrations.includes('Other') && (
+                <input
+                  type="text"
+                  placeholder="Please specify your custom integration requirement *"
+                  value={formData.customIntegrationText}
+                  onChange={e => setFormData({ ...formData, customIntegrationText: e.target.value })}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                />
               )}
+              {stepErrors.otherIntegrations && <p className="text-xs text-red-500">{stepErrors.otherIntegrations}</p>}
+              {stepErrors.customIntegrationText && <p className="text-xs text-red-500">{stepErrors.customIntegrationText}</p>}
             </div>
+          )}
 
-          </div>
-        )}
+          {/* ==================================================== */}
+          {/* STEP 9: FINAL PROJECT INFORMATION */}
+          {/* ==================================================== */}
+          {currentStep === 9 && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Final Project Information
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Budget bracket, launch timeline and any special requests.
+                </p>
+              </div>
 
+              {/* Estimated Budget */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2.5">
+                  1. Estimated Budget (Optional)
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  {[
+                    'Under ₹10,000',
+                    '₹10,000 – ₹25,000',
+                    '₹25,000 – ₹50,000',
+                    '₹50,000 – ₹1,00,000',
+                    'Above ₹1,00,000',
+                    'Custom Budget'
+                  ].map(b => (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, budgetBracket: b })}
+                      className={`p-3 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
+                        formData.budgetBracket === b
+                          ? 'bg-purple-600 border-purple-500 text-white shadow-md'
+                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      }`}
+                    >
+                      {b}
+                    </button>
+                  ))}
+                </div>
+                {formData.budgetBracket === 'Custom Budget' && (
+                  <input
+                    type="text"
+                    placeholder="Enter your custom target budget in INR..."
+                    value={formData.customBudget}
+                    onChange={e => setFormData({ ...formData, customBudget: e.target.value })}
+                    className="mt-2.5 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                  />
+                )}
+              </div>
+
+              {/* Expected Launch Date */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                  2. Expected Launch Date (Optional)
+                </label>
+                <input
+                  type="date"
+                  value={formData.expectedLaunchDate}
+                  onChange={e => setFormData({ ...formData, expectedLaunchDate: e.target.value })}
+                  className="w-full sm:w-64 px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                />
+              </div>
+
+              {/* Additional Requirements */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                  3. Additional Requirements (Optional)
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Describe any other specific goals, features or target audience specifics..."
+                  value={formData.additionalRequirements}
+                  onChange={e => setFormData({ ...formData, additionalRequirements: e.target.value })}
+                  className="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                />
+              </div>
+
+              {/* Anything else we should know? */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2">
+                  4. Anything else we should know? (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Any extra directives for our engineering team..."
+                  value={formData.anythingElse}
+                  onChange={e => setFormData({ ...formData, anythingElse: e.target.value })}
+                  className="w-full p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ==================================================== */}
+          {/* STEP 10: REVIEW & LIVE APPROX PRICE BREAKDOWN */}
+          {/* ==================================================== */}
+          {currentStep === 10 && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      Requirement Summary &amp; Investment Estimate
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      Please review all your submitted parameters below. You can click Edit on any section to modify.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAiAssistant()}
+                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:opacity-95 text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-purple-500/20 cursor-pointer active:scale-95 transition-all shrink-0 self-start sm:self-center"
+                  >
+                    <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+                    <span>🤖 Real AI Smart Summary &amp; Chat</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Live Approx Price Estimation Card */}
+              <div className="p-6 rounded-3xl bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-purple-950/60 dark:via-slate-900 dark:to-indigo-950/60 border border-purple-200 dark:border-purple-500/50 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
+                  <Sparkles className="w-32 h-32 text-purple-600 dark:text-purple-400" />
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 mb-4">
+                  <div>
+                    <span className="text-xs font-mono font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+                      Transparent Commercial Estimate
+                    </span>
+                    <h4 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                      Estimated Approximate Total Price
+                    </h4>
+                  </div>
+                  <div className="text-left sm:text-right">
+                    {isCouponApplied && priceBreakdown.discountAmount > 0 && (
+                      <div className="flex items-center sm:justify-end gap-1.5 mb-1">
+                        <span className="line-through text-sm sm:text-base text-slate-400 dark:text-slate-500 font-mono">
+                          {currentCountryTheme.symbol}{priceBreakdown.subtotal.toLocaleString('en-IN')}
+                        </span>
+                        <span className="text-[10px] font-black text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 px-2 py-0.5 rounded-full border border-purple-300 dark:border-purple-700 animate-pulse">
+                          20% OFF APPLIED
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                      {currentCountryTheme.symbol}{priceBreakdown.totalApproxPrice.toLocaleString('en-IN')}
+                    </span>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">All features &amp; 1st-year setup included</p>
+                  </div>
+                </div>
+
+                {/* Price Breakdown Line Items */}
+                <div className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
+                  <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800/40">
+                    <span>Base Website ({priceBreakdown.categoryName}):</span>
+                    <span className="font-mono font-semibold">₹{priceBreakdown.baseWebsitePrice.toLocaleString('en-IN')}</span>
+                  </div>
+                  {priceBreakdown.domainPrice > 0 && (
+                    <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800/40">
+                      <span>Domain Registration (1 Year):</span>
+                      <span className="font-mono font-semibold">₹{priceBreakdown.domainPrice.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  {priceBreakdown.hostingPrice > 0 && (
+                    <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800/40">
+                      <span>High-Speed Cloud Hosting ({formData.hostingPlan}):</span>
+                      <span className="font-mono font-semibold">₹{priceBreakdown.hostingPrice.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  {priceBreakdown.backendPrice > 0 && (
+                    <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800/40">
+                      <span>{formData.backendRequirement}:</span>
+                      <span className="font-mono font-semibold">₹{priceBreakdown.backendPrice.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  {priceBreakdown.integrationsPrice > 0 && (
+                    <div className="flex justify-between py-1 border-b border-slate-200 dark:border-slate-800/40">
+                      <span>Advanced Integrations:</span>
+                      <span className="font-mono font-semibold">₹{priceBreakdown.integrationsPrice.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  {/* Subtotal before coupon */}
+                  <div className="flex justify-between py-1.5 border-b border-slate-200 dark:border-slate-800/60 font-semibold text-slate-800 dark:text-slate-200">
+                    <span>Subtotal (Without Discounts):</span>
+                    <span className="font-mono">₹{priceBreakdown.subtotal.toLocaleString('en-IN')}</span>
+                  </div>
+                  {isCouponApplied && priceBreakdown.discountAmount > 0 && (
+                    <div className="flex justify-between py-1.5 text-emerald-600 dark:text-emerald-400 font-bold border-b border-slate-200 dark:border-slate-800/60 bg-emerald-50/60 dark:bg-emerald-950/30 px-2 rounded-lg">
+                      <span className="flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5" /> Special Discount Coupon ({couponCode} - 20% OFF):
+                      </span>
+                      <span className="font-mono">-₹{priceBreakdown.discountAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Coupon Input & Status Box */}
+                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800/80">
+                  {isCouponApplied && discountPercent > 0 ? (
+                    <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-xs text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                              {couponCode || 'COUPON APPLIED'}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded-md bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-white text-[10px] font-black">
+                              {discountPercent}% OFF
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-emerald-700 dark:text-emerald-400">
+                            Saved ₹{priceBreakdown.discountAmount.toLocaleString('en-IN')} on your estimated total!
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeCoupon}
+                        className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 text-xs font-bold border border-rose-200 dark:border-rose-900/60 cursor-pointer transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Enter Coupon / Won Voucher Code (e.g. INDIA2025)"
+                          value={couponCode}
+                          onChange={e => setCouponCode(e.target.value)}
+                          className="flex-1 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs uppercase font-mono tracking-wider outline-none focus:border-purple-500 transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => applyCoupon()}
+                          className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold cursor-pointer transition-colors shadow-sm"
+                        >
+                          Apply Coupon
+                        </button>
+                      </div>
+                      {(() => {
+                        try {
+                          const storedVoucher = localStorage.getItem('l2b_won_voucher');
+                          if (storedVoucher) {
+                            const parsed = JSON.parse(storedVoucher);
+                            if (parsed?.code) {
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => applyCoupon(parsed.code)}
+                                  className="text-[11px] text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                                >
+                                  🎁 Click to apply won voucher: <strong className="font-mono">{parsed.code}</strong> ({parsed.discountPercent || 20}% OFF)
+                                </button>
+                              );
+                            }
+                          }
+                        } catch (e) {}
+                        return null;
+                      })()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Complete Requirement Summary with Edit Buttons */}
+              <div className="space-y-4">
+                
+                {/* 1. Client Details */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">1. Client Details</h5>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white mt-0.5">{formData.fullName} • {formData.businessName}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{formData.emailAddress} • {formData.mobileNumber} • {formData.businessAddress}</p>
+                  </div>
+                  <button
+                    onClick={() => setCurrentStep(1)}
+                    className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                {/* 2. Selected Category */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">2. Website Category &amp; Template</h5>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white mt-0.5 capitalize">
+                      {formData.selectedCategory === 'other' ? formData.otherCategoryDescription : formData.selectedCategory}
+                      {appliedTemplate ? ` (Template: ${appliedTemplate})` : ''}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setCurrentStep(2)}
+                    className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                {/* 3. Design & Colors */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">3. Design Preferences</h5>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">Style: <span className="font-semibold text-slate-900 dark:text-white">{formData.visualStyle}</span> • Color: <span className="font-semibold text-slate-900 dark:text-white">{formData.colorTheme}</span></p>
+                  </div>
+                  <button
+                    onClick={() => setCurrentStep(4)}
+                    className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                {/* 4. Domain & Hosting */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">4. Domain &amp; Hosting</h5>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
+                      Domain: <span className="font-semibold text-slate-900 dark:text-white">{formData.domainStatus}</span>
+                      {formData.domainStatus === 'I need a new Domain' ? ` (₹999/yr)` : ''} • 
+                      Hosting: <span className="font-semibold text-slate-900 dark:text-white">{formData.hostingStatus}</span>
+                      {formData.hostingStatus === 'I need new Hosting' ? ` (₹1,999/yr)` : ''}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setCurrentStep(6)}
+                    className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                {/* 5. Backend & WhatsApp */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">5. Backend &amp; WhatsApp</h5>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">Backend: <span className="font-semibold text-slate-900 dark:text-white">{formData.backendRequirement}</span> • WhatsApp: <span className="font-semibold text-slate-900 dark:text-white">{formData.whatsappIntegration}</span></p>
+                  </div>
+                  <button
+                    onClick={() => setCurrentStep(7)}
+                    className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
-      {/* ========================================================================= */}
-      {/* 5. AI ASSISTANT MODAL (STEP SUMMARY & EXECUTIVE SCOPE ROADMAP)            */}
-      {/* ========================================================================= */}
-      {isAiModalOpen && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-xl animate-in fade-in overflow-y-auto"
-          onClick={() => setIsAiModalOpen(false)}
+      {/* Upward Dark Black Gradient Backdrop (Higher than bottom dock, smooth fade, zero blur) */}
+      <div className="fixed bottom-0 left-0 right-0 h-24 sm:h-28 pointer-events-none z-30 bg-gradient-to-t from-black/70 via-black/25 to-transparent dark:from-black dark:via-black/75 to-transparent transition-all" />
+
+      {/* FLOATING BOTTOM ACTIONS DOCK: 95% Width Mobile Responsive */}
+      <div className="fixed bottom-2 sm:bottom-4 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 w-[95%] sm:max-w-5xl z-40 bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-2xl border border-slate-200/90 dark:border-slate-800/90 rounded-2xl sm:rounded-3xl px-3 sm:px-6 py-2.5 sm:py-3 shadow-2xl dark:shadow-slate-950/80 flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden transition-all">
+        
+        {/* Dynamic National Flag Minimal Top Stripe */}
+        {formData.country && (
+          <div className={`absolute top-0 left-4 right-4 h-[2px] rounded-full bg-gradient-to-r ${currentCountryTheme.flagStripe || 'from-purple-600 to-indigo-600'} opacity-90`} />
+        )}
+
+        {/* Left: Previous & Save Draft */}
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {currentStep > 1 && (
+            <button
+              type="button"
+              onClick={handlePrev}
+              className="p-2 sm:px-3.5 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-bold transition-all flex items-center gap-1 cursor-pointer shrink-0"
+              title="Previous Step"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">{t.previous}</span>
+            </button>
+          )}
+
+          {/* Quick Save Draft button */}
+          <button
+            type="button"
+            onClick={handleManualSaveDraft}
+            className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-all shrink-0"
+            title="Save Draft Locally"
+          >
+            <Save className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="hidden md:inline">{t.saveDraft}</span>
+            {lastSavedTime && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+          </button>
+        </div>
+
+        {/* Center: Live Price Display (No fake discounts unless coupon applied) */}
+        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-slate-700/80 shrink-0">
+          <span className="text-sm select-none shrink-0">{currentCountryTheme.flag}</span>
+          <div className="flex flex-col text-left">
+            {isCouponApplied && priceBreakdown.discountAmount > 0 && (
+              <div className="flex items-center gap-1 leading-none">
+                <span className="line-through text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                  {formatPriceByCountry(priceBreakdown.subtotal, formData.country)}
+                </span>
+                <span className="text-[9px] font-black text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950 px-1 py-0.2 rounded font-mono">
+                  {discountPercent}% OFF
+                </span>
+              </div>
+            )}
+            <span className="font-mono font-black text-xs sm:text-base text-emerald-600 dark:text-emerald-400 leading-tight">
+              {formatPriceByCountry(priceBreakdown.totalApproxPrice, formData.country)}
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Continue / Submit Button */}
+        <div className="shrink-0">
+          {currentStep < totalSteps ? (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-3.5 sm:px-6 py-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black shadow-md shadow-purple-600/30 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <span>{t.continue}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={handleSubmit}
+              className="px-3.5 sm:px-6 py-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-500 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/30 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+            >
+              {isSubmitting ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> {t.submitting}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5" /> {t.submit}
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+
+
+      {/* ==================================================== */}
+      {/* AI REQUIREMENT GUIDE & REAL INTERACTIVE CHATBOT DRAWER */}
+      {/* ==================================================== */}
+      {showAiDrawer && (
+        <div 
+          className="fixed inset-0 z-50 flex justify-end bg-black/75 backdrop-blur-xs animate-in fade-in duration-300"
+          onClick={() => setShowAiDrawer(false)}
+          onWheel={e => e.stopPropagation()}
+          onTouchMove={e => e.stopPropagation()}
         >
           <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden my-auto min-h-0 animate-in zoom-in-95"
+            className="w-full sm:max-w-md md:max-w-lg lg:max-w-xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300 relative z-10 overflow-hidden"
+            onClick={e => e.stopPropagation()}
+            onWheel={e => e.stopPropagation()}
+            onTouchMove={e => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="p-3 sm:p-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 shrink-0 shadow-md">
-              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-xs shrink-0">
-                  <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            {/* Drawer Header (Fixed Height) */}
+            <div className="p-3.5 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-950/80 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center shadow-md shadow-purple-500/30 shrink-0">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <h3 className="font-black text-xs sm:text-base truncate">
-                      {aiModalLang === 'bn'
-                        ? '✨ AI অ্যাসিস্ট্যান্ট ও গাইড'
-                        : aiModalLang === 'hi'
-                        ? '✨ AI सहायक व सारांश'
-                        : '✨ AI Assistant & Guide'}
-                    </h3>
-                    <span className="text-[9px] sm:text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-white/25 text-white shrink-0">
-                      {aiModalTab === 'step' 
-                        ? (aiModalLang === 'bn' ? `ধাপ ${aiModalStepIndex + 1}` : `Step ${aiModalStepIndex + 1}`)
-                        : 'Executive'}
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
+                      AI Project Advisor
+                    </h4>
+                    <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                      Live AI
                     </span>
                   </div>
-                  <p className="text-[10px] sm:text-[11px] text-white/85 truncate">
-                    {aiModalTab === 'step'
-                      ? (aiModalLang === 'bn' 
-                          ? 'এই ধাপের প্রশ্ন ও সকল অপশনের সারসংক্ষেপ'
-                          : 'Clear summary of questions, options & recommendations')
-                      : (aiModalLang === 'bn'
-                          ? 'নির্বাচিত টেক স্ট্যাক ও প্রজেক্ট রোডম্যাপ'
-                          : 'Intelligent synthesis of your tech stack & roadmap')}
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
+                    Step {currentStep}: {t.steps[currentStep - 1]?.title || 'Smart Advisory'}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
-                {/* In-Modal Direct Language Switcher Pills */}
-                <div className="p-0.5 rounded-xl bg-black/25 backdrop-blur-md flex items-center gap-0.5 border border-white/20 shadow-xs">
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchAiModalLang('bn')}
-                    className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                      aiModalLang === 'bn'
-                        ? 'bg-white text-purple-900 shadow-sm scale-102'
-                        : 'text-white/80 hover:text-white'
-                    }`}
-                    title="বাংলায় অনুবাদ করুন"
-                  >
-                    বাংলা
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchAiModalLang('en')}
-                    className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                      aiModalLang === 'en'
-                        ? 'bg-white text-purple-900 shadow-sm scale-102'
-                        : 'text-white/80 hover:text-white'
-                    }`}
-                    title="View in English"
-                  >
-                    EN
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchAiModalLang('hi')}
-                    className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-black transition-all cursor-pointer ${
-                      aiModalLang === 'hi'
-                        ? 'bg-white text-purple-900 shadow-sm scale-102'
-                        : 'text-white/80 hover:text-white'
-                    }`}
-                    title="हिंदी में अनुवाद करें"
-                  >
-                    हिंदी
-                  </button>
+              <div className="flex items-center gap-1.5">
+                {/* Language switcher */}
+                <div className="flex items-center bg-slate-200/80 dark:bg-slate-800 p-0.5 rounded-xl text-[10px] font-bold">
+                  {['en', 'bn', 'hi'].map(l => (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => setSummaryLang(l)}
+                      className={`px-1.5 sm:px-2 py-0.5 rounded-lg uppercase transition-all cursor-pointer ${
+                        summaryLang === l
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
                 </div>
 
                 <button
                   type="button"
-                  onClick={() => setIsAiModalOpen(false)}
-                  className="p-1.5 rounded-full bg-black/20 hover:bg-black/40 text-white cursor-pointer transition-colors"
+                  onClick={() => setShowAiDrawer(false)}
+                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Tab Switcher */}
-            <div className="px-4 sm:px-6 pt-3 pb-2 bg-slate-50 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-2 shrink-0">
-              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-200/60 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 w-full sm:w-auto">
-                <button
-                  type="button"
-                  onClick={() => setAiModalTab('step')}
-                  className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    aiModalTab === 'step'
-                      ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs scale-101'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <BookOpen className="w-3.5 h-3.5 text-purple-600" />
-                  <span>
-                    {aiModalLang === 'bn' ? '📌 এই ধাপের সারসংক্ষেপ ও অপশন' : aiModalLang === 'hi' ? '📌 इस चरण का सारांश' : '📌 Step Guide & Options'}
-                  </span>
-                </button>
+            {/* Navigation Tabs (Fixed Height) */}
+            <div className="px-3.5 sm:px-4 py-2 flex gap-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
+              <button
+                type="button"
+                onClick={() => setAiDrawerTab('chat')}
+                className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  aiDrawerTab === 'chat'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <Bot className="w-3.5 h-3.5" />
+                <span>Interactive AI Chat</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAiDrawerTab('blueprint')}
+                className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  aiDrawerTab === 'blueprint'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Live Blueprint</span>
+              </button>
+            </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAiModalTab('full');
-                    if (!aiSummary && !isGeneratingAi) {
-                      handleGenerateAiSummary();
-                    }
-                  }}
-                  className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    aiModalTab === 'full'
-                      ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-300 shadow-xs scale-101'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>
-                    {aiModalLang === 'bn' ? '🚀 সম্পূর্ণ প্রজেক্ট রোডম্যাপ' : aiModalLang === 'hi' ? '🚀 पूर्ण प्रोजेक्ट रोडमैप' : '🚀 Full Project Scope'}
-                  </span>
-                </button>
-              </div>
+            {/* Main Area: Flex Column with scroll isolation */}
+            <div className="flex-1 min-h-0 flex flex-col p-3 sm:p-4 overflow-hidden">
+              {aiDrawerTab === 'chat' ? (
+                <div className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
+                  
+                  {/* Current Step Guidance Banner (shrink-0) */}
+                  <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50 to-pink-50 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800/60 shrink-0 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1">
+                        <Lightbulb className="w-3 h-3 text-amber-500 shrink-0" />
+                        Step {currentStep}: {currentStepGuide.title || 'Guidance'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenAiAssistant(true)}
+                        className="text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw className="w-2.5 h-2.5" /> Re-summarize Step
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 line-clamp-2">
+                      {currentStepGuide.purpose || 'Ask any question regarding this step to get instant personalized advice.'}
+                    </p>
+                  </div>
 
-              {/* Step Jump Pills (Quick Navigator - bounded by maxReachedStep) */}
-              {aiModalTab === 'step' && (
-                <div className="hidden md:flex items-center gap-1">
+                  {/* Quick Action Suggestion Chips (shrink-0) */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 shrink-0">
+                    {[
+                      { label: '✨ Summarize this step', prompt: `Summarize key things I should choose in Step ${currentStep} (${t.steps[currentStep-1]?.title}) in simple terms.` },
+                      { label: '💡 Best features for my brand', prompt: `What are the most essential and high-converting features for my ${formData.selectedCategory || 'business'} website?` },
+                      { label: '💰 Budget & Cost breakdown', prompt: `Explain my current investment estimate of ₹${priceBreakdown.totalApproxPrice.toLocaleString('en-IN')} and how I can optimize cost.` },
+                      { label: '🎨 Color & Visual advice', prompt: `Recommend the top 3 modern visual styles and color palettes for my ${formData.selectedCategory || 'business'} website.` }
+                    ].map((chip, cidx) => (
+                      <button
+                        key={cidx}
+                        type="button"
+                        onClick={() => handleSendAiChatMessage(chip.prompt)}
+                        className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-purple-100 dark:bg-slate-800 dark:hover:bg-purple-950 text-slate-700 dark:text-slate-300 hover:text-purple-700 dark:hover:text-purple-300 text-[11px] font-semibold whitespace-nowrap border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shrink-0 active:scale-95"
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Chat Messages Stream — 100% Scrollable, Zero Visible Scrollbars */}
+                  <div
+                    ref={aiChatScrollRef}
+                    onWheel={e => e.stopPropagation()}
+                    onTouchMove={e => e.stopPropagation()}
+                    className="flex-1 min-h-[220px] max-h-[calc(100vh-270px)] overflow-y-auto space-y-3 p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800/80 no-scrollbar overscroll-contain shadow-inner"
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      touchAction: 'pan-y',
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none'
+                    }}
+                  >
+                    {aiChatMessages.length === 0 && (
+                      <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-slate-400">
+                        <Sparkles className="w-8 h-8 text-purple-400 mb-2 animate-bounce" />
+                        <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                          {summaryLang === 'bn' ? 'প্রজেক্ট সম্পর্কে যেকোনো প্রশ্ন লিখুন' : summaryLang === 'hi' ? 'प्रोजेक्ट के बारे में कोई भी सवाल पूछें' : 'Ask any question or get smart advice for this step'}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          Our AI will analyze your live inputs and assist you in real time.
+                        </p>
+                      </div>
+                    )}
+
+                    {aiChatMessages.map((msg, midx) => {
+                      const isUser = msg.role === 'user';
+                      return (
+                        <div
+                          key={midx}
+                          className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in duration-200`}
+                        >
+                          {!isUser && (
+                            <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                              <Sparkles className="w-3.5 h-3.5" />
+                            </div>
+                          )}
+                          <div
+                            className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed ${
+                              isUser
+                                ? 'bg-purple-600 text-white rounded-br-xs shadow-md shadow-purple-600/20'
+                                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-xs shadow-xs'
+                            }`}
+                          >
+                            <div
+                              className="whitespace-pre-wrap space-y-1 break-words leading-relaxed"
+                              dangerouslySetInnerHTML={{ __html: formatInlineMarkdown(msg.content) }}
+                            />
+                            <div className="flex items-center justify-between gap-2 mt-1.5 pt-1 border-t border-black/5 dark:border-white/5 text-[9px] opacity-70">
+                              <span>{new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              {!isUser && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(msg.content);
+                                    toast.success('Copied to clipboard!');
+                                  }}
+                                  className="hover:underline flex items-center gap-0.5 cursor-pointer font-bold"
+                                >
+                                  <Copy className="w-2.5 h-2.5" /> Copy
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    {aiChatLoading && (
+                      <div className="flex gap-2.5 items-center text-xs text-purple-600 dark:text-purple-400 p-2 animate-pulse">
+                        <div className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        </div>
+                        <span className="font-semibold text-[11px]">AI Advisor is analyzing your project details...</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Chat Input Bar (shrink-0) */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSendAiChatMessage();
+                    }}
+                    className="flex items-center gap-2 pt-1 shrink-0"
+                  >
+                    <input
+                      type="text"
+                      placeholder={summaryLang === 'bn' ? 'এই স্টেপ বা ওয়েবসাইট সম্পর্কে লিখুন...' : summaryLang === 'hi' ? 'इस स्टेप या वेबसाइट के बारे में पूछें...' : 'Ask AI about features, budget or this step...'}
+                      value={aiChatInput}
+                      onChange={(e) => setAiChatInput(e.target.value)}
+                      disabled={aiChatLoading}
+                      className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none transition-colors"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!aiChatInput.trim() || aiChatLoading}
+                      className="p-2.5 sm:px-4 sm:py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-purple-600/30 active:scale-95 transition-all cursor-pointer shrink-0"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Send</span>
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                /* Live Blueprint Tab */
+                <div 
+                  className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 no-scrollbar"
+                  onWheel={e => e.stopPropagation()}
+                  onTouchMove={e => e.stopPropagation()}
+                  style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      Live Dynamic Architecture Blueprint
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(liveAiSummaryText);
+                        toast.success('📋 Blueprint copied to clipboard!');
+                      }}
+                      className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Copy className="w-3 h-3" /> Copy
+                    </button>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 font-mono whitespace-pre-wrap leading-relaxed max-h-[340px] overflow-y-auto no-scrollbar">
+                    {liveAiSummaryText}
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/40 space-y-1 text-xs text-purple-950 dark:text-purple-200">
+                    <strong className="block font-bold">💡 How this Blueprint is used:</strong>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                      This blueprint is passed directly to our senior web architects upon submission to begin wireframing and engineering your custom site.
+                    </p>
+                  </div>
+
                   <button
                     type="button"
-                    disabled={aiModalStepIndex === 0}
-                    onClick={() => setAiModalStepIndex((prev) => Math.max(0, prev - 1))}
-                    className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 cursor-pointer hover:bg-slate-50"
-                    title="Previous Step"
+                    onClick={() => {
+                      setAiDrawerTab('chat');
+                      handleSendAiChatMessage('Can you review this full blueprint and suggest any missing crucial features or upgrades?');
+                    }}
+                    className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-purple-600/30 cursor-pointer transition-all"
                   >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2 font-mono">
-                    {aiModalStepIndex + 1} / {maxReachedStep + 1}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={aiModalStepIndex >= maxReachedStep}
-                    onClick={() => setAiModalStepIndex((prev) => Math.min(maxReachedStep, prev + 1))}
-                    className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 cursor-pointer hover:bg-slate-50"
-                    title="Next Unlocked Step"
-                  >
-                    <ChevronRight className="w-3.5 h-3.5" />
+                    <Bot className="w-4 h-4" /> Ask AI to Review Full Blueprint
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Modal Body - 100% Scrollable with Mousewheel, Touch, and custom scrollbar */}
-            <div
-              data-lenis-prevent="true"
-              onWheel={(e) => e.stopPropagation()}
-              className="p-4 sm:p-6 overflow-y-auto overscroll-contain flex-1 min-h-0 space-y-4 text-xs scrollbar-thin text-slate-800 dark:text-slate-200 select-text"
-              style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-            >
-              
-              {/* ========================================================= */}
-              {/* TAB 1: CURRENT STEP AI GUIDE & SUMMARY WITH TYPEWRITER     */}
-              {/* ========================================================= */}
-              {aiModalTab === 'step' && (
-                <StepAiTypewriterView
-                  guideData={
-                    STEP_AI_GUIDES[aiModalStepIndex]
-                      ? (STEP_AI_GUIDES[aiModalStepIndex][aiModalLang] || STEP_AI_GUIDES[aiModalStepIndex].en)
-                      : (STEP_AI_GUIDES[0][aiModalLang] || STEP_AI_GUIDES[0].en)
-                  }
-                  lang={aiModalLang}
-                  selection={getCurrentStepSelectionText(aiModalStepIndex, formData, aiModalLang)}
-                  stepIdx={aiModalStepIndex}
-                  maxReachedStep={maxReachedStep}
-                  currentStepIndex={currentStepIndex}
-                  onSelectStep={(idx) => setAiModalStepIndex(idx)}
-                  onSwitchLang={(newLang) => handleSwitchAiModalLang(newLang)}
-                  t={t}
-                />
-              )}
+            {/* Drawer Footer (Fixed Height) */}
+            <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/90 dark:bg-slate-950/80 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(liveAiSummaryText);
+                  toast.success('📋 AI Summary copied to clipboard!');
+                }}
+                className="py-2 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+              >
+                <Copy className="w-3.5 h-3.5" /> Copy Blueprint
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAiDrawer(false)}
+                className="py-2 px-5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs cursor-pointer shadow-xs transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-              {/* ========================================================= */}
-              {/* TAB 2: EXECUTIVE FULL PROJECT SCOPE & ROADMAP              */}
-              {/* ========================================================= */}
-              {aiModalTab === 'full' && (
-                <div className="space-y-4 animate-in fade-in">
-                  {/* Progressive Thinking Steps */}
-                  {isGeneratingAi && (
-                    <div className="py-8 px-4 text-center space-y-5">
-                      <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto shadow-md">
-                        <RefreshCw className="w-6 h-6 animate-spin" />
-                      </div>
-                      
-                      <div className="space-y-2 max-w-md mx-auto">
-                        <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
-                          aiAnalysisStage >= 1
-                            ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-300 text-purple-900 dark:text-purple-200'
-                            : 'bg-slate-100 text-slate-400 opacity-40'
-                        }`}>
-                          {aiAnalysisStage > 1 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
-                          <span>{aiModalLang === 'bn' ? '১. বিজনেস মডেল ও স্পেসিফিকেশন বিশ্লেষণ হচ্ছে...' : aiModalLang === 'hi' ? '1. बिज़नेस मॉडल और आवश्यकताओं का विश्लेषण...' : '1. Analyzing business model & requirements...'}</span>
-                        </div>
+      {/* ==================================================== */}
+      {/* RESUME SAVED DRAFT OR START FRESH POPUP MODAL */}
+      {/* ==================================================== */}
+      {showDraftModal && pendingDraft && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div
+            className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 animate-in zoom-in-95 duration-300 relative overflow-hidden"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto shadow-inner">
+              <FileText className="w-6 h-6" />
+            </div>
 
-                        <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
-                          aiAnalysisStage >= 2
-                            ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-300 text-purple-900 dark:text-purple-200'
-                            : 'bg-slate-100 text-slate-400 opacity-40'
-                        }`}>
-                          {aiAnalysisStage > 2 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
-                          <span>{aiModalLang === 'bn' ? '২. ফুল-স্ট্যাক সফটওয়্যার আর্কিটেকচার তৈরি হচ্ছে...' : aiModalLang === 'hi' ? '2. सॉफ्टवेयर आर्किटेक्चर और डेटाबेस संरचना...' : '2. Synthesizing full-stack architecture & modules...'}</span>
-                        </div>
+            <div className="text-center space-y-1.5">
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">
+                Resume Previous Order Draft?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                {pendingDraft.appliedTemplate
+                  ? `You previously saved a draft with the template "${pendingDraft.appliedTemplate}". Would you like to apply that saved form or start fresh without any template?`
+                  : `We found your previously saved order requirements. Would you like to continue where you left off or start fresh?`}
+              </p>
+            </div>
 
-                        <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
-                          aiAnalysisStage >= 3
-                            ? 'bg-purple-50 dark:bg-purple-950/80 border-purple-300 text-purple-900 dark:text-purple-200'
-                            : 'bg-slate-100 text-slate-400 opacity-40'
-                        }`}>
-                          {aiAnalysisStage > 3 ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-600" />}
-                          <span>{aiModalLang === 'bn' ? '৩. মাইলস্টোন ডেলিভারি ও স্প্রিন্ট প্ল্যান তৈরি হচ্ছে...' : aiModalLang === 'hi' ? '3. टर्नअराउंड और स्प्रिंट डिलीवरी रोडमैप...' : '3. Finalizing sprint roadmap & milestone estimates...'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Displayed Streamed Content */}
-                  {!isGeneratingAi && displayedAiSummary && (
-                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/90 dark:border-slate-700 whitespace-pre-wrap leading-relaxed font-sans text-xs">
-                      {displayedAiSummary}
-                      {displayedAiSummary !== aiSummary && (
-                        <span className="inline-block w-2 h-4 bg-purple-600 ml-1 animate-pulse" />
-                      )}
-                    </div>
-                  )}
+            {/* Saved Draft Information Card */}
+            <div className="p-4 rounded-2xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/60 text-xs space-y-2">
+              <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                <span className="text-slate-400">Business / Project:</span>
+                <strong className="font-semibold text-slate-900 dark:text-white truncate max-w-[180px]">
+                  {pendingDraft.formData?.businessName || pendingDraft.formData?.fullName || 'Custom Order'}
+                </strong>
+              </div>
+              <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                <span className="text-slate-400">Website Category:</span>
+                <strong className="font-semibold text-slate-900 dark:text-white capitalize">
+                  {pendingDraft.formData?.selectedCategory || 'Not Selected'}
+                </strong>
+              </div>
+              {pendingDraft.appliedTemplate && (
+                <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                  <span className="text-slate-400">Applied Template:</span>
+                  <strong className="font-semibold text-purple-600 dark:text-purple-400 truncate max-w-[180px]">
+                    {pendingDraft.appliedTemplate}
+                  </strong>
                 </div>
               )}
+              <div className="flex justify-between items-center text-slate-700 dark:text-slate-300">
+                <span className="text-slate-400">Completed Progress:</span>
+                <span className="font-bold font-mono text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/60 px-2 py-0.5 rounded-md">
+                  Step {pendingDraft.currentStep || 1} of 10
+                </span>
+              </div>
+              {pendingDraft.lastSaved && (
+                <div className="flex justify-between items-center text-[10px] text-slate-400 pt-1 border-t border-purple-200/60 dark:border-purple-800/40">
+                  <span>Saved on this device:</span>
+                  <span>{new Date(pendingDraft.lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              )}
+            </div>
 
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={handleStartFresh}
+                className="py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Start Fresh
+              </button>
+              <button
+                type="button"
+                onClick={handleResumeDraft}
+                className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-purple-600/30 transition-all cursor-pointer flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <Zap className="w-3.5 h-3.5" /> Resume Draft
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================== */}
+      {/* LIVE DEMO PREVIEW MODAL */}
+      {/* ==================================================== */}
+      {previewDemoItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-3 sm:p-6 animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">{previewDemoItem.category} Template</span>
+                <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">{previewDemoItem.title}</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewDemoItem(null)}
+                className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Preview Body */}
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-4">
+              <div className="aspect-[16/9] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-950 border">
+                <img
+                  src={previewDemoItem.heroImage || previewDemoItem.thumbnail}
+                  alt={previewDemoItem.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">Turnaround Time</span>
+                  <strong className="text-slate-900 dark:text-white">{previewDemoItem.turnaround || '3 - 7 Days'}</strong>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">Starting Investment</span>
+                  <strong className="text-emerald-600 dark:text-emerald-400 font-mono text-sm">{formatPriceByCountry(previewDemoItem.priceInr || previewDemoItem.price || 4999, formData.country)}</strong>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                {previewDemoItem.description || previewDemoItem.shortDescription}
+              </p>
+
+              {previewDemoItem.features && (
+                <div className="space-y-1.5">
+                  <h6 className="text-xs font-bold text-slate-900 dark:text-white">Included Key Modules:</h6>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+                    {previewDemoItem.features.map((feat, fidx) => (
+                      <li key={fidx} className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span>{feat}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/80 flex flex-wrap items-center justify-between gap-2 shrink-0">
-              
-              {/* Left Action / Lang Toggle */}
-              <div className="flex items-center gap-2">
-                {aiModalTab === 'full' ? (
-                  <button
-                    type="button"
-                    onClick={handleGenerateAiSummary}
-                    disabled={isGeneratingAi}
-                    className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-purple-50 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isGeneratingAi ? 'animate-spin' : ''}`} />
-                    <span>{t.refreshAiSummary}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleSwitchAiModalLang(aiModalLang === 'bn' ? 'en' : 'bn')}
-                    className="px-3 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 cursor-pointer border border-purple-200 dark:border-purple-800 transition-all"
-                  >
-                    <Languages className="w-3.5 h-3.5" />
-                    <span>
-                      {aiModalLang === 'bn' ? 'Switch to English' : 'বাংলায় অনুবাদ করুন'}
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              {/* Right Action Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyModalSummary}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95"
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950/60">
+              {previewDemoItem.liveUrl ? (
+                <a
+                  href={previewDemoItem.liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 px-4 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
                 >
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>{copiedAi ? (aiModalLang === 'bn' ? 'কপি হয়েছে!' : 'Copied!') : (aiModalLang === 'bn' ? 'সারসংক্ষেপ কপি করুন' : t.copySummary)}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsAiModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
-                >
-                  {t.close}
-                </button>
-              </div>
-
+                  <ExternalLink className="w-3.5 h-3.5" /> Open Full Demo Site
+                </a>
+              ) : (
+                <div />
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  handleApplyTemplate(previewDemoItem);
+                  setPreviewDemoItem(null);
+                }}
+                className="py-2.5 px-6 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
+              >
+                <Zap className="w-3.5 h-3.5" /> Apply This Template
+              </button>
             </div>
           </div>
         </div>

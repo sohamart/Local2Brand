@@ -19,6 +19,7 @@ import DashboardLoader from '../components/common/DashboardLoader';
 import { useOrderModal } from '../context/OrderModalContext';
 import { generateWhatsAppGeneralUrl, openWhatsAppChat } from '../utils/whatsapp';
 import AshokaChakra from '../components/common/AshokaChakra';
+import { formatPriceByCountry } from '../data/countryThemes';
 import api from '../services/api';
 
 export default function DemoDetails() {
@@ -28,6 +29,7 @@ export default function DemoDetails() {
   const [demo, setDemo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const userCountry = typeof window !== 'undefined' ? (localStorage.getItem('l2b_user_country') || 'India') : 'India';
 
   useEffect(() => {
     // Strictly keep user at the top of the page on route load
@@ -199,7 +201,7 @@ export default function DemoDetails() {
               <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-2.5 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-700/80 shadow-xs shrink-0">
                 <div className="text-left lg:text-right">
                   <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                    {demo.priceInr || '₹4,999'} <span className="text-xs font-normal text-slate-400">/ {demo.price || '$99'}</span>
+                    {formatPriceByCountry(demo.priceInr || demo.price || 4999, userCountry)}
                   </div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400">
                     One-time investment • Full launch
@@ -374,7 +376,7 @@ export default function DemoDetails() {
                     onClick={handleOrder}
                     className="w-full py-4 px-6 rounded-btn font-bold text-sm text-white l2b-gradient-bg shadow-glass-highlight hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer hover:opacity-95"
                   >
-                    <span>Get This Website ({demo.priceInr || '₹9,999'})</span>
+                    <span>Get This Website ({formatPriceByCountry(demo.priceInr || demo.price || 9999, userCountry)})</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                   <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 mt-2">

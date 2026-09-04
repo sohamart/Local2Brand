@@ -4,10 +4,12 @@ import { ArrowRight, ExternalLink, Sparkles, TrendingUp, CheckCircle, Smartphone
 import SectionHeading from '../common/SectionHeading';
 import ScrollReveal from '../common/ScrollReveal';
 import { demoWebsites } from '../../data/demos';
+import { formatPriceByCountry } from '../../data/countryThemes';
 import { useOrderModal } from '../../context/OrderModalContext';
 import api from '../../services/api';
 
 export default function FeaturedWork() {
+  const userCountry = typeof window !== 'undefined' ? (localStorage.getItem('l2b_user_country') || 'India') : 'India';
   const { openOrderModal } = useOrderModal();
   const [featuredDemos, setFeaturedDemos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,7 +69,7 @@ export default function FeaturedWork() {
             const isReversed = index % 2 !== 0;
             const demoSlug = demo.slug || demo.id || 'lms';
             const demoImg = demo.thumbnail || demo.heroImage || demo.image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1400';
-            const price = demo.priceInr || demo.price || '₹4,999';
+            const price = formatPriceByCountry(demo.priceInr || demo.price || 4999, userCountry);
             const turnaround = demo.turnaround || '2 - 4 Days';
             const features = Array.isArray(demo.features) ? demo.features : (demo.features ? [demo.features] : []);
 

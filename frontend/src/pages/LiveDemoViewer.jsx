@@ -31,6 +31,7 @@ import { useOrderModal } from '../context/OrderModalContext';
 import { useAuth } from '../context/AuthContext';
 import ShareDemoModal from '../components/demos/ShareDemoModal';
 import DashboardLoader from '../components/common/DashboardLoader';
+import { formatPriceByCountry } from '../data/countryThemes';
 import api from '../services/api';
 
 // Reliable Built-in Fallbacks for Instant Resilient Load
@@ -346,8 +347,9 @@ export default function LiveDemoViewer() {
     );
   }
 
+  const userCountry = typeof window !== 'undefined' ? (localStorage.getItem('l2b_user_country') || 'India') : 'India';
   const liveUrl = activeDemo.liveUrl || '';
-  const priceDisplay = activeDemo.priceInr || activeDemo.price || '₹4,999';
+  const priceDisplay = formatPriceByCountry(activeDemo.priceInr || activeDemo.price || 4999, userCountry);
   const hasLiveUrl = (activeDemo.isPublished || activeDemo.status === 'published') && Boolean(liveUrl);
 
   return (

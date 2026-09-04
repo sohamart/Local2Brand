@@ -59,13 +59,23 @@ const createTransporter = () => {
   return null;
 };
 
-export const sendEmail = async ({ to, subject, html, text, priority = 'high', isImportant = true }) => {
-  const fromEmail = process.env.EMAIL_FROM || 'LOCAL2BRAND <stackaddacontact@gmail.com>';
+// Helper to format status strings to clean title case (avoids ALL_CAPS spam filters)
+export const formatStatusTitle = (status = '') => {
+  if (!status) return 'Updated';
+  return String(status)
+    .replace(/_/g, ' ')
+    .replace(/-/g, ' ')
+    .split(' ')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+};
+
+export const sendEmail = async ({ to, subject, html, text, priority = 'normal', isImportant = true }) => {
+  const fromEmail = `"LOCAL2BRAND" <${process.env.EMAIL_USER || 'stackaddacontact@gmail.com'}>`;
   const supportEmail = process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
   const transporter = createTransporter();
 
-  // Intelligent HTML-to-Plaintext converter: Preserves paragraphs, lists, and tables
-  // This achieves 0.0 SpamAssassin score & 100% Primary Inbox classification in Gmail/Outlook
+  // Clean HTML to Plaintext converter
   const cleanPlainText = text || (html
     ? html
         .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
@@ -95,19 +105,21 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'high', is
   }
 
   try {
+    const msgId = `<${Date.now()}.${Math.random().toString(36).substring(2, 9)}@local2brand.com>`;
     const customHeaders = {
-      'X-Mailer': 'LOCAL2BRAND Client Dispatch Hub',
+      'X-Mailer': 'LOCAL2BRAND Notification Engine',
       'MIME-Version': '1.0',
-      'X-Priority': '1',
-      'Priority': 'Urgent',
-      'Importance': 'High',
-      'X-MSMail-Priority': 'High',
+      'Message-ID': msgId,
+      'List-Unsubscribe': `<mailto:${supportEmail}?subject=Unsubscribe>`,
+      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      'Auto-Submitted': 'auto-generated',
+      'X-Auto-Response-Suppress': 'OOF, AutoReply',
       'Feedback-ID': 'LOCAL2BRAND:Transactional:Client',
     };
 
     const info = await transporter.sendMail({
       from: fromEmail,
-      replyTo: `LOCAL2BRAND Team <${supportEmail}>`,
+      replyTo: `"LOCAL2BRAND Team" <${supportEmail}>`,
       to,
       subject,
       text: cleanPlainText,
@@ -444,10 +456,11 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
   const clientEmail = reqDoc.clientInfo?.email;
   const status = reqDoc.status || 'Updated';
+  const formattedStatus = formatStatusTitle(status);
 
   if (!clientEmail) return;
 
-  const subject = `Order Update: ${status.toUpperCase()} — ${reqDoc.clientInfo?.businessName || 'Your Website'} (${reqId})`;
+  const subject = `Order Update: ${formattedStatus} — ${reqDoc.clientInfo?.businessName || 'Your Website'} (${reqId})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -460,7 +473,7 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
 
       <div class="bg-box border-theme" style="background-color: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 18px 22px; margin: 16px 0; text-align: center; box-sizing: border-box;">
         <div style="font-size: 11px; color: #166534; text-transform: uppercase; font-weight: 800; margin-bottom: 4px; letter-spacing: 0.5px;">Current Milestone Status</div>
-        <div style="font-size: 20px; font-weight: 900; color: #15803d; letter-spacing: 0.5px;">${status.toUpperCase()}</div>
+        <div style="font-size: 20px; font-weight: 900; color: #15803d; letter-spacing: 0.5px;">${formattedStatus}</div>
       </div>
 
       ${reqDoc.quotedAmount ? `
@@ -480,17 +493,17 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
   `;
 
   const html = wrapAgencyEmail({
-    preheader: `Your website order ${reqId} is now ${status}. Track milestones live.`,
+    preheader: `Your website order ${reqId} is now ${formattedStatus}. Track milestones live.`,
     headerBadge: '📋 PROJECT ROADMAP UPDATE',
-    title: `Order Status Updated 📋`,
-    subtitle: `Current Phase: ${status} &bull; Order ID: ${reqId}`,
+    title: `Order Status: ${formattedStatus}`,
+    subtitle: `Current Phase: ${formattedStatus} &bull; Order ID: ${reqId}`,
     orderId: reqId,
     contentHtml,
     ctaText: `Track Order ${reqId} Live`,
     ctaUrl: `${clientUrl}/track-order?id=${reqId}`,
   });
 
-  return await sendEmail({ to: clientEmail, subject, html, text: `Your order ${reqId} status is now ${status}` });
+  return await sendEmail({ to: clientEmail, subject, html, text: `Your order ${reqId} status is now ${formattedStatus}` });
 };
 
 // 5. Project Inquiry / Lead Submitted Email (to Client)
@@ -555,7 +568,7 @@ export const sendAdminNewLeadAlert = async (lead) => {
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
   const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
 
-  const subject = `🔥 [HOT LEAD] ${lead.name} submitted ${lead.websiteType} (${lead.budget})`;
+  const subject = `[New Proposal] ${lead.name} submitted ${lead.websiteType} (${lead.budget})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -605,8 +618,8 @@ export const sendAdminNewLeadAlert = async (lead) => {
 
   const html = wrapAgencyEmail({
     preheader: `New proposal from ${lead.name} (${lead.phone}) for ${lead.websiteType}.`,
-    headerBadge: '🚨 ADMIN PRIORITY ALERT',
-    title: `New Project Proposal Received! 🔥`,
+    headerBadge: '📋 ADMIN INCOMING LEAD',
+    title: `New Project Proposal: ${lead.websiteType}`,
     subtitle: `Client: ${lead.name} &bull; ${lead.websiteType}`,
     contentHtml,
     ctaText: 'Open Leads Desk in Admin',
@@ -622,7 +635,8 @@ export const sendLeadStatusUpdateEmail = async (lead) => {
   const clientUrl = getClientUrl();
   const leadIdShort = (lead._id || '').toString().slice(-6).toUpperCase();
   const status = lead.status || 'Updated';
-  const subject = `Proposal Status: ${status.toUpperCase()} — LOCAL2BRAND (#${leadIdShort})`;
+  const formattedStatus = formatStatusTitle(status);
+  const subject = `Proposal Status Update: ${formattedStatus} — ${lead.websiteType || 'LOCAL2BRAND'} (#${leadIdShort})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -635,16 +649,16 @@ export const sendLeadStatusUpdateEmail = async (lead) => {
 
       <div class="bg-box border-theme" style="background-color: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 18px 22px; margin: 16px 0; text-align: center; box-sizing: border-box;">
         <div style="font-size: 11px; color: #166534; text-transform: uppercase; font-weight: 800; margin-bottom: 4px; letter-spacing: 0.5px;">Current Status</div>
-        <div style="font-size: 20px; font-weight: 900; color: #15803d; letter-spacing: 0.5px;">${status.toUpperCase()}</div>
+        <div style="font-size: 20px; font-weight: 900; color: #15803d; letter-spacing: 0.5px;">${formattedStatus}</div>
       </div>
     </div>
   `;
 
   const html = wrapAgencyEmail({
-    preheader: `Your proposal #${leadIdShort} status is now ${status}.`,
+    preheader: `Your proposal #${leadIdShort} status is now ${formattedStatus}.`,
     headerBadge: '📋 PROPOSAL STATUS UPDATE',
-    title: `Proposal Status Updated 📋`,
-    subtitle: `Reference: #${leadIdShort} &bull; ${status}`,
+    title: `Proposal Status: ${formattedStatus}`,
+    subtitle: `Reference: #${leadIdShort} &bull; ${formattedStatus}`,
     orderId: `#${leadIdShort}`,
     contentHtml,
     ctaText: 'Visit Client Portal',

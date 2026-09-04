@@ -10,36 +10,38 @@ export const ensureDefaultForm = async () => {
     if (!form) {
       form = new FormConfig(defaultFormSchema);
       await form.save();
-      console.log('✅ Default Dynamic Form Configuration Seeded (Version 2.0)');
-    } else if (form.version !== '2.0' || !form.questions || form.questions.length < defaultFormSchema.questions.length) {
+      console.log('✅ Default Dynamic Form Configuration Seeded (Version 3.0)');
+    } else if (form.version !== '3.0') {
+      form.name = defaultFormSchema.name;
       form.version = defaultFormSchema.version;
       form.versionNumber = defaultFormSchema.versionNumber;
       form.categories = defaultFormSchema.categories;
       form.steps = defaultFormSchema.steps;
       form.questions = defaultFormSchema.questions;
       await form.save();
-      console.log('✅ Dynamic Form Configuration Upgraded to Full 12-Step Schema (Version 2.0)');
+      console.log('✅ Dynamic Form Configuration Upgraded to Full 10-Step Blank-First Schema (Version 3.0)');
     }
     return form;
   } else {
     let form = dataStore.find('form_configs', (f) => f.status === 'published');
     if (!form) {
       form = {
-        _id: 'form_config_default_v2',
+        _id: 'form_config_default_v3',
         ...defaultFormSchema,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       dataStore.create('form_configs', form);
-      console.log('✅ Default Form Configuration Seeded in Local Store (Version 2.0)');
-    } else if (form.version !== '2.0' || !form.questions || form.questions.length < defaultFormSchema.questions.length) {
+      console.log('✅ Default Form Configuration Seeded in Local Store (Version 3.0)');
+    } else if (form.version !== '3.0') {
+      form.name = defaultFormSchema.name;
       form.version = defaultFormSchema.version;
       form.versionNumber = defaultFormSchema.versionNumber;
       form.categories = defaultFormSchema.categories;
       form.steps = defaultFormSchema.steps;
       form.questions = defaultFormSchema.questions;
       dataStore.update('form_configs', form._id, form);
-      console.log('✅ Local Store Form Configuration Upgraded to Full 12-Step Schema (Version 2.0)');
+      console.log('✅ Local Store Form Configuration Upgraded to Full 10-Step Blank-First Schema (Version 3.0)');
     }
     return form;
   }
