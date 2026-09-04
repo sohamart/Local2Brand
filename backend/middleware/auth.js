@@ -5,15 +5,32 @@ import mongoose from 'mongoose';
 
 const getJwtSecret = () => process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026';
 
-export const protect = async (req, res, next) => {
-  let token;
+const extractToken = (req) => {
+  let token = null;
 
+  // 1. From Authorization Header
   if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
   }
+
+  // 2. From HTTP-Only Cookie
+  if (!token && req.cookies) {
+    token = req.cookies.token || req.cookies.l2b_token;
+  }
+
+  // Filter out literal 'null' / 'undefined' string tokens
+  if (token === 'null' || token === 'undefined' || token === '') {
+    token = null;
+  }
+
+  return token;
+};
+
+export const protect = async (req, res, next) => {
+  const token = extractToken(req);
 
   if (!token) {
     return res.status(401).json({
@@ -31,6 +48,14 @@ export const protect = async (req, res, next) => {
       success: false,
       isAuthError: true,
       message: 'Invalid or expired session token. Please log in again.',
+    });
+  }
+
+  if (!decoded || !decoded.id) {
+    return res.status(401).json({
+      success: false,
+      isAuthError: true,
+      message: 'Invalid token payload.',
     });
   }
 
@@ -80,16 +105,8 @@ export const protect = async (req, res, next) => {
   }
 };
 
-
 export const optionalAuth = async (req, res, next) => {
-  let token;
-
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    token = req.headers.authorization.split(' ')[1];
-  }
+  const token = extractToken(req);
 
   if (!token) {
     return next();
@@ -98,15 +115,15 @@ export const optionalAuth = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, getJwtSecret());
 
-    if (mongoose.connection.readyState !== 1) {
-      await connectDB();
-    }
+    if (decoded && decoded.id) {
+      if (mongoose.connection.readyState !== 1) {
+        await connectDB();
+      }
 
-
-
-    const user = await dataStore.findUserById(decoded.id);
-    if (user && user.status !== 'suspended') {
-      req.user = user;
+      const user = await dataStore.findUserById(decoded.id);
+      if (user && user.status !== 'suspended') {
+        req.user = user;
+      }
     }
   } catch (err) {
     // Ignore invalid optional token
@@ -123,4 +140,3 @@ export const adminOnly = (req, res, next) => {
   }
   next();
 };
-

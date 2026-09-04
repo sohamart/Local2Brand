@@ -107,6 +107,7 @@ export default function UserDashboard() {
     return searchParams.get('track') ? 'track' : 'requirements';
   });
 
+  const [submissionFilter, setSubmissionFilter] = useState('all'); // 'all' | 'requirements' | 'inquiries'
   const [requirements, setRequirements] = useState([]);
   const [inquiries, setInquiries] = useState([]);
   const [callbacks, setCallbacks] = useState([]);
@@ -209,10 +210,10 @@ export default function UserDashboard() {
       setAvatarUrl(user.avatar || '');
       fetchUserData(false);
 
-      // Real-time silent live background auto-poll every 3s
+      // Real-time silent live background auto-poll every 5s
       const pollTimer = setInterval(() => {
         fetchUserData(true);
-      }, 3000);
+      }, 5000);
       return () => clearInterval(pollTimer);
     } else if (!authLoading) {
       setLoading(false);
@@ -242,8 +243,10 @@ export default function UserDashboard() {
       ]);
 
       const reqList = reqsRes?.requirements || [];
+      const leadList = leadsRes?.leads || [];
+
       if (reqsRes && reqsRes.success) setRequirements(reqList);
-      if (leadsRes && leadsRes.success) setInquiries(leadsRes.leads || []);
+      if (leadsRes && leadsRes.success) setInquiries(leadList);
       if (cbRes && cbRes.success) setCallbacks(cbRes.callbacks || []);
       if (revsRes && revsRes.success) setUserReviews(revsRes.reviews || []);
 
@@ -254,15 +257,27 @@ export default function UserDashboard() {
         );
         if (liveMatch) {
           setTrackedOrder(liveMatch);
-        } else if (trackedOrder.requirementId) {
-          // If tracked by external ID, fetch single update silently
-          api.get(`/requirements/${encodeURIComponent(trackedOrder.requirementId)}`)
-            .then((res) => {
-              if (res?.success && res.requirement) {
-                setTrackedOrder(res.requirement);
-              }
-            })
-            .catch(() => {});
+        } else {
+          const leadMatch = leadList.find(
+            (l) => l._id === trackedOrder._id || (l.leadId && l.leadId === trackedOrder.requirementId)
+          );
+          if (leadMatch) {
+            setTrackedOrder({
+              requirementId: leadMatch.leadId || `ORD-${leadMatch._id?.slice(-6).toUpperCase()}`,
+              websiteTypeName: leadMatch.websiteType || 'Custom Project',
+              websiteType: leadMatch.websiteType || 'Custom Project',
+              clientInfo: {
+                businessName: leadMatch.businessName || leadMatch.name,
+                ownerName: leadMatch.name,
+                mobile: leadMatch.phone,
+                email: leadMatch.email,
+              },
+              status: leadMatch.status === 'in_progress' ? 'In Development' : leadMatch.status === 'contacted' ? 'Under Review' : leadMatch.status === 'completed' ? 'Completed' : 'Submitted',
+              budget: leadMatch.budget || 'Standard Commercial',
+              timeline: leadMatch.timeline || 'Express 48 Hours',
+              createdAt: leadMatch.createdAt,
+            });
+          }
         }
       } else if (reqList.length > 0) {
         const urlTrackId = searchParams.get('track');
@@ -271,6 +286,23 @@ export default function UserDashboard() {
           : reqList[0];
         setTrackedOrder(match);
         if (!trackSearchId) setTrackSearchId(match.requirementId);
+      } else if (leadList.length > 0) {
+        const lead = leadList[0];
+        setTrackedOrder({
+          requirementId: lead.leadId || `ORD-${lead._id?.slice(-6).toUpperCase()}`,
+          websiteTypeName: lead.websiteType || 'Custom Project',
+          websiteType: lead.websiteType || 'Custom Project',
+          clientInfo: {
+            businessName: lead.businessName || lead.name,
+            ownerName: lead.name,
+            mobile: lead.phone,
+            email: lead.email,
+          },
+          status: lead.status === 'in_progress' ? 'In Development' : lead.status === 'contacted' ? 'Under Review' : lead.status === 'completed' ? 'Completed' : 'Submitted',
+          budget: lead.budget || 'Standard Commercial',
+          timeline: lead.timeline || 'Express 48 Hours',
+          createdAt: lead.createdAt,
+        });
       }
 
       setLastSyncTime(new Date());
@@ -292,7 +324,7 @@ export default function UserDashboard() {
     setTrackError('');
 
     try {
-      // First check in already loaded requirements
+      // 1. Check in already loaded requirements
       const localMatch = requirements.find(
         (r) => r.requirementId?.toLowerCase() === id.toLowerCase() || r._id?.toString() === id
       );
@@ -303,7 +335,32 @@ export default function UserDashboard() {
         return;
       }
 
-      // Fetch from API
+      // 2. Check in loaded inquiries
+      const localLeadMatch = inquiries.find(
+        (l) => l._id?.toString() === id || (l.leadId && l.leadId.toLowerCase() === id.toLowerCase())
+      );
+
+      if (localLeadMatch) {
+        setTrackedOrder({
+          requirementId: localLeadMatch.leadId || `ORD-${localLeadMatch._id?.slice(-6).toUpperCase()}`,
+          websiteTypeName: localLeadMatch.websiteType || 'Custom Project',
+          websiteType: localLeadMatch.websiteType || 'Custom Project',
+          clientInfo: {
+            businessName: localLeadMatch.businessName || localLeadMatch.name,
+            ownerName: localLeadMatch.name,
+            mobile: localLeadMatch.phone,
+            email: localLeadMatch.email,
+          },
+          status: localLeadMatch.status === 'in_progress' ? 'In Development' : localLeadMatch.status === 'contacted' ? 'Under Review' : localLeadMatch.status === 'completed' ? 'Completed' : 'Submitted',
+          budget: localLeadMatch.budget || 'Standard Commercial',
+          timeline: localLeadMatch.timeline || 'Express 48 Hours',
+          createdAt: localLeadMatch.createdAt,
+        });
+        setTrackLoading(false);
+        return;
+      }
+
+      // 3. Fetch from API (/requirements/:id)
       const res = await api.get(`/requirements/${encodeURIComponent(id)}`);
       if (res?.success && res.requirement) {
         setTrackedOrder(res.requirement);
@@ -792,16 +849,56 @@ export default function UserDashboard() {
                 </p>
               </div>
 
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => openOrderModal()}
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>Submit New Order</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Sub-Filter Pills */}
+            <div className="flex items-center gap-2 flex-wrap pb-1">
               <button
-                onClick={() => openOrderModal()}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 flex items-center gap-1.5 cursor-pointer shrink-0"
+                type="button"
+                onClick={() => setSubmissionFilter('all')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  submissionFilter === 'all'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
               >
-                <Zap className="w-3.5 h-3.5" />
-                <span>Submit New Order</span>
+                All Submissions ({requirements.length + inquiries.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubmissionFilter('requirements')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  submissionFilter === 'requirements'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                Website Specifications ({requirements.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubmissionFilter('inquiries')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  submissionFilter === 'inquiries'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                Proposal Inquiries ({inquiries.length})
               </button>
             </div>
 
-            {requirements.length === 0 ? (
+            {/* Empty State */}
+            {requirements.length === 0 && inquiries.length === 0 ? (
               <div className="glass-panel p-8 sm:p-14 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
                 <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 flex items-center justify-center mx-auto text-purple-600 shadow-sm">
                   <Layers className="w-8 h-8 animate-pulse" />
@@ -821,109 +918,229 @@ export default function UserDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {requirements.map((req) => (
-                  <div
-                    key={req._id || req.requirementId}
-                    className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-glass space-y-4 bg-white/90 dark:bg-slate-900/90 hover:border-purple-400 transition-all flex flex-col justify-between"
-                  >
-                    <div className="space-y-3">
-                      {/* Top Header */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-mono text-xs font-black text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/80 px-2.5 py-0.5 rounded-md border border-purple-200 dark:border-purple-800">
-                              {req.requirementId}
+                {/* 1. Full Requirements Specifications */}
+                {(submissionFilter === 'all' || submissionFilter === 'requirements') &&
+                  requirements.map((req) => (
+                    <div
+                      key={req._id || req.requirementId}
+                      className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-glass space-y-4 bg-white/90 dark:bg-slate-900/90 hover:border-purple-400 transition-all flex flex-col justify-between"
+                    >
+                      <div className="space-y-3">
+                        {/* Top Header */}
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-xs font-black text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/80 px-2.5 py-0.5 rounded-md border border-purple-200 dark:border-purple-800">
+                                {req.requirementId}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(req.requirementId);
+                                  toast.success(`Order ID ${req.requirementId} copied!`);
+                                }}
+                                className="p-1 rounded-md text-slate-400 hover:text-purple-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                                title="Copy Order ID"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1.5 break-words">
+                              {req.clientInfo?.businessName || req.websiteTypeName || 'Custom Website Build'}
+                            </h3>
+                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{req.websiteTypeName || req.websiteType}</p>
+                          </div>
+
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${STATUS_BADGES[req.status] || STATUS_BADGES.Submitted}`}>
+                            {req.status || 'Submitted'}
+                          </span>
+                        </div>
+
+                        {/* Spec Key Metrics */}
+                        <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-3 sm:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                          <div>
+                            <span className="text-slate-400 block text-[10px] font-bold">Budget Tier</span>
+                            <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">{req.budget || 'Standard Commercial'}</strong>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[10px] font-bold">Delivery Speed</span>
+                            <strong className="text-slate-900 dark:text-white font-extrabold">{req.timeline || 'Express 48h'}</strong>
+                          </div>
+                          <div className="mt-1">
+                            <span className="text-slate-400 block text-[10px] font-bold">Pages Included</span>
+                            <strong className="text-slate-700 dark:text-slate-300 font-extrabold">{req.selectedPages?.length || 0} Pages</strong>
+                          </div>
+                          <div className="mt-1">
+                            <span className="text-slate-400 block text-[10px] font-bold">Admin Engine</span>
+                            <strong className="text-purple-600 dark:text-purple-400 font-extrabold truncate block">{req.adminPanelType || 'Dynamic CMS'}</strong>
+                          </div>
+                        </div>
+
+                        {/* Quoted Price if set by Admin */}
+                        {req.quotedAmount && (
+                          <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs">
+                            <div>
+                              <span className="text-[10px] font-bold uppercase text-emerald-800 dark:text-emerald-400 block">Official Price Quote</span>
+                              <span className="font-black text-sm text-emerald-700 dark:text-emerald-300">{req.quotedAmount}</span>
+                            </div>
+                            <span className="text-[10px] font-black bg-emerald-200/80 dark:bg-emerald-900 px-2 py-0.5 rounded-md text-emerald-800 dark:text-emerald-200">
+                              Approved Scope
                             </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom Actions Bar */}
+                      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-[11px] text-slate-400 font-medium">
+                          Submitted: {new Date(req.createdAt).toLocaleDateString()}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setViewingReqSpec(req)}
+                            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                            title="Inspect full answers"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Specs</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTrackedOrder(req);
+                              setTrackSearchId(req.requirementId);
+                              setActiveTab('track');
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
+                          >
+                            <Compass className="w-3.5 h-3.5" />
+                            <span>Track Milestone &rarr;</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                {/* 2. Instant Proposal Inquiries */}
+                {(submissionFilter === 'all' || submissionFilter === 'inquiries') &&
+                  inquiries.map((lead) => {
+                    const leadTrackingId = lead.leadId || `ORD-${lead._id?.slice(-6).toUpperCase()}`;
+                    return (
+                      <div
+                        key={lead._id}
+                        className="glass-panel p-5 sm:p-6 rounded-3xl border border-indigo-200/80 dark:border-indigo-900/60 shadow-glass space-y-4 bg-white/90 dark:bg-slate-900/90 hover:border-indigo-400 transition-all flex flex-col justify-between"
+                      >
+                        <div className="space-y-3">
+                          {/* Top Header */}
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-800">
+                                  {leadTrackingId}
+                                </span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300">
+                                  Instant Proposal
+                                </span>
+                              </div>
+                              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1.5 break-words">
+                                {lead.businessName || lead.websiteType || 'Website Project Inquiry'}
+                              </h3>
+                              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                {lead.websiteType} {lead.selectedDemo ? `(${lead.selectedDemo})` : ''}
+                              </p>
+                            </div>
+
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${
+                                lead.status === 'completed'
+                                  ? 'bg-teal-100 dark:bg-teal-950 text-teal-700 border-teal-300'
+                                  : lead.status === 'in_progress'
+                                  ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 border-indigo-300'
+                                  : lead.status === 'contacted'
+                                  ? 'bg-blue-100 dark:bg-blue-950 text-blue-700 border-blue-300'
+                                  : 'bg-purple-100 dark:bg-purple-950 text-purple-700 border-purple-300'
+                              }`}
+                            >
+                              {lead.status === 'in_progress' ? 'In Development' : lead.status === 'contacted' ? 'Under Review' : lead.status === 'completed' ? 'Completed' : 'Submitted'}
+                            </span>
+                          </div>
+
+                          {/* Lead Key Metrics */}
+                          <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-3 sm:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <div>
+                              <span className="text-slate-400 block text-[10px] font-bold">Estimated Budget</span>
+                              <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">{lead.budget || 'Standard'}</strong>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block text-[10px] font-bold">Speed Target</span>
+                              <strong className="text-slate-900 dark:text-white font-extrabold">{lead.timeline || 'Express 48h'}</strong>
+                            </div>
+                            <div className="col-span-2 mt-1">
+                              <span className="text-slate-400 block text-[10px] font-bold">Client Contact</span>
+                              <span className="text-slate-700 dark:text-slate-300 font-semibold truncate block">
+                                {lead.name} • {lead.phone}
+                              </span>
+                            </div>
+                          </div>
+
+                          {lead.requirements && (
+                            <p className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl italic">
+                              "{lead.requirements}"
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Bottom Actions Bar */}
+                        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                          <div className="text-[11px] text-slate-400 font-medium">
+                            Submitted: {new Date(lead.createdAt).toLocaleDateString()}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`https://wa.me/919876543210?text=${encodeURIComponent(`Hi LOCAL2BRAND, I want to discuss my project proposal ${leadTrackingId} (${lead.businessName || lead.name}).`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-2.5 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition-all cursor-pointer flex items-center gap-1 border border-emerald-300/60"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>WhatsApp</span>
+                            </a>
+
                             <button
                               type="button"
                               onClick={() => {
-                                navigator.clipboard.writeText(req.requirementId);
-                                toast.success(`Order ID ${req.requirementId} copied!`);
+                                setTrackedOrder({
+                                  requirementId: leadTrackingId,
+                                  websiteTypeName: lead.websiteType || 'Custom Project',
+                                  websiteType: lead.websiteType || 'Custom Project',
+                                  clientInfo: {
+                                    businessName: lead.businessName || lead.name,
+                                    ownerName: lead.name,
+                                    mobile: lead.phone,
+                                    email: lead.email,
+                                  },
+                                  status: lead.status === 'in_progress' ? 'In Development' : lead.status === 'contacted' ? 'Under Review' : lead.status === 'completed' ? 'Completed' : 'Submitted',
+                                  budget: lead.budget || 'Standard Commercial',
+                                  timeline: lead.timeline || 'Express 48 Hours',
+                                  createdAt: lead.createdAt,
+                                });
+                                setTrackSearchId(leadTrackingId);
+                                setActiveTab('track');
                               }}
-                              className="p-1 rounded-md text-slate-400 hover:text-purple-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
-                              title="Copy Order ID"
+                              className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
                             >
-                              <Copy className="w-3.5 h-3.5" />
+                              <Compass className="w-3.5 h-3.5" />
+                              <span>Track Milestone &rarr;</span>
                             </button>
                           </div>
-                          <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1.5 break-words">
-                            {req.clientInfo?.businessName || req.websiteTypeName || 'Custom Website Build'}
-                          </h3>
-                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{req.websiteTypeName || req.websiteType}</p>
-                        </div>
-
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${STATUS_BADGES[req.status] || STATUS_BADGES.Submitted}`}>
-                          {req.status || 'Submitted'}
-                        </span>
-                      </div>
-
-                      {/* Spec Key Metrics */}
-                      <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-3 sm:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        <div>
-                          <span className="text-slate-400 block text-[10px] font-bold">Budget Tier</span>
-                          <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">{req.budget || 'Standard Commercial'}</strong>
-                        </div>
-                        <div>
-                          <span className="text-slate-400 block text-[10px] font-bold">Delivery Speed</span>
-                          <strong className="text-slate-900 dark:text-white font-extrabold">{req.timeline || 'Express 48h'}</strong>
-                        </div>
-                        <div className="mt-1">
-                          <span className="text-slate-400 block text-[10px] font-bold">Pages Included</span>
-                          <strong className="text-slate-700 dark:text-slate-300 font-extrabold">{req.selectedPages?.length || 0} Pages</strong>
-                        </div>
-                        <div className="mt-1">
-                          <span className="text-slate-400 block text-[10px] font-bold">Admin Engine</span>
-                          <strong className="text-purple-600 dark:text-purple-400 font-extrabold truncate block">{req.adminPanelType || 'Dynamic CMS'}</strong>
                         </div>
                       </div>
-
-                      {/* Quoted Price if set by Admin */}
-                      {req.quotedAmount && (
-                        <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs">
-                          <div>
-                            <span className="text-[10px] font-bold uppercase text-emerald-800 dark:text-emerald-400 block">Official Price Quote</span>
-                            <span className="font-black text-sm text-emerald-700 dark:text-emerald-300">{req.quotedAmount}</span>
-                          </div>
-                          <span className="text-[10px] font-black bg-emerald-200/80 dark:bg-emerald-900 px-2 py-0.5 rounded-md text-emerald-800 dark:text-emerald-200">
-                            Approved Scope
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom Actions Bar */}
-                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
-                      <div className="text-[11px] text-slate-400 font-medium">
-                        Submitted: {new Date(req.createdAt).toLocaleDateString()}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setViewingReqSpec(req)}
-                          className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
-                          title="Inspect full answers"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Specs</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setTrackedOrder(req);
-                            setTrackSearchId(req.requirementId);
-                            setActiveTab('track');
-                          }}
-                          className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
-                        >
-                          <Compass className="w-3.5 h-3.5" />
-                          <span>Track Milestone &rarr;</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })}
               </div>
             )}
           </div>

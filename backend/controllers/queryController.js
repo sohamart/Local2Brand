@@ -1,4 +1,5 @@
 import { dataStore } from '../config/dataAdapter.js';
+import mongoose from 'mongoose';
 import {
   sendLeadConfirmationEmail,
   sendAdminNewLeadAlert,
@@ -35,6 +36,10 @@ export const createQueryLead = async (req, res) => {
       });
     }
 
+    const validUserId = req.user?._id && mongoose.Types.ObjectId.isValid(req.user._id)
+      ? req.user._id
+      : (req.body.user && mongoose.Types.ObjectId.isValid(req.body.user) ? req.body.user : null);
+
     const lead = await dataStore.createLead({
       name: name.trim(),
       email: email.toLowerCase().trim(),
@@ -52,7 +57,8 @@ export const createQueryLead = async (req, res) => {
       couponCode: couponCode || '',
       discountPercent: Number(discountPercent) || 0,
       estimatedPrice: estimatedPrice || '',
-      user: req.user ? req.user.id : null,
+      user: validUserId,
+      userId: req.user?._id?.toString() || req.user?.id || (validUserId ? String(validUserId) : null),
       ipAddress: req.ip || '',
     });
 
@@ -69,7 +75,6 @@ export const createQueryLead = async (req, res) => {
       sendLeadConfirmationEmail(lead).catch((err) => console.warn('Client lead email error:', err.message));
     }
     sendAdminNewLeadAlert(lead).catch((err) => console.warn('Admin lead alert error:', err.message));
-
 
     return res.status(201).json({
       success: true,
@@ -90,10 +95,12 @@ export const getUserQueries = async (req, res) => {
   try {
     const userId = req.user?._id?.toString() || req.user?.id;
     const userEmail = (req.user?.email || req.query.email || '').toLowerCase().trim();
-    if (!userId && !userEmail) {
+    const userPhone = (req.user?.phone || '').trim();
+
+    if (!userId && !userEmail && !userPhone) {
       return res.status(200).json({ success: true, count: 0, leads: [] });
     }
-    const leads = await dataStore.getUserLeads(userId, userEmail);
+    const leads = await dataStore.getUserLeads(userId, userEmail, userPhone);
     return res.status(200).json({
       success: true,
       count: leads.length,

@@ -428,14 +428,14 @@ export const dataStore = {
           const user = await User.findById(cleanId).select('-password');
           if (user) return user;
         }
-        // Fallback search by ID or email
-        const userByQuery = await User.findOne({
-          $or: [
-            { _id: cleanId },
-            { email: cleanId.toLowerCase() },
-            { email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim() },
-          ],
-        }).select('-password');
+        const queryOr = [
+          { email: cleanId.toLowerCase() },
+          { email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim() },
+        ];
+        if (mongoose.Types.ObjectId.isValid(cleanId)) {
+          queryOr.unshift({ _id: cleanId });
+        }
+        const userByQuery = await User.findOne({ $or: queryOr }).select('-password');
         if (userByQuery) return userByQuery;
       } catch (err) {
         console.warn('MongoDB findUserById fallback notice:', err.message);

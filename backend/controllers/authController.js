@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { dataStore } from '../config/dataAdapter.js';
-import { generateToken } from '../utils/token.js';
+import { generateToken, sendTokenResponse, getCookieOptions } from '../utils/token.js';
 import { sendWelcomeEmail, sendVerificationOtpEmail } from '../utils/email.js';
 import mongoose from 'mongoose';
 
@@ -46,29 +46,17 @@ export const register = async (req, res) => {
       emailOtpExpires: otpExpires,
     });
 
-    const token = generateToken(user._id, user.role);
-
     sendWelcomeEmail(user).catch((err) => console.warn('Welcome email error:', err.message));
     if (!isEmailVerified) {
       sendVerificationOtpEmail({ user, otp }).catch((err) => console.warn('OTP email error:', err.message));
     }
 
-    return res.status(201).json({
-      success: true,
-      message: 'Account created successfully! A verification code has been sent to your email.',
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar || '',
-        phone: user.phone || '',
-        company: user.company || '',
-        status: user.status || 'active',
-        isEmailVerified,
-      },
-    });
+    return sendTokenResponse(
+      user,
+      201,
+      res,
+      'Account created successfully! A verification code has been sent to your email.'
+    );
   } catch (error) {
     console.error('Register error:', error);
     return res.status(500).json({
@@ -159,29 +147,41 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken(user._id || user.id, user.role);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      token,
-      user: {
-        id: user._id || user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar || '',
-        phone: user.phone || '',
-        company: user.company || '',
-        status: user.status || 'active',
-        isEmailVerified: Boolean(user.isEmailVerified),
-      },
-    });
+    return sendTokenResponse(user, 200, res, 'Login successful');
   } catch (error) {
     console.error('Login error:', error);
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error during login',
+    });
+  }
+};
+
+// @desc    Logout user & clear cookie
+// @route   POST /api/auth/logout, GET /api/auth/logout
+// @access  Public / Private
+export const logoutUser = async (req, res) => {
+  try {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const clearOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+      path: '/',
+      expires: new Date(0),
+    };
+
+    res.clearCookie('token', clearOptions);
+    res.clearCookie('l2b_token', clearOptions);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error logging out',
     });
   }
 };

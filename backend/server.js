@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 
 // Load environment variables immediately before any route modules
@@ -107,6 +108,7 @@ app.options('*', cors(corsOptions));
 
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use(cookieParser());
 
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));

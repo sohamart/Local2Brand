@@ -32,11 +32,22 @@ export const saveRequirementDraft = async (req, res) => {
       ? req.user._id
       : (data.user && mongoose.Types.ObjectId.isValid(data.user) ? data.user : null);
 
+    const existingClientInfo = data.clientInfo || {};
+    const clientInfo = {
+      ...existingClientInfo,
+      email: (existingClientInfo.email || req.user?.email || '').toLowerCase().trim(),
+      ownerName: existingClientInfo.ownerName || existingClientInfo.contactPerson || req.user?.name || '',
+      mobile: existingClientInfo.mobile || req.user?.phone || '',
+      businessName: existingClientInfo.businessName || data.websiteTypeName || '',
+    };
+
     const payload = {
       ...data,
       requirementId,
       status: data.status || 'Draft',
       user: validUserId,
+      userId: req.user?._id?.toString() || req.user?.id || (validUserId ? String(validUserId) : null),
+      clientInfo,
       ipAddress: req.ip || req.connection?.remoteAddress || ''
     };
 
@@ -82,10 +93,21 @@ export const submitRequirement = async (req, res) => {
       ? req.user._id
       : (finalData.user && mongoose.Types.ObjectId.isValid(finalData.user) ? finalData.user : null);
 
+    const existingClientInfo = finalData.clientInfo || {};
+    const clientInfo = {
+      ...existingClientInfo,
+      email: (existingClientInfo.email || req.user?.email || '').toLowerCase().trim(),
+      ownerName: existingClientInfo.ownerName || existingClientInfo.contactPerson || req.user?.name || 'Client',
+      mobile: existingClientInfo.mobile || req.user?.phone || '',
+      businessName: existingClientInfo.businessName || finalData.websiteTypeName || 'New Project Proposal',
+    };
+
     const updatePayload = {
       ...finalData,
       requirementId: targetId,
       user: validUserId,
+      userId: req.user?._id?.toString() || req.user?.id || (validUserId ? String(validUserId) : null),
+      clientInfo,
       status: 'Submitted',
       submittedAt: new Date()
     };
@@ -153,6 +175,7 @@ export const getMyRequirements = async (req, res) => {
   try {
     const userId = req.user?._id ? String(req.user._id) : (req.user?.id ? String(req.user.id) : null);
     const userEmail = (req.user?.email || req.query.email || '').toLowerCase().trim();
+    const userPhone = (req.user?.phone || '').trim();
 
     let requirements = [];
     if (mongoose.connection.readyState === 1) {
@@ -160,9 +183,17 @@ export const getMyRequirements = async (req, res) => {
       if (userId && mongoose.Types.ObjectId.isValid(userId)) {
         orClauses.push({ user: userId });
       }
+      if (userId) {
+        orClauses.push({ userId: userId });
+      }
       if (userEmail) {
         const escaped = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         orClauses.push({ 'clientInfo.email': { $regex: new RegExp(`^${escaped}$`, 'i') } });
+        orClauses.push({ email: { $regex: new RegExp(`^${escaped}$`, 'i') } });
+      }
+      if (userPhone && userPhone.length >= 6) {
+        const cleanDigits = userPhone.replace(/\D/g, '');
+        orClauses.push({ 'clientInfo.mobile': { $regex: cleanDigits, $options: 'i' } });
       }
 
       if (orClauses.length > 0) {
@@ -176,9 +207,10 @@ export const getMyRequirements = async (req, res) => {
     } else {
       const allReqs = dataStore.read('requirements') || [];
       requirements = allReqs.filter((r) => {
-        const matchesUser = userId && String(r.user || '') === userId;
-        const matchesEmail = userEmail && r.clientInfo?.email?.toLowerCase().trim() === userEmail;
-        return matchesUser || matchesEmail;
+        const matchesUser = userId && (String(r.user || '') === userId || String(r.userId || '') === userId);
+        const matchesEmail = userEmail && (r.clientInfo?.email?.toLowerCase().trim() === userEmail || r.email?.toLowerCase().trim() === userEmail);
+        const matchesPhone = userPhone && r.clientInfo?.mobile && r.clientInfo.mobile.replace(/\D/g, '').includes(userPhone.replace(/\D/g, ''));
+        return matchesUser || matchesEmail || matchesPhone;
       });
       if (requirements.length === 0 && req.user?.role === 'admin') {
         requirements = allReqs.slice(0, 20);

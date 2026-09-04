@@ -17,7 +17,7 @@ router.get('/', getReviews);
 router.post('/', optionalAuth, createReview);
 
 // Logged-in User routes
-router.get('/my', protect, getMyReviews);
+router.get('/my', optionalAuth, getMyReviews);
 router.put('/:id', protect, updateReview);
 router.delete('/:id', protect, deleteReview);
 

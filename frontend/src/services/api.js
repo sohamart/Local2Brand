@@ -71,9 +71,9 @@ class ApiClient {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // Only clear auth token if confirmed authentication invalidity from /auth/me or explicit isAuthError
+        // Only clear auth token if confirmed authentication invalidity explicitly from /auth/me
         const isAuthCheckEndpoint = endpoint === '/auth/me' || endpoint.startsWith('/auth/me');
-        const isExplicitAuthFailure = data.isAuthError === true || (res.status === 401 && isAuthCheckEndpoint);
+        const isExplicitAuthFailure = res.status === 401 && isAuthCheckEndpoint;
 
         if (isExplicitAuthFailure && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
           this.setToken(null);
