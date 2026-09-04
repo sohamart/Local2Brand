@@ -2,6 +2,7 @@ import { dataStore } from '../config/dataAdapter.js';
 import {
   sendCallbackConfirmationEmail,
   sendAdminCallbackAlert,
+  sendCallbackStatusUpdateEmail,
   sendCallbackResolutionEmail,
   sendCallbackDeletionEmail,
   sendAdminCallbackDeletionAlert
@@ -24,10 +25,12 @@ export const createCallback = async (req, res) => {
       ? req.user._id
       : null;
 
+    const resolvedEmail = (email || req.user?.email || '').toLowerCase().trim();
+
     const callback = await dataStore.createCallback({
       name: name.trim(),
       phone: phone.trim(),
-      email: email ? email.toLowerCase().trim() : '',
+      email: resolvedEmail,
       preferredTime: preferredTime || '⚡ ASAP (Within 15-30 mins)',
       topic: topic || 'General Website Discussion',
       notes: notes || '',
@@ -110,8 +113,13 @@ export const updateCallbackStatus = async (req, res) => {
     const callback = await dataStore.updateCallback(req.params.id, updates);
     if (!callback) return res.status(404).json({ success: false, message: 'Callback request not found' });
 
-    if (callback.email && (status === 'completed' || status === 'contacted' || adminNotes)) {
-      sendCallbackResolutionEmail(callback).catch((err) => console.warn('Callback resolution email notice:', err.message));
+    // Instantly notify client on any status change or admin notes
+    if (callback.email) {
+      setImmediate(() => {
+        sendCallbackStatusUpdateEmail(callback, status, adminNotes).catch((err) =>
+          console.warn('Callback status update email notice:', err.message)
+        );
+      });
     }
 
     return res.status(200).json({

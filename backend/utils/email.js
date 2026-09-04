@@ -870,46 +870,120 @@ export const sendOrderDeliveredEmail = async (reqDoc) => {
   return await sendEmail({ to: clientEmail, subject, html, text: `Project ${reqId} for ${businessName} is now live and completed!` });
 };
 
-// 11. Callback Completed / Resolution Follow-Up Email (to Client)
-export const sendCallbackResolutionEmail = async (callback) => {
+// 11. Callback Status Update Email (to Client) - Handles called, resolved, cancelled, pending
+export const sendCallbackStatusUpdateEmail = async (callback, newStatus = '', customNotes = '') => {
   if (!callback.email) return;
   const clientUrl = getClientUrl();
-  const cbId = (callback._id || '').toString().slice(-6).toUpperCase();
-  const subject = `Founder Consultation Follow-up — LOCAL2BRAND 📞`;
+  const cbId = (callback._id || callback.id || '').toString().slice(-6).toUpperCase();
+  const status = (newStatus || callback.status || 'updated').toLowerCase();
+  const notes = customNotes || callback.adminNotes || '';
+
+  let badge = '📞 CONSULTATION UPDATE';
+  let title = 'Callback Request Status Updated';
+  let subtitle = `Update regarding your consultation request for ${callback.phone}`;
+  let statusBadgeColor = '#2563eb';
+  let statusBadgeBg = '#eff6ff';
+  let statusText = 'IN PROGRESS';
+  let mainMessage = `Our senior engineering & consultation team has updated the status of your callback request regarding <strong>${callback.topic || 'Website Consultation'}</strong>.`;
+
+  if (status === 'called') {
+    badge = '📞 CONSULTATION CALL INITIATED';
+    title = 'We Reached Out to You! 📞';
+    subtitle = `Phone: ${callback.phone} • Preferred Slot: ${callback.preferredTime || 'Scheduled'}`;
+    statusBadgeColor = '#2563eb';
+    statusBadgeBg = '#eff6ff';
+    statusText = 'CALLED / IN PROGRESS';
+    mainMessage = `Our senior tech consultant attempted or connected via phone at <strong>${callback.phone}</strong> to discuss your website goals.`;
+  } else if (status === 'resolved' || status === 'completed') {
+    badge = '✅ CONSULTATION COMPLETED';
+    title = 'Consultation Call Follow-up & Next Steps 🎯';
+    subtitle = `Reference: #${cbId} • Strategy Summary`;
+    statusBadgeColor = '#059669';
+    statusBadgeBg = '#f0fdf4';
+    statusText = 'RESOLVED / COMPLETED';
+    mainMessage = `Thank you for consulting with the <strong>LOCAL2BRAND</strong> founding engineering desk regarding <strong>${callback.topic || 'your digital project'}</strong>.`;
+  } else if (status === 'cancelled') {
+    badge = '📋 REQUEST STATUS: CANCELLED';
+    title = 'Callback Request Cancelled';
+    subtitle = `Reference: #${cbId} • Closed`;
+    statusBadgeColor = '#64748b';
+    statusBadgeBg = '#f1f5f9';
+    statusText = 'CANCELLED';
+    mainMessage = `Your callback request for phone <strong>${callback.phone}</strong> has been cancelled in our queue. You may request a new session anytime.`;
+  }
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
       <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
-        Hi ${callback.name},
+        Hi ${callback.name || 'Valued Client'},
       </p>
       <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
-        Thank you for taking the time to speak with our senior engineering desk regarding <strong>${callback.topic || 'your website strategy'}</strong>.
+        ${mainMessage}
       </p>
 
-      ${callback.adminNotes ? `
-        <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin: 14px 0; box-sizing: border-box;">
-          <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Call Summary &amp; Recommendations:</div>
-          <div class="text-body" style="font-size: 13px; color: #334155; line-height: 1.6; word-break: break-word;">${callback.adminNotes}</div>
+      <div style="background-color: ${statusBadgeBg}; border: 1.5px solid ${statusBadgeColor}; border-radius: 14px; padding: 14px 20px; margin: 16px 0; text-align: center; box-sizing: border-box;">
+        <div style="font-size: 10px; color: ${statusBadgeColor}; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 2px;">Consultation Status</div>
+        <div style="font-size: 18px; font-weight: 900; color: ${statusBadgeColor}; letter-spacing: 0.5px;">${statusText}</div>
+      </div>
+
+      <!-- Detail Box -->
+      <table class="bg-box border-theme" style="width: 100% !important; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin: 14px 0; background-color: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-sizing: border-box;">
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; width: 34%; font-size: 12px; font-weight: 600; vertical-align: top;">Callback ID:</td>
+          <td style="padding: 10px 12px; font-weight: 900; color: #4338ca; font-family: monospace; font-size: 13px; width: 66%; vertical-align: top;">#${cbId}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Phone:</td>
+          <td style="padding: 10px 12px; font-weight: 800; color: #059669; font-family: monospace; font-size: 13px; vertical-align: top;">${callback.phone}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Topic:</td>
+          <td class="text-title" style="padding: 10px 12px; font-weight: 700; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${callback.topic || 'General Consultation'}</td>
+        </tr>
+        ${callback.preferredTime ? `
+          <tr>
+            <td class="text-muted" style="padding: 10px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Preferred Slot:</td>
+            <td style="padding: 10px 12px; font-weight: 700; color: #d97706; font-size: 12px; vertical-align: top;">${callback.preferredTime}</td>
+          </tr>
+        ` : ''}
+      </table>
+
+      ${notes ? `
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border-radius: 12px; padding: 14px 16px; border: 1px solid #e2e8f0; margin: 14px 0; box-sizing: border-box;">
+          <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Consultant Notes &amp; Recommendations:</div>
+          <div class="text-body" style="font-size: 13px; color: #334155; line-height: 1.6; word-break: break-word;">${notes}</div>
         </div>
       ` : ''}
 
-      <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.5;">
-        Whenever you are ready to kick off your project, you can submit your specifications directly through our interactive intake engine with coupon code <strong>INDIA2025</strong> for a 20% discount.
-      </p>
+      <div style="background-color: #faf5ff; border: 1px solid #e9d5ff; border-radius: 12px; padding: 12px 16px; margin: 14px 0;">
+        <p style="margin: 0; font-size: 12px; color: #6b21a8; font-weight: 600; line-height: 1.5;">
+          ✨ <strong>Special Client Offer:</strong> You can start your website project with coupon code <strong>INDIA2025</strong> for an exclusive 20% discount on any package.
+        </p>
+      </div>
     </div>
   `;
 
   const html = wrapAgencyEmail({
-    preheader: `Thank you for speaking with our founding team regarding ${callback.topic}.`,
-    headerBadge: '📞 FOUNDER CONSULTATION SUMMARY',
-    title: `Strategy Call Follow-Up 📞`,
-    subtitle: `Reference: #${cbId} &bull; Next Steps`,
+    preheader: `Update on your consultation request for ${callback.phone} — Status: ${statusText}`,
+    headerBadge: badge,
+    title,
+    subtitle,
     contentHtml,
     ctaText: 'Start Your Website with 20% OFF',
     ctaUrl: `${clientUrl}/get-started`,
   });
 
-  return await sendEmail({ to: callback.email, subject, html, text: `Thank you for consulting with LOCAL2BRAND, ${callback.name}!` });
+  return await sendEmail({
+    to: callback.email,
+    subject: `Consultation Update: ${statusText} — LOCAL2BRAND (#${cbId})`,
+    html,
+    text: `Your callback request #${cbId} for ${callback.phone} status is now: ${statusText}.`
+  });
+};
+
+// 11b. Callback Completed / Resolution Follow-Up Email (to Client) - Backward compatibility
+export const sendCallbackResolutionEmail = async (callback) => {
+  return await sendCallbackStatusUpdateEmail(callback, 'resolved');
 };
 
 // 12. Direct Contact Form Submission Email (to Client)
