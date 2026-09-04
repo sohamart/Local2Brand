@@ -1337,18 +1337,19 @@ body.has-announcement-bar .page-header-offset,
   scrollbar-width: none;  /* Firefox */
 }
 
-/* Hide all YouTube player UI artifacts and force oversized full-bleed render */
+/* Precise 16:9 Full-Bleed YouTube Background Video without Letterboxing/Sidebars */
 #yt-bg-player-container,
 #yt-bg-player-container iframe,
 iframe.yt-bg-iframe {
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
-  width: 300vw !important;
-  height: 300vh !important;
-  min-width: 200vw !important;
-  min-height: 200vh !important;
   transform: translate(-50%, -50%) !important;
+  width: 140vw !important;
+  height: 78.75vw !important;
+  min-height: 140vh !important;
+  min-width: 248.88vh !important;
   pointer-events: none !important;
   border: 0 !important;
+  outline: none !important;
 }

@@ -4615,8 +4615,8 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
         </div>
       </main>
 
-      {/* Upward Dark Black Gradient Backdrop (Higher than bottom dock, smooth fade, zero blur) */}
-      <div className="fixed bottom-0 left-0 right-0 h-24 sm:h-28 pointer-events-none z-30 bg-gradient-to-t from-black/70 via-black/25 to-transparent dark:from-black dark:via-black/75 to-transparent transition-all" />
+      {/* Upward Smooth Gradient Backdrop (Light Slate in light mode, Dark Black in dark mode) */}
+      <div className="fixed bottom-0 left-0 right-0 h-24 sm:h-28 pointer-events-none z-30 bg-gradient-to-t from-slate-200/90 via-slate-100/40 to-transparent dark:from-black dark:via-black/75 to-transparent transition-all" />
 
       {/* FLOATING BOTTOM ACTIONS DOCK: 95% Width Mobile Responsive */}
       <div className="fixed bottom-2 sm:bottom-4 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 w-[95%] sm:max-w-5xl z-40 bg-white/85 dark:bg-[#0B1120]/85 backdrop-blur-2xl border border-white/70 dark:border-slate-800/80 rounded-2xl sm:rounded-3xl px-3 sm:px-6 py-2.5 sm:py-3 shadow-2xl dark:shadow-slate-950/80 flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden transition-all">
