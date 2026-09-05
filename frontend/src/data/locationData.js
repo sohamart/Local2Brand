@@ -171,38 +171,71 @@ export const COUNTRY_LOCATIONS = {
   },
 
   'United States': {
+    'Alabama': ['Jefferson County (Birmingham)', 'Mobile County', 'Madison County (Huntsville)', 'Montgomery County', 'Other'],
+    'Alaska': ['Anchorage Municipality', 'Fairbanks North Star', 'Juneau City and Borough', 'Other'],
+    'Arizona': ['Maricopa County (Phoenix/Scottsdale)', 'Pima County (Tucson)', 'Pinal County', 'Coconino County (Flagstaff)', 'Other'],
+    'Arkansas': ['Pulaski County (Little Rock)', 'Benton County', 'Washington County (Fayetteville)', 'Other'],
     'California': [
       'Los Angeles County', 'San Francisco / Bay Area', 'San Diego County', 'Orange County (Irvine/Anaheim)',
       'Santa Clara County (Silicon Valley)', 'Alameda County (Oakland)', 'Sacramento County',
-      'Contra Costa County', 'Riverside County', 'San Bernardino County', 'Fresno County', 'Other'
+      'Contra Costa County', 'Riverside County', 'San Bernardino County', 'Fresno County', 'San Mateo County', 'Other'
     ],
+    'Colorado': ['Denver County', 'El Paso County (Colorado Springs)', 'Arapahoe County', 'Boulder County', 'Larimer County (Fort Collins)', 'Other'],
+    'Connecticut': ['Fairfield County (Stamford)', 'Hartford County', 'New Haven County', 'Other'],
+    'Delaware': ['New Castle County (Wilmington)', 'Sussex County', 'Kent County (Dover)', 'Other'],
+    'Florida': [
+      'Miami-Dade County', 'Broward County (Fort Lauderdale)', 'Palm Beach County',
+      'Orange County (Orlando)', 'Hillsborough County (Tampa)', 'Duval County (Jacksonville)', 'Pinellas County', 'Lee County (Fort Myers)', 'Other'
+    ],
+    'Georgia': ['Fulton County (Atlanta)', 'Gwinnett County', 'Cobb County', 'DeKalb County', 'Chatham County (Savannah)', 'Other'],
+    'Hawaii': ['Honolulu County (Oahu)', 'Maui County', 'Hawaii County (Big Island)', 'Kauai County', 'Other'],
+    'Idaho': ['Ada County (Boise)', 'Canyon County', 'Kootenai County', 'Other'],
+    'Illinois': ['Cook County (Chicago)', 'DuPage County (Naperville)', 'Lake County', 'Will County', 'Kane County', 'Other'],
+    'Indiana': ['Marion County (Indianapolis)', 'Lake County', 'Allen County (Fort Wayne)', 'Hamilton County (Carmel)', 'Other'],
+    'Iowa': ['Polk County (Des Moines)', 'Linn County (Cedar Rapids)', 'Scott County (Davenport)', 'Other'],
+    'Kansas': ['Johnson County (Overland Park)', 'Sedgwick County (Wichita)', 'Wyandotte County (Kansas City)', 'Other'],
+    'Kentucky': ['Jefferson County (Louisville)', 'Fayette County (Lexington)', 'Kenton County', 'Other'],
+    'Louisiana': ['Orleans Parish (New Orleans)', 'East Baton Rouge Parish', 'Jefferson Parish', 'Other'],
+    'Maine': ['Cumberland County (Portland)', 'York County', 'Penobscot County', 'Other'],
+    'Maryland': ['Montgomery County', 'Prince George\'s County', 'Baltimore City / County', 'Anne Arundel County', 'Other'],
+    'Massachusetts': ['Suffolk County (Boston)', 'Middlesex County (Cambridge)', 'Norfolk County', 'Essex County', 'Worcester County', 'Other'],
+    'Michigan': ['Wayne County (Detroit)', 'Oakland County', 'Macomb County', 'Kent County (Grand Rapids)', 'Washtenaw County (Ann Arbor)', 'Other'],
+    'Minnesota': ['Hennepin County (Minneapolis)', 'Ramsey County (St. Paul)', 'Dakota County', 'Olmsted County (Rochester)', 'Other'],
+    'Mississippi': ['Hinds County (Jackson)', 'Harrison County (Gulfport)', 'DeSoto County', 'Other'],
+    'Missouri': ['St. Louis City / County', 'Jackson County (Kansas City)', 'St. Charles County', 'Greene County (Springfield)', 'Other'],
+    'Montana': ['Yellowstone County (Billings)', 'Missoula County', 'Gallatin County (Bozeman)', 'Other'],
+    'Nebraska': ['Douglas County (Omaha)', 'Lancaster County (Lincoln)', 'Sarpy County', 'Other'],
+    'Nevada': ['Clark County (Las Vegas/Henderson)', 'Washoe County (Reno)', 'Carson City', 'Other'],
+    'New Hampshire': ['Hillsborough County (Manchester/Nashua)', 'Rockingham County', 'Merrimack County', 'Other'],
+    'New Jersey': ['Bergen County', 'Hudson County (Jersey City)', 'Essex County (Newark)', 'Middlesex County', 'Monmouth County', 'Morris County', 'Other'],
+    'New Mexico': ['Bernalillo County (Albuquerque)', 'Santa Fe County', 'Doña Ana County (Las Cruces)', 'Other'],
     'New York': [
       'New York City (Manhattan)', 'Brooklyn (Kings County)', 'Queens', 'The Bronx',
       'Staten Island (Richmond)', 'Nassau County (Long Island)', 'Suffolk County',
-      'Westchester County', 'Erie County (Buffalo)', 'Monroe County (Rochester)', 'Albany', 'Other'
+      'Westchester County', 'Erie County (Buffalo)', 'Monroe County (Rochester)', 'Albany', 'Syracuse (Onondaga)', 'Other'
     ],
+    'North Carolina': ['Mecklenburg County (Charlotte)', 'Wake County (Raleigh)', 'Durham County', 'Guilford County (Greensboro)', 'Forsyth County (Winston-Salem)', 'Other'],
+    'North Dakota': ['Cass County (Fargo)', 'Burleigh County (Bismarck)', 'Grand Forks County', 'Other'],
+    'Ohio': ['Franklin County (Columbus)', 'Cuyahoga County (Cleveland)', 'Hamilton County (Cincinnati)', 'Summit County (Akron)', 'Montgomery County (Dayton)', 'Other'],
+    'Oklahoma': ['Oklahoma County (Oklahoma City)', 'Tulsa County', 'Cleveland County (Norman)', 'Other'],
+    'Oregon': ['Multnomah County (Portland)', 'Washington County (Beaverton/Hillsboro)', 'Lane County (Eugene)', 'Clackamas County', 'Other'],
+    'Pennsylvania': ['Philadelphia County', 'Allegheny County (Pittsburgh)', 'Montgomery County', 'Bucks County', 'Delaware County', 'Chester County', 'Other'],
+    'Rhode Island': ['Providence County', 'Kent County', 'Newport County', 'Other'],
+    'South Carolina': ['Greenville County', 'Richland County (Columbia)', 'Charleston County', 'Horry County (Myrtle Beach)', 'Other'],
+    'South Dakota': ['Minnehaha County (Sioux Falls)', 'Pennington County (Rapid City)', 'Lincoln County', 'Other'],
+    'Tennessee': ['Davidson County (Nashville)', 'Shelby County (Memphis)', 'Knox County (Knoxville)', 'Hamilton County (Chattanooga)', 'Williamson County', 'Other'],
     'Texas': [
       'Harris County (Houston)', 'Dallas County', 'Travis County (Austin)', 'Bexar County (San Antonio)',
-      'Tarrant County (Fort Worth)', 'Collin County (Plano/Frisco)', 'Denton County', 'El Paso County', 'Other'
+      'Tarrant County (Fort Worth)', 'Collin County (Plano/Frisco)', 'Denton County', 'El Paso County', 'Fort Bend County', 'Other'
     ],
-    'Florida': [
-      'Miami-Dade County', 'Broward County (Fort Lauderdale)', 'Palm Beach County',
-      'Orange County (Orlando)', 'Hillsborough County (Tampa)', 'Duval County (Jacksonville)', 'Pinellas County', 'Other'
-    ],
-    'Washington': ['King County (Seattle)', 'Pierce County (Tacoma)', 'Snohomish County (Everett)', 'Spokane County', 'Other'],
-    'Illinois': ['Cook County (Chicago)', 'DuPage County', 'Lake County', 'Will County', 'Kane County', 'Other'],
-    'Massachusetts': ['Suffolk County (Boston)', 'Middlesex County (Cambridge)', 'Norfolk County', 'Essex County', 'Other'],
-    'New Jersey': ['Bergen County', 'Hudson County (Jersey City)', 'Essex County (Newark)', 'Middlesex County', 'Other'],
-    'Georgia': ['Fulton County (Atlanta)', 'Gwinnett County', 'Cobb County', 'DeKalb County', 'Other'],
-    'North Carolina': ['Mecklenburg County (Charlotte)', 'Wake County (Raleigh)', 'Durham County', 'Guilford County', 'Other'],
-    'Pennsylvania': ['Philadelphia County', 'Allegheny County (Pittsburgh)', 'Montgomery County', 'Bucks County', 'Other'],
-    'Virginia': ['Fairfax County', 'Virginia Beach', 'Loudoun County', 'Richmond City', 'Arlington County', 'Other'],
-    'Ohio': ['Franklin County (Columbus)', 'Cuyahoga County (Cleveland)', 'Hamilton County (Cincinnati)', 'Other'],
-    'Michigan': ['Wayne County (Detroit)', 'Oakland County', 'Macomb County', 'Kent County (Grand Rapids)', 'Other'],
-    'Colorado': ['Denver County', 'El Paso County (Colorado Springs)', 'Arapahoe County', 'Boulder County', 'Other'],
-    'Arizona': ['Maricopa County (Phoenix)', 'Pima County (Tucson)', 'Pinal County', 'Other'],
-    'Washington DC': ['District of Columbia (DC Metro)'],
-    'Other US State': ['Other City / County']
+    'Utah': ['Salt Lake County', 'Utah County (Provo)', 'Davis County', 'Weber County (Ogden)', 'Other'],
+    'Vermont': ['Chittenden County (Burlington)', 'Rutland County', 'Washington County', 'Other'],
+    'Virginia': ['Fairfax County', 'Virginia Beach', 'Loudoun County', 'Richmond City', 'Arlington County', 'Prince William County', 'Other'],
+    'Washington': ['King County (Seattle/Bellevue)', 'Pierce County (Tacoma)', 'Snohomish County (Everett)', 'Spokane County', 'Clark County (Vancouver)', 'Other'],
+    'West Virginia': ['Kanawha County (Charleston)', 'Berkeley County', 'Monongalia County (Morgantown)', 'Other'],
+    'Wisconsin': ['Milwaukee County', 'Dane County (Madison)', 'Waukesha County', 'Brown County (Green Bay)', 'Other'],
+    'Wyoming': ['Laramie County (Cheyenne)', 'Natrona County (Casper)', 'Teton County (Jackson)', 'Other'],
+    'Washington DC': ['District of Columbia (DC Metro)']
   },
 
   'United Kingdom': {

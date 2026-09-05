@@ -19,7 +19,7 @@ function getOptimizedVideoUrl(url) {
   if (!url || typeof url !== 'string') return url;
   if (url.includes('cloudinary.com') && url.includes('/upload/')) {
     if (!url.includes('q_auto') && !url.includes('f_auto') && !url.includes('vc_auto')) {
-      return url.replace('/upload/', '/upload/f_auto,q_auto:eco,vc_auto,w_1280,ac_none/');
+      return url.replace('/upload/', '/upload/f_auto,q_auto:eco,vc_auto,w_1280/');
     }
   }
   return url;
@@ -27,8 +27,10 @@ function getOptimizedVideoUrl(url) {
 
 function BackgroundCountryArt({ country = 'India' }) {
   const videoRef = useRef(null);
+  const iframeRef = useRef(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [dynamicThemes, setDynamicThemes] = useState(() => {
     try {
       const cached = localStorage.getItem('l2b_country_themes_cache');
@@ -37,6 +39,40 @@ function BackgroundCountryArt({ country = 'India' }) {
       return null;
     }
   });
+
+  // Listen for Sound Toggle Events
+  useEffect(() => {
+    const handleSoundToggle = (e) => {
+      const targetMuted = e.detail?.isMuted ?? !isMuted;
+      setIsMuted(targetMuted);
+
+      const video = videoRef.current;
+      if (video) {
+        video.muted = targetMuted;
+        if (!targetMuted) {
+          video.volume = 0.75;
+          video.play().catch(() => {});
+        }
+      }
+
+      const iframe = iframeRef.current;
+      if (iframe && iframe.contentWindow) {
+        try {
+          if (!targetMuted) {
+            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
+            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [75] }), '*');
+          } else {
+            iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'mute', args: [] }), '*');
+          }
+        } catch (err) {}
+      }
+    };
+
+    window.addEventListener('l2b_toggle_ambient_sound', handleSoundToggle);
+    return () => {
+      window.removeEventListener('l2b_toggle_ambient_sound', handleSoundToggle);
+    };
+  }, [isMuted]);
 
   // Live Multi-Tab Sync with Cloudinary Video/Poster Changes
   useEffect(() => {
@@ -91,7 +127,7 @@ function BackgroundCountryArt({ country = 'India' }) {
     const video = videoRef.current;
     if (!video) return;
 
-    video.muted = true;
+    video.muted = isMuted;
     video.defaultMuted = true;
     video.playsInline = true;
     video.loop = true;
@@ -106,7 +142,7 @@ function BackgroundCountryArt({ country = 'India' }) {
     } else {
       setVideoPlaying(true);
     }
-  }, []);
+  }, [isMuted]);
 
   useEffect(() => {
     setVideoPlaying(false);
@@ -120,34 +156,28 @@ function BackgroundCountryArt({ country = 'India' }) {
 
     attemptPlay();
 
-    const handleVisibilityChange = () => {
-      if (!document.hidden && video && video.paused) {
-        attemptPlay();
-      }
-    };
-
-    const handleWindowFocus = () => {
+    const forceResume = () => {
       if (video && video.paused) {
         attemptPlay();
       }
     };
 
-    const handleUserInteraction = () => {
-      if (video && video.paused) {
-        attemptPlay();
-      }
-    };
+    // Keep playing even if tab changes or is minimized
+    const watchdog = setInterval(forceResume, 1500);
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleWindowFocus);
-    window.addEventListener('click', handleUserInteraction, { passive: true, once: true });
-    window.addEventListener('touchstart', handleUserInteraction, { passive: true, once: true });
+    document.addEventListener('visibilitychange', forceResume);
+    window.addEventListener('focus', forceResume);
+    window.addEventListener('blur', forceResume);
+    window.addEventListener('click', forceResume, { passive: true });
+    window.addEventListener('touchstart', forceResume, { passive: true });
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleWindowFocus);
-      window.removeEventListener('click', handleUserInteraction);
-      window.removeEventListener('touchstart', handleUserInteraction);
+      clearInterval(watchdog);
+      document.removeEventListener('visibilitychange', forceResume);
+      window.removeEventListener('focus', forceResume);
+      window.removeEventListener('blur', forceResume);
+      window.removeEventListener('click', forceResume);
+      window.removeEventListener('touchstart', forceResume);
     };
   }, [videoSrc, youtubeId, country, attemptPlay]);
 
@@ -168,14 +198,15 @@ function BackgroundCountryArt({ country = 'India' }) {
         />
       )}
 
-      {/* 2. YouTube Background Player (Smooth Faded Live Stream) */}
+      {/* 2. YouTube Background Player (Smooth Faded Live Stream with Audio API enabled) */}
       {!videoFailed && youtubeId && (
         <div className={`absolute inset-0 w-full h-full overflow-hidden pointer-events-none transition-opacity duration-1000 ${
           videoPlaying ? 'opacity-80 sm:opacity-65 dark:opacity-55 sm:dark:opacity-40' : 'opacity-0'
         }`}>
           <iframe
+            ref={iframeRef}
             key={youtubeId}
-            src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1&rel=0&iv_load_policy=3&modestbranding=1&disablekb=1&fs=0`}
+            src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1&rel=0&iv_load_policy=3&modestbranding=1&disablekb=1&fs=0&enablejsapi=1`}
             title="Cultural Ambient Background Video"
             allow="autoplay; encrypted-media; picture-in-picture"
             tabIndex="-1"
@@ -195,12 +226,18 @@ function BackgroundCountryArt({ country = 'India' }) {
           src={videoSrc}
           autoPlay
           loop
-          muted
+          muted={isMuted}
           playsInline
           webkit-playsinline="true"
+          disablePictureInPicture
+          disableRemotePlayback
           preload="auto"
           onPlaying={() => setVideoPlaying(true)}
           onLoadedData={() => setVideoPlaying(true)}
+          onPause={(e) => {
+            // Prevent auto-pausing when tab switches
+            e.currentTarget.play().catch(() => {});
+          }}
           onTimeUpdate={(e) => {
             if (e.currentTarget.currentTime > 0.1 && !videoPlaying) {
               setVideoPlaying(true);
