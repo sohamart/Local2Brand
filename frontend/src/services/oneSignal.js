@@ -290,11 +290,14 @@ class OneSignalService {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async (OneSignal) => {
       try {
+        if (OneSignal.User?.removeTags) {
+          await OneSignal.User.removeTags(['role', 'userId', 'email', 'name']).catch(() => {});
+        }
         if (OneSignal.logout) {
-          await OneSignal.logout();
+          await OneSignal.logout().catch(() => {});
         }
       } catch (e) {
-        // Ignored
+        console.warn('OneSignal clearUser notice:', e);
       }
     });
   }

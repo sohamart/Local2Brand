@@ -229,6 +229,9 @@ export function AuthProvider({ children }) {
           }
         }
 
+        // Clear OneSignal push identity & tags
+        oneSignalService.clearUser();
+
         // Notify active forms and components
         window.dispatchEvent(new CustomEvent('l2b_auth_logout'));
       } catch (e) {
