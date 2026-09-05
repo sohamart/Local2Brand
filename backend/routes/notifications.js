@@ -81,12 +81,12 @@ router.post('/test', async (req, res) => {
   }
 });
 
-// @desc    Broadcast push notification to all subscribers
+// @desc    Broadcast push notification to all subscribers or targeted segment
 // @route   POST /api/notifications/broadcast
 // @access  Public
 router.post('/broadcast', async (req, res) => {
   try {
-    const { title, message, url, bigPicture, segment } = req.body || {};
+    const { title, message, url, bigPicture, segment, targetAudience = 'all', customUserIds } = req.body || {};
 
     if (!title || !message) {
       return res.status(400).json({
@@ -95,13 +95,42 @@ router.post('/broadcast', async (req, res) => {
       });
     }
 
-    const result = await oneSignalBackend.broadcastPushNotification({
-      title,
-      message,
-      url,
-      bigPicture,
-      segment,
-    });
+    let result;
+    if (targetAudience === 'admins') {
+      result = await oneSignalBackend.sendNotificationToAdmins({
+        title,
+        message,
+        url,
+        bigPicture,
+      });
+    } else if (targetAudience === 'clients') {
+      result = await oneSignalBackend.sendPushNotification({
+        filters: [
+          { field: 'tag', key: 'role', relation: '!=', value: 'admin' },
+        ],
+        title,
+        message,
+        url,
+        bigPicture,
+      });
+    } else if (targetAudience === 'custom' && customUserIds) {
+      const userIds = customUserIds.split(',').map((s) => s.trim()).filter(Boolean);
+      result = await oneSignalBackend.sendPushNotification({
+        userIds,
+        title,
+        message,
+        url,
+        bigPicture,
+      });
+    } else {
+      result = await oneSignalBackend.broadcastPushNotification({
+        title,
+        message,
+        url,
+        bigPicture,
+        segment: segment || 'Total Subscriptions',
+      });
+    }
 
     return res.status(200).json(result);
   } catch (error) {

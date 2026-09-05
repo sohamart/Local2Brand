@@ -59,6 +59,17 @@ export const createCallback = async (req, res) => {
       sendCallbackConfirmationEmail(callback).catch((err) => console.warn('Callback email error:', err.message));
     }
 
+    // Personal user push confirmation if logged in
+    const callbackUserId = callback.user || validUserId;
+    if (callbackUserId) {
+      oneSignalBackend.sendNotificationToUser(callbackUserId, {
+        title: '📞 Callback Request Confirmed',
+        message: `Hi ${callback.name}, our specialist will call you at ${callback.phone} (${callback.preferredTime}).`,
+        url: '/dashboard',
+        data: { type: 'callback_confirmation', callbackId: callback._id || callback.id }
+      }).catch((err) => console.warn('User push callback confirmation error:', err.message));
+    }
+
     return res.status(201).json({
       success: true,
       message: 'Callback request registered! We will call you at your preferred time.',
@@ -133,6 +144,15 @@ export const updateCallbackStatus = async (req, res) => {
           console.warn('Callback status update email notice:', err.message)
         );
       });
+    }
+
+    if (callback.user && status) {
+      oneSignalBackend.sendNotificationToUser(callback.user, {
+        title: `Callback Update: ${status}`,
+        message: `Your callback request status has been marked as "${status}".`,
+        url: '/dashboard',
+        data: { type: 'callback_status_update', callbackId: callback._id || callback.id, status }
+      }).catch((err) => console.warn('Callback status push notice:', err.message));
     }
 
     return res.status(200).json({

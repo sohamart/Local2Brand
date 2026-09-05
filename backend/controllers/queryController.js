@@ -8,6 +8,7 @@ import {
   sendQueryDeletionEmail,
   sendAdminQueryDeletionAlert
 } from '../utils/email.js';
+import oneSignalBackend from '../services/oneSignalService.js';
 
 
 export const createQueryLead = async (req, res) => {
@@ -77,6 +78,25 @@ export const createQueryLead = async (req, res) => {
       sendLeadConfirmationEmail(lead).catch((err) => console.warn('Client lead email error:', err.message));
     }
     sendAdminNewLeadAlert(lead).catch((err) => console.warn('Admin lead alert error:', err.message));
+
+    // OneSignal Push: Alert Admins
+    oneSignalBackend.sendNotificationToAdmins({
+      title: '💼 New Proposal Inquiry',
+      message: `${lead.name} requested quote for ${lead.businessName || lead.websiteType} (${lead.budget})`,
+      url: '/admin/leads',
+      data: { type: 'new_lead', leadId: lead._id }
+    }).catch((err) => console.warn('Admin push lead alert error:', err.message));
+
+    // OneSignal Push: Personal Confirmation to User
+    const targetUserId = lead.userId || lead.user?._id || lead.user;
+    if (targetUserId) {
+      oneSignalBackend.sendNotificationToUser(targetUserId, {
+        title: '💼 Project Inquiry Received',
+        message: `Hi ${lead.name}, we received your proposal request. Our engineering team is preparing your roadmap!`,
+        url: '/dashboard',
+        data: { type: 'lead_confirmation', leadId: lead._id }
+      }).catch((err) => console.warn('User push lead confirmation error:', err.message));
+    }
 
     return res.status(201).json({
       success: true,
@@ -161,6 +181,16 @@ export const updateQueryStatus = async (req, res) => {
 
     if (lead.email) {
       sendLeadStatusUpdateEmail(lead).catch((err) => console.warn('Status update email error:', err.message));
+    }
+
+    const targetUserId = lead.userId || lead.user?._id || lead.user;
+    if (targetUserId && status) {
+      oneSignalBackend.sendNotificationToUser(targetUserId, {
+        title: `Proposal Update: ${status}`,
+        message: `Your inquiry for ${lead.businessName || lead.websiteType || 'website project'} has been updated to "${status}".`,
+        url: '/dashboard',
+        data: { type: 'lead_status_update', leadId: lead._id, status }
+      }).catch((err) => console.warn('Lead push update error:', err.message));
     }
 
     return res.status(200).json({

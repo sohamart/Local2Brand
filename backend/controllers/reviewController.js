@@ -1,6 +1,7 @@
 import { Review } from '../models/Review.js';
 import mongoose from 'mongoose';
 import { readLocalStore, writeLocalStore } from '../config/store.js';
+import oneSignalBackend from '../services/oneSignalService.js';
 
 const DEFAULT_REVIEWS = [
   {
@@ -241,6 +242,25 @@ export const createReview = async (req, res) => {
       isFeatured: false,
       createdAt: new Date().toISOString(),
     };
+
+    // Push notification to Admins
+    oneSignalBackend.sendNotificationToAdmins({
+      title: '⭐ New Client Review Published',
+      message: `${name} gave a ${ratingNum}-star review for ${business || 'LOCAL2BRAND'}: "${comment.substring(0, 80)}..."`,
+      url: '/admin/reviews',
+      data: { type: 'new_review' }
+    }).catch((err) => console.warn('Review push alert error:', err.message));
+
+    // Personal push confirmation to user
+    const targetUserId = req.user?._id || req.user?.id;
+    if (targetUserId) {
+      oneSignalBackend.sendNotificationToUser(targetUserId, {
+        title: '⭐ Review Live on Showcase!',
+        message: 'Thank you for your feedback! Your review is now live on our official showcase.',
+        url: '/portfolio',
+        data: { type: 'review_published' }
+      }).catch((err) => console.warn('User review push confirmation error:', err.message));
+    }
 
     if (mongoose.connection.readyState === 1) {
       const newReview = await Review.create(reviewData);
