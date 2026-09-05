@@ -122,10 +122,72 @@ export const formatStatusTitle = (status = '') => {
     .join(' ');
 };
 
+// Brevo Direct Transactional API Sender (Ultra-fast HTTPS, zero ISP port blocks, 100% Inbox delivery)
+export const sendViaBrevoApi = async ({ to, subject, html, text }) => {
+  const apiKey = (
+    process.env.BREVO_API_KEY ||
+    (process.env.EMAIL_PASS && process.env.EMAIL_PASS.startsWith('xkeysib-') ? process.env.EMAIL_PASS : '')
+  ).trim();
+
+  if (!apiKey) return null;
+
+  let senderEmail = 'sohamduttabwn@gmail.com';
+  if (process.env.EMAIL_FROM && process.env.EMAIL_FROM.includes('<')) {
+    const match = process.env.EMAIL_FROM.match(/<([^>]+)>/);
+    if (match && match[1]) senderEmail = match[1].trim();
+  } else if (process.env.EMAIL_USER && !process.env.EMAIL_USER.includes('@smtp-brevo.com')) {
+    senderEmail = process.env.EMAIL_USER.trim();
+  }
+
+  const senderName = process.env.BRAND_NAME || 'LOCAL2BRAND';
+  const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
+
+  const rawList = Array.isArray(to) ? to : (typeof to === 'string' ? to.split(',') : [to]);
+  const recipients = rawList
+    .map((item) => {
+      if (typeof item === 'string') return { email: item.trim() };
+      if (item && item.email) return { email: String(item.email).trim(), name: item.name };
+      return null;
+    })
+    .filter((r) => r && r.email && r.email.includes('@'));
+
+  if (recipients.length === 0) return null;
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: senderName, email: senderEmail },
+        replyTo: { name: `${senderName} Support`, email: supportEmail },
+        to: recipients,
+        subject,
+        htmlContent: html,
+        textContent: text,
+      }),
+    });
+
+    const data = await response.json();
+    if (response.ok && data.messageId) {
+      console.log(`✅ Email sent successfully via Brevo API to ${to} (MessageId: ${data.messageId})`);
+      return { success: true, messageId: data.messageId };
+    } else {
+      console.warn(`⚠️ Brevo API response note:`, data);
+      return null;
+    }
+  } catch (err) {
+    console.warn(`⚠️ Brevo API connection error:`, err.message);
+    return null;
+  }
+};
+
 export const sendEmail = async ({ to, subject, html, text, priority = 'high', isImportant = true }) => {
   const fromEmail = process.env.EMAIL_FROM || `"LOCAL2BRAND" <${process.env.EMAIL_USER || 'local2brand@zohomail.in'}>`;
   const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
-  let transporter = createTransporter();
 
   // Clean HTML to Plaintext converter
   const cleanPlainText = text || (html
@@ -147,6 +209,15 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'high', is
         .replace(/\n\s*\n\s*\n/g, '\n\n')
         .trim()
     : '');
+
+  // 1. First priority: Direct Brevo API (if API Key provided)
+  const brevoResult = await sendViaBrevoApi({ to, subject, html, text: cleanPlainText });
+  if (brevoResult && brevoResult.success) {
+    return brevoResult;
+  }
+
+  // 2. Second priority: Standard SMTP Transporter
+  let transporter = createTransporter();
 
   if (!transporter) {
     console.log(`\n======================================================`);
@@ -232,7 +303,9 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'high', is
 export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml, ctaText, ctaUrl, footerNote, orderId }) => {
   const currentYear = new Date().getFullYear();
   const clientUrl = getClientUrl();
-  const logoImgUrl = `${clientUrl}/logo.jpg`;
+  const logoImgUrl = clientUrl && !clientUrl.includes('localhost') && !clientUrl.includes('127.0.0.1')
+    ? `${clientUrl}/logo.jpg`
+    : 'https://local2brand.vercel.app/logo.jpg';
 
   return `
 <!DOCTYPE html>
