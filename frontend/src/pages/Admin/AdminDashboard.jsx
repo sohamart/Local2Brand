@@ -27,9 +27,13 @@ import {
   ShieldCheck,
   Calendar,
   ArrowUpRight,
-  Radio
+  Radio,
+  Mail,
+  Send
 } from 'lucide-react';
 import api from '../../services/api';
+import notificationApi from '../../services/notificationApi';
+import NotificationDetailModal from '../../components/common/NotificationDetailModal';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import MarqueeTicker from '../../components/common/MarqueeTicker';
 import { SEO } from '../../components/common/CommonUI';
@@ -67,6 +71,10 @@ export default function AdminDashboard() {
   const [recentRequirements, setRecentRequirements] = useState([]);
   const [recentLeads, setRecentLeads] = useState([]);
   const [recentCallbacks, setRecentCallbacks] = useState([]);
+  const [recentNotifications, setRecentNotifications] = useState([]);
+  const [inboxUnreadCount, setInboxUnreadCount] = useState(0);
+  const [totalInboxCount, setTotalInboxCount] = useState(0);
+  const [selectedInboxNotification, setSelectedInboxNotification] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeChartTab, setActiveChartTab] = useState('weekly');
@@ -88,14 +96,25 @@ export default function AdminDashboard() {
     setIsRefreshing(true);
     try {
       // Parallel resilient fetching across all core pipelines & telemetry hub
-      const [statsRes, reqsRes, leadsRes, callbacksRes, telRes] = await Promise.all([
+      const [statsRes, reqsRes, leadsRes, callbacksRes, telRes, inboxRes, unreadRes] = await Promise.all([
         api.get('/admin/stats').catch(() => null),
         api.get('/requirements/admin/all').catch(() => null),
         api.get('/queries').catch(() => null),
         api.get('/callbacks').catch(() => null),
-        api.get('/analytics/stats').catch(() => null)
+        api.get('/analytics/stats').catch(() => null),
+        notificationApi.getInbox({ limit: 6 }).catch(() => null),
+        notificationApi.getUnreadCount().catch(() => null)
       ]);
 
+      if (inboxRes?.success) {
+        setRecentNotifications(inboxRes.notifications || []);
+        setTotalInboxCount(inboxRes.pagination?.total || (inboxRes.notifications || []).length);
+      }
+      if (unreadRes?.success) {
+        setInboxUnreadCount(unreadRes.unreadCount || 0);
+      } else if (typeof inboxRes?.unreadCount === 'number') {
+        setInboxUnreadCount(inboxRes.unreadCount);
+      }
 
       const allReqs = (reqsRes?.requirements && reqsRes.requirements.length > 0)
         ? reqsRes.requirements
@@ -277,6 +296,19 @@ export default function AdminDashboard() {
             </button>
 
             <Link
+              to="/admin/inbox"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 flex items-center gap-1.5 cursor-pointer relative transition-all"
+            >
+              <Inbox className="w-3.5 h-3.5 text-purple-600" />
+              <span>Central Inbox</span>
+              {inboxUnreadCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-purple-600 text-white text-[10px] font-black animate-pulse">
+                  {inboxUnreadCount}
+                </span>
+              )}
+            </Link>
+
+            <Link
               to="/admin/requirements"
               className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-glass-highlight flex items-center gap-1.5 cursor-pointer"
             >
@@ -362,39 +394,68 @@ export default function AdminDashboard() {
 
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
           
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Website Orders</span>
-              <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                <Layers className="w-5 h-5" />
+          {/* Central Inbox Card */}
+          <Link
+            to="/admin/inbox"
+            className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group hover:border-purple-500/50 transition-all cursor-pointer flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Central Inbox</span>
+                <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                  <Inbox className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline justify-between">
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{totalInboxCount}</span>
+                <span className="text-xs font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/80 px-2 py-0.5 rounded-lg">
+                  {inboxUnreadCount} Unread
+                </span>
               </div>
             </div>
-            <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.totalRequirements}</span>
-              <span className="text-xs font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/80 px-2 py-0.5 rounded-lg">
-                {stats.pendingRequirements} Review
-              </span>
+            <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+              <span>✉️ Emails &amp; Push Logs</span>
+              <span className="text-purple-600 font-bold group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">Open &rarr;</span>
+            </div>
+          </Link>
+
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Website Orders</span>
+                <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                  <Layers className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="mt-3 flex items-baseline justify-between">
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.totalRequirements}</span>
+                <span className="text-xs font-extrabold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/80 px-2 py-0.5 rounded-lg">
+                  {stats.pendingRequirements} Review
+                </span>
+              </div>
             </div>
             <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
               <span>🚀 {stats.inProgressRequirements} In Sprint</span>
-              <span className="text-emerald-600 font-bold">✓ {stats.completedRequirements} Delivered</span>
+              <span className="text-emerald-600 font-bold">✓ {stats.completedRequirements} Done</span>
             </div>
           </div>
 
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Callback Desk</span>
-              <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <PhoneCall className="w-5 h-5" />
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Callback Desk</span>
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <PhoneCall className="w-5 h-5" />
+                </div>
               </div>
-            </div>
-            <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.totalCallbacks}</span>
-              <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-lg">
-                {stats.pendingCallbacks} Pending
-              </span>
+              <div className="mt-3 flex items-baseline justify-between">
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.totalCallbacks}</span>
+                <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2 py-0.5 rounded-lg">
+                  {stats.pendingCallbacks} Pending
+                </span>
+              </div>
             </div>
             <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
               <span>⚡ 15-Min Schedulers</span>
@@ -402,18 +463,20 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Leads &amp; Inquiries</span>
-              <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                <Inbox className="w-5 h-5" />
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Leads &amp; Inquiries</span>
+                <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Inbox className="w-5 h-5" />
+                </div>
               </div>
-            </div>
-            <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.totalLeads}</span>
-              <span className="text-xs font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2 py-0.5 rounded-lg">
-                {stats.pendingLeads} New
-              </span>
+              <div className="mt-3 flex items-baseline justify-between">
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.totalLeads}</span>
+                <span className="text-xs font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2 py-0.5 rounded-lg">
+                  {stats.pendingLeads} New
+                </span>
+              </div>
             </div>
             <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
               <span>💼 Proposals &amp; Quotes</span>
@@ -421,18 +484,20 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Client &amp; Users</span>
-              <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                <Users className="w-5 h-5" />
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Client &amp; Users</span>
+                <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <Users className="w-5 h-5" />
+                </div>
               </div>
-            </div>
-            <div className="mt-3 flex items-baseline justify-between">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.totalUsers}</span>
-              <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 px-2 py-0.5 rounded-lg">
-                Active DB
-              </span>
+              <div className="mt-3 flex items-baseline justify-between">
+                <span className="text-3xl font-black text-slate-900 dark:text-white">{stats.totalUsers}</span>
+                <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 px-2 py-0.5 rounded-lg">
+                  Active DB
+                </span>
+              </div>
             </div>
             <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
               <span>👥 Accounts &amp; Clients</span>
@@ -767,7 +832,112 @@ export default function AdminDashboard() {
 
         </div>
 
+        {/* 3. CENTRAL INBOX & EMAIL REPLICAS LIVE LOG */}
+        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-purple-500/20">
+                <Inbox className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <span>Central Inbox Live Alerts &amp; Email Logs</span>
+                  {inboxUnreadCount > 0 && (
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-600 text-white">
+                      {inboxUnreadCount} new
+                    </span>
+                  )}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Real-time database records of blueprint orders, callbacks, quote inquiries, email replicas, and push broadcasts.
+                </p>
+              </div>
+            </div>
+
+            <Link
+              to="/admin/inbox"
+              className="py-2 px-3.5 rounded-xl text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 flex items-center gap-1.5 self-start sm:self-center cursor-pointer transition-all"
+            >
+              <span>Open Central Inbox Console ({totalInboxCount})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {recentNotifications.length === 0 ? (
+            <p className="text-xs text-slate-500 py-8 text-center">
+              No recent inbox alerts found. New client orders and communications will log here in real-time.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {recentNotifications.map((n) => (
+                <div
+                  key={n._id}
+                  onClick={() => setSelectedInboxNotification(n)}
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 hover:border-purple-400/60 ${
+                    !n.isRead
+                      ? 'bg-purple-500/[0.04] dark:bg-purple-500/[0.08] border-purple-300/60 dark:border-purple-800'
+                      : 'bg-slate-50/70 dark:bg-slate-800/50 border-slate-200/80 dark:border-slate-800'
+                  }`}
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                        {n.category || 'Alert'}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                      {n.title}
+                    </h4>
+
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                      {n.message}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+                    <span className="text-[10px] text-slate-400 truncate max-w-[140px] font-mono">
+                      {n.recipientEmail || 'All Users'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedInboxNotification(n);
+                      }}
+                      className="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>Preview Email</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
+
+      {/* Notification / Email Replica Viewer Modal */}
+      {selectedInboxNotification && (
+        <NotificationDetailModal
+          notification={selectedInboxNotification}
+          onClose={() => setSelectedInboxNotification(null)}
+          onMarkRead={async (id) => {
+            try {
+              await notificationApi.markAsRead(id);
+              setRecentNotifications((prev) =>
+                prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
+              );
+              setInboxUnreadCount((c) => Math.max(0, c - 1));
+            } catch (e) {}
+          }}
+        />
+      )}
     </>
   );
 }
