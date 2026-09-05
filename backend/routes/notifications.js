@@ -1,7 +1,7 @@
 import express from 'express';
 import oneSignalBackend from '../services/oneSignalService.js';
 import Notification from '../models/Notification.js';
-import { protect } from '../middleware/auth.js';
+import { protect, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -214,15 +214,12 @@ router.post('/broadcast', async (req, res) => {
 // 2. IN-APP INBOX & PERSONAL NOTIFICATIONS API
 // ==========================================
 
-// @desc    Get Inbox Notifications for Authenticated User / Admin
+// @desc    Get Inbox Notifications for Authenticated User / Admin (or Guest Broadcasts)
 // @route   GET /api/notifications/inbox
-// @access  Private (User or Admin)
-router.get('/inbox', protect, async (req, res) => {
+// @access  Public / Optional Auth
+router.get('/inbox', optionalAuth, async (req, res) => {
   try {
     const user = req.user;
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Unauthorized' });
-    }
 
     const { page = 1, limit = 25, type, unreadOnly, search } = req.query;
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
@@ -241,26 +238,31 @@ router.get('/inbox', protect, async (req, res) => {
       ]
     }).catch(() => {});
 
-    // Scope query based on role
+    // Scope query based on role or guest
     const conditions = [];
 
-    if (user.role === 'admin') {
-      // Admin sees: admin-targeted alerts, global broadcasts, alerts assigned to admin user, or sent to admin email
-      conditions.push(
-        { recipientRole: 'admin' },
-        { recipientRole: 'all' },
-        { recipient: user._id },
-        { recipientEmail: user.email?.toLowerCase().trim() }
-      );
-    } else {
-      // Regular user sees: personal notifications (by user ID), personal notifications by email, or global broadcasts
-      conditions.push(
-        { recipient: user._id },
-        { recipientRole: 'all' }
-      );
-      if (user.email) {
-        conditions.push({ recipientEmail: user.email.toLowerCase().trim() });
+    if (user) {
+      if (user.role === 'admin') {
+        // Admin sees: admin-targeted alerts, global broadcasts, alerts assigned to admin user, or sent to admin email
+        conditions.push(
+          { recipientRole: 'admin' },
+          { recipientRole: 'all' },
+          { recipient: user._id },
+          { recipientEmail: user.email?.toLowerCase().trim() }
+        );
+      } else {
+        // Regular user sees: personal notifications (by user ID), personal notifications by email, or global broadcasts
+        conditions.push(
+          { recipient: user._id },
+          { recipientRole: 'all' }
+        );
+        if (user.email) {
+          conditions.push({ recipientEmail: user.email.toLowerCase().trim() });
+        }
       }
+    } else {
+      // Unauthenticated visitor sees global announcements & broadcasts
+      conditions.push({ recipientRole: 'all' });
     }
 
     const filter = {
@@ -337,30 +339,31 @@ router.get('/inbox', protect, async (req, res) => {
 
 // @desc    Get live unread count for fast polling / navbar badges
 // @route   GET /api/notifications/unread-count
-// @access  Private (User or Admin)
-router.get('/unread-count', protect, async (req, res) => {
+// @access  Public / Optional Auth
+router.get('/unread-count', optionalAuth, async (req, res) => {
   try {
     const user = req.user;
-    if (!user) {
-      return res.status(200).json({ success: true, unreadCount: 0 });
-    }
-
     const conditions = [];
-    if (user.role === 'admin') {
-      conditions.push(
-        { recipientRole: 'admin' },
-        { recipientRole: 'all' },
-        { recipient: user._id },
-        { recipientEmail: user.email?.toLowerCase().trim() }
-      );
-    } else {
-      conditions.push(
-        { recipient: user._id },
-        { recipientRole: 'all' }
-      );
-      if (user.email) {
-        conditions.push({ recipientEmail: user.email.toLowerCase().trim() });
+
+    if (user) {
+      if (user.role === 'admin') {
+        conditions.push(
+          { recipientRole: 'admin' },
+          { recipientRole: 'all' },
+          { recipient: user._id },
+          { recipientEmail: user.email?.toLowerCase().trim() }
+        );
+      } else {
+        conditions.push(
+          { recipient: user._id },
+          { recipientRole: 'all' }
+        );
+        if (user.email) {
+          conditions.push({ recipientEmail: user.email.toLowerCase().trim() });
+        }
       }
+    } else {
+      conditions.push({ recipientRole: 'all' });
     }
 
     const unreadCount = await Notification.countDocuments({

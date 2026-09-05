@@ -18,13 +18,31 @@ import { useAuth } from '../../context/AuthContext';
 import notificationApi from '../../services/notificationApi';
 import NotificationDetailModal from './NotificationDetailModal';
 
+const getCachedInbox = () => {
+  try {
+    const cached = localStorage.getItem('l2b_cached_inbox');
+    return cached ? JSON.parse(cached) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+const getCachedUnread = () => {
+  try {
+    const cached = localStorage.getItem('l2b_cached_unread');
+    return cached ? Number(cached) : 0;
+  } catch (e) {
+    return 0;
+  }
+};
+
 export default function FloatingMobileInbox() {
   const { user, isAdmin } = useAuth();
   const { isSupported, permission, isSubscribed, isLoading: pushLoading, requestPermission, optIn } = useOneSignal();
 
   const [isOpen, setIsOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(getCachedUnread);
+  const [notifications, setNotifications] = useState(getCachedInbox);
   const [loadingList, setLoadingList] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
 
@@ -33,24 +51,29 @@ export default function FloatingMobileInbox() {
     try {
       const res = await notificationApi.getUnreadCount();
       if (res?.success) {
-        setUnreadCount(res.unreadCount || 0);
+        const count = res.unreadCount || 0;
+        setUnreadCount(count);
+        try { localStorage.setItem('l2b_cached_unread', String(count)); } catch (e) {}
       }
     } catch (err) {
       // Non-blocking
     }
   }, []);
 
-  // Fetch recent inbox items (pre-fetched and silently revalidated)
-  const fetchRecentNotifications = useCallback(async (isInitial = false) => {
-    if (isInitial && notifications.length === 0) {
+  // Fetch recent inbox items (pre-fetched on startup and silently revalidated)
+  const fetchRecentNotifications = useCallback(async (showSpinner = false) => {
+    if (showSpinner && notifications.length === 0) {
       setLoadingList(true);
     }
     try {
       const res = await notificationApi.getInbox({ limit: 12 });
       if (res?.success) {
-        setNotifications(res.notifications || []);
+        const list = res.notifications || [];
+        setNotifications(list);
+        try { localStorage.setItem('l2b_cached_inbox', JSON.stringify(list)); } catch (e) {}
         if (typeof res.unreadCount === 'number') {
           setUnreadCount(res.unreadCount);
+          try { localStorage.setItem('l2b_cached_unread', String(res.unreadCount)); } catch (e) {}
         }
       }
     } catch (err) {
@@ -60,21 +83,21 @@ export default function FloatingMobileInbox() {
     }
   }, [notifications.length]);
 
-  // Initial load on mount & periodic polling
+  // Immediate fetch on website load & periodic polling
   useEffect(() => {
     fetchUnreadCount();
     fetchRecentNotifications(false);
     const interval = setInterval(() => {
       fetchUnreadCount();
-    }, 20000);
+    }, 15000);
     return () => clearInterval(interval);
   }, [fetchUnreadCount, fetchRecentNotifications, user]);
 
   useEffect(() => {
     if (isOpen) {
-      fetchRecentNotifications(notifications.length === 0);
+      fetchRecentNotifications(false);
     }
-  }, [isOpen, fetchRecentNotifications, notifications.length]);
+  }, [isOpen, fetchRecentNotifications]);
 
   const handleMarkRead = async (id, e) => {
     if (e) e.stopPropagation();
