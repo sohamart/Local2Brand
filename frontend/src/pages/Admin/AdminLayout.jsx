@@ -22,7 +22,8 @@ import {
   Lock,
   Activity,
   BarChart3,
-  Cloud
+  Cloud,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
