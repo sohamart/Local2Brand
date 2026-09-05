@@ -51,9 +51,8 @@ export const uploadWithToast = async ({
   let currentPercent = 0;
   let currentLoadedMB = 0;
   let isComplete = false;
-  let isCloudProcessing = false;
 
-  // Render Modern Toast Progress UI (Dark & Light Mode Optimized, Exact MB Tracking)
+  // Render Modern Toast Progress UI (Dark & Light Mode Optimized, Real-time Exact Tracking)
   const renderProgressUI = (pct, mb, statusText) => {
     const displayMB = typeof mb === 'number' ? mb.toFixed(1) : mb;
     return (
@@ -77,7 +76,7 @@ export const uploadWithToast = async ({
         {/* Animated Gradient Progress Bar */}
         <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/80 dark:border-slate-700 shadow-inner">
           <div
-            className="h-full bg-gradient-to-r from-purple-600 via-indigo-500 to-emerald-500 rounded-full transition-all duration-300 ease-out relative overflow-hidden"
+            className="h-full bg-gradient-to-r from-purple-600 via-indigo-500 to-emerald-500 rounded-full transition-all duration-150 ease-out relative overflow-hidden"
             style={{ width: `${Math.max(4, pct)}%` }}
           >
             {/* Shimmer Light Sweep */}
@@ -91,7 +90,7 @@ export const uploadWithToast = async ({
             {displayMB} MB <span className="text-slate-400 dark:text-slate-500 font-normal">/ {totalMB} MB</span>
           </span>
           <span className="font-bold text-purple-600 dark:text-purple-400 text-right text-[10px] sm:text-[11px] pl-2 break-words">
-            {statusText || (pct >= 90 ? '☁️ Cloud Sync...' : `${pct}% Streamed`)}
+            {statusText || (pct >= 100 ? '☁️ Cloudinary Syncing...' : `${pct}% Streamed`)}
           </span>
         </div>
       </div>
@@ -99,73 +98,34 @@ export const uploadWithToast = async ({
   };
 
   // Initialize Toast with pristine backdrop and borders
-  const toastId = toast.loading(renderProgressUI(0, 0, 'Initializing...'), {
+  const toastId = toast.loading(renderProgressUI(0, 0, 'Uploading...'), {
     autoClose: false,
     closeButton: false,
     className: '!bg-white dark:!bg-slate-900 !text-slate-900 dark:!text-white !border !border-slate-200 dark:!border-slate-700/80 !rounded-2xl !shadow-2xl sm:min-w-[350px]',
   });
 
-  // Smooth Cloud Sync Simulation Ticker (Moves smoothly from 50% to 98% with live MB progression)
-  let cloudInterval = null;
-  const startCloudProcessingTicker = (startPct = 50) => {
-    if (isCloudProcessing) return;
-    isCloudProcessing = true;
-    currentPercent = Math.max(currentPercent, startPct);
-
-    cloudInterval = setInterval(() => {
-      if (isComplete) {
-        clearInterval(cloudInterval);
-        return;
-      }
-
-      if (currentPercent < 98) {
-        const increment = currentPercent < 75 ? 2.5 : currentPercent < 90 ? 1.2 : 0.4;
-        currentPercent = Math.min(98, Number((currentPercent + increment).toFixed(1)));
-        currentLoadedMB = Number(((currentPercent / 100) * totalMB).toFixed(1));
-
-        const stageText = currentPercent < 75 
-          ? '☁️ Uploading to CDN...' 
-          : currentPercent < 90 
-          ? '⚡ Encoding Video...' 
-          : '✨ Finalizing Cloud Assets...';
-
-        toast.update(toastId, {
-          render: renderProgressUI(Math.round(currentPercent), currentLoadedMB, stageText),
-          isLoading: true,
-          autoClose: false,
-        });
-      }
-    }, 250);
-  };
-
   try {
-    const uploadPromise = api.uploadWithProgress(endpoint, formData, ({ percent, loadedMB, loaded, total }) => {
+    const uploadPromise = api.uploadWithProgress(endpoint, formData, ({ percent, loaded, total }) => {
       if (isComplete) return;
 
       const exactLoadedMB = Number((loaded / (1024 * 1024)).toFixed(1));
       currentLoadedMB = exactLoadedMB;
+      currentPercent = percent;
 
-      // Map client upload to 0% -> 50%
-      const mappedPercent = Math.min(50, Math.round(percent * 0.5));
-      currentPercent = mappedPercent;
+      const status = percent >= 100 ? '☁️ Saving to Cloudinary...' : `Uploading ${exactLoadedMB} MB (${percent}%)...`;
 
       toast.update(toastId, {
-        render: renderProgressUI(mappedPercent, exactLoadedMB, `Streaming ${exactLoadedMB} MB (${percent}%)...`),
+        render: renderProgressUI(percent, exactLoadedMB, status),
         isLoading: true,
         autoClose: false,
       });
-
-      if (percent >= 98) {
-        startCloudProcessingTicker(50);
-      }
     });
 
     const res = await uploadPromise;
     isComplete = true;
-    if (cloudInterval) clearInterval(cloudInterval);
 
     if (res?.success || res?.url || res?.urls?.length) {
-      // 100% Completion State (Dark & Light Mode Friendly, Full Text Visible, Exact MB)
+      // 100% Instant Completion State
       toast.update(toastId, {
         render: (
           <div className="space-y-1.5 select-none py-1">
@@ -185,7 +145,7 @@ export const uploadWithToast = async ({
         ),
         type: 'success',
         isLoading: false,
-        autoClose: 3500,
+        autoClose: 2500,
         closeButton: true,
         className: '!bg-white dark:!bg-slate-900 !text-slate-900 dark:!text-white !border !border-emerald-500/30 dark:!border-emerald-500/40 !rounded-2xl !shadow-2xl sm:min-w-[350px]',
       });
@@ -195,7 +155,6 @@ export const uploadWithToast = async ({
     }
   } catch (err) {
     isComplete = true;
-    if (cloudInterval) clearInterval(cloudInterval);
 
     const errorMessage = err.message || 'Upload failed';
 

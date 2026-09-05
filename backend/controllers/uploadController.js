@@ -111,9 +111,9 @@ export const uploadImage = async (req, res) => {
 
     const uploadedUrls = [];
 
-    // 1. Process Multipart Files (from disk or memory)
+    // 1. Process Multipart Files (from disk or memory) concurrently in parallel
     if (filesList && filesList.length > 0) {
-      for (const file of filesList) {
+      const uploadPromises = filesList.map(async (file) => {
         const filePath = file.path;
         const buffer = file.buffer;
         const mimetype = file.mimetype || 'image/jpeg';
@@ -125,12 +125,10 @@ export const uploadImage = async (req, res) => {
           tempFilesToDelete.push(filePath);
         }
 
-        let uploadedUrl = null;
-
         if (isCloudinaryConfigured) {
           if (filePath) {
             try {
-              // Attempt Cloudinary upload
+              // Direct high-speed Cloudinary upload
               const result = await uploadFileToCloudinary(filePath, {
                 folder: targetFolder,
                 asset_folder: targetFolder,
@@ -139,7 +137,7 @@ export const uploadImage = async (req, res) => {
                 resource_type: resourceType,
               });
               if (result?.secure_url) {
-                uploadedUrl = result.secure_url;
+                return result.secure_url;
               }
             } catch (cloudErr) {
               console.warn('ℹ️ Cloudinary free tier limit notice, saving to high-speed persistent server storage for large 2GB file:', cloudErr.message);
@@ -157,7 +155,7 @@ export const uploadImage = async (req, res) => {
                 
                 const hostUrl = req.get('host');
                 const protocol = req.protocol || 'http';
-                uploadedUrl = isVideo 
+                return isVideo 
                   ? `${protocol}://${hostUrl}/uploads/videos/${uniqueFilename}` 
                   : `${protocol}://${hostUrl}/uploads/${uniqueFilename}`;
               } catch (fsErr) {
@@ -175,12 +173,12 @@ export const uploadImage = async (req, res) => {
                 resource_type: resourceType,
               });
               if (result?.secure_url) {
-                uploadedUrl = result.secure_url;
+                return result.secure_url;
               }
             } catch (cloudErr) {
               console.warn('Cloudinary buffer error:', cloudErr.message);
               if (buffer.length < 5 * 1024 * 1024) {
-                uploadedUrl = `data:${mimetype};base64,${buffer.toString('base64')}`;
+                return `data:${mimetype};base64,${buffer.toString('base64')}`;
               } else {
                 throw cloudErr;
               }
@@ -196,18 +194,20 @@ export const uploadImage = async (req, res) => {
             await fs.promises.copyFile(filePath, destPath);
             const hostUrl = req.get('host');
             const protocol = req.protocol || 'http';
-            uploadedUrl = isVideo 
+            return isVideo 
               ? `${protocol}://${hostUrl}/uploads/videos/${uniqueFilename}` 
               : `${protocol}://${hostUrl}/uploads/${uniqueFilename}`;
           } else if (buffer && buffer.length < 5 * 1024 * 1024) {
-            uploadedUrls.push(`data:${mimetype};base64,${buffer.toString('base64')}`);
+            return `data:${mimetype};base64,${buffer.toString('base64')}`;
           }
         }
+        return null;
+      });
 
-        if (uploadedUrl) {
-          uploadedUrls.push(uploadedUrl);
-        }
-      }
+      const results = await Promise.all(uploadPromises);
+      results.forEach((url) => {
+        if (url) uploadedUrls.push(url);
+      });
     }
 
 
