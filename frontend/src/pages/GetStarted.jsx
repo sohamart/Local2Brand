@@ -1464,13 +1464,33 @@ export default function GetStarted() {
   const [showDraftModal, setShowDraftModal] = useState(false);
   const hasUserInteracted = useRef(false);
 
-  // Load Saved Draft on initial mount
+  // Dynamic Route / Template Storage Key
+  const currentTemplateKey = useMemo(() => {
+    const raw = (
+      templateId ||
+      searchParams.get('template') ||
+      searchParams.get('demo') ||
+      searchParams.get('title') ||
+      location.state?.selectedDemo ||
+      location.state?.templateId ||
+      ''
+    ).trim().toLowerCase();
+    return raw;
+  }, [templateId, searchParams, location.state]);
+
+  const draftStorageKey = useMemo(() => {
+    return currentTemplateKey
+      ? `l2b_draft_tpl_${currentTemplateKey.replace(/[^a-z0-9_-]/g, '_')}`
+      : `l2b_draft_custom`;
+  }, [currentTemplateKey]);
+
+  // Load Saved Draft on initial mount or when template route changes
   useEffect(() => {
     try {
-      const rawDraft = localStorage.getItem('l2b_get_started_draft');
+      const rawDraft = localStorage.getItem(draftStorageKey);
       if (rawDraft) {
         const parsed = JSON.parse(rawDraft);
-        // Only trigger popup if user has actually moved past Step 1 with meaningful order progress
+        // Only trigger popup if user has actually moved past Step 1 with meaningful order progress for this specific template/route
         const hasAdvancedStepProgress = Boolean(
           parsed &&
           typeof parsed.currentStep === 'number' &&
@@ -1494,15 +1514,18 @@ export default function GetStarted() {
           setShowDraftModal(true);
         } else {
           // If on Step 1 or no advanced data, silently purge to prevent popup
-          localStorage.removeItem('l2b_get_started_draft');
+          localStorage.removeItem(draftStorageKey);
           setShowDraftModal(false);
           setPendingDraft(null);
         }
+      } else {
+        setShowDraftModal(false);
+        setPendingDraft(null);
       }
     } catch (e) {
       console.warn('Draft detection failed:', e);
     }
-  }, []);
+  }, [draftStorageKey]);
 
   const handleResumeDraft = () => {
     hasUserInteracted.current = true;
@@ -1533,6 +1556,7 @@ export default function GetStarted() {
 
   const handleStartFresh = () => {
     hasUserInteracted.current = true;
+    localStorage.removeItem(draftStorageKey);
     localStorage.removeItem('l2b_get_started_draft');
     setPendingDraft(null);
     setShowDraftModal(false);
@@ -1569,7 +1593,7 @@ export default function GetStarted() {
 
     if (!hasMeaningfulSaveData) {
       if (currentStep <= 1) {
-        localStorage.removeItem('l2b_get_started_draft');
+        localStorage.removeItem(draftStorageKey);
       }
       return;
     }
@@ -1579,17 +1603,17 @@ export default function GetStarted() {
         const payloadToStore = {
           formData,
           currentStep,
-          appliedTemplate,
+          appliedTemplate: appliedTemplate || currentTemplateKey || '',
           isCouponApplied,
           couponCode,
           lastSaved: Date.now()
         };
-        localStorage.setItem('l2b_get_started_draft', JSON.stringify(payloadToStore));
+        localStorage.setItem(draftStorageKey, JSON.stringify(payloadToStore));
         setLastSavedTime(new Date().toLocaleTimeString());
       } catch (e) {}
     }, 600);
     return () => clearTimeout(timer);
-  }, [formData, currentStep, appliedTemplate, isCouponApplied, couponCode]);
+  }, [formData, currentStep, appliedTemplate, isCouponApplied, couponCode, draftStorageKey, currentTemplateKey]);
 
   // Calculate live approximate price breakdown
   const priceBreakdown = useMemo(() => {
@@ -1668,12 +1692,12 @@ export default function GetStarted() {
       const payloadToStore = {
         formData,
         currentStep,
-        appliedTemplate,
+        appliedTemplate: appliedTemplate || currentTemplateKey || '',
         isCouponApplied,
         couponCode,
         lastSaved: Date.now()
       };
-      localStorage.setItem('l2b_get_started_draft', JSON.stringify(payloadToStore));
+      localStorage.setItem(draftStorageKey, JSON.stringify(payloadToStore));
       const now = new Date().toLocaleTimeString();
       setLastSavedTime(now);
       toast.success(`💾 Form progress saved successfully at ${now}`);
@@ -1685,6 +1709,7 @@ export default function GetStarted() {
   // Helper to reset form
   const handleResetForm = () => {
     if (window.confirm('Are you sure you want to reset all form fields and start fresh?')) {
+      localStorage.removeItem(draftStorageKey);
       localStorage.removeItem('l2b_get_started_draft');
       window.location.reload();
     }
@@ -2119,6 +2144,7 @@ export default function GetStarted() {
       }
 
       // Clear draft on successful submission
+      localStorage.removeItem(draftStorageKey);
       localStorage.removeItem('l2b_get_started_draft');
 
       // Sync to local order history for seamless instant dashboard visibility
