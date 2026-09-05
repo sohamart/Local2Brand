@@ -12,8 +12,9 @@ try {
 } catch (e) {}
 
 const ONESIGNAL_API_URL = 'https://onesignal.com/api/v1/notifications';
-const DEFAULT_ICON = 'https://local2brand.com/favicon.jpg';
-const DEFAULT_LOGO = 'https://local2brand.com/logo.jpg';
+const DEFAULT_ICON = 'https://local2brand.vercel.app/logo.jpg';
+const DEFAULT_BADGE = 'https://local2brand.vercel.app/favicon.jpg';
+const DEFAULT_LOGO = 'https://local2brand.vercel.app/logo.jpg';
 
 export const resolveNotificationUrl = (url, defaultPath = '/dashboard') => {
   const prodBase = 'https://local2brand.vercel.app';
@@ -226,8 +227,10 @@ class OneSignalBackendService {
       contents: { en: message },
       url: resolvedUrl,
       chrome_web_icon: icon || DEFAULT_ICON,
-      chrome_web_badge: badge || DEFAULT_ICON,
+      chrome_web_badge: badge || DEFAULT_BADGE,
       firefox_icon: icon || DEFAULT_ICON,
+      safari_icon: icon || DEFAULT_ICON,
+      priority: 10,
       data: {
         ...data,
         sentAt: new Date().toISOString(),
