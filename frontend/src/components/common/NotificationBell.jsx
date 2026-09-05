@@ -181,45 +181,45 @@ export default function NotificationBell({ className = '' }) {
   const popoverInnerContent = (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-            <Inbox className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                Inbox &amp; Alerts
-              </h4>
-              {unreadCount > 0 && (
-                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                  {unreadCount} new
-                </span>
-              )}
+      <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40 shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          {/* Left: Icon + Title + Unread Count Badge */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs shrink-0">
+              <Inbox className="w-4 h-4" />
             </div>
+            <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+              Inbox &amp; Alerts
+            </h4>
+            {unreadCount > 0 && (
+              <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs">
+                {unreadCount} new
+              </span>
+            )}
           </div>
-        </div>
 
-        <div className="flex items-center gap-1">
-          {unreadCount > 0 && (
+          {/* Right: Mark Read button & Close (X) */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                className="px-2.5 py-1 rounded-xl text-[11px] font-bold text-purple-600 dark:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 flex items-center gap-1 cursor-pointer transition-all active:scale-95 whitespace-nowrap"
+                title="Mark all as read"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span>Mark Read</span>
+              </button>
+            )}
             <button
               type="button"
-              onClick={handleMarkAllRead}
-              className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:underline px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1"
-              title="Mark all as read"
+              onClick={() => setIsOpen(false)}
+              className="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              aria-label="Close"
             >
-              <CheckCheck className="w-3.5 h-3.5" />
-              <span>Mark Read</span>
+              <X className="w-4 h-4" />
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-            aria-label="Close"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          </div>
         </div>
       </div>
 
