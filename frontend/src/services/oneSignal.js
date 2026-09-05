@@ -49,6 +49,7 @@ class OneSignalService {
             appId: this.appId,
             serviceWorkerParam: { scope: '/' },
             serviceWorkerPath: '/OneSignalSDKWorker.js',
+            serviceWorkerUpdaterPath: '/OneSignalSDKWorker.js',
             allowLocalhostAsSecureOrigin: true,
             notifyButton: {
               enable: false, // We use our custom Apple-grade UI toggle & bell
@@ -62,6 +63,13 @@ class OneSignalService {
 
           this.isInitialized = true;
           console.log('✅ OneSignal Web Push SDK Initialized');
+
+          // Ensure worker is fully updated and active on older mobile browsers
+          if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then((reg) => {
+              reg.update().catch(() => {});
+            }).catch(() => {});
+          }
 
           // Ensure token refresh and active optIn if permission was already granted in browser
           if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
