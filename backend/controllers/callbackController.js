@@ -44,7 +44,7 @@ export const createCallback = async (req, res) => {
       link: `/admin/callbacks`,
     }).catch((err) => console.warn('Admin notification error:', err.message));
 
-    // Instant alert to Admin (sohamduttabwn@gmail.com) and Brand (stackaddacontact@gmail.com)
+    // Instant alert to Admin (sohamduttabwn@gmail.com) and Brand (local2brand@zohomail.in)
     sendAdminCallbackAlert(callback).catch((err) => console.warn('Admin callback alert error:', err.message));
 
     if (callback.email) {

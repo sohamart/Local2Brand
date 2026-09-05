@@ -350,7 +350,7 @@ export const sendBroadcastEmail = async (req, res) => {
           You received this official dispatch as a registered client on LOCAL2BRAND.
         </p>
         <div style="font-size: 11px; color: #475569; margin-bottom: 8px;">
-          <span>✉️ Official Contact: <a href="mailto:stackaddacontact@gmail.com" style="color: #6366f1; text-decoration: none; font-weight: 600;">stackaddacontact@gmail.com</a></span>
+          <span>✉️ Official Contact: <a href="mailto:local2brand@zohomail.in" style="color: #6366f1; text-decoration: none; font-weight: 600;">local2brand@zohomail.in</a></span>
           <span style="margin: 0 4px; color: #cbd5e1;">•</span>
           <span>Admin: <a href="mailto:sohamduttabwn@gmail.com" style="color: #6366f1; text-decoration: none; font-weight: 600;">sohamduttabwn@gmail.com</a></span>
         </div>

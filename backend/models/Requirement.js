@@ -13,33 +13,33 @@ const RequirementSchema = new mongoose.Schema({
   },
   websiteType: {
     type: String,
-    required: true
+    default: 'Custom Website'
   },
   websiteTypeName: {
     type: String,
-    default: ''
+    default: 'Custom Website Project'
   },
   clientInfo: {
-    businessName: { type: String, required: true },
-    ownerName: { type: String, default: '' },
-    contactPerson: { type: String, default: '' },
-    mobile: { type: String, required: true },
-    email: { type: String, required: true },
+    businessName: { type: String, default: 'Custom Business Project' },
+    ownerName: { type: String, default: 'Client' },
+    contactPerson: { type: String, default: 'Client' },
+    mobile: { type: String, default: 'Not Provided' },
+    email: { type: String, default: 'customer@local2brand.com' },
     address: { type: String, default: '' },
     city: { type: String, default: '' },
     state: { type: String, default: '' },
+    country: { type: String, default: 'India' },
     pincode: { type: String, default: '' },
     existingWebsite: { type: String, default: '' },
     facebookUrl: { type: String, default: '' },
     instagramUrl: { type: String, default: '' },
     otherSocialUrls: [{ type: String }],
-    hasLogo: { type: String, enum: ['yes', 'no', 'need_redesign'], default: 'no' },
+    hasLogo: { type: mongoose.Schema.Types.Mixed, default: 'no' },
     logoUrl: { type: String, default: '' },
-    contentReady: { type: String, enum: ['yes', 'no', 'partially'], default: 'partially' }
+    contentReady: { type: mongoose.Schema.Types.Mixed, default: 'partially' }
   },
   answers: {
-    type: Map,
-    of: mongoose.Schema.Types.Mixed,
+    type: mongoose.Schema.Types.Mixed,
     default: {}
   },
   selectedPages: [{ type: String }],
@@ -48,10 +48,10 @@ const RequirementSchema = new mongoose.Schema({
   orderMethods: [{ type: String }],
   adminFeatures: [{ type: String }],
   adminPanelType: { type: String, default: 'Basic' },
-  whatsappIntegration: { type: Boolean, default: false },
+  whatsappIntegration: { type: mongoose.Schema.Types.Mixed, default: false },
   whatsappOptions: [{ type: String }],
   whatsappNumber: { type: String, default: '' },
-  emailIntegration: { type: Boolean, default: false },
+  emailIntegration: { type: mongoose.Schema.Types.Mixed, default: false },
   emailOptions: [{ type: String }],
   designStyle: { type: String, default: 'Modern Glassmorphic' },
   preferredColors: [{ type: String }],

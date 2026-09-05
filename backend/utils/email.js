@@ -28,17 +28,24 @@ export const getClientUrl = (path = '') => {
   return `${base}${cleanPath}`;
 };
 
-// Cached singleton transporter with connection pooling for lightning fast dispatch
+// Cached singleton transporter with auto-reconfiguration detection
 let cachedTransporter = null;
+let lastTransporterConfigKey = '';
+
 let cachedFallbackTransporter = null;
+let lastFallbackConfigKey = '';
 
 const createTransporter = () => {
-  if (cachedTransporter) return cachedTransporter;
+  const host = (process.env.EMAIL_HOST || '').trim();
+  const port = process.env.EMAIL_PORT || (host.includes('zoho') ? '465' : '587');
+  const user = (process.env.EMAIL_USER || '').trim();
+  const pass = (process.env.EMAIL_PASS || '').trim();
 
-  const host = process.env.EMAIL_HOST;
-  const port = process.env.EMAIL_PORT || 587;
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
+  const currentKey = `${host}:${port}:${user}:${pass}`;
+
+  if (cachedTransporter && lastTransporterConfigKey === currentKey) {
+    return cachedTransporter;
+  }
 
   if (user && pass && pass !== 'your_smtp_app_password') {
     if (host === 'smtp.gmail.com' || (!host && user.includes('@gmail.com'))) {
@@ -63,6 +70,7 @@ const createTransporter = () => {
         },
       });
     }
+    lastTransporterConfigKey = currentKey;
     return cachedTransporter;
   }
 
@@ -111,8 +119,8 @@ export const formatStatusTitle = (status = '') => {
 };
 
 export const sendEmail = async ({ to, subject, html, text, priority = 'normal', isImportant = true }) => {
-  const fromEmail = `"LOCAL2BRAND" <${process.env.EMAIL_USER || 'stackaddacontact@gmail.com'}>`;
-  const supportEmail = process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
+  const fromEmail = process.env.EMAIL_FROM || `"LOCAL2BRAND" <${process.env.EMAIL_USER || 'local2brand@zohomail.in'}>`;
+  const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
   let transporter = createTransporter();
 
   // Clean HTML to Plaintext converter
@@ -146,26 +154,14 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
     return { success: true, simulated: true };
   }
 
-  const customHeaders = {
-    'X-Mailer': 'LOCAL2BRAND Notification Engine',
-    'MIME-Version': '1.0',
-    'Message-ID': `<${Date.now()}.${Math.random().toString(36).substring(2, 9)}@local2brand.com>`,
-    'List-Unsubscribe': `<mailto:${supportEmail}?subject=Unsubscribe>`,
-    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-    'Auto-Submitted': 'auto-generated',
-    'X-Auto-Response-Suppress': 'OOF, AutoReply',
-    'Feedback-ID': 'LOCAL2BRAND:Transactional:Client',
-  };
-
   try {
     const info = await transporter.sendMail({
       from: fromEmail,
-      replyTo: `"LOCAL2BRAND Team" <${supportEmail}>`,
+      replyTo: `"LOCAL2BRAND Support" <${supportEmail}>`,
       to,
       subject,
       text: cleanPlainText,
       html,
-      headers: customHeaders,
     });
     console.log(`✅ Email sent successfully to ${to} (MessageId: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
@@ -176,15 +172,14 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
     const fallbackTransporter = createFallbackTransporter();
     if (fallbackTransporter) {
       try {
-        const fallbackFrom = `"LOCAL2BRAND" <${process.env.FALLBACK_EMAIL_USER}>`;
+        const fallbackFrom = `"LOCAL2BRAND" <${process.env.FALLBACK_EMAIL_USER || 'local2brand@zohomail.in'}>`;
         const fbInfo = await fallbackTransporter.sendMail({
           from: fallbackFrom,
-          replyTo: `"LOCAL2BRAND Team" <${supportEmail}>`,
+          replyTo: `"LOCAL2BRAND Support" <${supportEmail}>`,
           to,
           subject,
           text: cleanPlainText,
           html,
-          headers: customHeaders,
         });
         console.log(`✅ Email sent successfully via FALLBACK SMTP to ${to} (MessageId: ${fbInfo.messageId})`);
         return { success: true, messageId: fbInfo.messageId };
@@ -261,11 +256,26 @@ const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml,
       <div style="height: 5px; width: 100%; background: linear-gradient(90deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); line-height: 5px; font-size: 5px;">&nbsp;</div>
 
       <!-- Header Section -->
-      <div class="bg-header border-theme" style="padding: 28px 24px 18px 24px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff; box-sizing: border-box;">
-        <div class="badge-theme" style="display: inline-block; padding: 4px 14px; border-radius: 9999px; background-color: #f3e8ff; border: 1px solid #e9d5ff; color: #7e22ce; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">
+      <div class="bg-header border-theme" style="padding: 24px 24px 18px 24px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff; box-sizing: border-box;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto; text-align: center;">
+          <tr>
+            <td align="center" style="vertical-align: middle;">
+              <!-- Brand Logo Emblem -->
+              <div style="width: 52px; height: 52px; margin: 0 auto; background: linear-gradient(135deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); border-radius: 14px; padding: 2px; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);">
+                <div style="background-color: #0f172a; width: 100%; height: 100%; border-radius: 12px; display: table; text-align: center;">
+                  <span style="display: table-cell; vertical-align: middle; font-size: 20px; font-weight: 900; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px;">
+                    L<span style="color: #c026d3;">2</span>B
+                  </span>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <div class="badge-theme" style="display: inline-block; padding: 4px 14px; border-radius: 9999px; background-color: #f3e8ff; border: 1px solid #e9d5ff; color: #7e22ce; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">
           ${headerBadge || '⚡ LOCAL2BRAND AGENCY'}
         </div>
-        <h1 class="text-title" style="margin: 0; font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.2;">
+        <h1 class="text-title" style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.2;">
           LOCAL<span style="color: #c026d3;">2</span>BRAND
         </h1>
         <p class="text-muted" style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">
@@ -309,7 +319,7 @@ const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml,
           ${footerNote || 'This is an official automated dispatch from LOCAL2BRAND Platform &amp; AI Dispatch System.'}
         </p>
         <div style="font-size: 11px; color: #4b5563; margin-bottom: 8px;">
-          <span>✉️ Support: <a href="mailto:stackaddacontact@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">stackaddacontact@gmail.com</a></span>
+          <span>✉️ Support: <a href="mailto:local2brand@zohomail.in" style="color: #7c3aed; text-decoration: none; font-weight: 600;">local2brand@zohomail.in</a></span>
           <span style="margin: 0 4px; color: #94a3b8;">•</span>
           <span>Founder Desk: <a href="mailto:sohamduttabwn@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">sohamduttabwn@gmail.com</a></span>
         </div>
@@ -438,8 +448,8 @@ export const sendRequirementConfirmationEmail = async (reqDoc) => {
 export const sendAdminRequirementAlert = async (reqDoc) => {
   const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
-  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
 
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
@@ -636,8 +646,8 @@ export const sendLeadConfirmationEmail = async (lead) => {
 export const sendAdminNewLeadAlert = async (lead) => {
   const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
-  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
 
   const subject = `[New Proposal] ${lead.name} submitted ${lead.websiteType} (${lead.budget})`;
 
@@ -795,8 +805,8 @@ export const sendCallbackConfirmationEmail = async (callback) => {
 export const sendAdminCallbackAlert = async (callback) => {
   const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
-  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
 
   const subject = `🚨 [INSTANT CALLBACK REQUEST] ${callback.name} — ${callback.phone}`;
 
@@ -859,8 +869,8 @@ export const sendAdminCallbackAlert = async (callback) => {
 export const sendAdminNewUserAlertEmail = async ({ user }) => {
   const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
-  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
 
   const subject = `👤 [NEW USER REGISTRATION] ${user.name} (${user.email}) — LOCAL2BRAND`;
 
@@ -914,14 +924,20 @@ export const sendAdminNewUserAlertEmail = async ({ user }) => {
 };
 
 // 9. Email Verification OTP Email
-export const sendVerificationOtpEmail = async ({ user, otp }) => {
+export const sendVerificationOtpEmail = async ({ user, otp, email }) => {
   const clientUrl = getClientUrl();
+  const targetEmail = (user?.email || email || '').toLowerCase().trim();
+  if (!targetEmail) {
+    console.warn('sendVerificationOtpEmail notice: No recipient email provided');
+    return { success: false, error: 'No recipient email' };
+  }
+  const userName = user?.name || 'Valued Client';
   const subject = `🔐 Your Verification Code: ${otp} — LOCAL2BRAND`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
       <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
-        Hi ${user.name || 'Client'},
+        Hi ${userName},
       </p>
       <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
         Please use the following 6-digit One-Time Password (OTP) to verify your registered email address on <strong>LOCAL2BRAND</strong>:
@@ -956,7 +972,7 @@ export const sendVerificationOtpEmail = async ({ user, otp }) => {
     ctaUrl: `${clientUrl}/dashboard`,
   });
 
-  return await sendEmail({ to: user.email, subject, html, text: `Your LOCAL2BRAND verification code is: ${otp}` });
+  return await sendEmail({ to: targetEmail, subject, html, text: `Your LOCAL2BRAND verification code is: ${otp}` });
 };
 
 // 10. Order Completed / VIP Delivery Handover Email
@@ -1387,7 +1403,7 @@ export const sendRequirementRejectedEmail = async (reqDoc, reason = '') => {
 
 // 15. Admin Alert on Requirement Deletion
 export const sendAdminRequirementDeletionAlert = async (reqDoc, reason = '') => {
-  const recipients = ['sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'];
+  const recipients = ['sohamduttabwn@gmail.com', 'local2brand@zohomail.in'];
   const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString() : 'REQ-ID');
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Client';
   const clientEmail = reqDoc.clientInfo?.email || 'No email';
@@ -1479,7 +1495,7 @@ export const sendCallbackDeletionEmail = async (callback) => {
 
 // 17. Admin Alert on Callback Deletion
 export const sendAdminCallbackDeletionAlert = async (callback) => {
-  const recipients = ['sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'];
+  const recipients = ['sohamduttabwn@gmail.com', 'local2brand@zohomail.in'];
   const subject = `🗑️ [CALLBACK DELETED] ${callback.name} — ${callback.phone}`;
 
   const contentHtml = `
@@ -1519,7 +1535,7 @@ export const sendAdminCallbackDeletionAlert = async (callback) => {
 
 // 18. Service Offering Deletion Notice (to Admin)
 export const sendServiceDeletionAlert = async (service) => {
-  const recipients = ['sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'];
+  const recipients = ['sohamduttabwn@gmail.com', 'local2brand@zohomail.in'];
   const subject = `🗑️ [SERVICE DELETED] ${service.title || 'Service Offering'}`;
 
   const contentHtml = `
@@ -1577,7 +1593,7 @@ export const sendQueryDeletionEmail = async (queryDoc) => {
 };
 
 export const sendAdminQueryDeletionAlert = async (queryDoc) => {
-  const recipients = ['sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'];
+  const recipients = ['sohamduttabwn@gmail.com', 'local2brand@zohomail.in'];
   const subject = `🗑️ [INQUIRY DELETED] ${queryDoc.name || 'Lead'} — ${queryDoc.email || queryDoc.phone}`;
 
   const contentHtml = `

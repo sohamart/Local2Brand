@@ -52,3 +52,4 @@ const callbackRequestSchema = new mongoose.Schema(
 );
 
 export const CallbackRequest = mongoose.models.CallbackRequest || mongoose.model('CallbackRequest', callbackRequestSchema);
+export default CallbackRequest;

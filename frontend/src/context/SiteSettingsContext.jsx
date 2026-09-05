@@ -32,7 +32,7 @@ export function SiteSettingsProvider({ children }) {
       brandName: staticFallback.brandName || 'LOCAL2BRAND',
       domain: staticFallback.domain || 'local2brand.com',
       tagline: staticFallback.tagline || 'Build Local. Think Global.',
-      supportEmail: staticFallback.email || 'stackaddacontact@gmail.com',
+      supportEmail: staticFallback.email || 'local2brand@zohomail.in',
       displayPhone: '+91 98765 43210',
       turnaroundTime: staticFallback.turnaroundTime || '48 Hours',
       startingPriceUsd: staticFallback.startingPrice || '$399',

@@ -555,7 +555,7 @@ export default function AdminBroadcast() {
                 <div className="p-4 bg-slate-50 dark:bg-[#0b0f19] border-t border-slate-200 dark:border-slate-800 text-center space-y-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                   <p>You received this official dispatch as a registered client on LOCAL2BRAND.</p>
                   <p className="text-slate-600 dark:text-slate-400 font-medium">
-                    ✉️ stackaddacontact@gmail.com • sohamduttabwn@gmail.com
+                    ✉️ local2brand@zohomail.in • sohamduttabwn@gmail.com
                   </p>
                   <p className="text-slate-400 dark:text-slate-500 font-semibold pt-0.5">
                     © {new Date().getFullYear()} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved.

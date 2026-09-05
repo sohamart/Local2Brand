@@ -25,7 +25,7 @@ export const generateRequirementId = () => {
 // @access  Public / Authenticated
 export const saveRequirementDraft = async (req, res) => {
   try {
-    const data = req.body;
+    const data = req.body || {};
     let requirementId = data.requirementId;
 
     if (!requirementId) {
@@ -37,16 +37,21 @@ export const saveRequirementDraft = async (req, res) => {
       : (data.user && mongoose.Types.ObjectId.isValid(data.user) ? data.user : null);
 
     const existingClientInfo = data.clientInfo || {};
+    const websiteType = data.websiteType || data.websiteTypeName || data.selectedCategory || 'Custom Website';
+    const websiteTypeName = data.websiteTypeName || data.businessName || existingClientInfo.businessName || 'Custom Website Project';
+
     const clientInfo = {
       ...existingClientInfo,
-      email: (existingClientInfo.email || req.user?.email || '').toLowerCase().trim(),
-      ownerName: existingClientInfo.ownerName || existingClientInfo.contactPerson || req.user?.name || '',
-      mobile: existingClientInfo.mobile || req.user?.phone || '',
-      businessName: existingClientInfo.businessName || data.websiteTypeName || '',
+      email: (existingClientInfo.email || req.user?.email || 'customer@local2brand.com').toLowerCase().trim(),
+      ownerName: existingClientInfo.ownerName || existingClientInfo.contactPerson || req.user?.name || 'Client',
+      mobile: existingClientInfo.mobile || req.user?.phone || 'Not Provided',
+      businessName: existingClientInfo.businessName || websiteTypeName,
     };
 
     const payload = {
       ...data,
+      websiteType,
+      websiteTypeName,
       requirementId,
       status: data.status || 'Draft',
       user: validUserId,
@@ -62,13 +67,17 @@ export const saveRequirementDraft = async (req, res) => {
         { $set: payload },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
+    }
+    
+    // Always mirror in dataStore
+    const existing = dataStore.find('requirements', (r) => r.requirementId === requirementId);
+    if (existing) {
+      dataStore.update('requirements', existing._id, payload);
     } else {
-      const existing = dataStore.find('requirements', (r) => r.requirementId === requirementId);
-      if (existing) {
-        doc = dataStore.update('requirements', existing._id, payload);
-      } else {
-        doc = dataStore.create('requirements', payload);
-      }
+      dataStore.create('requirements', payload);
+    }
+    if (!doc) {
+      doc = dataStore.find('requirements', (r) => r.requirementId === requirementId) || payload;
     }
 
     res.status(200).json({
@@ -89,7 +98,7 @@ export const saveRequirementDraft = async (req, res) => {
 export const submitRequirement = async (req, res) => {
   try {
     const { id } = req.params; // requirementId or _id
-    const finalData = req.body;
+    const finalData = req.body || {};
 
     let targetId = (id && id !== 'new' && id !== 'undefined') ? id.trim() : (finalData.requirementId || generateRequirementId());
 
@@ -98,16 +107,21 @@ export const submitRequirement = async (req, res) => {
       : (finalData.user && mongoose.Types.ObjectId.isValid(finalData.user) ? finalData.user : null);
 
     const existingClientInfo = finalData.clientInfo || {};
+    const websiteType = finalData.websiteType || finalData.websiteTypeName || finalData.selectedCategory || 'Custom Website';
+    const websiteTypeName = finalData.websiteTypeName || finalData.businessName || existingClientInfo.businessName || 'Custom Project';
+
     const clientInfo = {
       ...existingClientInfo,
-      email: (existingClientInfo.email || req.user?.email || '').toLowerCase().trim(),
+      email: (existingClientInfo.email || req.user?.email || 'customer@local2brand.com').toLowerCase().trim(),
       ownerName: existingClientInfo.ownerName || existingClientInfo.contactPerson || req.user?.name || 'Client',
-      mobile: existingClientInfo.mobile || req.user?.phone || '',
-      businessName: existingClientInfo.businessName || finalData.websiteTypeName || 'New Project Proposal',
+      mobile: existingClientInfo.mobile || req.user?.phone || 'Not Provided',
+      businessName: existingClientInfo.businessName || websiteTypeName,
     };
 
     const updatePayload = {
       ...finalData,
+      websiteType,
+      websiteTypeName,
       requirementId: targetId,
       user: validUserId,
       userId: req.user?._id?.toString() || req.user?.id || (validUserId ? String(validUserId) : null),
@@ -127,13 +141,17 @@ export const submitRequirement = async (req, res) => {
         { $set: updatePayload },
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );
+    }
+    
+    // Always mirror in dataStore
+    const existingDs = dataStore.find('requirements', (r) => r.requirementId === targetId || r._id === targetId);
+    if (existingDs) {
+      dataStore.update('requirements', existingDs._id, updatePayload);
     } else {
-      const existing = dataStore.find('requirements', (r) => r.requirementId === targetId || r._id === targetId);
-      if (existing) {
-        doc = dataStore.update('requirements', existing._id, updatePayload);
-      } else {
-        doc = dataStore.create('requirements', updatePayload);
-      }
+      dataStore.create('requirements', updatePayload);
+    }
+    if (!doc) {
+      doc = dataStore.find('requirements', (r) => r.requirementId === targetId || r._id === targetId) || updatePayload;
     }
 
     if (!doc) {

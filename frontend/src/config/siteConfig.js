@@ -7,7 +7,7 @@ export const siteConfig = {
   whatsappNumber: "919876543210",
   displayWhatsApp: "+91 98765 43210",
   phone: "+91 98765 43210",
-  email: "stackaddacontact@gmail.com",
+  email: "local2brand@zohomail.in",
   
   turnaroundTime: "48 Hours",
   startingPrice: "$399",

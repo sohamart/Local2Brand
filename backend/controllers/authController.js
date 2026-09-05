@@ -39,9 +39,9 @@ export const register = async (req, res) => {
       }
     }
 
-    const allUsers = await dataStore.getAllUsers();
-    const role = allUsers.length === 0 ? 'admin' : 'user';
-    const isEmailVerified = role === 'admin'; // Master admin auto-verified
+    const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
+    const role = cleanEmail === adminEmail ? 'admin' : 'user';
+    const isEmailVerified = false; // Always require OTP verification for client account activation
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 mins
@@ -60,16 +60,12 @@ export const register = async (req, res) => {
 
     console.log(`\n======================================================`);
     console.log(`👤 [NEW USER REGISTRATION] Name: ${user.name} | Email: ${cleanEmail} | Phone: ${rawPhone || 'N/A'}`);
-    if (!isEmailVerified) {
-      console.log(`🔑 [VERIFICATION OTP DISPATCHED]: ${otp} (Valid 15m)`);
-    }
+    console.log(`🔑 [VERIFICATION OTP DISPATCHED TO ${cleanEmail}]: ${otp} (Valid 15m)`);
     console.log(`======================================================\n`);
 
     sendWelcomeEmail(user).catch((err) => console.warn('Welcome email error:', err.message));
     sendAdminNewUserAlertEmail({ user }).catch((err) => console.warn('Admin new user alert email error:', err.message));
-    if (!isEmailVerified) {
-      sendVerificationOtpEmail({ user, otp }).catch((err) => console.warn('OTP email error:', err.message));
-    }
+    sendVerificationOtpEmail({ user, otp, email: cleanEmail }).catch((err) => console.warn('OTP email error:', err.message));
 
     return sendTokenResponse(
       user,

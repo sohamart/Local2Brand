@@ -19,7 +19,7 @@ const siteSettingsSchema = new mongoose.Schema(
     },
     supportEmail: {
       type: String,
-      default: 'stackaddacontact@gmail.com',
+      default: 'local2brand@zohomail.in',
       trim: true,
     },
     displayPhone: {
@@ -216,7 +216,7 @@ const siteSettingsSchema = new mongoose.Schema(
           ],
         },
         contactPhone: { type: String, default: '+91 98765 43210' },
-        contactEmail: { type: String, default: 'stackaddacontact@gmail.com' },
+        contactEmail: { type: String, default: 'local2brand@zohomail.in' },
         officeLocation: { type: String, default: 'Kolkata & Bangalore, India' },
         workingHours: { type: String, default: 'Monday - Saturday: 10:00 AM - 8:00 PM IST' },
         whatsappSupport: { type: String, default: '+91 98765 43210' },

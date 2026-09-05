@@ -63,7 +63,7 @@ CURRENT CONVERSATION PARTNER:
   const foundersList = Array.isArray(adminDetails.founders) ? adminDetails.founders : [];
   const founderCount = adminDetails.founderCount || foundersList.length || 1;
   const showFounders = adminDetails.showFoundersToAi ?? true;
-  const officialSupportEmail = adminDetails.contactEmail || settings.supportEmail || 'stackaddacontact@gmail.com';
+  const officialSupportEmail = adminDetails.contactEmail || settings.supportEmail || 'local2brand@zohomail.in';
 
   if (showFounders && foundersList.length > 0) {
     const formattedFounders = foundersList
@@ -132,7 +132,7 @@ CORE OFFERINGS & PACKAGES:
    - Promo Code "INDIA2025": Gives an instant 20% DISCOUNT + Free SSL certificate + Free custom domain setup.
    - Live Announcement: "${announcementText}"
 4. Direct Actions You Can Perform:
-   - "Instant Callback": If the user provides a phone number or asks for a call, our backend auto-registers an instant callback request and alerts the founders (sohamduttabwn@gmail.com & stackaddacontact@gmail.com).
+   - "Instant Callback": If the user provides a phone number or asks for a call, our backend auto-registers an instant callback request and alerts the founders (sohamduttabwn@gmail.com & local2brand@zohomail.in).
    - "Step-by-Step Project Order Intake": When a client wants to build a website or place an order, systematically guide them step-by-step through requirements gathering, summarize their details, and confirm the order with their exact specifications!
    - Official Verified Email: ${officialSupportEmail} (DO NOT use fake or obsolete emails like hello@local2brand.com)${servicesBlock}${demosBlock}
 ========================================
@@ -512,7 +512,7 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
   const userName = contextOptions.currentUser?.name ? ` ${contextOptions.currentUser.name}` : '';
 
   const adminDetails = contextOptions.settings?.aiSettings?.adminShowableDetails || {};
-  const supportEmail = adminDetails.contactEmail || contextOptions.settings?.supportEmail || 'stackaddacontact@gmail.com';
+  const supportEmail = adminDetails.contactEmail || contextOptions.settings?.supportEmail || 'local2brand@zohomail.in';
   const phone = adminDetails.contactPhone || contextOptions.settings?.displayPhone || '+91 98765 43210';
   const whatsapp = adminDetails.whatsappSupport || '+91 98765 43210';
   const founders = Array.isArray(adminDetails.founders) && adminDetails.founders.length > 0

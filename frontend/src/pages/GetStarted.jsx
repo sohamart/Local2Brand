@@ -1954,36 +1954,41 @@ export default function GetStarted() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      const websiteType = formData.selectedCategory === 'other' ? (formData.otherCategoryDescription || 'Custom Website') : (formData.selectedCategory || 'Custom Website');
+      const websiteTypeName = formData.businessName || formData.fullName || 'Custom Website Project';
+
+      const clientInfo = {
+        ownerName: formData.fullName || user?.name || 'Valued Client',
+        contactPerson: formData.fullName || user?.name || 'Valued Client',
+        businessName: formData.businessName || formData.fullName || 'New Website Project',
+        email: (formData.emailAddress || user?.email || 'customer@local2brand.com').toLowerCase().trim(),
+        mobile: formData.mobileNumber || user?.phone || 'Not Provided',
+        phone: formData.mobileNumber || user?.phone || 'Not Provided',
+        whatsapp: formData.whatsappNumber || formData.mobileNumber || user?.phone || '',
+        address: formData.businessAddress || '',
+        city: formData.cityLocation || '',
+        country: formData.country || 'India'
+      };
+
       const requirementPayload = {
-        websiteType: formData.selectedCategory === 'other' ? formData.otherCategoryDescription : formData.selectedCategory,
-        websiteTypeName: formData.businessName || formData.fullName || 'Custom Website Project',
+        websiteType,
+        websiteTypeName,
         appliedTemplate: appliedTemplate || '',
         selectedDemo: appliedTemplate || '',
-        clientInfo: {
-          ownerName: formData.fullName || user?.name || '',
-          contactPerson: formData.fullName || user?.name || '',
-          businessName: formData.businessName || formData.fullName || '',
-          email: (formData.emailAddress || user?.email || '').toLowerCase().trim(),
-          mobile: formData.mobileNumber || user?.phone || '',
-          phone: formData.mobileNumber || user?.phone || '',
-          whatsapp: formData.whatsappNumber || formData.mobileNumber || '',
-          address: formData.businessAddress || '',
-          city: formData.cityLocation || '',
-          country: formData.country || 'India'
-        },
+        clientInfo,
         designPreferences: {
           visualStyle: formData.visualStyle || 'Modern',
           colorTheme: formData.colorTheme || 'Default',
           fontPairing: formData.fontPairing || 'Inter',
-          hasLogo: formData.hasLogo,
-          hasPhotos: formData.hasPhotos,
-          hasContent: formData.hasContent
+          hasLogo: formData.hasLogo || 'no',
+          hasPhotos: formData.hasPhotos || 'no',
+          hasContent: formData.hasContent || 'partially'
         },
         domainStatus: formData.domainStatus || 'I need a new Domain',
         domainName: formData.domainName || '',
         domainExtension: (formData.domainExtensions || ['.com']).join(', '),
         hostingStatus: formData.hostingStatus || 'I need new Hosting',
-        hostingPlan: formData.hostingPlan || 'Basic',
+        hostingPlan: formData.hostingPlan || 'Basic SSD Cloud Hosting',
         backendRequirement: formData.backendRequirement || 'Backend Required',
         whatsappIntegration: formData.whatsappIntegration || 'WhatsApp Integration Required',
         otherIntegrations: formData.otherIntegrations || [],
@@ -2007,21 +2012,36 @@ export default function GetStarted() {
       // Clear draft on successful submission
       localStorage.removeItem('l2b_get_started_draft');
 
+      // Sync to local order history for seamless instant dashboard visibility
+      try {
+        const storedOrders = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
+        const newOrderRecord = {
+          requirementId,
+          websiteType,
+          websiteTypeName,
+          clientInfo,
+          status: 'Submitted',
+          estimatedPrice: priceBreakdown.totalApproxPrice,
+          createdAt: new Date().toISOString()
+        };
+        localStorage.setItem('l2b_user_orders', JSON.stringify([newOrderRecord, ...storedOrders.slice(0, 19)]));
+      } catch (e) {}
+
       setSubmissionSuccess({
         id: requirementId,
-        businessName: formData.businessName,
-        email: formData.emailAddress,
+        businessName: clientInfo.businessName,
+        email: clientInfo.email,
         totalApproxPrice: priceBreakdown.totalApproxPrice
       });
-      toast.success('🎉 Project Order successfully submitted and recorded in database!');
+      toast.success('🎉 Project Order successfully submitted and recorded!');
     } catch (err) {
       console.error('Submission error:', err);
       // Fallback local successful generation if network glitch
       const reqId = `REQ-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
       setSubmissionSuccess({
         id: reqId,
-        businessName: formData.businessName,
-        email: formData.emailAddress,
+        businessName: formData.businessName || 'New Project',
+        email: formData.emailAddress || 'client@local2brand.com',
         totalApproxPrice: priceBreakdown.totalApproxPrice
       });
       toast.success('Project order recorded successfully!');
@@ -2272,16 +2292,16 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
           </div>
 
           {/* Prominent Team Contact Confirmation Banner */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/30 text-left mb-6 space-y-1.5">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/30 text-left mb-6 space-y-2">
             <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-bold text-xs">
               <PhoneCall className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-              <span>Executive Team Dispatch &amp; Verification</span>
+              <span>Dedicated Project Manager Assigned</span>
             </div>
-            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-              আমাদের স্পেশালিস্ট টিম খুব শীঘ্রই আপনার সাথে <strong>WhatsApp, Email অথবা Direct Phone Call</strong>-এর মাধ্যমে যোগাযোগ করবে এবং আপনার প্রজেক্টের যাবতীয় ফাইল, ডোমেন ভেরিফিকেশন ও ডেভেলপমেন্ট রোডম্যাপ শুরু করবে।
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              Our specialist team will contact you shortly via <strong>WhatsApp, Email, or Direct Phone Call</strong> to verify your assets, domain configurations, and initiate your customized development roadmap.
             </p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-              * Our senior project manager will contact you shortly via <strong>WhatsApp, Email, or Call</strong> with verified timeline &amp; milestones.
+              You can track your live development milestones and review project updates anytime from your dashboard.
             </p>
           </div>
 

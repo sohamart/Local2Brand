@@ -98,3 +98,4 @@ const queryLeadSchema = new mongoose.Schema(
 );
 
 export const QueryLead = mongoose.models.QueryLead || mongoose.model('QueryLead', queryLeadSchema);
+export default QueryLead;

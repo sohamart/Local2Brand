@@ -121,7 +121,7 @@ export default function AdminSettings() {
           },
         ],
         contactPhone: '+91 98765 43210',
-        contactEmail: 'stackaddacontact@gmail.com',
+        contactEmail: 'local2brand@zohomail.in',
         officeLocation: 'Kolkata & Bangalore, India',
         workingHours: 'Monday - Saturday: 10:00 AM - 8:00 PM IST',
         whatsappSupport: '+91 98765 43210',
@@ -1509,7 +1509,7 @@ export default function AdminSettings() {
                     type="email"
                     value={formData.aiSettings?.adminShowableDetails?.contactEmail || ''}
                     onChange={(e) => handleAiAdminDetailsChange('contactEmail', e.target.value)}
-                    placeholder="stackaddacontact@gmail.com"
+                    placeholder="local2brand@zohomail.in"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                   />
                 </div>

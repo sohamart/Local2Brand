@@ -153,6 +153,7 @@ export default function UserDashboard() {
     }
   });
   const [voucherCopied, setVoucherCopied] = useState(false);
+  const [dismissedRejectBanner, setDismissedRejectBanner] = useState(false);
 
 
   // Resend OTP countdown timer
@@ -857,30 +858,88 @@ export default function UserDashboard() {
               </button>
             </div>
 
-            {/* Non-Accepted / Rejected / Cancelled Orders Notification Banner */}
-            {requirements.some((r) => r.status === 'Rejected' || r.status === 'Cancelled' || r.isDeleted) && (
-              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0">
-                    <AlertCircle className="w-4 h-4" />
+            {/* Non-Accepted / Rejected / Cancelled Orders Notification Banner - Specific Project Clarity */}
+            {(() => {
+              const rejectedList = requirements.filter((r) => r.status === 'Rejected' || r.status === 'Cancelled' || r.isDeleted);
+              if (rejectedList.length === 0 || dismissedRejectBanner) return null;
+
+              return (
+                <div className="p-4 sm:p-5 rounded-2xl bg-rose-50/90 dark:bg-rose-950/70 border border-rose-300/80 dark:border-rose-800 shadow-sm relative overflow-hidden space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-rose-100 dark:bg-rose-900/80 text-rose-600 dark:text-rose-300 flex items-center justify-center shrink-0 mt-0.5">
+                        <AlertCircle className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="text-xs sm:text-sm font-black text-rose-900 dark:text-rose-200">
+                            {rejectedList.length === 1
+                              ? `Project Submission #${rejectedList[0].requirementId} was Not Accepted`
+                              : `${rejectedList.length} Specific Project Submissions were Not Accepted`}
+                          </h4>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-200/80 dark:bg-rose-900/80 text-rose-800 dark:text-rose-200">
+                            Revision Available
+                          </span>
+                        </div>
+                        <p className="text-xs text-rose-700 dark:text-rose-300 mt-1 leading-relaxed">
+                          Only specific order{' '}
+                          <strong className="underline font-mono">
+                            {rejectedList.map((r) => `#${r.requirementId} (${r.clientInfo?.businessName || r.websiteTypeName || 'Project'})`).join(', ')}
+                          </strong>{' '}
+                          was not approved. {requirements.length > rejectedList.length && (
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-300 ml-1">
+                              Your other {requirements.length - rejectedList.length} active project(s) remain completely unaffected.
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => openOrderModal()}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-xs cursor-pointer transition-all"
+                      >
+                        Revise Project
+                      </button>
+                      <button
+                        onClick={() => setDismissedRejectBanner(true)}
+                        className="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 dark:hover:text-rose-200 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all cursor-pointer"
+                        title="Dismiss notification"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-black text-rose-900 dark:text-rose-200">
-                      Project Status Notice: Rejected or Cancelled Orders
-                    </h4>
-                    <p className="text-xs text-rose-700 dark:text-rose-300 mt-0.5">
-                      Specific review/cancellation reasons are shown directly on the project cards below. You can submit a revised specification anytime.
-                    </p>
+
+                  {/* Quick Cards of Specific Rejected Orders */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-rose-200/70 dark:border-rose-900/60">
+                    {rejectedList.map((r) => (
+                      <div
+                        key={r._id || r.requirementId}
+                        className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-rose-200 dark:border-rose-900/80 flex items-center justify-between text-xs gap-2"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-mono font-bold text-rose-700 dark:text-rose-400 block truncate">
+                            #{r.requirementId}
+                          </span>
+                          <span className="text-[11px] text-slate-600 dark:text-slate-400 truncate block">
+                            {r.clientInfo?.businessName || r.websiteTypeName || 'Custom Project'}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setViewingReqSpec(r);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 text-[11px] font-bold text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 shrink-0 cursor-pointer"
+                        >
+                          View Reason
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <button
-                  onClick={() => openOrderModal()}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-xs cursor-pointer shrink-0 transition-all"
-                >
-                  Start Revised Project
-                </button>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Empty State */}
             {requirements.length === 0 && inquiries.length === 0 ? (
