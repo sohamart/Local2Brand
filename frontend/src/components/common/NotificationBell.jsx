@@ -90,22 +90,23 @@ export default function NotificationBell({ className = '' }) {
     }
   }, [notifications.length]);
 
-  // Immediate fetch on website load & periodic polling
+  // Immediate fetch on website load & periodic background polling
   useEffect(() => {
     fetchUnreadCount();
-    fetchRecentNotifications(false);
+    fetchRecentNotifications(true);
     const interval = setInterval(() => {
       fetchUnreadCount();
+      fetchRecentNotifications(false);
     }, 15000);
     return () => clearInterval(interval);
   }, [fetchUnreadCount, fetchRecentNotifications, user]);
 
-  // When popover opens, revalidate silently
+  // When popover opens, revalidate
   useEffect(() => {
     if (isOpen) {
-      fetchRecentNotifications(false);
+      fetchRecentNotifications(notifications.length === 0);
     }
-  }, [isOpen, fetchRecentNotifications]);
+  }, [isOpen, fetchRecentNotifications, notifications.length]);
 
   // Close dropdown on outside click
   useEffect(() => {

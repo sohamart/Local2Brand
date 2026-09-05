@@ -265,37 +265,39 @@ router.get('/inbox', optionalAuth, async (req, res) => {
       conditions.push({ recipientRole: 'all' });
     }
 
-    const filter = {
-      $or: conditions,
-      // Exclude read notifications older than 3 days
-      $and: [
-        {
-          $or: [
-            { isRead: false },
-            { 
-              isRead: true, 
-              $or: [
-                { expiresAt: { $gt: now } },
-                { readAt: { $gt: threeDaysAgo } },
-                { expiresAt: null, readAt: null }
-              ] 
-            }
-          ]
-        }
+    const andClauses = [];
+
+    // 1. Recipient Scope
+    if (conditions.length > 0) {
+      andClauses.push({ $or: conditions });
+    }
+
+    // 2. Exclude read notifications older than 3 days (keep unread and recent read)
+    andClauses.push({
+      $or: [
+        { isRead: false },
+        { isRead: { $exists: false } },
+        { readAt: null },
+        { readAt: { $gt: threeDaysAgo } },
+        { expiresAt: { $gt: now } },
+        { expiresAt: null }
       ]
-    };
+    });
 
+    // 3. Type filter
     if (type && type !== 'all') {
-      filter.type = type;
+      andClauses.push({ type });
     }
 
+    // 4. Unread only
     if (unreadOnly === 'true' || unreadOnly === true) {
-      filter.isRead = false;
+      andClauses.push({ isRead: false });
     }
 
+    // 5. Search filter
     if (search && typeof search === 'string' && search.trim()) {
       const s = search.trim();
-      filter.$and.push({
+      andClauses.push({
         $or: [
           { title: { $regex: s, $options: 'i' } },
           { message: { $regex: s, $options: 'i' } },
@@ -304,6 +306,8 @@ router.get('/inbox', optionalAuth, async (req, res) => {
         ],
       });
     }
+
+    const filter = andClauses.length > 0 ? { $and: andClauses } : {};
 
     // High-speed lightweight projection (excludes heavy emailHtml for instantaneous list loads)
     const [notifications, total, unreadCount] = await Promise.all([
@@ -315,8 +319,10 @@ router.get('/inbox', optionalAuth, async (req, res) => {
         .lean(),
       Notification.countDocuments(filter),
       Notification.countDocuments({
-        $or: conditions,
-        isRead: false,
+        $and: [
+          { $or: conditions },
+          { isRead: false }
+        ]
       }),
     ]);
 
@@ -367,8 +373,10 @@ router.get('/unread-count', optionalAuth, async (req, res) => {
     }
 
     const unreadCount = await Notification.countDocuments({
-      $or: conditions,
-      isRead: false,
+      $and: [
+        { $or: conditions },
+        { isRead: false }
+      ]
     });
 
     return res.status(200).json({
