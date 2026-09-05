@@ -110,14 +110,17 @@ class OneSignalBackendService {
     if (emails.length > 0) {
       // 1. Query MongoDB User collection
       try {
-        const { default: User } = await import('../models/User.js');
-        const foundUsers = await User.find({
-          email: { $in: emails.map((e) => new RegExp(`^${e}$`, 'i')) },
-        }).select('_id email');
+        const userMod = await import('../models/User.js');
+        const User = userMod.User || userMod.default;
+        if (User && typeof User.find === 'function') {
+          const foundUsers = await User.find({
+            email: { $in: emails.map((e) => new RegExp(`^${e}$`, 'i')) },
+          }).select('_id email');
 
-        foundUsers.forEach((u) => {
-          if (u?._id) resolvedUserIds.push(u._id.toString());
-        });
+          foundUsers.forEach((u) => {
+            if (u?._id) resolvedUserIds.push(u._id.toString());
+          });
+        }
       } catch (err) {
         console.warn('User lookup notice in OneSignal service:', err?.message || err);
       }
@@ -238,12 +241,11 @@ class OneSignalBackendService {
 
     // Set targeting
     if (resolvedUserIds.length > 0) {
-      // Include resolved user database IDs and any raw IDs
+      // Target specific users strictly on push channel via aliases
       payload.include_aliases = {
         external_id: resolvedUserIds,
       };
       payload.target_channel = 'push';
-      payload.include_external_user_ids = resolvedUserIds;
     } else if (resolvedEmails.length > 0) {
       // If no DB user found, target via email tag filters
       const emailFilters = [];
@@ -372,11 +374,14 @@ class OneSignalBackendService {
     let resolvedAdminIds = [...(userIds ? (Array.isArray(userIds) ? userIds : [userIds]) : [])];
 
     try {
-      const { default: User } = await import('../models/User.js');
-      const admins = await User.find({ role: 'admin' }).select('_id email');
-      admins.forEach((a) => {
-        if (a?._id) resolvedAdminIds.push(a._id.toString());
-      });
+      const userMod = await import('../models/User.js');
+      const User = userMod.User || userMod.default;
+      if (User && typeof User.find === 'function') {
+        const admins = await User.find({ role: 'admin' }).select('_id email');
+        admins.forEach((a) => {
+          if (a?._id) resolvedAdminIds.push(a._id.toString());
+        });
+      }
     } catch (e) {}
 
     const uniqueAdminIds = [...new Set(resolvedAdminIds.filter(Boolean))];

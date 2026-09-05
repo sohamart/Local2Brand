@@ -109,9 +109,12 @@ router.post('/broadcast', async (req, res) => {
       // Find all admin IDs in DB
       let adminIds = [];
       try {
-        const { default: User } = await import('../models/User.js');
-        const admins = await User.find({ role: 'admin' }).select('_id email');
-        adminIds = admins.map((a) => a._id.toString());
+        const userMod = await import('../models/User.js');
+        const User = userMod.User || userMod.default;
+        if (User && typeof User.find === 'function') {
+          const admins = await User.find({ role: 'admin' }).select('_id email');
+          adminIds = admins.map((a) => a._id.toString());
+        }
       } catch (e) {}
 
       result = await oneSignalBackend.sendNotificationToAdmins({
@@ -125,9 +128,12 @@ router.post('/broadcast', async (req, res) => {
       // Find all client IDs in DB
       let clientIds = [];
       try {
-        const { default: User } = await import('../models/User.js');
-        const clients = await User.find({ role: { $ne: 'admin' } }).select('_id email');
-        clientIds = clients.map((c) => c._id.toString());
+        const userMod = await import('../models/User.js');
+        const User = userMod.User || userMod.default;
+        if (User && typeof User.find === 'function') {
+          const clients = await User.find({ role: { $ne: 'admin' } }).select('_id email');
+          clientIds = clients.map((c) => c._id.toString());
+        }
       } catch (e) {}
 
       if (clientIds.length > 0) {
