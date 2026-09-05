@@ -83,6 +83,7 @@ import { STEP_AI_GUIDES } from '../data/stepAiData';
 import CulturalMascotArt from '../components/common/CulturalMascotArt';
 import BackgroundCountryArt from '../components/common/BackgroundCountryArt';
 import SearchableCombobox from '../components/common/SearchableCombobox';
+import { detectUserLiveLocation, detectCountryFromTimezone } from '../utils/geoDetector';
 
 // Multilingual dictionary
 const TRANSLATIONS = {
@@ -925,15 +926,56 @@ export default function GetStarted() {
   const [previewDemoItem, setPreviewDemoItem] = useState(null);
   const [lastSavedTime, setLastSavedTime] = useState(null);
 
-  // Form State - Starts 100% blank with no pre-selected options
-  const [formData, setFormData] = useState({
+  // Track if user explicitly picked or changed country manually
+  const userExplicitlyChangedCountry = useRef(false);
+
+  // Automatic Live Country & Geolocation Fetch on Initial Open
+  useEffect(() => {
+    let isMounted = true;
+
+    try {
+      const storedDraft = localStorage.getItem('l2b_get_started_draft');
+      if (storedDraft) {
+        const parsed = JSON.parse(storedDraft);
+        if (parsed?.formData?.country) {
+          userExplicitlyChangedCountry.current = true;
+          return;
+        }
+      }
+    } catch (e) {}
+
+    detectUserLiveLocation().then(geo => {
+      if (!isMounted || userExplicitlyChangedCountry.current) return;
+      if (geo && geo.country) {
+        setFormData(prev => {
+          if (userExplicitlyChangedCountry.current) return prev;
+          const next = { ...prev, country: geo.country };
+          // If state is not filled and geo returns a valid state/city, prefill them
+          if (!prev.state && geo.state) {
+            next.state = geo.state;
+          }
+          if (!prev.district && geo.city) {
+            next.district = geo.city;
+          }
+          return next;
+        });
+      }
+    }).catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Form State - Starts with detected country & clean blank fields
+  const [formData, setFormData] = useState(() => ({
     // Step 1: Client Details
     fullName: '',
     businessName: '',
     mobileNumber: '',
     whatsappNumber: '',
     emailAddress: '',
-    country: 'India',
+    country: detectCountryFromTimezone() || 'India',
     state: '',
     district: '',
     otherDistrict: '',
@@ -1215,7 +1257,7 @@ export default function GetStarted() {
     expectedLaunchDate: '',
     additionalRequirements: '',
     anythingElse: ''
-  });
+  }));
 
   // Dynamic Country Cultural Theme based on selected country (Transitions smoothly)
   const currentCountryTheme = useMemo(() => {
@@ -1523,6 +1565,9 @@ export default function GetStarted() {
 
   // Auto-compose formatted full address with smooth country theme morph
   const handleAddressUpdate = (updates) => {
+    if (updates.country !== undefined) {
+      userExplicitlyChangedCountry.current = true;
+    }
     if (updates.country && updates.country !== formData.country) {
       toast.info(`✨ Switched to ${updates.country} Edition cultural theme`, { autoClose: 2000 });
     }
