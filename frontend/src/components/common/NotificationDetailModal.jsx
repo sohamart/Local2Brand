@@ -31,16 +31,16 @@ export default function NotificationDetailModal({ notification, onClose, onMarkR
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[999999999] flex items-center justify-center p-2.5 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
       <div 
-        className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white dark:bg-[#0e131f] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-2xl max-h-[86dvh] sm:max-h-[90vh] my-auto flex flex-col bg-white dark:bg-[#0e131f] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-start justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30">
-          <div className="flex items-start gap-3.5 pr-4">
-            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
-              <Mail className="w-5 h-5" />
+        <div className="flex items-start justify-between p-3.5 sm:p-6 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
+          <div className="flex items-start gap-3 pr-2 sm:pr-4">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+              <Mail className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -89,21 +89,21 @@ export default function NotificationDetailModal({ notification, onClose, onMarkR
         </div>
 
         {/* Modal Body / Email Content */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+        <div className="p-3 sm:p-6 overflow-y-auto flex-1 space-y-3 sm:space-y-4 min-h-0">
           {/* Main Message Text */}
-          <div className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800">
+          <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/40 p-3 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800">
             {notification.message}
           </div>
 
           {/* Render Full Rich HTML Email Replica if present */}
           {notification.emailHtml ? (
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 <Mail className="w-3.5 h-3.5" />
                 <span>Full Email Replica / Message Details</span>
               </div>
               <div 
-                className="bg-white text-slate-900 p-5 rounded-2xl border border-slate-200 shadow-xs overflow-x-auto email-content-preview text-sm"
+                className="bg-white text-slate-900 p-3 sm:p-5 rounded-2xl border border-slate-200 shadow-xs overflow-x-auto email-content-preview text-xs sm:text-sm"
                 dangerouslySetInnerHTML={{ __html: notification.emailHtml }}
               />
             </div>
@@ -111,7 +111,7 @@ export default function NotificationDetailModal({ notification, onClose, onMarkR
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between gap-3 p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30">
+        <div className="flex items-center justify-between gap-2.5 p-3 sm:p-5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
           <div className="text-xs text-slate-400">
             {notification.isRead ? (
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">

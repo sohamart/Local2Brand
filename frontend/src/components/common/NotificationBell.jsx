@@ -186,12 +186,12 @@ export default function NotificationBell({ className = '' }) {
           <>
             {/* Mobile Backdrop Overlay */}
             <div
-              className="fixed inset-0 bg-black/40 backdrop-blur-xs z-40 sm:hidden animate-in fade-in duration-150"
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[99999998] sm:hidden animate-in fade-in duration-150"
               onClick={() => setIsOpen(false)}
             />
 
             {/* Popover Box */}
-            <div className="fixed left-3 right-3 top-16 sm:top-full sm:mt-2 sm:left-auto sm:right-0 sm:absolute w-auto sm:w-88 md:w-96 max-w-md rounded-3xl bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col max-h-[85vh] sm:max-h-[560px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+            <div className="fixed left-3 right-3 top-14 sm:top-full sm:mt-2 sm:left-auto sm:right-0 sm:absolute w-auto sm:w-88 md:w-96 max-w-md rounded-3xl bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-[99999999] flex flex-col max-h-[80dvh] sm:max-h-[560px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
               
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40 shrink-0">
@@ -262,6 +262,7 @@ export default function NotificationBell({ className = '' }) {
                       onClick={() => {
                         handleMarkRead(item._id);
                         setSelectedNotification(item);
+                        setIsOpen(false);
                       }}
                       className={`p-3 rounded-2xl transition-all cursor-pointer flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-900/60 ${
                         !item.isRead ? 'bg-purple-500/[0.04] dark:bg-purple-500/[0.08]' : ''
