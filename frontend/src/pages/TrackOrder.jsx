@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import {
   Compass,
   Search,
@@ -83,14 +83,37 @@ const getStageIndex = (status) => {
 
 export default function TrackOrder() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const params = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { openOrderModal, openCallbackModal } = useOrderModal();
 
-  const [orderIdInput, setOrderIdInput] = useState(
-    searchParams.get('id') || searchParams.get('order') || searchParams.get('track') || ''
-  );
+  const getInitialTargetId = () => {
+    const urlId =
+      searchParams.get('id') ||
+      searchParams.get('order') ||
+      searchParams.get('track') ||
+      searchParams.get('lead') ||
+      params?.id ||
+      '';
+    if (urlId) return urlId.trim();
+
+    try {
+      const lastId = localStorage.getItem('l2b_last_order_id');
+      if (lastId) return lastId.trim();
+
+      const stored = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
+      if (Array.isArray(stored) && stored.length > 0 && stored[0]?.requirementId) {
+        return stored[0].requirementId.trim();
+      }
+    } catch (e) {}
+
+    return '';
+  };
+
+  const initialId = getInitialTargetId();
+  const [orderIdInput, setOrderIdInput] = useState(initialId);
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -99,13 +122,23 @@ export default function TrackOrder() {
 
   // Auto fetch user's recent orders if logged in for 1-click buttons
   useEffect(() => {
+    // 1. Immediately populate from local storage for 0ms delay
+    try {
+      const localStored = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
+      if (Array.isArray(localStored) && localStored.length > 0) {
+        setUserOrders(localStored);
+      }
+    } catch (e) {}
+
+    // 2. Fetch fresh from server if user is logged in
     if (user?.email) {
       api.get(`/requirements/my?email=${encodeURIComponent(user.email)}`)
         .then((res) => {
-          if (res?.success && res.requirements) {
+          if (res?.success && Array.isArray(res.requirements) && res.requirements.length > 0) {
             setUserOrders(res.requirements);
-            // If no search param is set, automatically track the latest order
-            if (!searchParams.get('id') && !searchParams.get('order') && !searchParams.get('track') && res.requirements.length > 0) {
+            // If no search param is set and no order currently tracked, track latest order
+            const currentParam = searchParams.get('id') || searchParams.get('order') || searchParams.get('track') || params?.id;
+            if (!currentParam && !trackedOrder) {
               const latest = res.requirements[0];
               setOrderIdInput(latest.requirementId);
               fetchOrderDetails(latest.requirementId, false);
@@ -113,19 +146,24 @@ export default function TrackOrder() {
           }
         })
         .catch(() => {});
-    } else {
-      setUserOrders([]);
     }
-  }, [user]);
+  }, [user?.email]);
 
-  // Initial load from URL query
+  // Initial load from URL query or path params or localStorage
   useEffect(() => {
-    const urlId = searchParams.get('id') || searchParams.get('order') || searchParams.get('track');
-    if (urlId) {
-      setOrderIdInput(urlId);
-      fetchOrderDetails(urlId, false);
+    const targetId =
+      searchParams.get('id') ||
+      searchParams.get('order') ||
+      searchParams.get('track') ||
+      searchParams.get('lead') ||
+      params?.id ||
+      getInitialTargetId();
+
+    if (targetId) {
+      setOrderIdInput(targetId);
+      fetchOrderDetails(targetId, false);
     }
-  }, [searchParams]);
+  }, [searchParams, params?.id]);
 
   // Live silent background polling every 3 seconds for real-time progress updates
   useEffect(() => {
@@ -152,6 +190,7 @@ export default function TrackOrder() {
       if (res?.success && res.requirement) {
         setTrackedOrder(res.requirement);
         setLastSyncTime(new Date());
+        setError('');
         // Update URL search query cleanly only when explicit user fetch
         if (!silent) {
           const currentParam = searchParams.get('id') || searchParams.get('order') || searchParams.get('track');
@@ -164,7 +203,22 @@ export default function TrackOrder() {
         throw new Error(res?.message || 'Order not found');
       }
     } catch (err) {
-      if (!silent) {
+      // Check if we have it in local cached orders as a fallback
+      let matchedLocal = null;
+      try {
+        const stored = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
+        matchedLocal = stored.find(
+          (o) =>
+            o.requirementId?.toLowerCase() === cleanId.toLowerCase() ||
+            o._id === cleanId
+        );
+      } catch (e) {}
+
+      if (matchedLocal) {
+        setTrackedOrder(matchedLocal);
+        setLastSyncTime(new Date());
+        setError('');
+      } else if (!silent) {
         setError(err.data?.message || err.message || `No website project found with ID "${cleanId}". Please check the ID.`);
         setTrackedOrder(null);
       }

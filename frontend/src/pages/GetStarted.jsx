@@ -2359,6 +2359,7 @@ export default function GetStarted() {
 
       // Sync to local order history for seamless instant dashboard visibility
       try {
+        localStorage.setItem('l2b_last_order_id', requirementId);
         const storedOrders = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
         const newOrderRecord = {
           requirementId,

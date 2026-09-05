@@ -392,11 +392,12 @@ export default function AdminRequirements() {
       if (!silent) setLoading(true);
       setIsRefreshing(true);
       const res = await api.get(`/requirements/admin/all?status=${statusFilter}&search=${encodeURIComponent(search)}`);
-      if (res?.success && res.requirements) {
-        setRequirements(res.requirements);
+      const list = res?.requirements || res?.data?.requirements || (Array.isArray(res) ? res : []);
+      if (Array.isArray(list)) {
+        setRequirements(list);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching admin requirements:', err);
     } finally {
       if (!silent) setLoading(false);
       setIsRefreshing(false);
