@@ -1,24 +1,12 @@
 import { dataStore } from '../config/dataAdapter.js';
 import { sendEmail, getClientUrl, wrapAgencyEmail } from '../utils/email.js';
 import { getLiveTelemetryStats } from './telemetryController.js';
+import { fetchAllMergedRequirements } from './requirementController.js';
 import mongoose from 'mongoose';
 
 export const getAdminStats = async (req, res) => {
   try {
-    let requirements = [];
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const { default: Requirement } = await import('../models/Requirement.js');
-        requirements = await Requirement.find().sort({ createdAt: -1 });
-      } catch (e) {
-        console.warn('MongoDB Requirement fetch notice:', e.message);
-      }
-    }
-    
-    if (requirements.length === 0) {
-      const localReqs = dataStore.read('requirements') || [];
-      if (localReqs.length > 0) requirements = localReqs;
-    }
+    const requirements = await fetchAllMergedRequirements();
 
     let allUsers = [];
     if (mongoose.connection.readyState === 1) {

@@ -254,5 +254,104 @@ export const uploadImage = async (req, res) => {
   }
 };
 
+// Helper to extract Cloudinary public_id from URL
+const extractPublicId = (urlOrPublicId) => {
+  if (!urlOrPublicId || typeof urlOrPublicId !== 'string') return null;
+  if (!urlOrPublicId.startsWith('http')) return urlOrPublicId;
+  try {
+    const uploadIndex = urlOrPublicId.indexOf('/upload/');
+    if (uploadIndex === -1) return null;
+    let afterUpload = urlOrPublicId.substring(uploadIndex + 8);
+    // Remove version tag e.g. v1725547890/
+    afterUpload = afterUpload.replace(/^v\d+\//, '');
+    // Remove file extension .jpg, .png, etc.
+    const lastDot = afterUpload.lastIndexOf('.');
+    if (lastDot !== -1) {
+      afterUpload = afterUpload.substring(0, lastDot);
+    }
+    return afterUpload;
+  } catch (e) {
+    return null;
+  }
+};
+
+// @desc    Delete media file(s) from Cloudinary CDN or local uploads storage
+// @route   DELETE /api/upload or POST /api/upload/delete
+// @access  Public
+export const deleteMedia = async (req, res) => {
+  try {
+    const { url, urls, public_id, public_ids } = req.body || {};
+    const itemsToDelete = [];
+
+    if (url) itemsToDelete.push(url);
+    if (public_id) itemsToDelete.push(public_id);
+    if (Array.isArray(urls)) itemsToDelete.push(...urls);
+    if (Array.isArray(public_ids)) itemsToDelete.push(...public_ids);
+
+    if (itemsToDelete.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No media items to delete',
+        deleted: []
+      });
+    }
+
+    const deletionResults = [];
+
+    for (const item of itemsToDelete) {
+      if (!item || typeof item !== 'string') continue;
+
+      // 1. Cloudinary deletion
+      if (item.includes('res.cloudinary.com') || (!item.startsWith('http') && item.includes('/'))) {
+        const publicId = extractPublicId(item);
+        if (publicId && isCloudinaryConfigured) {
+          try {
+            const isVideo = item.includes('/video/') || Boolean(item.match(/\.(mp4|webm|mov|mkv|avi)$/i));
+            const resType = isVideo ? 'video' : 'image';
+            let destroyResult = await cloudinary.uploader.destroy(publicId, {
+              resource_type: resType,
+              invalidate: true,
+            });
+            if (destroyResult?.result !== 'ok' && isVideo) {
+              destroyResult = await cloudinary.uploader.destroy(publicId, { invalidate: true });
+            }
+            deletionResults.push({ item, publicId, status: destroyResult?.result || 'ok' });
+          } catch (cloudErr) {
+            console.warn('Cloudinary destroy notice:', cloudErr.message);
+          }
+        }
+      }
+
+      // 2. Local uploads folder deletion
+      if (item.includes('/uploads/')) {
+        try {
+          const filename = item.split('/uploads/').pop();
+          if (filename) {
+            const localFilePath = path.join(backendUploadsDir, filename);
+            if (fs.existsSync(localFilePath)) {
+              await fs.promises.unlink(localFilePath);
+              deletionResults.push({ item, status: 'deleted_local' });
+            }
+          }
+        } catch (fsErr) {
+          console.warn('Local file unlink notice:', fsErr.message);
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `${deletionResults.length} item(s) deleted successfully`,
+      deleted: deletionResults,
+    });
+  } catch (error) {
+    console.error('Delete media error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Error deleting media',
+    });
+  }
+};
+
 
 

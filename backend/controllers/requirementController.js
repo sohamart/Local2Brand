@@ -1,5 +1,6 @@
 import Requirement from '../models/Requirement.js';
-import { dataStore } from '../config/dataAdapter.js';
+import { dataStore, ensureDb, isDbConnected } from '../config/dataAdapter.js';
+import { connectDB } from '../config/db.js';
 import { deleteCloudinaryMedia } from '../config/cloudinary.js';
 import {
   sendRequirementConfirmationEmail,
@@ -18,6 +19,61 @@ export const generateRequirementId = () => {
   const year = new Date().getFullYear();
   const randomSuffix = Math.floor(10000 + Math.random() * 90000);
   return `REQ-${year}-${randomSuffix}`;
+};
+
+// Helper to fetch and merge all requirements from MongoDB and Local dataStore
+export const fetchAllMergedRequirements = async () => {
+  await ensureDb().catch(() => {});
+  let dbReqs = [];
+  if (isDbConnected()) {
+    try {
+      dbReqs = await Requirement.find().sort({ createdAt: -1 }).lean();
+    } catch (err) {
+      console.warn('MongoDB Requirement.find notice:', err.message);
+    }
+  }
+
+  const localReqs = dataStore.read('requirements') || [];
+
+  const map = new Map();
+  // 1. Seed with local records
+  for (const r of localReqs) {
+    if (!r) continue;
+    const key = (r.requirementId || r._id?.toString() || '').trim().toLowerCase();
+    if (key) map.set(key, r);
+  }
+
+  // 2. Overlay / Merge with DB records
+  for (const r of dbReqs) {
+    if (!r) continue;
+    const key = (r.requirementId || r._id?.toString() || '').trim().toLowerCase();
+    if (key) {
+      const existing = map.get(key);
+      map.set(key, { ...existing, ...r });
+    }
+  }
+
+  // 3. Background auto-sync any local dataStore requirements into MongoDB if missing
+  if (isDbConnected() && localReqs.length > 0) {
+    setImmediate(async () => {
+      try {
+        for (const lr of localReqs) {
+          if (!lr || !lr.requirementId) continue;
+          const exists = await Requirement.findOne({ requirementId: lr.requirementId });
+          if (!exists) {
+            const { _id, __v, ...cleanPayload } = lr;
+            await Requirement.create(cleanPayload).catch(() => {});
+          }
+        }
+      } catch (syncErr) {
+        console.warn('Background requirement sync notice:', syncErr.message);
+      }
+    });
+  }
+
+  const allMerged = Array.from(map.values());
+  allMerged.sort((a, b) => new Date(b.createdAt || b.submittedAt || 0) - new Date(a.createdAt || a.submittedAt || 0));
+  return allMerged;
 };
 
 // @desc    Create or Autosave Draft Requirement
@@ -83,13 +139,18 @@ export const saveRequirementDraft = async (req, res) => {
       ipAddress: req.ip || req.connection?.remoteAddress || ''
     };
 
-    let doc;
-    if (mongoose.connection.readyState === 1) {
-      let existingDoc = await Requirement.findOne({ requirementId });
-      if (existingDoc) {
-        doc = await Requirement.findByIdAndUpdate(existingDoc._id, { $set: payload }, { new: true, setDefaultsOnInsert: true });
-      } else {
-        doc = await Requirement.create(payload);
+    let doc = null;
+    await ensureDb().catch(() => {});
+    if (isDbConnected()) {
+      try {
+        let existingDoc = await Requirement.findOne({ requirementId });
+        if (existingDoc) {
+          doc = await Requirement.findByIdAndUpdate(existingDoc._id, { $set: payload }, { new: true, setDefaultsOnInsert: true });
+        } else {
+          doc = await Requirement.create(payload);
+        }
+      } catch (dbErr) {
+        console.warn('MongoDB draft save notice:', dbErr.message);
       }
     }
     
@@ -136,9 +197,9 @@ export const submitRequirement = async (req, res) => {
 
     const clientInfo = {
       ...existingClientInfo,
-      email: (existingClientInfo.email || req.user?.email || 'customer@local2brand.com').toLowerCase().trim(),
-      ownerName: existingClientInfo.ownerName || existingClientInfo.contactPerson || req.user?.name || 'Client',
-      mobile: existingClientInfo.mobile || req.user?.phone || 'Not Provided',
+      email: (existingClientInfo.email || req.user?.email || finalData.fullFormData?.emailAddress || 'customer@local2brand.com').toLowerCase().trim(),
+      ownerName: existingClientInfo.ownerName || existingClientInfo.contactPerson || req.user?.name || finalData.fullFormData?.fullName || 'Client',
+      mobile: existingClientInfo.mobile || req.user?.phone || finalData.fullFormData?.mobileNumber || 'Not Provided',
       businessName: existingClientInfo.businessName || websiteTypeName,
     };
 
@@ -178,11 +239,9 @@ export const submitRequirement = async (req, res) => {
     };
 
     let doc = null;
-    if (mongoose.connection.readyState !== 1) {
-      await connectDB().catch(() => {});
-    }
+    await ensureDb().catch(() => {});
 
-    if (mongoose.connection.readyState === 1) {
+    if (isDbConnected()) {
       try {
         let existingDoc = null;
         if (mongoose.Types.ObjectId.isValid(targetId)) {
@@ -202,7 +261,7 @@ export const submitRequirement = async (req, res) => {
           doc = await Requirement.create(updatePayload);
         }
       } catch (mongoErr) {
-        console.warn('MongoDB submission save error:', mongoErr.message);
+        console.warn('MongoDB submission save notice:', mongoErr.message);
       }
     }
     
@@ -264,47 +323,38 @@ export const getMyRequirements = async (req, res) => {
   try {
     const userId = req.user?._id ? String(req.user._id) : (req.user?.id ? String(req.user.id) : null);
     const userEmail = (req.user?.email || req.query.email || '').toLowerCase().trim();
-    const userPhone = (req.user?.phone || '').trim();
+    const userPhone = (req.user?.phone || req.query.phone || '').trim();
+    const cleanPhone = userPhone.replace(/\D/g, '');
 
-    let requirements = [];
-    if (mongoose.connection.readyState === 1) {
-      const orClauses = [];
-      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
-        orClauses.push({ user: userId });
-      }
+    const allReqs = await fetchAllMergedRequirements();
+
+    let requirements = allReqs.filter((r) => {
+      if (!r) return false;
+
+      // 1. User ID matching
       if (userId) {
-        orClauses.push({ userId: userId });
+        const rUserId = String(r.user?._id || r.user || r.userId || '');
+        if (rUserId && rUserId === userId) return true;
       }
+
+      // 2. Email matching (case-insensitive across clientInfo, root email, and form answers)
       if (userEmail) {
-        const escaped = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        orClauses.push({ 'clientInfo.email': { $regex: new RegExp(`^${escaped}$`, 'i') } });
-        orClauses.push({ email: { $regex: new RegExp(`^${escaped}$`, 'i') } });
-      }
-      if (userPhone && userPhone.length >= 6) {
-        const cleanDigits = userPhone.replace(/\D/g, '');
-        orClauses.push({ 'clientInfo.mobile': { $regex: cleanDigits, $options: 'i' } });
+        const rEmail = (r.clientInfo?.email || r.email || r.fullFormData?.emailAddress || r.answers?.emailAddress || '').toLowerCase().trim();
+        if (rEmail && (rEmail === userEmail || rEmail.includes(userEmail) || userEmail.includes(rEmail))) return true;
       }
 
-      if (orClauses.length > 0) {
-        requirements = await Requirement.find({ $or: orClauses }).sort({ createdAt: -1 });
+      // 3. Phone matching (compare clean digits)
+      if (cleanPhone && cleanPhone.length >= 7) {
+        const rPhone = (r.clientInfo?.mobile || r.clientInfo?.phone || r.fullFormData?.mobileNumber || r.answers?.mobileNumber || '').replace(/\D/g, '');
+        if (rPhone && (rPhone.includes(cleanPhone.slice(-10)) || cleanPhone.includes(rPhone.slice(-10)))) return true;
       }
 
-      // If user is admin and has no personal orders, return latest system orders
-      if (requirements.length === 0 && req.user?.role === 'admin') {
-        requirements = await Requirement.find().sort({ createdAt: -1 }).limit(20);
-      }
-    } else {
-      const allReqs = dataStore.read('requirements') || [];
-      requirements = allReqs.filter((r) => {
-        const matchesUser = userId && (String(r.user || '') === userId || String(r.userId || '') === userId);
-        const matchesEmail = userEmail && (r.clientInfo?.email?.toLowerCase().trim() === userEmail || r.email?.toLowerCase().trim() === userEmail);
-        const matchesPhone = userPhone && r.clientInfo?.mobile && r.clientInfo.mobile.replace(/\D/g, '').includes(userPhone.replace(/\D/g, ''));
-        return matchesUser || matchesEmail || matchesPhone;
-      });
-      if (requirements.length === 0 && req.user?.role === 'admin') {
-        requirements = allReqs.slice(0, 20);
-      }
-      requirements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return false;
+    });
+
+    // If logged-in user has admin privileges and no personal orders, provide recent system orders
+    if (requirements.length === 0 && req.user?.role === 'admin') {
+      requirements = allReqs.slice(0, 25);
     }
 
     return res.status(200).json({
@@ -329,67 +379,49 @@ export const getRequirementById = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Order ID is required.' });
     }
 
-    const escaped = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    let doc = null;
+    const allReqs = await fetchAllMergedRequirements();
+    let doc = allReqs.find(
+      (r) =>
+        r.requirementId?.toLowerCase() === cleanId.toLowerCase() ||
+        r.requirementId === cleanId ||
+        r._id?.toString() === cleanId
+    );
 
-    // 1. Search in MongoDB Requirements
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const orClauses = [
-          { requirementId: cleanId },
-          { requirementId: { $regex: new RegExp(`^${escaped}$`, 'i') } }
-        ];
-        if (mongoose.Types.ObjectId.isValid(cleanId)) {
-          orClauses.push({ _id: cleanId });
-        }
-        doc = await Requirement.findOne({ $or: orClauses });
-      } catch (dbErr) {
-        console.warn('MongoDB getRequirementById error:', dbErr.message);
-      }
-    }
-
-    // 2. Fallback to dataStore requirements if not found in MongoDB
+    // 3. Fallback to QueryLead in MongoDB or dataStore if still not found
     if (!doc) {
-      const allReqs = dataStore.read('requirements') || [];
-      doc = allReqs.find(
-        (r) =>
-          r.requirementId?.toLowerCase() === cleanId.toLowerCase() ||
-          r.requirementId === cleanId ||
-          r._id?.toString() === cleanId
-      );
-    }
-
-    // 3. Fallback to QueryLead in MongoDB if still not found
-    if (!doc && mongoose.connection.readyState === 1) {
-      try {
-        const { QueryLead } = await import('../models/QueryLead.js');
-        const lead = await QueryLead.findOne({
-          $or: [
-            { leadId: cleanId },
-            { leadId: { $regex: new RegExp(`^${escaped}$`, 'i') } },
-            ...(mongoose.Types.ObjectId.isValid(cleanId) ? [{ _id: cleanId }] : [])
-          ]
-        });
-        if (lead) {
-          doc = {
-            requirementId: lead.leadId || `ORD-${lead._id.toString().slice(-6).toUpperCase()}`,
-            websiteTypeName: lead.websiteType || 'Custom Project',
-            websiteType: lead.websiteType || 'Custom Project',
-            clientInfo: {
-              businessName: lead.businessName || lead.name,
-              ownerName: lead.name,
-              mobile: lead.phone,
-              email: lead.email,
-            },
-            status: lead.status === 'in_progress' ? 'In Development' : lead.status === 'contacted' ? 'Under Review' : lead.status === 'completed' ? 'Completed' : 'Submitted',
-            budget: lead.budget || 'Standard Commercial',
-            timeline: lead.timeline || 'Express 48-72 Hours',
-            additionalNotes: lead.requirements || '',
-            createdAt: lead.createdAt
-          };
+      await ensureDb().catch(() => {});
+      if (isDbConnected()) {
+        try {
+          const { QueryLead } = await import('../models/QueryLead.js');
+          const escaped = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const lead = await QueryLead.findOne({
+            $or: [
+              { leadId: cleanId },
+              { leadId: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+              ...(mongoose.Types.ObjectId.isValid(cleanId) ? [{ _id: cleanId }] : [])
+            ]
+          });
+          if (lead) {
+            doc = {
+              requirementId: lead.leadId || `ORD-${lead._id.toString().slice(-6).toUpperCase()}`,
+              websiteTypeName: lead.websiteType || 'Custom Project',
+              websiteType: lead.websiteType || 'Custom Project',
+              clientInfo: {
+                businessName: lead.businessName || lead.name,
+                ownerName: lead.name,
+                mobile: lead.phone,
+                email: lead.email,
+              },
+              status: lead.status === 'in_progress' ? 'In Development' : lead.status === 'contacted' ? 'Under Review' : lead.status === 'completed' ? 'Completed' : 'Submitted',
+              budget: lead.budget || 'Standard Commercial',
+              timeline: lead.timeline || 'Express 48-72 Hours',
+              additionalNotes: lead.requirements || '',
+              createdAt: lead.createdAt
+            };
+          }
+        } catch (leadErr) {
+          console.warn('QueryLead fallback notice:', leadErr.message);
         }
-      } catch (leadErr) {
-        console.warn('QueryLead fallback error:', leadErr.message);
       }
     }
 
@@ -439,44 +471,43 @@ export const getRequirementById = async (req, res) => {
 // @access  Admin
 export const getAllRequirements = async (req, res) => {
   try {
-    const { status, search, limit = 100 } = req.query;
+    const { status, search, limit = 200 } = req.query;
 
-    let requirements = [];
-    if (mongoose.connection.readyState === 1) {
-      const query = {};
-      if (status && status !== 'all') {
-        query.status = status;
-      }
-      if (search && search.trim()) {
-        const s = search.trim();
-        query.$or = [
-          { requirementId: { $regex: s, $options: 'i' } },
-          { 'clientInfo.businessName': { $regex: s, $options: 'i' } },
-          { 'clientInfo.ownerName': { $regex: s, $options: 'i' } },
-          { 'clientInfo.email': { $regex: s, $options: 'i' } },
-          { 'clientInfo.mobile': { $regex: s, $options: 'i' } },
-          { websiteType: { $regex: s, $options: 'i' } },
-          { websiteTypeName: { $regex: s, $options: 'i' } }
-        ];
-      }
-      requirements = await Requirement.find(query).sort({ createdAt: -1 }).limit(Number(limit));
-    } else {
-      requirements = dataStore.read('requirements') || [];
-      if (status && status !== 'all') {
-        requirements = requirements.filter((r) => r.status?.toLowerCase() === status.toLowerCase());
-      }
-      if (search && search.trim()) {
-        const s = search.toLowerCase().trim();
-        requirements = requirements.filter((r) =>
-          r.requirementId?.toLowerCase().includes(s) ||
-          r.clientInfo?.businessName?.toLowerCase().includes(s) ||
-          r.clientInfo?.ownerName?.toLowerCase().includes(s) ||
-          r.clientInfo?.email?.toLowerCase().includes(s) ||
-          r.clientInfo?.mobile?.includes(s) ||
-          r.websiteType?.toLowerCase().includes(s)
+    let requirements = await fetchAllMergedRequirements();
+
+    // Filter by status if requested
+    if (status && status !== 'all') {
+      const targetStatus = String(status).toLowerCase().trim();
+      requirements = requirements.filter((r) => {
+        const rStatus = (r.status || 'Submitted').toLowerCase().trim();
+        return rStatus === targetStatus;
+      });
+    }
+
+    // Filter by search query if provided
+    if (search && String(search).trim()) {
+      const s = String(search).toLowerCase().trim();
+      requirements = requirements.filter((r) => {
+        const rId = (r.requirementId || '').toLowerCase();
+        const bName = (r.clientInfo?.businessName || r.websiteTypeName || '').toLowerCase();
+        const oName = (r.clientInfo?.ownerName || r.clientInfo?.contactPerson || '').toLowerCase();
+        const email = (r.clientInfo?.email || r.email || '').toLowerCase();
+        const phone = (r.clientInfo?.mobile || r.clientInfo?.phone || '');
+        const wType = (r.websiteType || r.websiteTypeName || '').toLowerCase();
+
+        return (
+          rId.includes(s) ||
+          bName.includes(s) ||
+          oName.includes(s) ||
+          email.includes(s) ||
+          phone.includes(s) ||
+          wType.includes(s)
         );
-      }
-      requirements.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      });
+    }
+
+    if (limit && Number(limit) > 0) {
+      requirements = requirements.slice(0, Number(limit));
     }
 
     res.status(200).json({
@@ -522,10 +553,9 @@ export const updateRequirementStatus = async (req, res) => {
     }
 
     let updated = null;
-    if (mongoose.connection.readyState === 1) {
+    await ensureDb().catch(() => {});
+    if (isDbConnected()) {
       try {
-        const { default: Requirement } = await import('../models/Requirement.js');
-        await import('../models/User.js');
         updated = await Requirement.findOneAndUpdate(
           { $or: [{ requirementId: id }, ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : [])] },
           { $set: updatePayload },
@@ -536,8 +566,10 @@ export const updateRequirementStatus = async (req, res) => {
       }
     }
 
+    // Always mirror update in dataStore
+    const localUpdated = dataStore.update('requirements', id, { ...updatePayload, updatedAt: new Date().toISOString() });
     if (!updated) {
-      updated = dataStore.update('requirements', id, { ...updatePayload, updatedAt: new Date().toISOString() });
+      updated = localUpdated;
     }
 
     if (!updated) {
@@ -577,7 +609,8 @@ export const deleteRequirement = async (req, res) => {
     const reason = req.body?.reason || req.query?.reason || 'Cancelled/Deleted by Administrator';
     let doc = null;
 
-    if (mongoose.connection.readyState === 1) {
+    await ensureDb().catch(() => {});
+    if (isDbConnected()) {
       const query = mongoose.Types.ObjectId.isValid(id)
         ? { $or: [{ requirementId: id }, { _id: id }] }
         : { requirementId: id };
@@ -599,19 +632,18 @@ export const deleteRequirement = async (req, res) => {
       );
     }
 
-    if (!doc) {
-      const allReqs = dataStore.read('requirements') || [];
-      const existing = allReqs.find((r) => r.requirementId === id || r._id?.toString() === id);
-      if (existing) {
-        doc = dataStore.update('requirements', existing._id, {
-          isDeleted: true,
-          status: 'Cancelled',
-          deletionReason: reason,
-          rejectionReason: reason,
-          deletedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-      }
+    const allReqs = dataStore.read('requirements') || [];
+    const existing = allReqs.find((r) => r.requirementId === id || r._id?.toString() === id);
+    if (existing) {
+      const localDoc = dataStore.update('requirements', existing._id, {
+        isDeleted: true,
+        status: 'Cancelled',
+        deletionReason: reason,
+        rejectionReason: reason,
+        deletedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      if (!doc) doc = localDoc;
     }
 
     if (!doc) {

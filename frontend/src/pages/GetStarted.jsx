@@ -1557,8 +1557,38 @@ export default function GetStarted() {
     setPendingDraft(null);
   };
 
+  // Helper to purge all uploaded Cloudinary assets when user Starts Fresh or Resets Form
+  const purgeAllUploadedMedia = () => {
+    try {
+      const urlsToDelete = [];
+      if (formData.logoFile?.url) urlsToDelete.push(formData.logoFile.url);
+      if (Array.isArray(formData.photosFiles)) {
+        formData.photosFiles.forEach(p => {
+          if (p?.url) urlsToDelete.push(p.url);
+        });
+      }
+
+      if (pendingDraft?.formData?.logoFile?.url) {
+        urlsToDelete.push(pendingDraft.formData.logoFile.url);
+      }
+      if (Array.isArray(pendingDraft?.formData?.photosFiles)) {
+        pendingDraft.formData.photosFiles.forEach(p => {
+          if (p?.url) urlsToDelete.push(p.url);
+        });
+      }
+
+      const uniqueUrls = [...new Set(urlsToDelete)].filter(u => u && typeof u === 'string' && (u.includes('res.cloudinary.com') || u.includes('/uploads/')));
+      if (uniqueUrls.length > 0) {
+        api.delete('/upload', { urls: uniqueUrls }).catch((err) => {
+          console.warn('Cloudinary purge notice on start fresh:', err.message);
+        });
+      }
+    } catch (e) {}
+  };
+
   const handleStartFresh = () => {
     hasUserInteracted.current = true;
+    purgeAllUploadedMedia();
     localStorage.removeItem(draftStorageKey);
     localStorage.removeItem('l2b_get_started_draft');
     setPendingDraft(null);
@@ -1580,7 +1610,7 @@ export default function GetStarted() {
       logoFile: null
     }));
     setCurrentStep(1);
-    toast.info('Started fresh clean order form.');
+    toast.info('Started fresh clean order form (cleared images from cloud).');
   };
 
   // Auto-Save Draft on changes (debounced) — only for Step 2+
@@ -1765,7 +1795,8 @@ export default function GetStarted() {
 
   // Helper to reset form
   const handleResetForm = () => {
-    if (window.confirm('Are you sure you want to reset all form fields and start fresh?')) {
+    if (window.confirm('Are you sure you want to reset all form fields and start fresh? All attached images will be cleared from cloud.')) {
+      purgeAllUploadedMedia();
       localStorage.removeItem(draftStorageKey);
       localStorage.removeItem('l2b_get_started_draft');
       window.location.reload();
@@ -1943,11 +1974,30 @@ export default function GetStarted() {
     }
   };
 
+  const handleRemoveLogo = () => {
+    const logoUrl = formData.logoFile?.url || formData.logoFile?.dataUrl;
+    if (logoUrl && typeof logoUrl === 'string' && (logoUrl.includes('res.cloudinary.com') || logoUrl.includes('/uploads/'))) {
+      api.delete('/upload', { url: logoUrl }).catch((err) => {
+        console.warn('Cloudinary delete notice on remove logo:', err.message);
+      });
+    }
+    setFormData(prev => ({ ...prev, logoFile: null }));
+    toast.info('Logo removed.');
+  };
+
   const handleRemovePhoto = (index) => {
+    const targetPhoto = formData.photosFiles?.[index];
+    const photoUrl = targetPhoto?.url || targetPhoto?.dataUrl;
+    if (photoUrl && typeof photoUrl === 'string' && (photoUrl.includes('res.cloudinary.com') || photoUrl.includes('/uploads/'))) {
+      api.delete('/upload', { url: photoUrl }).catch((err) => {
+        console.warn('Cloudinary delete notice on remove photo:', err.message);
+      });
+    }
     setFormData(prev => ({
       ...prev,
       photosFiles: prev.photosFiles.filter((_, i) => i !== index)
     }));
+    toast.info('Photo removed.');
   };
 
   // Validation before advancing step
@@ -4280,7 +4330,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                       </div>
                       <button
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, logoFile: null }))}
+                        onClick={handleRemoveLogo}
                         className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
                         title="Remove Logo"
                       >

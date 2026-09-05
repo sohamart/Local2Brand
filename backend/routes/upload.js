@@ -1,5 +1,5 @@
 import express from 'express';
-import { uploadImage } from '../controllers/uploadController.js';
+import { uploadImage, deleteMedia } from '../controllers/uploadController.js';
 import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
@@ -28,6 +28,9 @@ router.post(
   uploadImage
 );
 
+// Delete media from Cloudinary / local storage
+router.delete('/', deleteMedia);
+router.post('/delete', deleteMedia);
 
 export default router;
 
