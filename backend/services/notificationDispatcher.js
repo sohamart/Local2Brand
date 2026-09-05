@@ -59,28 +59,29 @@ class NotificationDispatcher {
 
       // 3. Dispatch OneSignal Push Notification if enabled
       if (sendPush && oneSignalBackend.isConfigured()) {
-        if (recipientRole === 'admin' && !finalRecipient) {
+        const isCustomBroadcast = type === 'broadcast';
+
+        // Generic safe push payload for privacy (no phone numbers or sensitive order details over push)
+        const pushTitle = isCustomBroadcast ? title : '🔔 1 New Message in Inbox';
+        const pushMessage = isCustomBroadcast
+          ? message
+          : 'You have a new update in your LOCAL2BRAND inbox. Tap to view.';
+        const pushUrl = link || (recipientRole === 'admin' ? '/admin/inbox' : '/dashboard');
+
+        if (recipientRole === 'admin') {
           pushResult = await oneSignalBackend.sendNotificationToAdmins({
-            title,
-            message,
-            url: link || '/admin',
-            data: { ...data, notificationId: notificationRecord._id.toString(), type },
+            title: pushTitle,
+            message: pushMessage,
+            url: pushUrl,
+            data: { notificationId: notificationRecord._id.toString(), type },
           });
-        } else if (finalRecipient || finalEmail) {
-          pushResult = await oneSignalBackend.sendPushNotification({
-            userIds: finalRecipient ? [finalRecipient.toString()] : [],
-            emails: finalEmail ? [finalEmail] : [],
-            title,
-            message,
-            url: link || '/dashboard',
-            data: { ...data, notificationId: notificationRecord._id.toString(), type },
-          });
-        } else if (recipientRole === 'all') {
+        } else {
+          // Broadcast generic inbox ping to all subscribed client devices reliably
           pushResult = await oneSignalBackend.broadcastPushNotification({
-            title,
-            message,
-            url: link || '/dashboard',
-            data: { ...data, notificationId: notificationRecord._id.toString(), type },
+            title: pushTitle,
+            message: pushMessage,
+            url: pushUrl,
+            data: { notificationId: notificationRecord._id.toString(), type },
           });
         }
       }
