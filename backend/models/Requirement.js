@@ -118,8 +118,13 @@ const RequirementSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.Mixed,
     default: {}
   },
-  images: [{ type: String }],
-  uploadedImages: [{ type: String }],
+  images: [{ type: mongoose.Schema.Types.Mixed }],
+  uploadedImages: [{ type: mongoose.Schema.Types.Mixed }],
+  logoFile: { type: mongoose.Schema.Types.Mixed, default: null },
+  photosFiles: [{ type: mongoose.Schema.Types.Mixed }],
+  designPreferences: { type: mongoose.Schema.Types.Mixed, default: {} },
+  priceBreakdown: { type: mongoose.Schema.Types.Mixed, default: {} },
+  fullFormData: { type: mongoose.Schema.Types.Mixed, default: {} },
   aiExecutiveSummary: {
     type: String,
     default: ''

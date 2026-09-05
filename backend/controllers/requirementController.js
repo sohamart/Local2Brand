@@ -135,40 +135,37 @@ export const saveRequirementDraft = async (req, res) => {
       userId: req.user?._id?.toString() || req.user?.id || (validUserId ? String(validUserId) : null),
       clientInfo,
       images: uniqueImages.length > 0 ? uniqueImages : (data.images || []),
-      uploadedImages: uniqueImages.length > 0 ? uniqueImages : (data.uploadedImages || []),
+      uploadedImages: data.uploadedImages || uniqueImages,
       ipAddress: req.ip || req.connection?.remoteAddress || ''
     };
 
+    if (!validUserId) {
+      delete payload.user;
+    }
+
+    await connectDB();
     let doc = null;
-    await ensureDb().catch(() => {});
-    if (isDbConnected()) {
-      try {
-        let existingDoc = await Requirement.findOne({ requirementId });
-        if (existingDoc) {
-          doc = await Requirement.findByIdAndUpdate(existingDoc._id, { $set: payload }, { new: true, setDefaultsOnInsert: true });
-        } else {
-          doc = await Requirement.create(payload);
-        }
-      } catch (dbErr) {
-        console.warn('MongoDB draft save notice:', dbErr.message);
-      }
+    let existingDoc = await Requirement.findOne({ requirementId });
+    if (existingDoc) {
+      doc = await Requirement.findByIdAndUpdate(existingDoc._id, { $set: payload }, { new: true, setDefaultsOnInsert: true });
+    } else {
+      doc = await Requirement.create(payload);
     }
     
-    // Always mirror in dataStore
-    const existing = dataStore.find('requirements', (r) => r.requirementId === requirementId);
-    if (existing) {
-      dataStore.update('requirements', existing._id, payload);
-    } else {
-      dataStore.create('requirements', payload);
-    }
-    if (!doc) {
-      doc = dataStore.find('requirements', (r) => r.requirementId === requirementId) || payload;
-    }
+    // Mirror in dataStore
+    try {
+      const existing = dataStore.find('requirements', (r) => r.requirementId === requirementId);
+      if (existing) {
+        dataStore.update('requirements', existing._id, payload);
+      } else {
+        dataStore.create('requirements', payload);
+      }
+    } catch (e) {}
 
     res.status(200).json({
       success: true,
       message: 'Progress saved successfully',
-      requirementId: doc.requirementId || requirementId,
+      requirementId: doc?.requirementId || requirementId,
       requirement: doc
     });
   } catch (error) {
@@ -233,56 +230,57 @@ export const submitRequirement = async (req, res) => {
       userId: req.user?._id?.toString() || req.user?.id || (validUserId ? String(validUserId) : null),
       clientInfo,
       images: uniqueImages.length > 0 ? uniqueImages : (finalData.images || []),
-      uploadedImages: uniqueImages.length > 0 ? uniqueImages : (finalData.uploadedImages || []),
+      uploadedImages: finalData.uploadedImages || uniqueImages,
       status: 'Submitted',
       submittedAt: new Date()
     };
 
+    if (!validUserId) {
+      delete updatePayload.user;
+    }
+
+    // Connect strictly to MongoDB Atlas
+    await connectDB();
+
     let doc = null;
-    await ensureDb().catch(() => {});
-
-    if (isDbConnected()) {
-      try {
-        let existingDoc = null;
-        if (mongoose.Types.ObjectId.isValid(targetId)) {
-          existingDoc = await Requirement.findOne({ $or: [{ requirementId: targetId }, { _id: targetId }] });
-        } else {
-          existingDoc = await Requirement.findOne({
-            $or: [
-              { requirementId: targetId },
-              { requirementId: { $regex: new RegExp(`^${targetId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }
-            ]
-          });
-        }
-
-        if (existingDoc) {
-          doc = await Requirement.findByIdAndUpdate(existingDoc._id, { $set: updatePayload }, { new: true });
-        } else {
-          doc = await Requirement.create(updatePayload);
-        }
-      } catch (mongoErr) {
-        console.warn('MongoDB submission save notice:', mongoErr.message);
-      }
-    }
-    
-    // Always mirror in dataStore
-    const existingDs = dataStore.find('requirements', (r) => r.requirementId?.toLowerCase() === targetId.toLowerCase() || r._id === targetId);
-    if (existingDs) {
-      dataStore.update('requirements', existingDs._id, updatePayload);
+    let existingDoc = null;
+    if (mongoose.Types.ObjectId.isValid(targetId)) {
+      existingDoc = await Requirement.findOne({ $or: [{ requirementId: targetId }, { _id: targetId }] });
     } else {
-      dataStore.create('requirements', updatePayload);
-    }
-    if (!doc) {
-      doc = dataStore.find('requirements', (r) => r.requirementId?.toLowerCase() === targetId.toLowerCase() || r._id === targetId) || updatePayload;
+      existingDoc = await Requirement.findOne({
+        $or: [
+          { requirementId: targetId },
+          { requirementId: { $regex: new RegExp(`^${targetId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }
+        ]
+      });
     }
 
-    if (!doc) {
-      return res.status(500).json({ success: false, message: 'Failed to record requirement submission' });
+    if (existingDoc) {
+      doc = await Requirement.findByIdAndUpdate(existingDoc._id, { $set: updatePayload }, { new: true });
+    } else {
+      doc = await Requirement.create(updatePayload);
     }
+
+    if (!doc || !doc._id) {
+      return res.status(500).json({
+        success: false,
+        message: 'Sorry, order could not be generated in the database. Please check your connection or contact our team directly.'
+      });
+    }
+
+    // Mirror to dataStore
+    try {
+      const existingDs = dataStore.find('requirements', (r) => r.requirementId?.toLowerCase() === targetId.toLowerCase() || r._id === targetId);
+      if (existingDs) {
+        dataStore.update('requirements', existingDs._id, updatePayload);
+      } else {
+        dataStore.create('requirements', updatePayload);
+      }
+    } catch (e) {}
 
     const savedReqId = doc.requirementId || targetId;
 
-    // Immediately respond to client so UI transitions in milliseconds
+    // Return confirmed MongoDB saved document
     res.status(200).json({
       success: true,
       message: 'Your website requirements have been submitted successfully.',

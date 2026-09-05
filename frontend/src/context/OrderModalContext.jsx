@@ -28,30 +28,30 @@ export function OrderModalProvider({ children }) {
     const isOfferTrigger =
       data.autoApplyOffer === true ||
       Boolean(data.promoCode) ||
-      data.websiteType?.toLowerCase().includes('offer') ||
-      data.websiteType?.toLowerCase().includes('20%') ||
-      data.websiteType?.toLowerCase().includes('india2025') ||
       true; // Default to activating coupon for direct orders
 
     const promoCode = data.promoCode || (isOfferTrigger ? 'INDIA2025' : '');
     const discountPercent = data.discountPercent || (isOfferTrigger ? 20 : 0);
-    const rawSlug = data.templateId || data.slug || data.selectedDemoSlug || data.selectedDemo || data.websiteType || '';
+    
+    // Only extract slug/template if it's explicitly an actual demo template ID/slug, not a generic proposal
+    const rawSlug = data.templateId || data.slug || data.selectedDemoSlug || '';
     const cleanSlug = typeof rawSlug === 'string' && !rawSlug.includes(' ') ? rawSlug : '';
-    const templateTitle = data.selectedDemo || data.templateTitle || data.websiteType || 'Custom Website';
+    const templateTitle = data.selectedDemo || data.templateTitle || '';
     const price = data.price || data.priceInr || '';
     const category = data.category || '';
 
     const params = new URLSearchParams();
-    if (rawSlug) params.set('template', rawSlug);
+    if (cleanSlug || rawSlug) params.set('template', cleanSlug || rawSlug);
     if (templateTitle) params.set('title', templateTitle);
     if (category) params.set('category', category);
     if (price) params.set('price', price);
     if (promoCode) params.set('coupon', promoCode);
     if (discountPercent) params.set('discount', String(discountPercent));
+    if (data.initialRequirements) params.set('notes', data.initialRequirements);
 
     const targetPath = cleanSlug
       ? `/get-started/${encodeURIComponent(cleanSlug)}?${params.toString()}`
-      : `/get-started?${params.toString()}`;
+      : (params.toString() ? `/get-started?${params.toString()}` : `/get-started`);
 
     // Directly navigate to dedicated /get-started form page with pre-filled state!
     navigate(targetPath, {

@@ -852,15 +852,32 @@ export default function GetStarted() {
     return filterDemosForCategory(dbDemosList, category);
   }, [dbDemosList]);
 
+  const isGenericOrProposalSlug = (str) => {
+    if (!str || typeof str !== 'string') return true;
+    const s = str.trim().toLowerCase();
+    return (
+      !s ||
+      s === 'custom website' ||
+      s === 'new project proposal' ||
+      s === 'new proposal' ||
+      s === 'proposal' ||
+      s === 'general proposal' ||
+      s === 'agency collaboration' ||
+      s.startsWith('won prize') ||
+      s.startsWith('general proposal') ||
+      s.includes('proposal')
+    );
+  };
+
   const [appliedTemplate, setAppliedTemplate] = useState(() => {
     const direct = location.state?.selectedDemo || searchParams.get('title') || searchParams.get('template') || templateId || '';
-    return (direct && direct !== 'Custom Website') ? direct : '';
+    return !isGenericOrProposalSlug(direct) ? direct : '';
   });
 
   // Sync appliedTemplate whenever dynamic route / URL params / state change
   useEffect(() => {
     const direct = location.state?.selectedDemo || searchParams.get('title') || searchParams.get('template') || templateId || '';
-    if (direct && direct !== 'Custom Website') {
+    if (!isGenericOrProposalSlug(direct)) {
       setAppliedTemplate(direct);
       const matchedCategory = resolveCategoryFromTemplate(direct);
       setFormData(prev => ({
@@ -868,12 +885,15 @@ export default function GetStarted() {
         appliedTemplateName: direct,
         ...(matchedCategory ? { selectedCategory: matchedCategory } : {})
       }));
+    } else {
+      setAppliedTemplate('');
+      setFormData(prev => ({ ...prev, appliedTemplateName: '' }));
     }
   }, [templateId, searchParams, location.state]);
 
   // Guarantee that whenever appliedTemplate is set, selectedCategory is strictly locked to that template
   useEffect(() => {
-    if (appliedTemplate && appliedTemplate !== 'Custom Website') {
+    if (appliedTemplate && !isGenericOrProposalSlug(appliedTemplate)) {
       const matchedCategory = resolveCategoryFromTemplate(appliedTemplate);
       if (matchedCategory) {
         setFormData(prev => {
@@ -1835,19 +1855,76 @@ export default function GetStarted() {
     toast.info('Template removed. Category selection is now unlocked.');
   };
 
-  // Helper for asynchronous file upload to Cloudinary/Server CDN
+  // Client-side instant image optimization for lightning-fast Cloud CDN uploads
+  const compressImageForUpload = async (file, maxDimension = 1920, quality = 0.85) => {
+    if (!file || !file.type || !file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
+      return file;
+    }
+    if (file.size < 350 * 1024) {
+      return file;
+    }
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round((height * maxDimension) / width);
+              width = maxDimension;
+            } else {
+              width = Math.round((width * maxDimension) / height);
+              height = maxDimension;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob && blob.size < file.size) {
+                const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              } else {
+                resolve(file);
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        img.onerror = () => resolve(file);
+        img.src = e.target.result;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Helper for asynchronous file upload to Cloud CDN with Instant Toastify feedback
   const handleFileUpload = async (e, fieldType) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+    const rawFiles = Array.from(e.target.files || []);
+    if (!rawFiles.length) return;
 
     if (fieldType === 'logo') {
-      const file = files[0];
-      if (file.size > 15 * 1024 * 1024) {
-        toast.error('Logo file size exceeds 15MB. Please choose a smaller image.');
+      const file = rawFiles[0];
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error('Logo file size exceeds 20MB. Please choose a smaller image.');
         return;
       }
+
       setIsUploadingLogo(true);
       setUploadProgressText(`Uploading ${file.name}...`);
+      const uploadToastId = toast.loading(`Uploading brand logo "${file.name}"...`);
 
       // Read local preview first so user immediately sees their file
       const localPreview = await new Promise((resolve) => {
@@ -1868,8 +1945,10 @@ export default function GetStarted() {
       }));
 
       try {
-        const uploadRes = await api.uploadFile(file);
+        const optimizedFile = await compressImageForUpload(file, 1600, 0.9);
+        const uploadRes = await api.uploadFile(optimizedFile);
         const remoteUrl = uploadRes?.url || (uploadRes?.urls && uploadRes.urls[0]) || '';
+        
         if (remoteUrl) {
           setFormData(prev => ({
             ...prev,
@@ -1881,7 +1960,12 @@ export default function GetStarted() {
               isUploading: false
             }
           }));
-          toast.success(`🎉 Logo "${file.name}" uploaded to Cloud CDN!`);
+          toast.update(uploadToastId, {
+            render: `🎉 Logo "${file.name}" uploaded successfully!`,
+            type: 'success',
+            isLoading: false,
+            autoClose: 3000
+          });
         } else {
           setFormData(prev => ({
             ...prev,
@@ -1893,7 +1977,12 @@ export default function GetStarted() {
               isUploading: false
             }
           }));
-          toast.info(`Logo "${file.name}" attached.`);
+          toast.update(uploadToastId, {
+            render: `Logo "${file.name}" attached.`,
+            type: 'info',
+            isLoading: false,
+            autoClose: 2500
+          });
         }
       } catch (err) {
         console.warn('Logo cloud upload notice, retaining local attachment:', err.message);
@@ -1907,62 +1996,86 @@ export default function GetStarted() {
             isUploading: false
           }
         }));
-        toast.info(`Logo "${file.name}" attached.`);
+        toast.update(uploadToastId, {
+          render: `Logo "${file.name}" attached successfully.`,
+          type: 'info',
+          isLoading: false,
+          autoClose: 2500
+        });
       } finally {
         setIsUploadingLogo(false);
         setUploadProgressText('');
       }
     } else if (fieldType === 'photos') {
       setIsUploadingPhotos(true);
-      const total = files.length;
-      let uploadedCount = 0;
+      const total = rawFiles.length;
+      setUploadProgressText(`Optimizing & uploading ${total} photo(s)...`);
+      const uploadToastId = toast.loading(`Uploading ${total} project photo(s)...`);
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        if (file.size > 25 * 1024 * 1024) {
-          toast.warn(`Skipped "${file.name}" (exceeds 25MB)`);
-          continue;
-        }
+      try {
+        // Concurrently optimize and upload all photos in parallel
+        const uploadResults = await Promise.all(
+          rawFiles.map(async (file, idx) => {
+            if (file.size > 25 * 1024 * 1024) {
+              return null;
+            }
 
-        setUploadProgressText(`Uploading photo ${i + 1} of ${total}...`);
+            const localPreview = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (ev) => resolve(ev.target.result);
+              reader.readAsDataURL(file);
+            });
 
-        const localPreview = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (ev) => resolve(ev.target.result);
-          reader.readAsDataURL(file);
-        });
+            let finalUrl = localPreview;
+            try {
+              const optimizedFile = await compressImageForUpload(file, 1920, 0.85);
+              const uploadRes = await api.uploadFile(optimizedFile);
+              const remoteUrl = uploadRes?.url || (uploadRes?.urls && uploadRes.urls[0]) || '';
+              if (remoteUrl) {
+                finalUrl = remoteUrl;
+              }
+            } catch (err) {
+              console.warn(`Photo ${idx + 1} upload notice, using local preview:`, err.message);
+            }
 
-        let finalUrl = localPreview;
-        try {
-          const uploadRes = await api.uploadFile(file);
-          const remoteUrl = uploadRes?.url || (uploadRes?.urls && uploadRes.urls[0]) || '';
-          if (remoteUrl) {
-            finalUrl = remoteUrl;
-          }
-        } catch (err) {
-          console.warn('Photo upload notice, using local preview:', err.message);
-        }
+            return {
+              name: file.name,
+              size: `${(file.size / 1024).toFixed(1)} KB`,
+              dataUrl: finalUrl,
+              url: finalUrl
+            };
+          })
+        );
+
+        const validPhotos = uploadResults.filter(Boolean);
 
         setFormData(prev => ({
           ...prev,
           photosFiles: [
             ...(prev.photosFiles || []),
-            {
-              name: file.name,
-              size: `${(file.size / 1024).toFixed(1)} KB`,
-              dataUrl: finalUrl,
-              url: finalUrl
-            }
+            ...validPhotos
           ]
         }));
-        uploadedCount++;
-      }
 
-      setIsUploadingPhotos(false);
-      setUploadProgressText('');
-      toast.success(`📸 Added ${uploadedCount} photo(s) successfully!`);
+        toast.update(uploadToastId, {
+          render: `📸 ${validPhotos.length} photo(s) uploaded successfully!`,
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000
+        });
+      } catch (err) {
+        toast.update(uploadToastId, {
+          render: 'Photos attached to requirement specifications.',
+          type: 'info',
+          isLoading: false,
+          autoClose: 2500
+        });
+      } finally {
+        setIsUploadingPhotos(false);
+        setUploadProgressText('');
+      }
     } else if (fieldType === 'contentDoc') {
-      const file = files[0];
+      const file = rawFiles[0];
       setFormData(prev => ({
         ...prev,
         contentDocFile: {
