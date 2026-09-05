@@ -137,11 +137,13 @@ export default function FloatingMobileInbox() {
           aria-label="Notifications & Inbox"
           className="relative group transition-transform duration-200 active:scale-95 cursor-pointer"
         >
-          {/* Ambient Glow Aura */}
-          <span className="absolute -inset-1.5 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-400 opacity-60 blur-md group-hover:opacity-80 transition-opacity pointer-events-none" />
+          {/* Subtle Ambient Aura (Toned down and soft) */}
+          {unreadCount > 0 && (
+            <span className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-purple-500/25 via-pink-500/20 to-amber-400/25 blur-xs pointer-events-none" />
+          )}
 
           {/* Ultra-Premium Colorful Gradient Border Container */}
-          <div className="relative w-12 h-12 rounded-2xl p-[1.8px] bg-gradient-to-tr from-purple-600 via-pink-500 to-amber-400 dark:from-purple-500 dark:via-cyan-400 dark:to-pink-500 shadow-[0_8px_25px_rgba(168,85,247,0.35)] dark:shadow-[0_8px_25px_rgba(6,182,212,0.35)]">
+          <div className="relative w-12 h-12 rounded-2xl p-[1.8px] bg-gradient-to-tr from-purple-600 via-pink-500 to-amber-400 dark:from-purple-500 dark:via-cyan-400 dark:to-pink-500 shadow-md shadow-purple-500/10 dark:shadow-cyan-500/10">
             {/* Frosted Glass Core */}
             <div className="w-full h-full rounded-[14px] bg-white/95 dark:bg-[#090e1a]/95 backdrop-blur-xl flex items-center justify-center transition-all duration-300">
               {/* Bell Icon with natural ringing swing animation */}
@@ -158,7 +160,7 @@ export default function FloatingMobileInbox() {
 
           {/* Prominent High-Contrast Floating Notification Count Badge */}
           {unreadCount > 0 && (
-            <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-1.5 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10.5px] font-black tracking-tight flex items-center justify-center shadow-lg shadow-rose-500/50 border-2 border-white dark:border-[#090e1a] animate-bounce">
+            <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-1.5 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10.5px] font-black tracking-tight flex items-center justify-center shadow-md shadow-rose-500/40 border-2 border-white dark:border-[#090e1a] animate-bounce">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
