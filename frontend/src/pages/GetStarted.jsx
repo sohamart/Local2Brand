@@ -1470,16 +1470,19 @@ export default function GetStarted() {
       const rawDraft = localStorage.getItem('l2b_get_started_draft');
       if (rawDraft) {
         const parsed = JSON.parse(rawDraft);
-        const hasMeaningfulData = parsed?.formData && (
-          parsed.formData.businessName ||
-          parsed.formData.fullName ||
-          parsed.formData.mobileNumber ||
-          parsed.formData.selectedCategory ||
-          (parsed.currentStep && parsed.currentStep > 1) ||
-          parsed.appliedTemplate
+        // Only trigger popup if user has actually moved past Step 1 with meaningful order progress
+        const hasAdvancedStepProgress = Boolean(
+          parsed &&
+          typeof parsed.currentStep === 'number' &&
+          parsed.currentStep > 1 &&
+          (
+            parsed.formData?.selectedCategory ||
+            parsed.formData?.businessName?.trim() ||
+            parsed.appliedTemplate
+          )
         );
 
-        if (hasMeaningfulData) {
+        if (hasAdvancedStepProgress) {
           const draftToApply = { ...parsed.formData };
           if (user?.email) {
             draftToApply.emailAddress = user.email;
@@ -1489,6 +1492,11 @@ export default function GetStarted() {
 
           setPendingDraft({ ...parsed, formData: draftToApply });
           setShowDraftModal(true);
+        } else {
+          // If on Step 1 or no advanced data, silently purge to prevent popup
+          localStorage.removeItem('l2b_get_started_draft');
+          setShowDraftModal(false);
+          setPendingDraft(null);
         }
       }
     } catch (e) {
@@ -1548,18 +1556,23 @@ export default function GetStarted() {
     toast.info('Started fresh clean order form.');
   };
 
-  // Auto-Save Draft on changes (debounced)
+  // Auto-Save Draft on changes (debounced) — only for Step 2+
   useEffect(() => {
-    const hasData = Boolean(
-      formData.businessName ||
-      formData.fullName ||
-      formData.mobileNumber ||
-      formData.selectedCategory ||
-      currentStep > 1 ||
-      appliedTemplate
+    // Only autosave when client has moved past Step 1
+    const hasMeaningfulSaveData = Boolean(
+      currentStep > 1 && (
+        formData.selectedCategory ||
+        formData.businessName?.trim() ||
+        appliedTemplate
+      )
     );
 
-    if (!hasData) return;
+    if (!hasMeaningfulSaveData) {
+      if (currentStep <= 1) {
+        localStorage.removeItem('l2b_get_started_draft');
+      }
+      return;
+    }
 
     const timer = setTimeout(() => {
       try {
