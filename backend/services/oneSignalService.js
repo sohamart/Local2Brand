@@ -15,6 +15,43 @@ const ONESIGNAL_API_URL = 'https://onesignal.com/api/v1/notifications';
 const DEFAULT_ICON = 'https://local2brand.com/favicon.jpg';
 const DEFAULT_LOGO = 'https://local2brand.com/logo.jpg';
 
+export const resolveNotificationUrl = (url, defaultPath = '/dashboard') => {
+  const prodBase = 'https://local2brand.vercel.app';
+  if (!url) {
+    return `${prodBase}${defaultPath.startsWith('/') ? defaultPath : `/${defaultPath}`}`;
+  }
+
+  let finalUrl = String(url).trim();
+
+  // If comma separated (like CLIENT_URL in .env)
+  if (finalUrl.includes(',')) {
+    finalUrl = finalUrl.split(',')[0].trim();
+  }
+
+  // Replace localhost or 127.0.0.1 with live production URL
+  if (finalUrl.includes('localhost') || finalUrl.includes('127.0.0.1')) {
+    try {
+      const parsed = new URL(finalUrl);
+      const pathname = parsed.pathname === '/' ? defaultPath : parsed.pathname;
+      return `${prodBase}${pathname || defaultPath}${parsed.search || ''}${parsed.hash || ''}`;
+    } catch (e) {
+      return `${prodBase}${defaultPath}`;
+    }
+  }
+
+  // If relative path
+  if (finalUrl.startsWith('/')) {
+    return `${prodBase}${finalUrl}`;
+  }
+
+  // If already full http(s)
+  if (finalUrl.startsWith('http://') || finalUrl.startsWith('https://')) {
+    return finalUrl;
+  }
+
+  return `${prodBase}/${finalUrl.replace(/^\/+/, '')}`;
+};
+
 class OneSignalBackendService {
   constructor() {
     this.appId = process.env.ONESIGNAL_APP_ID || '';
@@ -177,12 +214,8 @@ class OneSignalBackendService {
 
     const { userIds: resolvedUserIds, emails: resolvedEmails } = await this.resolveTargetUserIds(rawTargets);
 
-    // Base Notification Payload
-    const clientBase = (process.env.CLIENT_URL || 'https://local2brand.vercel.app').replace(/\/+$/, '');
-    let resolvedUrl = url || `${clientBase}/dashboard`;
-    if (typeof resolvedUrl === 'string' && resolvedUrl.startsWith('/')) {
-      resolvedUrl = `${clientBase}${resolvedUrl}`;
-    }
+    // Guaranteed production absolute URL resolution
+    const resolvedUrl = resolveNotificationUrl(url, '/dashboard');
 
     const payload = {
       app_id: appId,
@@ -347,7 +380,7 @@ class OneSignalBackendService {
     } catch (e) {}
 
     const uniqueAdminIds = [...new Set(resolvedAdminIds.filter(Boolean))];
-    const resolvedAdminUrl = url || (process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/admin` : 'https://local2brand.vercel.app/admin');
+    const resolvedAdminUrl = resolveNotificationUrl(url, '/admin');
 
     let result = null;
 

@@ -372,7 +372,7 @@ export default function AdminBroadcast() {
       const res = await api.post('/notifications/test', {
         title: pushTitle,
         message: pushMessage,
-        url: pushUrl || window.location.origin,
+        url: pushUrl || 'https://local2brand.vercel.app/dashboard',
         bigPicture: pushBigPicture,
         target: 'broadcast',
       });
