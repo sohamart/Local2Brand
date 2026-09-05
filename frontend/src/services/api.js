@@ -216,7 +216,6 @@ class ApiClient {
     // 1. Try Multipart FormData
     try {
       const formData = new FormData();
-      formData.append('image', file);
       formData.append('file', file);
       const res = await this.post('/upload', formData);
       if (res?.url || res?.urls?.length) {

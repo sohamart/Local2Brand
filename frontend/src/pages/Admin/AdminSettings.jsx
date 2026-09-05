@@ -299,7 +299,6 @@ export default function AdminSettings() {
 
     try {
       const data = new FormData();
-      data.append('image', file);
       data.append('file', file);
 
       const res = await api.post('/upload', data);

@@ -37,15 +37,11 @@ export const uploadWithToast = async ({
 
   const formData = new FormData();
   if (files && files.length > 0) {
-    Array.from(files).forEach(f => {
-      formData.append('images', f);
-      formData.append('file', f);
+    Array.from(files).forEach((f) => {
+      formData.append('files', f);
     });
   } else if (file) {
-    formData.append('images', file);
     formData.append('file', file);
-    formData.append('image', file);
-    formData.append('video', file);
   }
 
   let currentPercent = 0;

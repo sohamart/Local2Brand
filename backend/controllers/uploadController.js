@@ -13,7 +13,7 @@ const uploadFileToCloudinary = (filePath, options = {}) => {
     try {
       const stats = fs.statSync(filePath);
       const isVideo = options.resource_type === 'video';
-      const isLarge = stats.size > 40 * 1024 * 1024; // If > 40MB, use chunked upload_large
+      const isLarge = stats.size > 10 * 1024 * 1024 || isVideo; // If > 10MB or video, use resilient chunked upload_large
 
       console.log(`☁️ Uploading to Cloudinary [Size: ${(stats.size / (1024 * 1024)).toFixed(2)} MB, Resource: ${options.resource_type || 'auto'}, Method: ${isLarge ? 'upload_large' : 'upload'}]...`);
 
