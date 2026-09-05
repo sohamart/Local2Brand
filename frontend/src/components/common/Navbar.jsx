@@ -815,8 +815,9 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Right: Theme Toggle & Close (X) Button */}
+            {/* Right: Notification Bell, Theme Toggle & Close (X) Button */}
             <div className="flex items-center gap-2">
+              <NotificationBell />
               <ThemeToggle />
               <button
                 onClick={() => setMobileMenuOpen(false)}

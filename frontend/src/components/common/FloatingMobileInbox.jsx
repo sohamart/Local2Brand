@@ -137,27 +137,28 @@ export default function FloatingMobileInbox() {
           aria-label="Notifications & Inbox"
           className="relative group transition-transform duration-200 active:scale-95 cursor-pointer"
         >
-          {/* Ambient Glow Aura when there are unread messages */}
-          {unreadCount > 0 && (
-            <span className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 opacity-50 blur-md animate-pulse pointer-events-none" />
-          )}
+          {/* Ambient Glow Aura */}
+          <span className="absolute -inset-1.5 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-500 to-amber-400 opacity-60 blur-md group-hover:opacity-80 transition-opacity pointer-events-none" />
 
-          {/* Premium Glassmorphic Squircle Container with Subtle Light Border */}
-          <div className="relative w-12 h-12 rounded-2xl bg-white/95 dark:bg-[#0b1120]/95 backdrop-blur-xl border border-purple-400/40 dark:border-purple-400/35 ring-1 ring-slate-900/10 dark:ring-white/15 shadow-[0_8px_22px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.45)] flex items-center justify-center transition-all duration-300 group-hover:border-purple-500 dark:group-hover:border-purple-300">
-            {/* Bell Icon with continuous natural ringing swing animation */}
-            {unreadCount > 0 ? (
-              <div className="relative flex items-center justify-center">
-                <BellRing className="w-5 h-5 text-amber-500 dark:text-amber-400 animate-bell-swing drop-shadow-xs" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#0b1120] animate-ping" />
-              </div>
-            ) : (
-              <Bell className="w-5 h-5 text-slate-700 dark:text-slate-200 animate-bell-swing transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400" />
-            )}
+          {/* Ultra-Premium Colorful Gradient Border Container */}
+          <div className="relative w-12 h-12 rounded-2xl p-[1.8px] bg-gradient-to-tr from-purple-600 via-pink-500 to-amber-400 dark:from-purple-500 dark:via-cyan-400 dark:to-pink-500 shadow-[0_8px_25px_rgba(168,85,247,0.35)] dark:shadow-[0_8px_25px_rgba(6,182,212,0.35)]">
+            {/* Frosted Glass Core */}
+            <div className="w-full h-full rounded-[14px] bg-white/95 dark:bg-[#090e1a]/95 backdrop-blur-xl flex items-center justify-center transition-all duration-300">
+              {/* Bell Icon with natural ringing swing animation */}
+              {unreadCount > 0 ? (
+                <div className="relative flex items-center justify-center">
+                  <BellRing className="w-5 h-5 text-amber-500 dark:text-amber-400 animate-bell-swing drop-shadow-xs" />
+                  <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#090e1a] animate-ping" />
+                </div>
+              ) : (
+                <Bell className="w-5 h-5 text-slate-800 dark:text-slate-100 animate-bell-swing transition-colors group-hover:text-purple-600 dark:group-hover:text-cyan-400" />
+              )}
+            </div>
           </div>
 
           {/* Prominent High-Contrast Floating Notification Count Badge */}
           {unreadCount > 0 && (
-            <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-1.5 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10.5px] font-black tracking-tight flex items-center justify-center shadow-lg shadow-rose-500/50 border-2 border-white dark:border-[#0b1120] animate-bounce">
+            <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-1.5 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10.5px] font-black tracking-tight flex items-center justify-center shadow-lg shadow-rose-500/50 border-2 border-white dark:border-[#090e1a] animate-bounce">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
