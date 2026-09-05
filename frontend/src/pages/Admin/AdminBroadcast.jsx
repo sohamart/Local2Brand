@@ -210,6 +210,7 @@ export default function AdminBroadcast() {
           setPushStatus({
             configured: res.configured || res.appIdConfigured,
             appIdPreview: res.appIdPreview,
+            totalSubscribers: res.totalSubscribers,
             message: res.message,
             loading: false,
           });
@@ -505,12 +506,17 @@ export default function AdminBroadcast() {
               📡
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-black text-slate-900 dark:text-white">OneSignal Web Push Gateway:</span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
                   Live &amp; Connected
                 </span>
+                {pushStatus?.totalSubscribers !== null && pushStatus?.totalSubscribers !== undefined && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+                    👥 {pushStatus.totalSubscribers} Subscribed Devices
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Pushes reach active desktop Chrome/Edge/Firefox and Android mobile screens even if browser tabs are closed.

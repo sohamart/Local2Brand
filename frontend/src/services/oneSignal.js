@@ -112,12 +112,22 @@ class OneSignalService {
 
     if (Notification.permission !== 'granted') return false;
 
+    try {
+      if (localStorage.getItem('l2b_push_muted') === 'true') {
+        return false;
+      }
+    } catch (e) {}
+
     return new Promise((resolve) => {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push((OneSignal) => {
         try {
-          const isOptedIn = OneSignal.User?.PushSubscription?.optedIn ?? false;
-          resolve(isOptedIn || Notification.permission === 'granted');
+          const pushSub = OneSignal.User?.PushSubscription;
+          if (pushSub && typeof pushSub.optedIn === 'boolean') {
+            resolve(pushSub.optedIn);
+            return;
+          }
+          resolve(Notification.permission === 'granted');
         } catch (e) {
           resolve(Notification.permission === 'granted');
         }
@@ -152,7 +162,8 @@ class OneSignalService {
             if (OneSignal.User?.PushSubscription?.optIn) {
               await OneSignal.User.PushSubscription.optIn();
             }
-            this.notifyListeners({ type: 'permissionGranted' });
+            try { localStorage.removeItem('l2b_push_muted'); } catch (e) {}
+            this.notifyListeners({ type: 'permissionGranted', isSubscribed: true });
             resolve({ success: true, permission: 'granted' });
           } else if (currentPerm === 'denied') {
             resolve({ success: false, permission: 'denied', message: 'Notification permission was blocked in browser settings.' });
@@ -167,7 +178,31 @@ class OneSignalService {
   }
 
   /**
-   * Opt out from push notifications
+   * Opt in / Unmute push notifications
+   */
+  async optIn() {
+    if (typeof window === 'undefined') return;
+
+    return new Promise((resolve) => {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async (OneSignal) => {
+        try {
+          if (OneSignal.User?.PushSubscription?.optIn) {
+            await OneSignal.User.PushSubscription.optIn();
+          }
+          try { localStorage.removeItem('l2b_push_muted'); } catch (e) {}
+          this.notifyListeners({ type: 'optIn', isSubscribed: true });
+          resolve(true);
+        } catch (e) {
+          console.warn('OneSignal optIn error:', e);
+          resolve(false);
+        }
+      });
+    });
+  }
+
+  /**
+   * Opt out / Mute push notifications
    */
   async optOut() {
     if (typeof window === 'undefined') return;
@@ -179,9 +214,11 @@ class OneSignalService {
           if (OneSignal.User?.PushSubscription?.optOut) {
             await OneSignal.User.PushSubscription.optOut();
           }
-          this.notifyListeners({ type: 'optOut' });
+          try { localStorage.setItem('l2b_push_muted', 'true'); } catch (e) {}
+          this.notifyListeners({ type: 'optOut', isSubscribed: false });
           resolve(true);
         } catch (e) {
+          console.warn('OneSignal optOut error:', e);
           resolve(false);
         }
       });

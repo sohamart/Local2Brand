@@ -3,7 +3,7 @@ import { Bell, BellRing, BellOff, Check, X, ShieldAlert, Sparkles, ExternalLink 
 import useOneSignal from '../../hooks/useOneSignal';
 
 export default function NotificationBell({ className = '' }) {
-  const { isSupported, permission, isSubscribed, isLoading, requestPermission, optOut } = useOneSignal();
+  const { isSupported, permission, isSubscribed, isLoading, requestPermission, optIn, optOut } = useOneSignal();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -169,14 +169,18 @@ export default function NotificationBell({ className = '' }) {
                 <button
                   type="button"
                   onClick={async () => {
-                    await requestPermission();
+                    if (permission === 'granted') {
+                      await optIn();
+                    } else {
+                      await requestPermission();
+                    }
                     setIsOpen(false);
                   }}
                   disabled={isLoading}
                   className="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-2"
                 >
                   <BellRing className="w-4 h-4 animate-bounce" />
-                  <span>{isLoading ? 'Requesting...' : 'Enable Push Notifications'}</span>
+                  <span>{isLoading ? 'Requesting...' : permission === 'granted' ? 'Unmute & Enable Push Notifications' : 'Enable Push Notifications'}</span>
                 </button>
               )}
             </div>

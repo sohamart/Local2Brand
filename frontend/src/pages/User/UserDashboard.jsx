@@ -34,7 +34,8 @@ import {
   MessageCircle,
   Copy,
   Gift,
-  X
+  X,
+  RefreshCw
 } from 'lucide-react';
 
 import WriteReviewModal from '../../components/common/WriteReviewModal';

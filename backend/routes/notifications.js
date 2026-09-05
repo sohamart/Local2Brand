@@ -6,15 +6,19 @@ const router = express.Router();
 // @desc    Check OneSignal Push service status
 // @route   GET /api/notifications/status
 // @access  Public
-router.get('/status', (req, res) => {
+router.get('/status', async (req, res) => {
   const isConfigured = oneSignalBackend.isConfigured();
   const { appId, apiKey } = oneSignalBackend.getCredentials();
+  const appDetails = isConfigured ? await oneSignalBackend.getAppDetails() : null;
+
   return res.status(200).json({
     success: true,
     configured: isConfigured,
     appIdConfigured: Boolean(appId),
     apiKeyConfigured: Boolean(apiKey),
     appIdPreview: appId ? `${appId.substring(0, 8)}...` : null,
+    totalSubscribers: appDetails?.totalSubscribedUsers ?? null,
+    messageablePlayers: appDetails?.messageablePlayers ?? null,
     message: isConfigured
       ? 'OneSignal Push Service is active and ready.'
       : 'OneSignal Push Service is running in standby (configure ONESIGNAL_APP_ID & ONESIGNAL_REST_API_KEY to activate).',
@@ -31,6 +35,7 @@ router.post('/test', async (req, res) => {
       title = '🎉 LOCAL2BRAND Push Test',
       message = 'Hello! Your browser push notifications are functioning smoothly.',
       url,
+      bigPicture,
       target = 'user', // 'user' | 'broadcast' | 'admin'
     } = req.body || {};
 
@@ -48,12 +53,14 @@ router.post('/test', async (req, res) => {
         title,
         message,
         url,
+        bigPicture,
       });
     } else if (target === 'admin') {
       result = await oneSignalBackend.sendNotificationToAdmins({
         title,
         message,
         url,
+        bigPicture,
       });
     } else {
       if (userId) {
@@ -61,12 +68,14 @@ router.post('/test', async (req, res) => {
           title,
           message,
           url,
+          bigPicture,
         });
       } else {
         result = await oneSignalBackend.broadcastPushNotification({
           title,
           message,
           url,
+          bigPicture,
         });
       }
     }
@@ -97,26 +106,52 @@ router.post('/broadcast', async (req, res) => {
 
     let result;
     if (targetAudience === 'admins') {
+      // Find all admin IDs in DB
+      let adminIds = [];
+      try {
+        const { default: User } = await import('../models/User.js');
+        const admins = await User.find({ role: 'admin' }).select('_id email');
+        adminIds = admins.map((a) => a._id.toString());
+      } catch (e) {}
+
       result = await oneSignalBackend.sendNotificationToAdmins({
+        userIds: adminIds,
         title,
         message,
         url,
         bigPicture,
       });
     } else if (targetAudience === 'clients') {
-      result = await oneSignalBackend.sendPushNotification({
-        filters: [
-          { field: 'tag', key: 'role', relation: '!=', value: 'admin' },
-        ],
-        title,
-        message,
-        url,
-        bigPicture,
-      });
+      // Find all client IDs in DB
+      let clientIds = [];
+      try {
+        const { default: User } = await import('../models/User.js');
+        const clients = await User.find({ role: { $ne: 'admin' } }).select('_id email');
+        clientIds = clients.map((c) => c._id.toString());
+      } catch (e) {}
+
+      if (clientIds.length > 0) {
+        result = await oneSignalBackend.sendPushNotification({
+          userIds: clientIds,
+          title,
+          message,
+          url,
+          bigPicture,
+        });
+      } else {
+        result = await oneSignalBackend.sendPushNotification({
+          filters: [
+            { field: 'tag', key: 'role', relation: '!=', value: 'admin' },
+          ],
+          title,
+          message,
+          url,
+          bigPicture,
+        });
+      }
     } else if (targetAudience === 'custom' && customUserIds) {
-      const userIds = customUserIds.split(',').map((s) => s.trim()).filter(Boolean);
       result = await oneSignalBackend.sendPushNotification({
-        userIds,
+        userIds: customUserIds,
         title,
         message,
         url,

@@ -314,10 +314,10 @@ export const submitRequirement = async (req, res) => {
           data: { type: 'new_order', requirementId: reqId }
         }).catch((err) => console.warn('Admin push alert error:', err.message));
 
-        // Push confirmation to User if authenticated
-        const userTargetId = doc.userId || doc.user?._id || doc.user;
-        if (userTargetId) {
-          oneSignalBackend.sendNotificationToUser(userTargetId, {
+        // Push confirmation to User
+        const userTarget = doc.userId || doc.user?._id || doc.user || doc.clientInfo?.email || doc.email;
+        if (userTarget) {
+          oneSignalBackend.sendNotificationToUser(userTarget, {
             title: `🎉 Order Confirmed (${reqId})`,
             message: `We received your requirements for ${businessName}. Review in progress!`,
             url: `/track-order?id=${reqId}`,
@@ -608,7 +608,7 @@ export const updateRequirementStatus = async (req, res) => {
     }
 
     // Push notification to user on status change
-    const targetUserId = updated.userId || updated.user?._id || updated.user;
+    const targetUserId = updated.userId || updated.user?._id || updated.user || updated.clientInfo?.email || updated.email;
     const reqId = updated.requirementId || id;
     const bizName = updated.clientInfo?.businessName || updated.websiteTypeName || 'Your project';
 

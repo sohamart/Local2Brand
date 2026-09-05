@@ -101,10 +101,28 @@ export function useOneSignal() {
     }
   };
 
+  const optIn = async () => {
+    setIsLoading(true);
+    try {
+      await oneSignalService.optIn();
+      await checkStatus();
+      toast.success('Push notifications unmuted & active!');
+      return true;
+    } catch (err) {
+      toast.error('Failed to update notification preferences.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const toggle = async () => {
     if (isSubscribed) {
       return optOut();
     } else {
+      if (permission === 'granted') {
+        return optIn();
+      }
       return requestPermission();
     }
   };
@@ -115,6 +133,7 @@ export function useOneSignal() {
     isSubscribed,
     isLoading,
     requestPermission,
+    optIn,
     optOut,
     toggle,
     checkStatus,

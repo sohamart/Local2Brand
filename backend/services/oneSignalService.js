@@ -178,11 +178,17 @@ class OneSignalBackendService {
     const { userIds: resolvedUserIds, emails: resolvedEmails } = await this.resolveTargetUserIds(rawTargets);
 
     // Base Notification Payload
+    const clientBase = (process.env.CLIENT_URL || 'https://local2brand.vercel.app').replace(/\/+$/, '');
+    let resolvedUrl = url || `${clientBase}/dashboard`;
+    if (typeof resolvedUrl === 'string' && resolvedUrl.startsWith('/')) {
+      resolvedUrl = `${clientBase}${resolvedUrl}`;
+    }
+
     const payload = {
       app_id: appId,
       headings: { en: title },
       contents: { en: message },
-      url: url || (process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/dashboard` : 'https://local2brand.com/dashboard'),
+      url: resolvedUrl,
       chrome_web_icon: icon || DEFAULT_ICON,
       chrome_web_badge: badge || DEFAULT_ICON,
       firefox_icon: icon || DEFAULT_ICON,
@@ -274,9 +280,39 @@ class OneSignalBackendService {
   }
 
   /**
+   * Fetch live application stats (including total_subscribed_users and messageable_players)
+   */
+  async getAppDetails() {
+    const { appId, apiKey } = this.getCredentials();
+    if (!this.isConfigured()) return null;
+
+    try {
+      const response = await fetch(`https://onesignal.com/api/v1/apps/${appId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${apiKey}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          id: data.id,
+          name: data.name,
+          players: data.players,
+          messageablePlayers: data.messageable_players,
+          totalSubscribedUsers: data.total_subscribed_users || data.players || 0,
+        };
+      }
+    } catch (e) {
+      console.warn('OneSignal getAppDetails error:', e?.message || e);
+    }
+    return null;
+  }
+
+  /**
    * Send notification to a specific registered user by their User ID
    */
-  async sendNotificationToUser(userId, { title, message, url, data = {}, icon }) {
+  async sendNotificationToUser(userId, { title, message, url, data = {}, icon, bigPicture }) {
     if (!userId) return { success: false, message: 'User ID is required' };
     return this.sendPushNotification({
       userIds: [userId],
@@ -285,22 +321,35 @@ class OneSignalBackendService {
       url,
       data,
       icon,
+      bigPicture,
     });
   }
 
   /**
    * Send notification to all administrators
    */
-  async sendNotificationToAdmins({ title, message, url, data = {}, icon }) {
+  async sendNotificationToAdmins({ userIds = [], title, message, url, data = {}, icon, bigPicture }) {
+    let resolvedAdminIds = [...(userIds ? (Array.isArray(userIds) ? userIds : [userIds]) : [])];
+
+    if (resolvedAdminIds.length === 0) {
+      try {
+        const { default: User } = await import('../models/User.js');
+        const admins = await User.find({ role: 'admin' }).select('_id email');
+        resolvedAdminIds = admins.map((a) => a._id.toString());
+      } catch (e) {}
+    }
+
     return this.sendPushNotification({
-      filters: [
+      userIds: resolvedAdminIds.length > 0 ? resolvedAdminIds : undefined,
+      filters: resolvedAdminIds.length === 0 ? [
         { field: 'tag', key: 'role', relation: '=', value: 'admin' },
-      ],
+      ] : undefined,
       title,
       message,
       url: url || (process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/admin` : 'https://local2brand.com/admin'),
       data: { ...data, target: 'admin' },
       icon,
+      bigPicture,
     });
   }
 
