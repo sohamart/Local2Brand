@@ -240,16 +240,8 @@ export default function Hero() {
   const current = showcases[safeIndex] || defaultHeroShowcases[0];
   const CurrentIcon = current.icon || Sparkles;
 
-  // Auto-slide effect with pause on hover
-  useEffect(() => {
-    if (isPaused || showcases.length <= 1) return;
-
-    const timer = setInterval(() => {
-      setActiveTab((prev) => (prev + 1) % showcases.length);
-    }, AUTO_SLIDE_INTERVAL);
-
-    return () => clearInterval(timer);
-  }, [isPaused, showcases.length]);
+  // Static tab selection (changes only on user click, no unexpected auto-sliding)
+  // Auto-slide disabled per user request so the banner stays consistent
 
   // Update dynamic moving liquid waterdrop pill position
   const updatePill = () => {

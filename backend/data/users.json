@@ -48,10 +48,10 @@
     "phone": "",
     "company": "",
     "status": "active",
-    "emailOtp": "259463",
-    "emailOtpExpires": "2026-09-05T07:57:37.348Z",
+    "emailOtp": "121042",
+    "emailOtpExpires": "2026-09-05T08:15:35.230Z",
     "isEmailVerified": false,
-    "updatedAt": "2026-09-05T07:42:37.409Z"
+    "updatedAt": "2026-09-05T08:00:35.289Z"
   },
   {
     "_id": "6a9bc23b958aa27bb9fec0b8",
@@ -63,8 +63,8 @@
     "phone": "",
     "company": "",
     "status": "active",
-    "emailOtp": "663313",
-    "emailOtpExpires": "2026-09-05T07:57:15.164Z",
-    "updatedAt": "2026-09-05T07:42:15.235Z"
+    "emailOtp": "996563",
+    "emailOtpExpires": "2026-09-05T08:15:29.857Z",
+    "updatedAt": "2026-09-05T08:00:29.910Z"
   }
 ]

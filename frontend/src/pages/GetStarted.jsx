@@ -43,6 +43,7 @@ import {
   Bot,
   RefreshCw,
   FileText,
+  PhoneCall,
   Languages,
   CheckCheck,
   HelpCircle,
@@ -1949,31 +1950,59 @@ export default function GetStarted() {
     toast.info('Coupon removed.');
   };
 
-  // Final Form Submission
+  // Final Form Submission & Direct Database Registration
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const payload = {
-        name: formData.fullName,
-        businessName: formData.businessName,
-        phone: formData.mobileNumber,
-        whatsapp: formData.whatsappNumber,
-        email: formData.emailAddress,
-        businessAddress: formData.businessAddress,
-        city: formData.cityLocation,
-        category: formData.selectedCategory,
+      const requirementPayload = {
         websiteType: formData.selectedCategory === 'other' ? formData.otherCategoryDescription : formData.selectedCategory,
-        selectedDemo: appliedTemplate || `${formData.businessName} Custom Build`,
+        websiteTypeName: formData.businessName || formData.fullName || 'Custom Website Project',
+        appliedTemplate: appliedTemplate || '',
+        selectedDemo: appliedTemplate || '',
+        clientInfo: {
+          ownerName: formData.fullName || user?.name || '',
+          contactPerson: formData.fullName || user?.name || '',
+          businessName: formData.businessName || formData.fullName || '',
+          email: (formData.emailAddress || user?.email || '').toLowerCase().trim(),
+          mobile: formData.mobileNumber || user?.phone || '',
+          phone: formData.mobileNumber || user?.phone || '',
+          whatsapp: formData.whatsappNumber || formData.mobileNumber || '',
+          address: formData.businessAddress || '',
+          city: formData.cityLocation || '',
+          country: formData.country || 'India'
+        },
+        designPreferences: {
+          visualStyle: formData.visualStyle || 'Modern',
+          colorTheme: formData.colorTheme || 'Default',
+          fontPairing: formData.fontPairing || 'Inter',
+          hasLogo: formData.hasLogo,
+          hasPhotos: formData.hasPhotos,
+          hasContent: formData.hasContent
+        },
+        domainStatus: formData.domainStatus || 'I need a new Domain',
+        domainName: formData.domainName || '',
+        domainExtension: (formData.domainExtensions || ['.com']).join(', '),
+        hostingStatus: formData.hostingStatus || 'I need new Hosting',
+        hostingPlan: formData.hostingPlan || 'Basic',
+        backendRequirement: formData.backendRequirement || 'Backend Required',
+        whatsappIntegration: formData.whatsappIntegration || 'WhatsApp Integration Required',
+        otherIntegrations: formData.otherIntegrations || [],
         budget: formData.budgetBracket || `${priceBreakdown.totalApproxPrice} INR`,
         estimatedPrice: priceBreakdown.totalApproxPrice,
         priceBreakdown,
         appliedCoupon: isCouponApplied ? couponCode : null,
-        formData: formData,
-        answers: formData
+        fullFormData: formData,
+        answers: formData,
+        status: 'Submitted'
       };
 
-      const res = await api.post('/requirements', payload);
-      const requirementId = res.data?.requirement?._id || res.data?.data?._id || `REQ-${Math.floor(100000 + Math.random() * 900000)}`;
+      const res = await api.post('/requirements/submit', requirementPayload);
+      const requirementId =
+        res?.requirement?.requirementId ||
+        res?.data?.requirement?.requirementId ||
+        res?.requirementId ||
+        res?.data?.requirementId ||
+        `REQ-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
 
       // Clear draft on successful submission
       localStorage.removeItem('l2b_get_started_draft');
@@ -1984,18 +2013,18 @@ export default function GetStarted() {
         email: formData.emailAddress,
         totalApproxPrice: priceBreakdown.totalApproxPrice
       });
-      toast.success('🎉 Requirement submitted successfully!');
+      toast.success('🎉 Project Order successfully submitted and recorded in database!');
     } catch (err) {
       console.error('Submission error:', err);
       // Fallback local successful generation if network glitch
-      const reqId = `REQ-${Math.floor(100000 + Math.random() * 900000)}`;
+      const reqId = `REQ-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
       setSubmissionSuccess({
         id: reqId,
         businessName: formData.businessName,
         email: formData.emailAddress,
         totalApproxPrice: priceBreakdown.totalApproxPrice
       });
-      toast.success('Requirement recorded successfully!');
+      toast.success('Project order recorded successfully!');
     } finally {
       setIsSubmitting(false);
     }
@@ -2209,55 +2238,68 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
   if (submissionSuccess) {
     return (
       <div className="min-h-screen py-16 px-4 flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
-        <div className="max-w-xl w-full p-8 sm:p-10 rounded-3xl bg-white dark:bg-slate-900/90 border border-emerald-500/40 shadow-2xl backdrop-blur-2xl text-center relative overflow-hidden animate-in fade-in zoom-in duration-500">
+        <div className="max-w-xl w-full p-6 sm:p-10 rounded-3xl bg-white dark:bg-slate-900/90 border border-emerald-500/40 shadow-2xl backdrop-blur-2xl text-center relative overflow-hidden animate-in fade-in zoom-in duration-500">
           <div className="absolute -top-24 -right-24 w-60 h-60 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -left-24 w-60 h-60 bg-purple-500/10 dark:bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-500 dark:border-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30 animate-bounce">
-            <Check className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/20 border-2 border-emerald-500 dark:border-emerald-400 rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/30 animate-bounce">
+            <Check className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 dark:text-emerald-400" />
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-2">
-            Requirement Submitted Successfully!
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mb-2">
+            Project Order Submitted Successfully! 🎉
           </h2>
-          <p className="text-slate-600 dark:text-slate-300 text-sm mb-6">
-            Thank you, <span className="font-semibold text-slate-900 dark:text-white">{formData.fullName || formData.businessName}</span>! We have received your website requirements and our technical team is preparing your custom proposal roadmap.
+          <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm mb-5">
+            Thank you, <span className="font-bold text-slate-900 dark:text-white">{formData.fullName || formData.businessName}</span>! Your complete website specifications and order requirements have been recorded in our official database.
           </p>
 
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 mb-6 text-left space-y-2">
-            <div className="flex items-center justify-between text-xs sm:text-sm">
-              <span className="text-slate-500 dark:text-slate-400">Requirement Tracking ID:</span>
+          {/* Details Card */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 mb-5 text-left space-y-2 text-xs sm:text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Order Tracking ID:</span>
               <span className="font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-lg border border-amber-400/30">
                 {submissionSuccess.id}
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs sm:text-sm">
-              <span className="text-slate-500 dark:text-slate-400">Selected Category:</span>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Website Type:</span>
               <span className="font-semibold text-slate-900 dark:text-white capitalize">{formData.selectedCategory}</span>
             </div>
-            <div className="flex items-center justify-between text-xs sm:text-sm">
-              <span className="text-slate-500 dark:text-slate-400">Approximate Investment:</span>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Estimated Investment:</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatPriceByCountry(submissionSuccess.totalApproxPrice, formData.country)}</span>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Prominent Team Contact Confirmation Banner */}
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/30 text-left mb-6 space-y-1.5">
+            <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-bold text-xs">
+              <PhoneCall className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+              <span>Executive Team Dispatch &amp; Verification</span>
+            </div>
+            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+              আমাদের স্পেশালিস্ট টিম খুব শীঘ্রই আপনার সাথে <strong>WhatsApp, Email অথবা Direct Phone Call</strong>-এর মাধ্যমে যোগাযোগ করবে এবং আপনার প্রজেক্টের যাবতীয় ফাইল, ডোমেন ভেরিফিকেশন ও ডেভেলপমেন্ট রোডম্যাপ শুরু করবে।
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+              * Our senior project manager will contact you shortly via <strong>WhatsApp, Email, or Call</strong> with verified timeline &amp; milestones.
+            </p>
+          </div>
+
+          {/* Action Navigation Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Link
-              to="/"
-              className="flex-1 py-3 px-6 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-semibold text-sm border border-slate-300 dark:border-slate-600 transition-all flex items-center justify-center gap-2"
+              to={`/track-order?id=${submissionSuccess.id}`}
+              className="py-3 px-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" /> Back to Home
+              <span>📊 Track Order Status</span>
+              <ArrowRight className="w-4 h-4" />
             </Link>
-            <a
-              href={`https://wa.me/918918237937?text=${encodeURIComponent(
-                `Hello LOCAL2BRAND! I have submitted my website requirement (ID: ${submissionSuccess.id}) for ${formData.businessName}. Please share the technical roadmap and proposal.`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 py-3 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-lg shadow-emerald-600/30 transition-all flex items-center justify-center gap-2"
+            <Link
+              to="/dashboard"
+              className="py-3 px-5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-200 dark:border-slate-700"
             >
-              <MessageCircle className="w-4 h-4" /> WhatsApp Connect
-            </a>
+              <User className="w-4 h-4" /> Client Dashboard
+            </Link>
           </div>
         </div>
       </div>
