@@ -279,8 +279,15 @@ export const sendBroadcastEmail = async (req, res) => {
       ? (actionUrl.startsWith('http://') || actionUrl.startsWith('https://') ? actionUrl : getClientUrl(actionUrl))
       : getClientUrl();
 
+    const bannerHtml = emailBannerImg ? `
+      <div style="margin: 0 0 16px 0; border-radius: 12px; overflow: hidden; max-height: 280px;">
+        <img src="${emailBannerImg}" alt="Banner" style="width: 100%; max-height: 280px; object-fit: cover; display: block;" />
+      </div>
+    ` : '';
+
     const contentHtml = `
       <div style="margin: 10px 0 16px 0;">
+        ${bannerHtml}
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 12px; box-sizing: border-box;">
           <div style="color: #334155; font-size: 14px; line-height: 1.7; word-break: break-word;">
             ${messageHtml.replace(/\n/g, '<br/>')}
@@ -339,8 +346,11 @@ export const sendBroadcastEmail = async (req, res) => {
       oneSignalBackend.broadcastPushNotification({
         title: heading || subject,
         message: cleanMessage,
-        url: actionUrl || (getClientUrl ? `${getClientUrl()}/demos` : 'https://local2brand.com/demos'),
-      }).catch((err) => console.warn('Admin broadcast push notice:', err.message));
+        url: resolvedActionUrl,
+        bigPicture: emailBannerImg || req.body?.bigPicture || undefined,
+      }).catch((err) => {
+        console.warn('OneSignal broadcast mirror push notice:', err?.message || err);
+      });
     }
 
     return res.status(200).json({

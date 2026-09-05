@@ -53,6 +53,11 @@ class OneSignalService {
             notifyButton: {
               enable: false, // We use our custom Apple-grade UI toggle & bell
             },
+            promptOptions: {
+              slidedown: {
+                prompts: [], // Disable duplicate automatic slidedown
+              },
+            },
           });
 
           this.isInitialized = true;
@@ -200,8 +205,17 @@ class OneSignalService {
           await OneSignal.login(externalId);
         }
 
-        if (user.email && OneSignal.User?.addEmail) {
-          OneSignal.User.addEmail(user.email).catch(() => {});
+        if (user.email) {
+          if (OneSignal.User?.addEmail) {
+            OneSignal.User.addEmail(user.email).catch(() => {});
+          }
+          if (OneSignal.User?.addTag) {
+            OneSignal.User.addTag('email', user.email.toLowerCase().trim()).catch(() => {});
+          }
+        }
+
+        if (OneSignal.User?.addTag) {
+          OneSignal.User.addTag('userId', externalId).catch(() => {});
         }
 
         if (user.role && OneSignal.User?.addTag) {

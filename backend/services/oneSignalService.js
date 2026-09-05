@@ -44,11 +44,91 @@ class OneSignalBackendService {
   }
 
   /**
+   * Intelligently resolves raw inputs (emails, user IDs, or mixed strings)
+   * into matching MongoDB User _ids, email tags, and external_ids.
+   */
+  async resolveTargetUserIds(inputs) {
+    if (!inputs) return { userIds: [], emails: [] };
+
+    let rawList = [];
+    if (Array.isArray(inputs)) {
+      rawList = inputs.map(String).map((s) => s.trim()).filter(Boolean);
+    } else if (typeof inputs === 'string') {
+      rawList = inputs.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+
+    const emails = [];
+    const directIds = [];
+
+    for (const item of rawList) {
+      if (item.includes('@')) {
+        emails.push(item.toLowerCase().trim());
+      } else {
+        directIds.push(item.trim());
+      }
+    }
+
+    const resolvedUserIds = [...directIds];
+
+    if (emails.length > 0) {
+      // 1. Query MongoDB User collection
+      try {
+        const { default: User } = await import('../models/User.js');
+        const foundUsers = await User.find({
+          email: { $in: emails.map((e) => new RegExp(`^${e}$`, 'i')) },
+        }).select('_id email');
+
+        foundUsers.forEach((u) => {
+          if (u?._id) resolvedUserIds.push(u._id.toString());
+        });
+      } catch (err) {
+        console.warn('User lookup notice in OneSignal service:', err?.message || err);
+      }
+
+      // 2. Query Requirement collection
+      try {
+        const { default: Requirement } = await import('../models/Requirement.js');
+        const foundReqs = await Requirement.find({
+          $or: [
+            { 'clientInfo.email': { $in: emails.map((e) => new RegExp(`^${e}$`, 'i')) } },
+            { email: { $in: emails.map((e) => new RegExp(`^${e}$`, 'i')) } },
+          ],
+        }).select('user clientInfo email');
+
+        foundReqs.forEach((r) => {
+          if (r?.user) resolvedUserIds.push(r.user.toString());
+        });
+      } catch (err) {}
+
+      // 3. Query fallback dataStore
+      try {
+        const { default: dataStore } = await import('../utils/dataStore.js');
+        const fallbackUsers = await dataStore.getAllUsers();
+        fallbackUsers.forEach((u) => {
+          const uEmail = (u.email || '').toLowerCase().trim();
+          if (emails.includes(uEmail) && (u._id || u.id)) {
+            resolvedUserIds.push(String(u._id || u.id));
+          }
+        });
+      } catch (err) {}
+    }
+
+    const uniqueUserIds = [...new Set(resolvedUserIds.filter(Boolean))];
+    const uniqueEmails = [...new Set(emails.filter(Boolean))];
+
+    return {
+      userIds: uniqueUserIds,
+      emails: uniqueEmails,
+    };
+  }
+
+  /**
    * Universal method to dispatch Push Notifications via OneSignal REST API
    *
    * @param {Object} options
-   * @param {string|string[]} [options.userIds] Single or array of user IDs (external_id)
+   * @param {string|string[]} [options.userIds] Single or array of user IDs or email addresses
    * @param {string|string[]} [options.externalUserIds] Backward-compatible alias for userIds
+   * @param {string|string[]} [options.emails] Array of client email addresses
    * @param {string[]} [options.segments] OneSignal segments (e.g. ['Total Subscriptions', 'Subscribed Users'])
    * @param {Array<Object>} [options.filters] OneSignal tag/attribute filters
    * @param {string} options.title Notification title
@@ -62,6 +142,7 @@ class OneSignalBackendService {
   async sendPushNotification({
     userIds,
     externalUserIds,
+    emails,
     segments,
     filters,
     title,
@@ -87,18 +168,14 @@ class OneSignalBackendService {
       return { success: false, message: 'Notification title and message body are required.' };
     }
 
-    // Determine target users / recipients
-    const targetUserIds = [];
-    if (userIds) {
-      if (Array.isArray(userIds)) targetUserIds.push(...userIds.map(String));
-      else targetUserIds.push(String(userIds));
-    }
-    if (externalUserIds) {
-      if (Array.isArray(externalUserIds)) targetUserIds.push(...externalUserIds.map(String));
-      else targetUserIds.push(String(externalUserIds));
-    }
+    // Automatically resolve raw userIds/emails into database User _ids and email tags
+    const rawTargets = [
+      ...(userIds ? (Array.isArray(userIds) ? userIds : [userIds]) : []),
+      ...(externalUserIds ? (Array.isArray(externalUserIds) ? externalUserIds : [externalUserIds]) : []),
+      ...(emails ? (Array.isArray(emails) ? emails : [emails]) : []),
+    ];
 
-    const uniqueUserIds = [...new Set(targetUserIds.filter(Boolean))];
+    const { userIds: resolvedUserIds, emails: resolvedEmails } = await this.resolveTargetUserIds(rawTargets);
 
     // Base Notification Payload
     const payload = {
@@ -121,13 +198,21 @@ class OneSignalBackendService {
     }
 
     // Set targeting
-    if (uniqueUserIds.length > 0) {
-      // Modern OneSignal v16 alias targeting + backward compatibility
+    if (resolvedUserIds.length > 0) {
+      // Include resolved user database IDs and any raw IDs
       payload.include_aliases = {
-        external_id: uniqueUserIds,
+        external_id: resolvedUserIds,
       };
       payload.target_channel = 'push';
-      payload.include_external_user_ids = uniqueUserIds;
+      payload.include_external_user_ids = resolvedUserIds;
+    } else if (resolvedEmails.length > 0) {
+      // If no DB user found, target via email tag filters
+      const emailFilters = [];
+      resolvedEmails.forEach((email, idx) => {
+        if (idx > 0) emailFilters.push({ operator: 'OR' });
+        emailFilters.push({ field: 'tag', key: 'email', relation: '=', value: email });
+      });
+      payload.filters = emailFilters;
     } else if (filters && Array.isArray(filters) && filters.length > 0) {
       payload.filters = filters;
     } else if (segments && Array.isArray(segments) && segments.length > 0) {
@@ -138,7 +223,13 @@ class OneSignalBackendService {
     }
 
     try {
-      console.log(`📡 Sending OneSignal Push Notification: "${title}" -> [Targets: ${uniqueUserIds.length ? uniqueUserIds.join(', ') : segments?.join(', ') || 'All Subscribed'}]`);
+      const targetSummary = resolvedUserIds.length > 0
+        ? `[User IDs: ${resolvedUserIds.join(', ')}]`
+        : resolvedEmails.length > 0
+        ? `[Emails: ${resolvedEmails.join(', ')}]`
+        : segments?.join(', ') || 'All Subscribed';
+
+      console.log(`📡 Sending OneSignal Push Notification: "${title}" -> Targets: ${targetSummary}`);
 
       const response = await fetch(ONESIGNAL_API_URL, {
         method: 'POST',
@@ -160,7 +251,12 @@ class OneSignalBackendService {
           data: resData,
         };
       } else {
-        const errorMsg = resData.errors ? (Array.isArray(resData.errors) ? resData.errors.join(', ') : JSON.stringify(resData.errors)) : 'Unknown OneSignal error';
+        let errorMsg = resData.errors ? (Array.isArray(resData.errors) ? resData.errors.join(', ') : JSON.stringify(resData.errors)) : 'Unknown OneSignal error';
+        
+        if (errorMsg.includes('All included players are not subscribed') || errorMsg.includes('not subscribed')) {
+          errorMsg = `None of the targeted devices for (${resolvedEmails.length ? resolvedEmails.join(', ') : resolvedUserIds.join(', ')}) have active push permissions subscribed in their browser yet. Push will reach them once they log in and allow browser notifications.`;
+        }
+
         console.warn('OneSignal API response warning:', errorMsg);
         return {
           success: false,

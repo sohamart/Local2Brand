@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Send,
   Mail,
@@ -18,12 +18,16 @@ import {
   ExternalLink,
   ShieldCheck,
   CheckCircle2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  UploadCloud,
+  Trash2,
+  Link2
 } from 'lucide-react';
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import { toast } from 'react-toastify';
 import { oneSignalService } from '../../services/oneSignal';
+import { uploadWithToast } from '../../utils/toastUpload';
 
 // ==========================================
 // EMAIL TEMPLATES PRESETS
@@ -37,6 +41,7 @@ const EMAIL_TEMPLATE_PRESETS = [
     message: `Hi there!\n\nWe noticed you registered on LOCAL2BRAND but haven't finalized your website project order yet. Whether you are wondering about the right design, features, tech stack, or budget — our engineering team is here to assist you.\n\n⚡ For the next 48 hours, we are offering an exclusive ₹2,000 launch credit on all packages, including free .IN domain connection, Tier-4 SSL certificate, and WhatsApp direct ordering.\n\nWould you like to schedule a quick 15-minute consultation or select a live demo to fast-track your launch?`,
     actionText: 'Claim ₹2,000 Credit & Start Project',
     actionUrl: 'https://local2brand.vercel.app/pricing',
+    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80',
     isImportant: true,
   },
   {
@@ -47,6 +52,7 @@ const EMAIL_TEMPLATE_PRESETS = [
     message: `We are thrilled to announce new premium website templates, lightning-fast 48-hour delivery, and enterprise-grade cloud hosting for all new client projects.\n\nExplore our latest high-converting live demos and request your customized quote in just 2 minutes.`,
     actionText: 'Explore New Website Demos',
     actionUrl: 'https://local2brand.vercel.app/demos',
+    imageUrl: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80',
     isImportant: true,
   },
   {
@@ -57,6 +63,7 @@ const EMAIL_TEMPLATE_PRESETS = [
     message: `I wanted to personally reach out and thank you for connecting with LOCAL2BRAND.\n\nOur mission is simple: deliver agency-grade, sub-second websites that convert casual visitors into paying customers without bloated timelines or excessive costs.\n\nIf you have any questions or need custom architecture recommendations for your brand, reply directly to this email or click below to schedule a 15-minute strategy call.`,
     actionText: 'Schedule 15-Min Founder Call',
     actionUrl: 'https://local2brand.vercel.app/contact',
+    imageUrl: '',
     isImportant: true,
   },
   {
@@ -67,6 +74,7 @@ const EMAIL_TEMPLATE_PRESETS = [
     message: `Upgrade your business with a brand-new website tailored to your domain. For a limited time, use promo code INDIA2025 at checkout to enjoy a flat 20% discount on any standard or pro package.\n\nOur team handles design, copywriting, domain connection, and launch within 48 hours.`,
     actionText: 'Redeem Voucher Now',
     actionUrl: 'https://local2brand.vercel.app/get-started',
+    imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80',
     isImportant: true,
   },
   {
@@ -77,6 +85,7 @@ const EMAIL_TEMPLATE_PRESETS = [
     message: `All client websites hosted under LOCAL2BRAND now feature automatic Tier-4 Cloudflare SSL encryption, DDoS mitigation, and global edge cache replication.\n\nYour customers enjoy zero downtime, instantaneous asset delivery, and maximum trust.`,
     actionText: 'View Platform Status & Orders',
     actionUrl: 'https://local2brand.vercel.app/track-order',
+    imageUrl: '',
     isImportant: true,
   },
   {
@@ -87,6 +96,7 @@ const EMAIL_TEMPLATE_PRESETS = [
     message: `We have introduced 1-Click WhatsApp Ordering & Direct Inquiries across all e-commerce and catalog demo websites.\n\nClients receive instant ping notifications on their phone as soon as a customer selects a service, resulting in a 3x higher closing rate.`,
     actionText: 'Preview WhatsApp Demo',
     actionUrl: 'https://local2brand.vercel.app/demos',
+    imageUrl: 'https://images.unsplash.com/photo-1556742049-0a67e557224f?w=800&auto=format&fit=crop&q=80',
     isImportant: false,
   },
   {
@@ -97,6 +107,7 @@ const EMAIL_TEMPLATE_PRESETS = [
     message: '',
     actionText: 'Visit LOCAL2BRAND',
     actionUrl: 'https://local2brand.vercel.app/',
+    imageUrl: '',
     isImportant: true,
   },
 ];
@@ -168,6 +179,8 @@ export default function AdminBroadcast() {
   const [pushStatus, setPushStatus] = useState({ configured: true, loading: true });
   const [pushSending, setPushSending] = useState(false);
   const [pushTestSending, setPushTestSending] = useState(false);
+  const [isUploadingPushImage, setIsUploadingPushImage] = useState(false);
+  const pushFileInputRef = useRef(null);
 
   // Email State
   const [emailAudience, setEmailAudience] = useState('all');
@@ -177,13 +190,15 @@ export default function AdminBroadcast() {
   const [messageHtml, setMessageHtml] = useState(EMAIL_TEMPLATE_PRESETS[0].message);
   const [actionText, setActionText] = useState(EMAIL_TEMPLATE_PRESETS[0].actionText);
   const [actionUrl, setActionUrl] = useState(EMAIL_TEMPLATE_PRESETS[0].actionUrl);
+  const [emailImage, setEmailImage] = useState(EMAIL_TEMPLATE_PRESETS[0].imageUrl || '');
   const [isImportant, setIsImportant] = useState(true);
   const [sendPushWithEmail, setSendPushWithEmail] = useState(true);
   const [emailSending, setEmailSending] = useState(false);
+  const [isUploadingEmailImage, setIsUploadingEmailImage] = useState(false);
+  const emailFileInputRef = useRef(null);
 
   // General & Preview State
   const [result, setResult] = useState(null);
-  const [previewTab, setPreviewTab] = useState(false);
   const [previewDevice, setPreviewDevice] = useState('desktop');
 
   // Check OneSignal Push Status on mount
@@ -212,6 +227,7 @@ export default function AdminBroadcast() {
     setMessageHtml(preset.message);
     setActionText(preset.actionText);
     setActionUrl(preset.actionUrl);
+    setEmailImage(preset.imageUrl || '');
     if (typeof preset.isImportant === 'boolean') {
       setIsImportant(preset.isImportant);
     }
@@ -224,6 +240,70 @@ export default function AdminBroadcast() {
     setPushUrl(preset.url);
     setPushBigPicture(preset.bigPicture || '');
     toast.info(`Applied push preset: ${preset.name}`);
+  };
+
+  // Upload Cloudinary Handler for Push Notification
+  const handleUploadPushImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.warning('Please select an image file (PNG, JPG, WEBP, GIF).');
+      return;
+    }
+
+    setIsUploadingPushImage(true);
+    try {
+      const res = await uploadWithToast({
+        file,
+        title: 'Uploading Banner to Cloudinary CDN',
+        successMessage: '🎉 Push Banner uploaded to Cloudinary CDN!',
+      });
+
+      if (res?.success && (res.url || res.urls?.[0])) {
+        const uploadedUrl = res.url || res.urls[0];
+        setPushBigPicture(uploadedUrl);
+        toast.success('Cloudinary CDN URL attached to push alert!');
+      }
+    } catch (err) {
+      console.error('Push image upload error:', err);
+      toast.error(err.message || 'Failed to upload image to Cloudinary');
+    } finally {
+      setIsUploadingPushImage(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  // Upload Cloudinary Handler for Email Hero Banner
+  const handleUploadEmailImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.warning('Please select an image file (PNG, JPG, WEBP, GIF).');
+      return;
+    }
+
+    setIsUploadingEmailImage(true);
+    try {
+      const res = await uploadWithToast({
+        file,
+        title: 'Uploading Hero Graphic to Cloudinary CDN',
+        successMessage: '🎉 Email Graphic uploaded to Cloudinary CDN!',
+      });
+
+      if (res?.success && (res.url || res.urls?.[0])) {
+        const uploadedUrl = res.url || res.urls[0];
+        setEmailImage(uploadedUrl);
+        toast.success('Cloudinary CDN image embedded in email template!');
+      }
+    } catch (err) {
+      console.error('Email image upload error:', err);
+      toast.error(err.message || 'Failed to upload image to Cloudinary');
+    } finally {
+      setIsUploadingEmailImage(false);
+      if (e.target) e.target.value = '';
+    }
   };
 
   // Dispatch OneSignal Web Push Broadcast
@@ -292,6 +372,7 @@ export default function AdminBroadcast() {
         title: pushTitle,
         message: pushMessage,
         url: pushUrl || window.location.origin,
+        bigPicture: pushBigPicture,
         target: 'admin',
       });
 
@@ -331,6 +412,7 @@ export default function AdminBroadcast() {
           messageHtml,
           actionText,
           actionUrl,
+          imageUrl: emailImage,
           targetAudience: emailAudience,
           customEmails,
           isImportant,
@@ -604,10 +686,10 @@ export default function AdminBroadcast() {
                 </div>
               </div>
 
-              {/* Target Link & Banner Image */}
+              {/* Target Link & Banner Image (with Cloudinary Direct Upload) */}
               <div className="glass-panel p-5 rounded-2xl border border-white dark:border-slate-800 space-y-3 shadow-xs">
                 <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
-                  3. Action Link &amp; Image Banner
+                  3. Action Link &amp; Banner Image
                 </label>
 
                 <div className="space-y-3">
@@ -625,16 +707,82 @@ export default function AdminBroadcast() {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block mb-1">
-                      Expanded Banner Image URL (Optional)
-                    </label>
-                    <input
-                      type="url"
-                      value={pushBigPicture}
-                      onChange={(e) => setPushBigPicture(e.target.value)}
-                      placeholder="https://images.unsplash.com/... or leave blank"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-medium text-slate-900 dark:text-white focus:outline-purple-500"
-                    />
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                        Expanded Banner Image (Cloudinary CDN or Web URL)
+                      </label>
+                      {pushBigPicture && (
+                        <button
+                          type="button"
+                          onClick={() => setPushBigPicture('')}
+                          className="text-[10px] text-rose-500 hover:text-rose-600 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Remove Image</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="url"
+                            value={pushBigPicture}
+                            onChange={(e) => setPushBigPicture(e.target.value)}
+                            placeholder="Paste image URL or upload to Cloudinary..."
+                            className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-medium text-slate-900 dark:text-white focus:outline-purple-500"
+                          />
+                          <Link2 className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+                        </div>
+
+                        {/* Hidden native file input */}
+                        <input
+                          type="file"
+                          ref={pushFileInputRef}
+                          onChange={handleUploadPushImage}
+                          accept="image/*"
+                          className="hidden"
+                        />
+
+                        {/* Cloudinary Upload Button */}
+                        <button
+                          type="button"
+                          disabled={isUploadingPushImage}
+                          onClick={() => pushFileInputRef.current?.click()}
+                          className="px-3.5 py-2 rounded-xl text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50 shadow-xs"
+                        >
+                          {isUploadingPushImage ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <UploadCloud className="w-3.5 h-3.5 text-purple-600" />
+                          )}
+                          <span>{isUploadingPushImage ? 'Uploading...' : 'Upload to Cloudinary'}</span>
+                        </button>
+                      </div>
+
+                      {/* Cloudinary Live Thumbnail Preview */}
+                      {pushBigPicture && (
+                        <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 p-2.5 flex items-center gap-3">
+                          <img
+                            src={pushBigPicture}
+                            alt="Push Banner"
+                            className="w-16 h-12 rounded-lg object-cover border border-purple-500/30 shrink-0 shadow-sm"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
+                                {pushBigPicture.includes('cloudinary.com') ? '☁️ Cloudinary CDN Edge' : '🌐 Web URL'}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-500 truncate font-mono mt-1">
+                              {pushBigPicture}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -971,10 +1119,87 @@ export default function AdminBroadcast() {
                 </div>
               </div>
 
+              {/* Hero Graphic / Banner Image (with Cloudinary Direct Upload) */}
+              <div className="glass-panel p-5 rounded-2xl border border-white dark:border-slate-800 space-y-3 shadow-xs">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
+                    3. Promotional Banner Graphic (Optional)
+                  </label>
+                  {emailImage && (
+                    <button
+                      type="button"
+                      onClick={() => setEmailImage('')}
+                      className="text-[10px] text-rose-500 hover:text-rose-600 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Remove</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="url"
+                        value={emailImage}
+                        onChange={(e) => setEmailImage(e.target.value)}
+                        placeholder="Paste image URL or upload to Cloudinary..."
+                        className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-medium text-slate-900 dark:text-white focus:outline-purple-500"
+                      />
+                      <Link2 className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-3" />
+                    </div>
+
+                    <input
+                      type="file"
+                      ref={emailFileInputRef}
+                      onChange={handleUploadEmailImage}
+                      accept="image/*"
+                      className="hidden"
+                    />
+
+                    <button
+                      type="button"
+                      disabled={isUploadingEmailImage}
+                      onClick={() => emailFileInputRef.current?.click()}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 disabled:opacity-50 shadow-xs"
+                    >
+                      {isUploadingEmailImage ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <UploadCloud className="w-3.5 h-3.5 text-purple-600" />
+                      )}
+                      <span>{isUploadingEmailImage ? 'Uploading...' : 'Upload to Cloudinary'}</span>
+                    </button>
+                  </div>
+
+                  {emailImage && (
+                    <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/80 p-2.5 flex items-center gap-3">
+                      <img
+                        src={emailImage}
+                        alt="Email Banner"
+                        className="w-16 h-12 rounded-lg object-cover border border-purple-500/30 shrink-0 shadow-sm"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
+                            {emailImage.includes('cloudinary.com') ? '☁️ Cloudinary CDN Edge' : '🌐 Web URL'}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 truncate font-mono mt-1">
+                          {emailImage}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Message Content */}
               <div className="glass-panel p-5 rounded-2xl border border-white dark:border-slate-800 space-y-3 shadow-xs">
                 <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
-                  3. Message Content (Agency HTML Formatted)
+                  4. Message Content (Agency HTML Formatted)
                 </label>
                 <textarea
                   rows={5}
@@ -989,7 +1214,7 @@ export default function AdminBroadcast() {
               {/* Call-to-action */}
               <div className="glass-panel p-5 rounded-2xl border border-white dark:border-slate-800 space-y-3 shadow-xs">
                 <label className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider block">
-                  4. Call-To-Action Button (Optional)
+                  5. Call-To-Action Button (Optional)
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -1119,6 +1344,17 @@ export default function AdminBroadcast() {
                         HIGH-PERFORMANCE DIGITAL AGENCY &amp; ENGINEERING
                       </p>
                     </div>
+
+                    {/* Graphic Banner in Preview */}
+                    {emailImage && (
+                      <div className="border-b border-slate-100 dark:border-slate-800 overflow-hidden max-h-56">
+                        <img
+                          src={emailImage}
+                          alt="Banner Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
 
                     {heading && (
                       <div className="px-6 pt-5 pb-1 bg-white dark:bg-[#111827]">
