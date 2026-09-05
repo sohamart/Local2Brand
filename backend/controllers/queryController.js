@@ -72,31 +72,27 @@ export const createQueryLead = async (req, res) => {
       link: `/admin/leads`,
     }).catch((err) => console.warn('Admin notification error:', err.message));
 
-    if (lead.industry === 'Direct Contact Form' || lead.websiteType?.includes('Contact Form')) {
-      sendContactFormConfirmationEmail(lead).catch((err) => console.warn('Client contact email error:', err.message));
-    } else {
-      sendLeadConfirmationEmail(lead).catch((err) => console.warn('Client lead email error:', err.message));
-    }
-    sendAdminNewLeadAlert(lead).catch((err) => console.warn('Admin lead alert error:', err.message));
+    // Await delivery of all push notifications & emails before responding
+    const targetUser = lead.userId || lead.user?._id || lead.user || lead.email;
 
-    // OneSignal Push: Alert Admins
-    oneSignalBackend.sendNotificationToAdmins({
-      title: '💼 New Proposal Inquiry',
-      message: `${lead.name} requested quote for ${lead.businessName || lead.websiteType} (${lead.budget})`,
-      url: '/admin/leads',
-      data: { type: 'new_lead', leadId: lead._id }
-    }).catch((err) => console.warn('Admin push lead alert error:', err.message));
-
-    // OneSignal Push: Personal Confirmation to User
-    const targetUserId = lead.userId || lead.user?._id || lead.user;
-    if (targetUserId) {
-      oneSignalBackend.sendNotificationToUser(targetUserId, {
+    await Promise.allSettled([
+      sendAdminNewLeadAlert(lead),
+      (lead.industry === 'Direct Contact Form' || lead.websiteType?.includes('Contact Form'))
+        ? sendContactFormConfirmationEmail(lead)
+        : sendLeadConfirmationEmail(lead),
+      oneSignalBackend.sendNotificationToAdmins({
+        title: '💼 New Proposal Inquiry',
+        message: `${lead.name} requested quote for ${lead.businessName || lead.websiteType} (${lead.budget})`,
+        url: '/admin/leads',
+        data: { type: 'new_lead', leadId: lead._id }
+      }),
+      targetUser ? oneSignalBackend.sendNotificationToUser(targetUser, {
         title: '💼 Project Inquiry Received',
         message: `Hi ${lead.name}, we received your proposal request. Our engineering team is preparing your roadmap!`,
         url: '/dashboard',
         data: { type: 'lead_confirmation', leadId: lead._id }
-      }).catch((err) => console.warn('User push lead confirmation error:', err.message));
-    }
+      }) : Promise.resolve(),
+    ]);
 
     return res.status(201).json({
       success: true,
@@ -108,7 +104,7 @@ export const createQueryLead = async (req, res) => {
     console.error('Error creating inquiry lead:', error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Error submitting project inquiry',
+      message: error.message || 'Error submitting proposal inquiry',
     });
   }
 };
@@ -117,12 +113,18 @@ export const getUserQueries = async (req, res) => {
   try {
     const userId = req.user?._id?.toString() || req.user?.id;
     const userEmail = (req.user?.email || req.query.email || '').toLowerCase().trim();
-    const userPhone = (req.user?.phone || '').trim();
 
-    if (!userId && !userEmail && !userPhone) {
+    if (!userId && !userEmail) {
       return res.status(200).json({ success: true, count: 0, leads: [] });
     }
-    const leads = await dataStore.getUserLeads(userId, userEmail, userPhone);
+
+    const allLeads = await dataStore.getAllLeads();
+    const leads = allLeads.filter((l) => {
+      const matchId = userId && (l.userId === userId || l.user?.toString() === userId || l.user?._id?.toString() === userId);
+      const matchEmail = userEmail && (l.email?.toLowerCase().trim() === userEmail);
+      return matchId || matchEmail;
+    });
+
     return res.status(200).json({
       success: true,
       count: leads.length,
@@ -131,15 +133,15 @@ export const getUserQueries = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Error retrieving your inquiries',
+      message: error.message || 'Error retrieving leads',
     });
   }
 };
 
 export const getAllQueries = async (req, res) => {
   try {
-    const { status, search } = req.query;
-    const leads = await dataStore.getAllLeads({ status, search });
+    const { status } = req.query;
+    const leads = await dataStore.getAllLeads({ status });
     return res.status(200).json({
       success: true,
       total: leads.length,
@@ -179,19 +181,18 @@ export const updateQueryStatus = async (req, res) => {
     const lead = await dataStore.updateLead(req.params.id, updates);
     if (!lead) return res.status(404).json({ success: false, message: 'Inquiry not found' });
 
-    if (lead.email) {
-      sendLeadStatusUpdateEmail(lead).catch((err) => console.warn('Status update email error:', err.message));
-    }
+    const targetUser = lead.userId || lead.user?._id || lead.user || lead.email;
 
-    const targetUserId = lead.userId || lead.user?._id || lead.user;
-    if (targetUserId && status) {
-      oneSignalBackend.sendNotificationToUser(targetUserId, {
-        title: `Proposal Update: ${status}`,
+    // Await delivery of status update email and push notification
+    await Promise.allSettled([
+      lead.email ? sendLeadStatusUpdateEmail(lead) : Promise.resolve(),
+      targetUser && status ? oneSignalBackend.sendNotificationToUser(targetUser, {
+        title: `💼 Proposal Update: ${status}`,
         message: `Your inquiry for ${lead.businessName || lead.websiteType || 'website project'} has been updated to "${status}".`,
         url: '/dashboard',
         data: { type: 'lead_status_update', leadId: lead._id, status }
-      }).catch((err) => console.warn('Lead push update error:', err.message));
-    }
+      }) : Promise.resolve(),
+    ]);
 
     return res.status(200).json({
       success: true,

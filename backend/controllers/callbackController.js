@@ -45,30 +45,25 @@ export const createCallback = async (req, res) => {
       link: `/admin/callbacks`,
     }).catch((err) => console.warn('Admin notification error:', err.message));
 
-    // Instant alert to Admin (sohamduttabwn@gmail.com) and Brand (local2brand@zohomail.in)
-    sendAdminCallbackAlert(callback).catch((err) => console.warn('Admin callback alert error:', err.message));
-
-    oneSignalBackend.sendNotificationToAdmins({
-      title: '📞 New Callback Request',
-      message: `${callback.name} requested a call: ${callback.phone} (${callback.preferredTime})`,
-      url: '/admin/callbacks',
-      data: { type: 'callback_request', callbackId: callback._id || callback.id }
-    }).catch((err) => console.warn('Admin push callback alert error:', err.message));
-
-    if (callback.email) {
-      sendCallbackConfirmationEmail(callback).catch((err) => console.warn('Callback email error:', err.message));
-    }
-
-    // Personal user push confirmation
+    // Asynchronous notifications with await to ensure delivery before response
     const callbackUserTarget = callback.user || validUserId || resolvedEmail;
-    if (callbackUserTarget) {
-      oneSignalBackend.sendNotificationToUser(callbackUserTarget, {
+
+    await Promise.allSettled([
+      sendAdminCallbackAlert(callback),
+      callback.email ? sendCallbackConfirmationEmail(callback) : Promise.resolve(),
+      oneSignalBackend.sendNotificationToAdmins({
+        title: '📞 New Callback Request',
+        message: `${callback.name} requested a call: ${callback.phone} (${callback.preferredTime})`,
+        url: '/admin/callbacks',
+        data: { type: 'callback_request', callbackId: callback._id || callback.id }
+      }),
+      callbackUserTarget ? oneSignalBackend.sendNotificationToUser(callbackUserTarget, {
         title: '📞 Callback Request Confirmed',
         message: `Hi ${callback.name}, our specialist will call you at ${callback.phone} (${callback.preferredTime}).`,
         url: '/dashboard',
         data: { type: 'callback_confirmation', callbackId: callback._id || callback.id }
-      }).catch((err) => console.warn('User push callback confirmation error:', err.message));
-    }
+      }) : Promise.resolve(),
+    ]);
 
     return res.status(201).json({
       success: true,
@@ -137,24 +132,18 @@ export const updateCallbackStatus = async (req, res) => {
     const callback = await dataStore.updateCallback(req.params.id, updates);
     if (!callback) return res.status(404).json({ success: false, message: 'Callback request not found' });
 
-    // Instantly notify client on any status change, pdf link, or admin notes
-    if (callback.email) {
-      setImmediate(() => {
-        sendCallbackStatusUpdateEmail(callback, status, adminNotes, resolvedPdf).catch((err) =>
-          console.warn('Callback status update email notice:', err.message)
-        );
-      });
-    }
-
     const targetUser = callback.user || callback.userId || callback.email;
-    if (targetUser && status) {
-      oneSignalBackend.sendNotificationToUser(targetUser, {
+
+    // Await delivery of status update email and push notification
+    await Promise.allSettled([
+      callback.email ? sendCallbackStatusUpdateEmail(callback, status, adminNotes, resolvedPdf) : Promise.resolve(),
+      targetUser && status ? oneSignalBackend.sendNotificationToUser(targetUser, {
         title: `📞 Callback Update: ${status}`,
         message: `Your callback request status has been updated to "${status}".`,
         url: '/dashboard',
         data: { type: 'callback_status_update', callbackId: callback._id || callback.id, status }
-      }).catch((err) => console.warn('Callback status push notice:', err.message));
-    }
+      }) : Promise.resolve(),
+    ]);
 
     return res.status(200).json({
       success: true,

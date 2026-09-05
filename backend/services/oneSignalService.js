@@ -225,7 +225,7 @@ class OneSignalBackendService {
       payload.included_segments = segments;
     } else {
       // Default to all subscribed users if no specific targets specified
-      payload.included_segments = ['Total Subscriptions', 'Subscribed Users'];
+      payload.included_segments = ['Total Subscriptions', 'Active Subscriptions'];
     }
 
     try {
@@ -260,7 +260,14 @@ class OneSignalBackendService {
         let errorMsg = resData.errors ? (Array.isArray(resData.errors) ? resData.errors.join(', ') : JSON.stringify(resData.errors)) : 'Unknown OneSignal error';
         
         if (errorMsg.includes('All included players are not subscribed') || errorMsg.includes('not subscribed')) {
-          errorMsg = `None of the targeted devices for (${resolvedEmails.length ? resolvedEmails.join(', ') : resolvedUserIds.join(', ')}) have active push permissions subscribed in their browser yet. Push will reach them once they log in and allow browser notifications.`;
+          const targetDetail = resolvedEmails.length
+            ? resolvedEmails.join(', ')
+            : resolvedUserIds.length
+            ? resolvedUserIds.join(', ')
+            : filters?.length
+            ? 'selected filter'
+            : segments?.join(', ') || 'selected audience';
+          errorMsg = `None of the targeted devices (${targetDetail}) have active push permissions subscribed in their browser yet. Push will reach them once they open the site, log in, and allow browser notifications.`;
         }
 
         console.warn('OneSignal API response warning:', errorMsg);
@@ -326,31 +333,65 @@ class OneSignalBackendService {
   }
 
   /**
-   * Send notification to all administrators
+   * Send notification to all administrators with multi-tier fallback
    */
   async sendNotificationToAdmins({ userIds = [], title, message, url, data = {}, icon, bigPicture }) {
     let resolvedAdminIds = [...(userIds ? (Array.isArray(userIds) ? userIds : [userIds]) : [])];
 
-    if (resolvedAdminIds.length === 0) {
-      try {
-        const { default: User } = await import('../models/User.js');
-        const admins = await User.find({ role: 'admin' }).select('_id email');
-        resolvedAdminIds = admins.map((a) => a._id.toString());
-      } catch (e) {}
+    try {
+      const { default: User } = await import('../models/User.js');
+      const admins = await User.find({ role: 'admin' }).select('_id email');
+      admins.forEach((a) => {
+        if (a?._id) resolvedAdminIds.push(a._id.toString());
+      });
+    } catch (e) {}
+
+    const uniqueAdminIds = [...new Set(resolvedAdminIds.filter(Boolean))];
+    const resolvedAdminUrl = url || (process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/admin` : 'https://local2brand.vercel.app/admin');
+
+    let result = null;
+
+    // 1. Try targeting specific admin User IDs
+    if (uniqueAdminIds.length > 0) {
+      result = await this.sendPushNotification({
+        userIds: uniqueAdminIds,
+        title,
+        message,
+        url: resolvedAdminUrl,
+        data: { ...data, target: 'admin' },
+        icon,
+        bigPicture,
+      });
     }
 
-    return this.sendPushNotification({
-      userIds: resolvedAdminIds.length > 0 ? resolvedAdminIds : undefined,
-      filters: resolvedAdminIds.length === 0 ? [
-        { field: 'tag', key: 'role', relation: '=', value: 'admin' },
-      ] : undefined,
-      title,
-      message,
-      url: url || (process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/admin` : 'https://local2brand.com/admin'),
-      data: { ...data, target: 'admin' },
-      icon,
-      bigPicture,
-    });
+    // 2. If no subscribed player matched specific IDs, try role=admin tag filter
+    if (!result || !result.success) {
+      result = await this.sendPushNotification({
+        filters: [
+          { field: 'tag', key: 'role', relation: '=', value: 'admin' },
+        ],
+        title,
+        message,
+        url: resolvedAdminUrl,
+        data: { ...data, target: 'admin' },
+        icon,
+        bigPicture,
+      });
+    }
+
+    // 3. Fallback to general broadcast if admin-specific tag not populated yet
+    if (!result || !result.success) {
+      result = await this.broadcastPushNotification({
+        title,
+        message,
+        url: resolvedAdminUrl,
+        data: { ...data, target: 'admin' },
+        icon,
+        bigPicture,
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -358,7 +399,7 @@ class OneSignalBackendService {
    */
   async broadcastPushNotification({ title, message, url, data = {}, icon, bigPicture, segment = 'Total Subscriptions' }) {
     return this.sendPushNotification({
-      segments: [segment, 'Subscribed Users'],
+      segments: [segment, 'Active Subscriptions'],
       title,
       message,
       url,

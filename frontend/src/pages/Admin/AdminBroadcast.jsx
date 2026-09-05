@@ -374,7 +374,7 @@ export default function AdminBroadcast() {
         message: pushMessage,
         url: pushUrl || window.location.origin,
         bigPicture: pushBigPicture,
-        target: 'admin',
+        target: 'broadcast',
       });
 
       if (res.success) {
@@ -508,13 +508,14 @@ export default function AdminBroadcast() {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs font-black text-slate-900 dark:text-white">OneSignal Web Push Gateway:</span>
-                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   Live &amp; Connected
                 </span>
                 {pushStatus?.totalSubscribers !== null && pushStatus?.totalSubscribers !== undefined && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30">
-                    👥 {pushStatus.totalSubscribers} Subscribed Devices
+                  <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full bg-purple-600 text-white shadow-md shadow-purple-600/30 ring-2 ring-purple-400/50 animate-in fade-in">
+                    <span>👥</span>
+                    <span>{pushStatus.totalSubscribers} Subscribed Devices</span>
                   </span>
                 )}
               </div>
@@ -600,13 +601,13 @@ export default function AdminBroadcast() {
                     1. Target Audience Segment
                   </label>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300">
-                    Device Subscribers
+                    Device Subscribers ({pushStatus?.totalSubscribers ?? 'Active'})
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                   {[
-                    { id: 'all', label: 'All Subscribed', desc: 'Every registered browser' },
+                    { id: 'all', label: `All Subscribed (${pushStatus?.totalSubscribers ?? 'All'})`, desc: 'Every registered browser' },
                     { id: 'clients', label: 'Clients Only', desc: 'Non-admin users' },
                     { id: 'admins', label: 'Admins Only', desc: 'Agency Team' },
                     { id: 'custom', label: 'Custom User IDs', desc: 'Specific accounts' },

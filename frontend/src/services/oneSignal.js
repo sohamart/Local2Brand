@@ -163,6 +163,15 @@ class OneSignalService {
               await OneSignal.User.PushSubscription.optIn();
             }
             try { localStorage.removeItem('l2b_push_muted'); } catch (e) {}
+
+            // Auto sync cached user if available
+            try {
+              const cached = localStorage.getItem('l2b_cached_user');
+              if (cached) {
+                this.syncUser(JSON.parse(cached));
+              }
+            } catch (e) {}
+
             this.notifyListeners({ type: 'permissionGranted', isSubscribed: true });
             resolve({ success: true, permission: 'granted' });
           } else if (currentPerm === 'denied') {
@@ -242,25 +251,29 @@ class OneSignalService {
           await OneSignal.login(externalId);
         }
 
+        const tags = {
+          userId: externalId,
+          role: user.role || 'client',
+        };
+
         if (user.email) {
+          tags.email = user.email.toLowerCase().trim();
           if (OneSignal.User?.addEmail) {
             OneSignal.User.addEmail(user.email).catch(() => {});
           }
-          if (OneSignal.User?.addTag) {
-            OneSignal.User.addTag('email', user.email.toLowerCase().trim()).catch(() => {});
+        }
+
+        if (user.name) {
+          tags.name = user.name;
+        }
+
+        // Add tags using v16 bulk method
+        if (OneSignal.User?.addTags) {
+          await OneSignal.User.addTags(tags);
+        } else if (OneSignal.User?.addTag) {
+          for (const [k, v] of Object.entries(tags)) {
+            OneSignal.User.addTag(k, v);
           }
-        }
-
-        if (OneSignal.User?.addTag) {
-          OneSignal.User.addTag('userId', externalId).catch(() => {});
-        }
-
-        if (user.role && OneSignal.User?.addTag) {
-          OneSignal.User.addTag('role', user.role).catch(() => {});
-        }
-
-        if (user.name && OneSignal.User?.addTag) {
-          OneSignal.User.addTag('name', user.name).catch(() => {});
         }
       } catch (err) {
         console.warn('OneSignal user sync notice:', err.message);
