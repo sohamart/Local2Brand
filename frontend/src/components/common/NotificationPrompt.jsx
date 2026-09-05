@@ -15,21 +15,12 @@ export default function NotificationPrompt() {
       return;
     }
 
-    const dismissedTime = localStorage.getItem('l2b_push_prompt_dismissed');
-    if (dismissedTime) {
-      const elapsed = Date.now() - Number(dismissedTime);
-      // Wait 15 minutes before gently showing again if dismissed
-      if (elapsed < 15 * 60 * 1000) {
-        return;
-      }
-    }
-
-    // Show prompt promptly after 1.5 seconds of page load
+    // Show prompt promptly after 800ms of page load
     const timer = setTimeout(() => {
       if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
         setIsVisible(true);
       }
-    }, 1500);
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [isSupported, permission, isSubscribed]);

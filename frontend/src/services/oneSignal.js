@@ -92,6 +92,15 @@ class OneSignalService {
                 OneSignal.User.PushSubscription.optIn().catch(() => {});
               }
             } catch (e) {}
+          } else if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+            // Fresh prompt for all unprompted / previous visitors
+            setTimeout(() => {
+              try {
+                if (OneSignal.Slidedown?.promptPush) {
+                  OneSignal.Slidedown.promptPush({ force: true }).catch(() => {});
+                }
+              } catch (e) {}
+            }, 800);
           }
 
           // Listen to push subscription changes
