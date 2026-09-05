@@ -12,6 +12,7 @@ import CallbackModal from './components/common/CallbackModal';
 import AuthModal from './components/common/AuthModal';
 import LogoutOverlay from './components/common/LogoutOverlay';
 import AssistantChatbot from './components/common/AssistantChatbot';
+import NotificationPrompt from './components/common/NotificationPrompt';
 import Preloader from './components/common/Preloader';
 import MaintenanceMode from './components/common/MaintenanceMode';
 import { OrderModalProvider } from './context/OrderModalContext';
@@ -260,6 +261,9 @@ function MainAppContent() {
 
       {/* Floating Interactive Assistant */}
       {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <AssistantChatbot />}
+
+      {/* Global Push Notification Permission Prompt */}
+      <NotificationPrompt />
 
       {/* Global Modals */}
       <CallbackModal />

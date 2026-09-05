@@ -8,11 +8,13 @@ const router = express.Router();
 // @access  Public
 router.get('/status', (req, res) => {
   const isConfigured = oneSignalBackend.isConfigured();
+  const { appId, apiKey } = oneSignalBackend.getCredentials();
   return res.status(200).json({
     success: true,
     configured: isConfigured,
-    appIdConfigured: Boolean(process.env.ONESIGNAL_APP_ID),
-    apiKeyConfigured: Boolean(process.env.ONESIGNAL_REST_API_KEY),
+    appIdConfigured: Boolean(appId),
+    apiKeyConfigured: Boolean(apiKey),
+    appIdPreview: appId ? `${appId.substring(0, 8)}...` : null,
     message: isConfigured
       ? 'OneSignal Push Service is active and ready.'
       : 'OneSignal Push Service is running in standby (configure ONESIGNAL_APP_ID & ONESIGNAL_REST_API_KEY to activate).',
