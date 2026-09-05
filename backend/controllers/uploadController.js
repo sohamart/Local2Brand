@@ -7,6 +7,55 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const backendUploadsDir = path.join(__dirname, '..', 'uploads');
 
+// @desc    Generate signed Cloudinary direct upload signature (Bypasses Vercel 4.5MB payload limit)
+// @route   GET /api/upload/signature
+// @access  Public
+export const getSignature = (req, res) => {
+  try {
+    if (!isCloudinaryConfigured) {
+      return res.status(200).json({
+        success: true,
+        directUpload: false,
+        message: 'Cloudinary not configured for direct upload, using server fallback',
+      });
+    }
+
+    const isVideo =
+      req.query?.resource_type === 'video' ||
+      req.query?.isVideo === 'true' ||
+      req.body?.resource_type === 'video' ||
+      req.body?.isVideo === true;
+
+    const folder = req.query?.folder || req.body?.folder || (isVideo ? 'local2brand_videos' : 'local2brand_assets');
+    const timestamp = Math.round(Date.now() / 1000);
+
+    const paramsToSign = {
+      folder,
+      timestamp,
+    };
+
+    const signature = cloudinary.utils.api_sign_request(paramsToSign, process.env.CLOUDINARY_API_SECRET);
+
+    return res.status(200).json({
+      success: true,
+      directUpload: true,
+      signature,
+      timestamp,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      folder,
+      resourceType: isVideo ? 'video' : 'auto',
+    });
+  } catch (error) {
+    console.error('Signature generation error:', error);
+    return res.status(500).json({
+      success: false,
+      directUpload: false,
+      message: error.message || 'Failed to generate upload signature',
+    });
+  }
+};
+
 // Helper to upload media files directly to Cloudinary (single or chunked)
 const uploadFileToCloudinary = (filePath, options = {}) => {
   return new Promise((resolve, reject) => {

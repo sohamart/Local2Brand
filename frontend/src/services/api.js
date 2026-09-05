@@ -144,15 +144,19 @@ class ApiClient {
 
   uploadWithProgress(endpoint, formData, onProgress, options = {}) {
     return new Promise((resolve, reject) => {
-      const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+      const isExternalUrl = endpoint.startsWith('http://') || endpoint.startsWith('https://');
+      const url = isExternalUrl ? endpoint : `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
       const token = this.getToken();
       const xhr = new XMLHttpRequest();
 
       xhr.open(options.method || 'POST', url, true);
-      xhr.withCredentials = true;
 
-      if (token) {
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      // Only attach authentication headers/cookies for our own internal API
+      if (!isExternalUrl) {
+        xhr.withCredentials = true;
+        if (token) {
+          xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        }
       }
 
       if (options.headers) {
@@ -191,7 +195,8 @@ class ApiClient {
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve(responseData);
         } else {
-          const error = new Error(responseData.message || `Upload failed with status ${xhr.status}`);
+          const errorMsg = responseData.message || responseData.error?.message || `Upload failed with status ${xhr.status}`;
+          const error = new Error(errorMsg);
           error.status = xhr.status;
           error.data = responseData;
           reject(error);
@@ -206,7 +211,7 @@ class ApiClient {
         reject(new Error('Upload timed out. Please try again.'));
       };
 
-      xhr.timeout = options.timeout || 15 * 60 * 1000;
+      xhr.timeout = options.timeout || 20 * 60 * 1000; // 20 minutes for large 2GB media
 
       xhr.send(formData);
     });

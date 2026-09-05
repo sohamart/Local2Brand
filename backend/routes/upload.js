@@ -1,8 +1,12 @@
 import express from 'express';
-import { uploadImage, deleteMedia } from '../controllers/uploadController.js';
+import { uploadImage, deleteMedia, getSignature } from '../controllers/uploadController.js';
 import { upload } from '../middleware/upload.js';
 
 const router = express.Router();
+
+// Generate signed upload parameters for direct Cloudinary client upload (Bypasses Vercel 4.5MB limits)
+router.get('/signature', getSignature);
+router.post('/signature', getSignature);
 
 // Safe upload handler with explicit error interception and no timeout for 2GB streaming
 router.post(

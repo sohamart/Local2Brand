@@ -86,7 +86,7 @@ export const uploadWithToast = async ({
             {displayMB} MB <span className="text-slate-400 dark:text-slate-500 font-normal">/ {totalMB} MB</span>
           </span>
           <span className="font-bold text-purple-600 dark:text-purple-400 text-right text-[10px] sm:text-[11px] pl-2 break-words">
-            {statusText || (pct >= 100 ? '☁️ Cloudinary Syncing...' : `${pct}% Streamed`)}
+            {statusText || (pct >= 100 ? '☁️ Cloud CDN Syncing...' : `${pct}% Streamed`)}
           </span>
         </div>
       </div>
@@ -94,33 +94,87 @@ export const uploadWithToast = async ({
   };
 
   // Initialize Toast with pristine backdrop and borders
-  const toastId = toast.loading(renderProgressUI(0, 0, 'Uploading...'), {
+  const toastId = toast.loading(renderProgressUI(0, 0, 'Preparing upload...'), {
     autoClose: false,
     closeButton: false,
     className: '!bg-white dark:!bg-slate-900 !text-slate-900 dark:!text-white !border !border-slate-200 dark:!border-slate-700/80 !rounded-2xl !shadow-2xl sm:min-w-[350px]',
   });
 
-  try {
-    const uploadPromise = api.uploadWithProgress(endpoint, formData, ({ percent, loaded, total }) => {
-      if (isComplete) return;
+  const progressHandler = ({ percent, loaded }) => {
+    if (isComplete) return;
 
-      const exactLoadedMB = Number((loaded / (1024 * 1024)).toFixed(1));
-      currentLoadedMB = exactLoadedMB;
-      currentPercent = percent;
+    const exactLoadedMB = Number((loaded / (1024 * 1024)).toFixed(1));
+    const status = percent >= 100 ? '☁️ Syncing to Cloud CDN...' : `Uploading ${exactLoadedMB} MB (${percent}%)...`;
 
-      const status = percent >= 100 ? '☁️ Saving to Cloudinary...' : `Uploading ${exactLoadedMB} MB (${percent}%)...`;
-
-      toast.update(toastId, {
-        render: renderProgressUI(percent, exactLoadedMB, status),
-        isLoading: true,
-        autoClose: false,
-      });
+    toast.update(toastId, {
+      render: renderProgressUI(percent, exactLoadedMB, status),
+      isLoading: true,
+      autoClose: false,
     });
+  };
 
-    const res = await uploadPromise;
+  try {
+    let uploadResult = null;
+
+    // Check if single or multiple files
+    const fileListToUpload = files && files.length > 0 ? Array.from(files) : file ? [file] : [];
+    const isVideo = fileListToUpload.some(f => f?.type?.startsWith('video/') || Boolean(f?.name?.match(/\.(mp4|webm|mov|mkv|avi|ogg)$/i)));
+
+    // 1. Try Direct Cloudinary Signed Upload (Bypasses Vercel 4.5MB serverless limit)
+    let directSig = null;
+    try {
+      const sigRes = await api.get(`/upload/signature?resource_type=${isVideo ? 'video' : 'auto'}`);
+      if (sigRes?.directUpload && sigRes?.signature && sigRes?.cloudName && sigRes?.apiKey) {
+        directSig = sigRes;
+      }
+    } catch (sigErr) {
+      console.warn('Direct upload signature unavailable, falling back to server upload:', sigErr.message);
+    }
+
+    if (directSig) {
+      // Direct high-speed upload straight from client browser to Cloudinary CDN edge
+      const directUploadPromises = fileListToUpload.map(async (singleFile) => {
+        const directData = new FormData();
+        directData.append('file', singleFile);
+        directData.append('api_key', directSig.apiKey);
+        directData.append('timestamp', directSig.timestamp);
+        directData.append('signature', directSig.signature);
+        directData.append('folder', directSig.folder || (isVideo ? 'local2brand_videos' : 'local2brand_assets'));
+
+        const targetUrl = `https://api.cloudinary.com/v1_1/${directSig.cloudName}/${isVideo ? 'video' : 'auto'}/upload`;
+        const cloudData = await api.uploadWithProgress(targetUrl, directData, progressHandler);
+
+        return cloudData?.secure_url || cloudData?.url;
+      });
+
+      const uploadedUrls = await Promise.all(directUploadPromises);
+      const validUrls = uploadedUrls.filter(Boolean);
+
+      if (validUrls.length > 0) {
+        uploadResult = {
+          success: true,
+          url: validUrls[0],
+          urls: validUrls,
+          message: `${validUrls.length} file(s) uploaded directly to Cloud CDN`,
+        };
+      }
+    }
+
+    // 2. Fallback to standard server /api/upload if direct upload was skipped or failed
+    if (!uploadResult) {
+      const standardFormData = new FormData();
+      if (files && files.length > 0) {
+        Array.from(files).forEach((f) => standardFormData.append('files', f));
+      } else if (file) {
+        standardFormData.append('file', file);
+      }
+
+      uploadResult = await api.uploadWithProgress(endpoint, standardFormData, progressHandler);
+    }
+
     isComplete = true;
 
-    if (res?.success || res?.url || res?.urls?.length) {
+    if (uploadResult?.success || uploadResult?.url || uploadResult?.urls?.length) {
       // 100% Instant Completion State
       toast.update(toastId, {
         render: (
@@ -145,9 +199,9 @@ export const uploadWithToast = async ({
         closeButton: true,
         className: '!bg-white dark:!bg-slate-900 !text-slate-900 dark:!text-white !border !border-emerald-500/30 dark:!border-emerald-500/40 !rounded-2xl !shadow-2xl sm:min-w-[350px]',
       });
-      return res;
+      return uploadResult;
     } else {
-      throw new Error(res?.message || 'Upload failed');
+      throw new Error(uploadResult?.message || 'Upload failed');
     }
   } catch (err) {
     isComplete = true;
