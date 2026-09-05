@@ -2357,23 +2357,6 @@ export default function GetStarted() {
       localStorage.removeItem(draftStorageKey);
       localStorage.removeItem('l2b_get_started_draft');
 
-      // Sync to local order history for seamless instant dashboard visibility
-      try {
-        localStorage.setItem('l2b_last_order_id', requirementId);
-        const storedOrders = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
-        const newOrderRecord = {
-          requirementId,
-          websiteType,
-          websiteTypeName,
-          clientInfo,
-          status: 'Submitted',
-          estimatedPrice: priceBreakdown.totalApproxPrice,
-          createdAt: new Date().toISOString()
-        };
-        const filtered = storedOrders.filter((o) => o.requirementId !== requirementId);
-        localStorage.setItem('l2b_user_orders', JSON.stringify([newOrderRecord, ...filtered.slice(0, 19)]));
-      } catch (e) {}
-
       setSubmissionSuccess({
         id: requirementId,
         businessName: clientInfo.businessName,

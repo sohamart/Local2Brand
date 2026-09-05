@@ -250,28 +250,6 @@ export default function UserDashboard() {
       let reqList = reqsRes?.requirements || [];
       const leadList = leadsRes?.leads || [];
 
-      // Merge with locally stored order history if any are pending or submitted
-      try {
-        const storedOrders = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
-        if (Array.isArray(storedOrders) && storedOrders.length > 0) {
-          const map = new Map();
-          // Seed with local orders
-          for (const so of storedOrders) {
-            if (!so) continue;
-            const key = (so.requirementId || so._id || '').toLowerCase();
-            if (key) map.set(key, so);
-          }
-          // Overlay with server requirements
-          for (const ro of reqList) {
-            if (!ro) continue;
-            const key = (ro.requirementId || ro._id || '').toLowerCase();
-            if (key) map.set(key, ro);
-          }
-          reqList = Array.from(map.values());
-          reqList.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        }
-      } catch (e) {}
-
       setRequirements(reqList);
       if (leadsRes && leadsRes.success) setInquiries(leadList);
       if (cbRes && cbRes.success) setCallbacks(cbRes.callbacks || []);

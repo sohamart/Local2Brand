@@ -97,19 +97,7 @@ export default function TrackOrder() {
       searchParams.get('lead') ||
       params?.id ||
       '';
-    if (urlId) return urlId.trim();
-
-    try {
-      const lastId = localStorage.getItem('l2b_last_order_id');
-      if (lastId) return lastId.trim();
-
-      const stored = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
-      if (Array.isArray(stored) && stored.length > 0 && stored[0]?.requirementId) {
-        return stored[0].requirementId.trim();
-      }
-    } catch (e) {}
-
-    return '';
+    return urlId ? urlId.trim() : '';
   };
 
   const initialId = getInitialTargetId();
@@ -120,25 +108,16 @@ export default function TrackOrder() {
   const [userOrders, setUserOrders] = useState([]);
   const [lastSyncTime, setLastSyncTime] = useState(new Date());
 
-  // Auto fetch user's recent orders if logged in for 1-click buttons
+  // Auto fetch user's recent orders from Database API
   useEffect(() => {
-    // 1. Immediately populate from local storage for 0ms delay
-    try {
-      const localStored = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
-      if (Array.isArray(localStored) && localStored.length > 0) {
-        setUserOrders(localStored);
-      }
-    } catch (e) {}
-
-    // 2. Fetch fresh from server if user is logged in
     if (user?.email) {
       api.get(`/requirements/my?email=${encodeURIComponent(user.email)}`)
         .then((res) => {
-          if (res?.success && Array.isArray(res.requirements) && res.requirements.length > 0) {
+          if (res?.success && Array.isArray(res.requirements)) {
             setUserOrders(res.requirements);
-            // If no search param is set and no order currently tracked, track latest order
+            // If no search param is set and no order currently tracked, track latest order from DB
             const currentParam = searchParams.get('id') || searchParams.get('order') || searchParams.get('track') || params?.id;
-            if (!currentParam && !trackedOrder) {
+            if (!currentParam && !trackedOrder && res.requirements.length > 0) {
               const latest = res.requirements[0];
               setOrderIdInput(latest.requirementId);
               fetchOrderDetails(latest.requirementId, false);
@@ -146,10 +125,12 @@ export default function TrackOrder() {
           }
         })
         .catch(() => {});
+    } else {
+      setUserOrders([]);
     }
   }, [user?.email]);
 
-  // Initial load from URL query or path params or localStorage
+  // Initial load from URL query or path params
   useEffect(() => {
     const targetId =
       searchParams.get('id') ||
@@ -157,7 +138,7 @@ export default function TrackOrder() {
       searchParams.get('track') ||
       searchParams.get('lead') ||
       params?.id ||
-      getInitialTargetId();
+      '';
 
     if (targetId) {
       setOrderIdInput(targetId);
@@ -165,7 +146,7 @@ export default function TrackOrder() {
     }
   }, [searchParams, params?.id]);
 
-  // Live silent background polling every 3 seconds for real-time progress updates
+  // Live silent background polling every 3 seconds for real-time progress updates from DB
   useEffect(() => {
     if (!trackedOrder?.requirementId) return;
 
@@ -200,26 +181,11 @@ export default function TrackOrder() {
           }
         }
       } else {
-        throw new Error(res?.message || 'Order not found');
+        throw new Error(res?.message || 'Order not found in database');
       }
     } catch (err) {
-      // Check if we have it in local cached orders as a fallback
-      let matchedLocal = null;
-      try {
-        const stored = JSON.parse(localStorage.getItem('l2b_user_orders') || '[]');
-        matchedLocal = stored.find(
-          (o) =>
-            o.requirementId?.toLowerCase() === cleanId.toLowerCase() ||
-            o._id === cleanId
-        );
-      } catch (e) {}
-
-      if (matchedLocal) {
-        setTrackedOrder(matchedLocal);
-        setLastSyncTime(new Date());
-        setError('');
-      } else if (!silent) {
-        setError(err.data?.message || err.message || `No website project found with ID "${cleanId}". Please check the ID.`);
+      if (!silent) {
+        setError(err.data?.message || err.message || `No website project found in database with ID "${cleanId}". Please check the ID.`);
         setTrackedOrder(null);
       }
     } finally {
