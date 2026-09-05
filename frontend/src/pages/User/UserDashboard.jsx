@@ -47,6 +47,7 @@ import { uploadWithToast } from '../../utils/toastUpload';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import DashboardLoader from '../../components/common/DashboardLoader';
 import MarqueeTicker from '../../components/common/MarqueeTicker';
+import NotificationToggle from '../../components/common/NotificationToggle';
 import { SEO } from '../../components/common/CommonUI';
 
 
@@ -600,6 +601,9 @@ export default function UserDashboard() {
             </button>
           </div>
         </div>
+
+        {/* Live Push Notifications Setting Card */}
+        <NotificationToggle className="mb-6" />
 
         {/* Email Verification Required Alert Card */}
         {user && !user.isEmailVerified && (

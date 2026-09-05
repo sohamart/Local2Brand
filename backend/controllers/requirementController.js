@@ -11,6 +11,7 @@ import {
   sendRequirementRejectedEmail,
   sendAdminRequirementDeletionAlert
 } from '../utils/email.js';
+import oneSignalBackend from '../services/oneSignalService.js';
 
 import mongoose from 'mongoose';
 
@@ -304,6 +305,25 @@ export const submitRequirement = async (req, res) => {
 
         sendRequirementConfirmationEmail(doc).catch((err) => console.warn('Client requirement email error:', err.message));
         sendAdminRequirementAlert(doc).catch((err) => console.warn('Admin requirement alert error:', err.message));
+
+        // Push notification to Admins
+        oneSignalBackend.sendNotificationToAdmins({
+          title: `🚀 New Order Submitted (${reqId})`,
+          message: `${clientName} submitted order for ${businessName}`,
+          url: '/admin/requirements',
+          data: { type: 'new_order', requirementId: reqId }
+        }).catch((err) => console.warn('Admin push alert error:', err.message));
+
+        // Push confirmation to User if authenticated
+        const userTargetId = doc.userId || doc.user?._id || doc.user;
+        if (userTargetId) {
+          oneSignalBackend.sendNotificationToUser(userTargetId, {
+            title: `🎉 Order Confirmed (${reqId})`,
+            message: `We received your requirements for ${businessName}. Review in progress!`,
+            url: `/track-order?id=${reqId}`,
+            data: { type: 'order_received', requirementId: reqId }
+          }).catch((err) => console.warn('User push confirmation error:', err.message));
+        }
       } catch (bgErr) {
         console.warn('Background requirement alert error:', bgErr.message);
       }
@@ -585,6 +605,20 @@ export const updateRequirementStatus = async (req, res) => {
       sendOrderDeliveredEmail(updated).catch((err) => console.warn('Delivery handover email notice:', err.message));
     } else {
       sendRequirementStatusUpdateEmail(updated).catch((err) => console.warn('Status email update notice:', err.message));
+    }
+
+    // Push notification to user on status change
+    const targetUserId = updated.userId || updated.user?._id || updated.user;
+    const reqId = updated.requirementId || id;
+    const bizName = updated.clientInfo?.businessName || updated.websiteTypeName || 'Your project';
+
+    if (targetUserId) {
+      oneSignalBackend.sendNotificationToUser(targetUserId, {
+        title: `Order Update: ${status} (${reqId})`,
+        message: `${bizName} has been updated to "${status}". Click to check progress roadmap.`,
+        url: `/track-order?id=${reqId}`,
+        data: { type: 'order_status_update', requirementId: reqId, status }
+      }).catch((err) => console.warn('Status push update notice:', err.message));
     }
 
     res.status(200).json({

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api from '../services/api';
+import oneSignalService from '../services/oneSignal';
 
 const AuthContext = createContext();
 
@@ -53,6 +54,7 @@ export function AuthProvider({ children }) {
             setToken(savedToken);
           }
           localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+          oneSignalService.syncUser(res.user);
         }
       } catch (err) {
         // If server explicitly reports session expired / invalid token
@@ -118,6 +120,7 @@ export function AuthProvider({ children }) {
       }
       setUser(res.user);
       localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+      oneSignalService.syncUser(res.user);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('l2b_auth_login', { detail: res.user }));
       }
@@ -146,6 +149,7 @@ export function AuthProvider({ children }) {
       }
       setUser(res.user);
       localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+      oneSignalService.syncUser(res.user);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('l2b_auth_login', { detail: res.user }));
       }
@@ -165,6 +169,9 @@ export function AuthProvider({ children }) {
 
     // Graceful delay for user to enjoy the smooth logout animation and security sound/visuals
     await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    // Clear OneSignal User identity session
+    oneSignalService.clearUser();
 
     api.setToken(null);
     setToken(null);
@@ -255,6 +262,7 @@ export function AuthProvider({ children }) {
     if (res.success && res.user) {
       setUser((prev) => ({ ...prev, ...res.user }));
       localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+      oneSignalService.syncUser(res.user);
       return res.user;
     }
     throw new Error(res.message || 'Update failed');

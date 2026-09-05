@@ -1,0 +1,256 @@
+/**
+ * OneSignal Web Push Notification Service (v16 SDK)
+ * Handles client initialization, user identity sync, and push subscription lifecycle.
+ */
+
+class OneSignalService {
+  constructor() {
+    this.appId = import.meta.env.VITE_ONESIGNAL_APP_ID || '';
+    this.isInitialized = false;
+    this.initPromise = null;
+    this.listeners = new Set();
+  }
+
+  /**
+   * Check if push notifications and service workers are supported in the current environment
+   */
+  isPushSupported() {
+    if (typeof window === 'undefined') return false;
+    return Boolean(
+      'Notification' in window &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window
+    );
+  }
+
+  /**
+   * Initialize OneSignal Web SDK
+   */
+  async init() {
+    if (typeof window === 'undefined') return false;
+    if (this.isInitialized) return true;
+    if (this.initPromise) return this.initPromise;
+
+    if (!this.appId) {
+      console.warn('ℹ️ OneSignal Notice: VITE_ONESIGNAL_APP_ID is not configured in environment variables.');
+      return false;
+    }
+
+    if (!this.isPushSupported()) {
+      console.warn('ℹ️ OneSignal Notice: Push notifications are not supported on this browser.');
+      return false;
+    }
+
+    this.initPromise = new Promise((resolve) => {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async (OneSignal) => {
+        try {
+          await OneSignal.init({
+            appId: this.appId,
+            serviceWorkerParam: { scope: '/' },
+            serviceWorkerPath: '/OneSignalSDKWorker.js',
+            allowLocalhostAsSecureOrigin: true,
+            notifyButton: {
+              enable: false, // We use our custom Apple-grade UI toggle & bell
+            },
+          });
+
+          this.isInitialized = true;
+          console.log('✅ OneSignal Web Push SDK Initialized');
+
+          // Listen to push subscription changes
+          if (OneSignal.User?.PushSubscription?.addEventListener) {
+            OneSignal.User.PushSubscription.addEventListener('change', (event) => {
+              this.notifyListeners({
+                type: 'subscriptionChange',
+                optedIn: event?.current?.optedIn,
+                id: event?.current?.id,
+              });
+            });
+          }
+
+          // Listen to permission changes
+          if (OneSignal.Notifications?.addEventListener) {
+            OneSignal.Notifications.addEventListener('permissionChange', (permission) => {
+              this.notifyListeners({
+                type: 'permissionChange',
+                permission,
+              });
+            });
+          }
+
+          resolve(true);
+        } catch (err) {
+          console.warn('OneSignal initialization notice:', err.message);
+          resolve(false);
+        }
+      });
+    });
+
+    return this.initPromise;
+  }
+
+  /**
+   * Get current notification permission ('default', 'granted', 'denied')
+   */
+  getPermission() {
+    if (typeof window === 'undefined' || !('Notification' in window)) return 'denied';
+    return Notification.permission;
+  }
+
+  /**
+   * Check if user is actively subscribed and opted in
+   */
+  async isSubscribed() {
+    if (!this.isPushSupported()) return false;
+    if (typeof window === 'undefined') return false;
+
+    if (Notification.permission !== 'granted') return false;
+
+    return new Promise((resolve) => {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push((OneSignal) => {
+        try {
+          const isOptedIn = OneSignal.User?.PushSubscription?.optedIn ?? false;
+          resolve(isOptedIn || Notification.permission === 'granted');
+        } catch (e) {
+          resolve(Notification.permission === 'granted');
+        }
+      });
+    });
+  }
+
+  /**
+   * Request native browser permission and opt in to push
+   */
+  async requestPermission() {
+    if (!this.isPushSupported()) {
+      throw new Error('Push notifications are not supported on this browser or device.');
+    }
+
+    await this.init();
+
+    return new Promise((resolve, reject) => {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async (OneSignal) => {
+        try {
+          // Request notification permission
+          if (OneSignal.Notifications?.requestPermission) {
+            await OneSignal.Notifications.requestPermission();
+          } else if (Notification.requestPermission) {
+            await Notification.requestPermission();
+          }
+
+          const currentPerm = Notification.permission;
+
+          if (currentPerm === 'granted') {
+            if (OneSignal.User?.PushSubscription?.optIn) {
+              await OneSignal.User.PushSubscription.optIn();
+            }
+            this.notifyListeners({ type: 'permissionGranted' });
+            resolve({ success: true, permission: 'granted' });
+          } else if (currentPerm === 'denied') {
+            resolve({ success: false, permission: 'denied', message: 'Notification permission was blocked in browser settings.' });
+          } else {
+            resolve({ success: false, permission: currentPerm });
+          }
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+  }
+
+  /**
+   * Opt out from push notifications
+   */
+  async optOut() {
+    if (typeof window === 'undefined') return;
+
+    return new Promise((resolve) => {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async (OneSignal) => {
+        try {
+          if (OneSignal.User?.PushSubscription?.optOut) {
+            await OneSignal.User.PushSubscription.optOut();
+          }
+          this.notifyListeners({ type: 'optOut' });
+          resolve(true);
+        } catch (e) {
+          resolve(false);
+        }
+      });
+    });
+  }
+
+  /**
+   * Associate authenticated user identity with OneSignal
+   * Prevents duplicates and enables targeted backend notifications
+   */
+  syncUser(user) {
+    if (!user || (!user._id && !user.id)) return;
+    if (typeof window === 'undefined') return;
+
+    const externalId = String(user._id || user.id);
+
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async (OneSignal) => {
+      try {
+        if (OneSignal.login) {
+          await OneSignal.login(externalId);
+        }
+
+        if (user.email && OneSignal.User?.addEmail) {
+          OneSignal.User.addEmail(user.email).catch(() => {});
+        }
+
+        if (user.role && OneSignal.User?.addTag) {
+          OneSignal.User.addTag('role', user.role).catch(() => {});
+        }
+
+        if (user.name && OneSignal.User?.addTag) {
+          OneSignal.User.addTag('name', user.name).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('OneSignal user sync notice:', err.message);
+      }
+    });
+  }
+
+  /**
+   * Clear user association on logout
+   */
+  clearUser() {
+    if (typeof window === 'undefined') return;
+
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    window.OneSignalDeferred.push(async (OneSignal) => {
+      try {
+        if (OneSignal.logout) {
+          await OneSignal.logout();
+        }
+      } catch (e) {
+        // Ignored
+      }
+    });
+  }
+
+  /**
+   * Subscribe to lifecycle changes
+   */
+  subscribeListener(fn) {
+    this.listeners.add(fn);
+    return () => this.listeners.delete(fn);
+  }
+
+  notifyListeners(data) {
+    this.listeners.forEach((fn) => {
+      try {
+        fn(data);
+      } catch (e) {}
+    });
+  }
+}
+
+export const oneSignalService = new OneSignalService();
+export default oneSignalService;

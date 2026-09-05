@@ -24,6 +24,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useOrderModal } from '../../context/OrderModalContext';
 import AshokaChakra from './AshokaChakra';
 import ThemeToggle from './ThemeToggle';
+import NotificationBell from './NotificationBell';
 import MarqueeTicker from './MarqueeTicker';
 
 
@@ -593,6 +594,7 @@ export default function Navbar() {
 
             {/* 3. RIGHT ACTIONS (Desktop / Tablet) */}
             <div className="hidden md:flex items-center gap-2.5 sm:gap-3 shrink-0">
+              <NotificationBell />
               <ThemeToggle />
 
               {/* User Profile Avatar with Hover Dropdown */}
@@ -725,7 +727,8 @@ export default function Navbar() {
             </div>
 
             {/* 4. MOBILE RIGHT ACTION BUTTONS */}
-            <div className="flex items-center gap-2 md:hidden">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:hidden">
+              <NotificationBell />
               <ThemeToggle />
 
               {!user ? (

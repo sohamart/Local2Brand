@@ -40,6 +40,7 @@ import chatRoutes from './routes/chat.js';
 import telemetryRoutes from './routes/telemetry.js';
 import analyticsRoutes from './routes/analytics.js';
 import mediaRoutes from './routes/media.js';
+import notificationRoutes from './routes/notifications.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -198,6 +199,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/media', mediaRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
 

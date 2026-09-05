@@ -7,6 +7,7 @@ import {
   sendCallbackDeletionEmail,
   sendAdminCallbackDeletionAlert
 } from '../utils/email.js';
+import oneSignalBackend from '../services/oneSignalService.js';
 import mongoose from 'mongoose';
 
 
@@ -46,6 +47,13 @@ export const createCallback = async (req, res) => {
 
     // Instant alert to Admin (sohamduttabwn@gmail.com) and Brand (local2brand@zohomail.in)
     sendAdminCallbackAlert(callback).catch((err) => console.warn('Admin callback alert error:', err.message));
+
+    oneSignalBackend.sendNotificationToAdmins({
+      title: '📞 New Callback Request',
+      message: `${callback.name} requested a call: ${callback.phone} (${callback.preferredTime})`,
+      url: '/admin/callbacks',
+      data: { type: 'callback_request', callbackId: callback._id || callback.id }
+    }).catch((err) => console.warn('Admin push callback alert error:', err.message));
 
     if (callback.email) {
       sendCallbackConfirmationEmail(callback).catch((err) => console.warn('Callback email error:', err.message));

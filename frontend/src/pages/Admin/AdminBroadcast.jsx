@@ -111,6 +111,7 @@ export default function AdminBroadcast() {
   const [actionText, setActionText] = useState(TEMPLATE_PRESETS[0].actionText);
   const [actionUrl, setActionUrl] = useState(TEMPLATE_PRESETS[0].actionUrl);
   const [isImportant, setIsImportant] = useState(true);
+  const [sendPush, setSendPush] = useState(true);
 
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
@@ -136,7 +137,7 @@ export default function AdminBroadcast() {
       return;
     }
 
-    if (!confirm(`Are you sure you want to dispatch this broadcast email to "${targetAudience.toUpperCase()}" with ${isImportant ? 'HIGH PRIORITY (Inbox Placement)' : 'Standard Delivery'}?`)) {
+    if (!confirm(`Are you sure you want to dispatch this broadcast${sendPush ? ' (Email + OneSignal Push)' : ' (Email Only)'} to "${targetAudience.toUpperCase()}" with ${isImportant ? 'HIGH PRIORITY' : 'Standard Delivery'}?`)) {
       return;
     }
 
@@ -155,6 +156,7 @@ export default function AdminBroadcast() {
           targetAudience,
           customEmails,
           isImportant,
+          sendPush,
         },
         { timeout: 120000 }
       );
@@ -420,6 +422,42 @@ export default function AdminBroadcast() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* 5. OneSignal Push Notification Option */}
+          <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-xs">
+                📡
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <span>Send OneSignal Web Push Notification</span>
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-purple-200 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300">
+                    Live
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Instant browser alert sent to all subscribed desktop &amp; mobile users
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSendPush(!sendPush)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
+                sendPush ? 'bg-purple-600' : 'bg-slate-300 dark:bg-slate-700'
+              }`}
+              role="switch"
+              aria-checked={sendPush}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  sendPush ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
 
           {/* Dispatch Button */}

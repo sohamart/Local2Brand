@@ -2,6 +2,7 @@ import { dataStore } from '../config/dataAdapter.js';
 import { sendEmail, getClientUrl, wrapAgencyEmail } from '../utils/email.js';
 import { getLiveTelemetryStats } from './telemetryController.js';
 import { fetchAllMergedRequirements } from './requirementController.js';
+import oneSignalBackend from '../services/oneSignalService.js';
 import mongoose from 'mongoose';
 
 export const getAdminStats = async (req, res) => {
@@ -332,9 +333,19 @@ export const sendBroadcastEmail = async (req, res) => {
       }
     }
 
+    // Optional OneSignal Push Broadcast
+    if (req.body?.sendPush || req.body?.sendPushNotification) {
+      const cleanMessage = (messageHtml || '').replace(/<[^>]*>?/gm, '').replace(/\n+/g, ' ').trim().substring(0, 150);
+      oneSignalBackend.broadcastPushNotification({
+        title: heading || subject,
+        message: cleanMessage,
+        url: actionUrl || (getClientUrl ? `${getClientUrl()}/demos` : 'https://local2brand.com/demos'),
+      }).catch((err) => console.warn('Admin broadcast push notice:', err.message));
+    }
+
     return res.status(200).json({
       success: true,
-      message: `Broadcast completed! Dispatched to ${sentCount} recipients.`,
+      message: `Broadcast completed! Dispatched to ${sentCount} email recipients.`,
       sentCount,
       failedCount,
       total: recipients.length,
