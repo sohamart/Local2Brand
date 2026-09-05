@@ -9,7 +9,7 @@ export default function NotificationPrompt() {
   useEffect(() => {
     if (!isSupported) return;
 
-    // Check if permission is already decided or dismissed recently
+    // Check if permission is already decided or subscribed
     if (permission !== 'default' || isSubscribed) {
       setIsVisible(false);
       return;
@@ -18,18 +18,18 @@ export default function NotificationPrompt() {
     const dismissedTime = localStorage.getItem('l2b_push_prompt_dismissed');
     if (dismissedTime) {
       const elapsed = Date.now() - Number(dismissedTime);
-      // Wait at least 2 days before gently showing again
-      if (elapsed < 2 * 24 * 60 * 60 * 1000) {
+      // Wait 15 minutes before gently showing again if dismissed
+      if (elapsed < 15 * 60 * 1000) {
         return;
       }
     }
 
-    // Show prompt after 4 seconds of smooth page exploration
+    // Show prompt promptly after 1.5 seconds of page load
     const timer = setTimeout(() => {
-      if (Notification.permission === 'default') {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
         setIsVisible(true);
       }
-    }, 4000);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, [isSupported, permission, isSubscribed]);

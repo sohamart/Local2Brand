@@ -56,7 +56,21 @@ class OneSignalService {
             },
             promptOptions: {
               slidedown: {
-                prompts: [], // Disable duplicate automatic slidedown
+                prompts: [
+                  {
+                    type: 'push',
+                    autoPrompt: true,
+                    text: {
+                      actionMessage: "Get instant real-time notifications for order milestones, blueprints, and offers from LOCAL2BRAND.",
+                      acceptButton: 'Allow Notifications',
+                      cancelButton: 'Later',
+                    },
+                    delay: {
+                      pageViews: 1,
+                      timeDelay: 2,
+                    },
+                  },
+                ],
               },
             },
           });
