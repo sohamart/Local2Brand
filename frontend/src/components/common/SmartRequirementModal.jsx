@@ -1750,18 +1750,25 @@ export default function SmartRequirementModal() {
                       Domain & Cloud Infrastructure
                     </h3>
                     <p className="text-xs text-slate-500">
-                      All LOCAL2BRAND projects include free 1-year SSL & high-speed CDN routing.
+                      Domain registration and cloud SSD hosting rates vary by extension (.com, .in, .org, .co, .ai) and storage specifications.
+                    </p>
+                  </div>
+
+                  {/* Informative Notice */}
+                  <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs text-slate-700 dark:text-slate-300">
+                    <p className="text-[11px] leading-relaxed">
+                      💡 <strong>Note:</strong> Enter your preferred domain name(s) below. Our engineering desk will check live registry availability and email you the confirmed exact pricing along with available extension options.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
-                      <label className="text-xs font-bold block text-slate-900 dark:text-white">Domain Name Status</label>
+                      <label className="text-xs font-bold block text-slate-900 dark:text-white">Domain Name Preference</label>
                       <div className="space-y-1.5 text-xs">
                         {[
-                          'Need New Domain (Free Included)',
+                          'Need New Domain (Approx ₹799–₹1,499/yr)',
                           'Already Own Domain (Will Point DNS)',
-                          'Need Subdomain Only'
+                          'Need Multiple Domain Extensions Booking'
                         ].map((d) => (
                           <label key={d} className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -1777,12 +1784,12 @@ export default function SmartRequirementModal() {
                     </div>
 
                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
-                      <label className="text-xs font-bold block text-slate-900 dark:text-white">Cloud Hosting Status</label>
+                      <label className="text-xs font-bold block text-slate-900 dark:text-white">Cloud Hosting Preference</label>
                       <div className="space-y-1.5 text-xs">
                         {[
-                          'High-Speed Cloud Hosting (Free 1-Yr Included)',
+                          'High-Speed SSD Cloud Server (Approx ₹1,499–₹2,999/yr)',
                           'Deploy to My Own Server / AWS / VPS',
-                          'Need Enterprise Dedicated Server'
+                          'Need Enterprise Dedicated Cluster'
                         ].map((h) => (
                           <label key={h} className="flex items-center gap-2 cursor-pointer">
                             <input

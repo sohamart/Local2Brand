@@ -359,15 +359,28 @@ export default function AssistantChatbot() {
     } catch (e) {}
   }, []);
 
-  // Auto Popup Game Modal on load/refresh if user has not played current campaign round
+  // Close handler that permanently remembers dismissal so it never auto-pops up on refresh
+  const handleCloseLuckyWheel = () => {
+    try {
+      const currentCampaign = settings?.luckyWheel?.campaignVersion || 1;
+      localStorage.setItem('l2b_wheel_popup_dismissed', 'true');
+      localStorage.setItem('l2b_wheel_dismissed_version', currentCampaign.toString());
+    } catch (e) {}
+    setIsLuckyWheelOpen(false);
+  };
+
+  // Auto Popup Game Modal on load/refresh only if user has NEVER dismissed it and hasn't played current round
   useEffect(() => {
     if (settings?.luckyWheel?.enabled === false) return;
     try {
       const currentCampaign = settings?.luckyWheel?.campaignVersion || 1;
       const spunCampaign = parseInt(localStorage.getItem('l2b_wheel_spun_version') || '0', 10);
+      const isDismissed =
+        localStorage.getItem('l2b_wheel_popup_dismissed') === 'true' ||
+        parseInt(localStorage.getItem('l2b_wheel_dismissed_version') || '0', 10) >= currentCampaign;
 
-      // If user hasn't played current round, pop up the reward game after initial page load animation
-      if (spunCampaign < currentCampaign) {
+      // If user closed it once or already played, do not auto-popup on refresh/load
+      if (!isDismissed && spunCampaign < currentCampaign) {
         const timer = setTimeout(() => {
           setIsLuckyWheelOpen(true);
         }, 2800);
@@ -384,6 +397,8 @@ export default function AssistantChatbot() {
         localStorage.removeItem('l2b_wheel_spun_version');
         localStorage.removeItem('l2b_wheel_spun');
         localStorage.removeItem('l2b_won_voucher');
+        localStorage.removeItem('l2b_wheel_popup_dismissed');
+        localStorage.removeItem('l2b_wheel_dismissed_version');
         setSavedVoucher(null);
       } catch (e) {}
       setIsLuckyWheelOpen(true);
@@ -1372,7 +1387,7 @@ export default function AssistantChatbot() {
       {/* Lucky Prize Wheel Mini-Game Modal */}
       <LuckyWheelModal
         isOpen={isLuckyWheelOpen}
-        onClose={() => setIsLuckyWheelOpen(false)}
+        onClose={handleCloseLuckyWheel}
       />
     </div>
   );

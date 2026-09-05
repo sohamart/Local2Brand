@@ -106,23 +106,18 @@ function CulturalMascotArt({ country = 'India', lang = 'en' }) {
     video.playsInline = true;
     video.loop = true;
 
-    const master = document.getElementById('global-bg-country-video');
-    if (master && master.currentTime > 0) {
-      try {
-        if (Math.abs(video.currentTime - master.currentTime) > 0.5) {
-          video.currentTime = master.currentTime;
-        }
-      } catch (e) {}
-    }
-
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => {
-          setVideoPlaying(true);
-          setVideoFailed(false);
-        })
-        .catch(() => {});
+    if (video.paused && !document.hidden) {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setVideoPlaying(true);
+            setVideoFailed(false);
+          })
+          .catch(() => {});
+      }
+    } else if (!video.paused) {
+      setVideoPlaying(true);
     }
   }, []);
 
@@ -131,7 +126,7 @@ function CulturalMascotArt({ country = 'India', lang = 'en' }) {
     setFlagImgError(false);
   }, [videoSrc, youtubeId, country]);
 
-  // Synchronize banner video with background master video
+  // Synchronize banner video with background master video and resume on tab switch
   useEffect(() => {
     if (youtubeId) return;
 
@@ -139,16 +134,21 @@ function CulturalMascotArt({ country = 'India', lang = 'en' }) {
     const master = document.getElementById('global-bg-country-video');
 
     const handleSync = () => {
+      if (document.hidden) return;
       const m = document.getElementById('global-bg-country-video') || master;
       const s = bgVideoRef.current;
       if (!s) return;
 
+      s.muted = true;
+      s.playsInline = true;
+
+      if (m && !m.seeking && !s.seeking && m.currentTime > 0 && Math.abs(s.currentTime - m.currentTime) > 2.0) {
+        try {
+          s.currentTime = m.currentTime;
+        } catch (e) {}
+      }
+
       if (s.paused) {
-        if (m && m.currentTime > 0) {
-          try {
-            s.currentTime = m.currentTime;
-          } catch (e) {}
-        }
         s.play()
           .then(() => {
             setVideoPlaying(true);
@@ -166,28 +166,24 @@ function CulturalMascotArt({ country = 'India', lang = 'en' }) {
       handleSync();
     }
 
-    const handleUserTouch = () => {
-      handleSync();
-    };
-
-    const handleVisibilityChange = () => {
-      handleSync();
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleVisibilityChange);
-    window.addEventListener('click', handleUserTouch, { passive: true });
-    window.addEventListener('touchstart', handleUserTouch, { passive: true });
+    document.addEventListener('visibilitychange', handleSync);
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('pageshow', handleSync);
+    window.addEventListener('l2b_tab_visible', handleSync);
+    window.addEventListener('click', handleSync, { passive: true });
+    window.addEventListener('touchstart', handleSync, { passive: true });
 
     return () => {
       if (master) {
         master.removeEventListener('play', handleSync);
         master.removeEventListener('playing', handleSync);
       }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleVisibilityChange);
-      window.removeEventListener('click', handleUserTouch);
-      window.removeEventListener('touchstart', handleUserTouch);
+      document.removeEventListener('visibilitychange', handleSync);
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('pageshow', handleSync);
+      window.removeEventListener('l2b_tab_visible', handleSync);
+      window.removeEventListener('click', handleSync);
+      window.removeEventListener('touchstart', handleSync);
     };
   }, [videoSrc, youtubeId, country, attemptPlay]);
 
@@ -237,6 +233,16 @@ function CulturalMascotArt({ country = 'India', lang = 'en' }) {
             }}
             onCanPlay={() => {
               attemptPlay();
+            }}
+            onWaiting={() => {
+              if (!document.hidden && bgVideoRef.current) {
+                bgVideoRef.current.play().catch(() => {});
+              }
+            }}
+            onStalled={() => {
+              if (!document.hidden && bgVideoRef.current) {
+                bgVideoRef.current.play().catch(() => {});
+              }
             }}
             onTimeUpdate={(e) => {
               if (e.currentTarget.currentTime > 0.05 && !videoPlaying) {

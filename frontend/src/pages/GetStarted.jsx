@@ -1231,11 +1231,13 @@ export default function GetStarted() {
     contentDocFile: null, // { name, size }
 
     // Step 6: Domain & Hosting (Separated)
-    domainStatus: '',
+    domainStatus: 'I need a new Domain',
     domainName: '',
     domainExtension: '.com',
+    domainExtensions: ['.com'],
     domainOtherExtension: '',
-    hostingStatus: '',
+    domainNotes: '',
+    hostingStatus: 'I need new Hosting',
     hostingPlan: 'Basic',
     hostingCustomDesc: '',
 
@@ -4025,6 +4027,26 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 </p>
               </div>
 
+              {/* Notice Banner: Domain & Hosting Price Variance & Real-time Quote */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10 border border-blue-500/20 dark:border-blue-500/30 text-xs">
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-xl bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <div className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-2">
+                      <span>Domain &amp; Cloud Hosting Transparency</span>
+                      <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[9px] font-extrabold uppercase tracking-wider">
+                        Estimate Quote
+                      </span>
+                    </div>
+                    <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Domain names and cloud server rates vary depending on live registry availability (.com, .in, .org, etc.) and your required storage bandwidth. <strong>You can select multiple preferred domain extensions and names below.</strong> Our engineering desk will check live registry availability and email you the exact confirmed price quote and available options.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* ---------------- DOMAIN ---------------- */}
               <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 space-y-4">
                 <div className="flex items-center justify-between">
@@ -4033,30 +4055,35 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                       <Globe className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">Do you need a Domain? <span className="text-red-500">*</span></h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">Web address e.g. yourbrand.com / .in</p>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                        Do you need a Domain? <span className="text-red-500">*</span>
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Choose your domain preference or provide multiple choices for availability checking
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {['I already have a Domain', 'I need a new Domain'].map(opt => (
+                  {[
+                    { key: 'I already have a Domain', label: 'I already have a Domain', badge: 'Free DNS Setup' },
+                    { key: 'I need a new Domain', label: 'I need a new Domain / Multiple Options', badge: 'Approx ₹799 – ₹1,499/Yr' }
+                  ].map(opt => (
                     <button
-                      key={opt}
+                      key={opt.key}
                       type="button"
-                      onClick={() => setFormData({ ...formData, domainStatus: opt })}
+                      onClick={() => setFormData({ ...formData, domainStatus: opt.key })}
                       className={`p-3.5 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
-                        formData.domainStatus === opt
-                          ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-500 text-blue-900 dark:text-white shadow-md'
+                        formData.domainStatus === opt.key
+                          ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-500 text-blue-900 dark:text-white shadow-md ring-1 ring-blue-400'
                           : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
                       }`}
                     >
-                      <span>{opt}</span>
-                      {opt === 'I need a new Domain' && (
-                        <span className="font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded">
-                          ₹999 / Year
-                        </span>
-                      )}
+                      <span>{opt.label}</span>
+                      <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded">
+                        {opt.badge}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -4064,41 +4091,110 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
 
                 {/* If New Domain Selected */}
                 {formData.domainStatus === 'I need a new Domain' && (
-                  <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <div className="sm:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Desired Domain Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g. mybusinessbrand"
-                          value={formData.domainName}
-                          onChange={e => setFormData({ ...formData, domainName: e.target.value })}
-                          className="w-full px-3.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none"
-                        />
-                        {stepErrors.domainName && <p className="text-xs text-red-500 mt-1">{stepErrors.domainName}</p>}
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Domain Extension
-                        </label>
-                        <select
-                          value={formData.domainExtension}
-                          onChange={e => setFormData({ ...formData, domainExtension: e.target.value })}
-                          className="w-full px-3.5 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none"
-                        >
-                          <option value=".com">.com</option>
-                          <option value=".in">.in</option>
-                          <option value=".org">.org</option>
-                          <option value=".net">.net</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </div>
+                  <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in duration-200">
+                    
+                    {/* Domain Names input */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Desired Domain Name(s) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. mybusiness, mybusinessbrand, mybusinessonline (comma separated for multiple options)"
+                        value={formData.domainName}
+                        onChange={e => setFormData({ ...formData, domainName: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none focus:border-blue-500"
+                      />
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        💡 You can enter multiple alternative names separated by commas. We will verify real-time availability for all options and email you the live price.
+                      </p>
+                      {stepErrors.domainName && <p className="text-xs text-red-500 mt-1">{stepErrors.domainName}</p>}
                     </div>
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center justify-between pt-1">
-                      <span>Domain Registration:</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">₹999 / Year</span>
+
+                    {/* Multi-Select Domain Extensions */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Preferred Domain Extension(s) (Select multiple choices)
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                        {[
+                          { ext: '.com', label: '.com', desc: 'Global Commercial', approx: 'Approx ₹899–₹1,399/yr' },
+                          { ext: '.in', label: '.in', desc: 'India Official', approx: 'Approx ₹699–₹999/yr' },
+                          { ext: '.co.in', label: '.co.in', desc: 'India Business', approx: 'Approx ₹649–₹899/yr' },
+                          { ext: '.org', label: '.org', desc: 'Organization / Trust', approx: 'Approx ₹999–₹1,499/yr' },
+                          { ext: '.net', label: '.net', desc: 'Tech & Network', approx: 'Approx ₹1,199–₹1,599/yr' },
+                          { ext: '.co', label: '.co', desc: 'Modern Company', approx: 'Approx ₹1,299–₹1,899/yr' },
+                          { ext: '.ai', label: '.ai', desc: 'Artificial Intelligence', approx: 'Approx ₹5,999–₹7,999/yr' },
+                          { ext: '.io', label: '.io', desc: 'SaaS & Web App', approx: 'Approx ₹3,499–₹4,999/yr' },
+                          { ext: 'Other', label: 'Other', desc: 'Custom Extension', approx: 'Registry Rate' },
+                        ].map(dItem => {
+                          const isSelected = (formData.domainExtensions || ['.com']).includes(dItem.ext);
+                          return (
+                            <button
+                              key={dItem.ext}
+                              type="button"
+                              onClick={() => {
+                                const curr = formData.domainExtensions || ['.com'];
+                                const updated = isSelected
+                                  ? (curr.length > 1 ? curr.filter(x => x !== dItem.ext) : curr)
+                                  : [...curr, dItem.ext];
+                                setFormData({
+                                  ...formData,
+                                  domainExtensions: updated,
+                                  domainExtension: updated.join(', ')
+                                });
+                              }}
+                              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'bg-blue-50 dark:bg-blue-900/40 border-blue-500 text-blue-900 dark:text-white shadow-xs ring-1 ring-blue-400'
+                                  : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-mono font-bold text-xs">{dItem.label}</span>
+                                <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] font-bold ${
+                                  isSelected ? 'bg-blue-600 text-white' : 'border border-slate-400 text-transparent'
+                                }`}>
+                                  ✓
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-slate-500 truncate">{dItem.desc}</div>
+                              <div className="text-[9px] font-mono font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                {dItem.approx}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* If Other Selected */}
+                      {(formData.domainExtensions || []).includes('Other') && (
+                        <div className="mt-2.5">
+                          <input
+                            type="text"
+                            placeholder="Specify other extensions (e.g. .store, .agency, .shop)"
+                            value={formData.domainOtherExtension || ''}
+                            onChange={e => setFormData({ ...formData, domainOtherExtension: e.target.value })}
+                            className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 text-xs text-slate-900 dark:text-white outline-none"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Dynamic Registry Confirmation Note */}
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div className="space-y-0.5">
+                        <span className="text-slate-500 font-medium">Selected Preferred Extensions:</span>
+                        <div className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                          {(formData.domainExtensions || ['.com']).join(' • ')}
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <span className="text-[10px] text-slate-400 block">Approx. Estimated Registration</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                          Approx ₹799 – ₹1,499 / Yr
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -4112,30 +4208,35 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                       <Server className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">Do you need Hosting? <span className="text-red-500">*</span></h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">High-speed SSD cloud server with SSL &amp; daily backups</p>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                        Do you need Cloud Hosting? <span className="text-red-500">*</span>
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        High-speed SSD cloud server with automated SSL, daily backups &amp; DDoS shielding
+                      </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {['I already have Hosting', 'I need new Hosting'].map(opt => (
+                  {[
+                    { key: 'I already have Hosting', label: 'I already have Hosting (Connect for Free)', badge: 'Zero Cost' },
+                    { key: 'I need new Hosting', label: 'I need Cloud SSD Hosting', badge: 'Approx ₹1,499 – ₹3,999/Yr' }
+                  ].map(opt => (
                     <button
-                      key={opt}
+                      key={opt.key}
                       type="button"
-                      onClick={() => setFormData({ ...formData, hostingStatus: opt })}
+                      onClick={() => setFormData({ ...formData, hostingStatus: opt.key })}
                       className={`p-3.5 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
-                        formData.hostingStatus === opt
-                          ? 'bg-purple-50 dark:bg-purple-900/40 border-purple-500 text-purple-900 dark:text-white shadow-md'
+                        formData.hostingStatus === opt.key
+                          ? 'bg-purple-50 dark:bg-purple-900/40 border-purple-500 text-purple-900 dark:text-white shadow-md ring-1 ring-purple-400'
                           : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
                       }`}
                     >
-                      <span>{opt}</span>
-                      {opt === 'I need new Hosting' && (
-                        <span className="font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded">
-                          ₹1,999 / Year
-                        </span>
-                      )}
+                      <span>{opt.label}</span>
+                      <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded">
+                        {opt.badge}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -4144,28 +4245,39 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 {/* If New Hosting Selected */}
                 {formData.hostingStatus === 'I need new Hosting' && (
                   <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Hosting Plan
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Estimated Hosting Tier &amp; Capacity
+                      </label>
+                      <span className="text-[10px] text-slate-500">
+                        * Exact plan verified &amp; confirmed on quote
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                       {[
-                        { plan: 'Basic', price: '₹1,999' },
-                        { plan: 'Standard', price: '₹2,499' },
-                        { plan: 'Premium', price: '₹3,999' },
-                        { plan: 'Custom', price: '₹4,999' }
+                        { plan: 'Basic', title: 'Basic Cloud SSD', approx: 'Approx ₹1,499 – ₹1,999/Yr', desc: 'Fast LiteSpeed & SSL, ideal for portfolios & landing pages' },
+                        { plan: 'Standard', title: 'Standard Business', approx: 'Approx ₹2,499 – ₹2,999/Yr', desc: 'NVMe SSD, Dynamic DB, ideal for company portals' },
+                        { plan: 'Premium', title: 'High-Performance Pro', approx: 'Approx ₹3,999 – ₹4,999/Yr', desc: 'Dedicated CPU slices, ideal for E-Commerce & high traffic' },
+                        { plan: 'Custom', title: 'Enterprise Cloud', approx: 'Custom Quote', desc: 'Dedicated VPS/AWS cluster architecture' }
                       ].map(hp => (
                         <button
                           key={hp.plan}
                           type="button"
                           onClick={() => setFormData({ ...formData, hostingPlan: hp.plan })}
-                          className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
                             formData.hostingPlan === hp.plan
-                              ? 'bg-purple-600 border-purple-500 text-white font-bold shadow-xs'
-                              : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                              ? 'bg-purple-600 border-purple-500 text-white font-bold shadow-md ring-1 ring-purple-400'
+                              : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-400'
                           }`}
                         >
-                          <div className="text-xs">{hp.plan}</div>
-                          <div className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">{hp.price} / Yr</div>
+                          <div className="text-xs font-bold">{hp.title}</div>
+                          <div className={`text-[10px] font-mono font-semibold mt-0.5 ${formData.hostingPlan === hp.plan ? 'text-amber-200' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                            {hp.approx}
+                          </div>
+                          <div className={`text-[10px] mt-1 leading-snug ${formData.hostingPlan === hp.plan ? 'text-purple-100' : 'text-slate-500'}`}>
+                            {hp.desc}
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -4690,17 +4802,20 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 {/* 4. Domain & Hosting */}
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                   <div>
-                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">4. Domain &amp; Hosting</h5>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">4. Domain &amp; Cloud Infrastructure</h5>
                     <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
                       Domain: <span className="font-semibold text-slate-900 dark:text-white">{formData.domainStatus}</span>
-                      {formData.domainStatus === 'I need a new Domain' ? ` (₹999/yr)` : ''} • 
+                      {formData.domainStatus === 'I need a new Domain' ? ` (${formData.domainName || 'Pending'} • ${(formData.domainExtensions || ['.com']).join(', ')} — Approx ₹799–₹1,499/yr)` : ''} • 
                       Hosting: <span className="font-semibold text-slate-900 dark:text-white">{formData.hostingStatus}</span>
-                      {formData.hostingStatus === 'I need new Hosting' ? ` (₹1,999/yr)` : ''}
+                      {formData.hostingStatus === 'I need new Hosting' ? ` (${formData.hostingPlan} Plan — Approx ₹1,499–₹3,999/yr)` : ''}
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      * Verified availability &amp; final confirmed invoice will be emailed.
                     </p>
                   </div>
                   <button
                     onClick={() => setCurrentStep(6)}
-                    className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer shrink-0"
                   >
                     Edit
                   </button>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Lock, Mail, User, Phone, Building, ArrowRight, Sparkles, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, User, Phone, Building, ArrowRight, Sparkles, AlertCircle, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SEO } from '../../components/common/CommonUI';
 import PhoneInputWithCountry, { validatePhoneNumber } from '../../components/common/PhoneInputWithCountry';
@@ -117,6 +117,26 @@ export default function Register() {
                     placeholder="e.g. Vikram Malhotra"
                     className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm focus:outline-purple-500 text-slate-900 dark:text-white"
                   />
+                </div>
+              </div>
+
+              {/* Important Email Verification Notice (Mobile Friendly) */}
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/20 dark:border-purple-500/30 text-xs">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-0.5 flex-1 min-w-0">
+                    <div className="font-bold text-slate-800 dark:text-slate-200 text-[11px] flex items-center gap-1.5">
+                      <span>Important Notice</span>
+                      <span className="px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-[9px] font-extrabold uppercase tracking-wider">
+                        OTP Verification
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                      Please enter a valid active email. A <strong>6-digit verification code (OTP)</strong> will be sent to this email to activate your account.
+                    </p>
+                  </div>
                 </div>
               </div>
 

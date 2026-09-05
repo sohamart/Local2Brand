@@ -79,8 +79,7 @@ const uploadBufferToCloudinary = (buffer, options = {}) => {
 // @route   POST /api/upload
 // @access  Public
 export const uploadImage = async (req, res) => {
-
-  const tempFilesToDelete = [];
+  const tempFilesToDelete = new Set();
 
   try {
     let filesList = [];
@@ -111,7 +110,7 @@ export const uploadImage = async (req, res) => {
 
     const uploadedUrls = [];
 
-    // 1. Process Multipart Files (from disk or memory) concurrently in parallel
+    // 1. Process Multipart Files concurrently in parallel
     if (filesList && filesList.length > 0) {
       const uploadPromises = filesList.map(async (file) => {
         const filePath = file.path;
@@ -122,7 +121,7 @@ export const uploadImage = async (req, res) => {
         const targetFolder = isVideo ? 'local2brand_videos' : 'local2brand_assets';
 
         if (filePath) {
-          tempFilesToDelete.push(filePath);
+          tempFilesToDelete.add(filePath);
         }
 
         if (isCloudinaryConfigured) {
@@ -131,18 +130,15 @@ export const uploadImage = async (req, res) => {
               // Direct high-speed Cloudinary upload
               const result = await uploadFileToCloudinary(filePath, {
                 folder: targetFolder,
-                asset_folder: targetFolder,
-                use_filename: true,
-                unique_filename: true,
                 resource_type: resourceType,
               });
               if (result?.secure_url) {
                 return result.secure_url;
               }
             } catch (cloudErr) {
-              console.warn('ℹ️ Cloudinary free tier limit notice, saving to high-speed persistent server storage for large 2GB file:', cloudErr.message);
+              console.warn('ℹ️ Cloudinary upload notice, saving to persistent server storage:', cloudErr.message);
               
-              // If file exceeds Cloudinary's 100MB free tier limit, save directly to persistent server storage
+              // Fallback to server local storage if Cloudinary fails or is throttled
               const uniqueFilename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname || '') || (isVideo ? '.mp4' : '.jpg')}`;
               const targetDir = isVideo ? path.join(backendUploadsDir, 'videos') : backendUploadsDir;
               
@@ -159,7 +155,7 @@ export const uploadImage = async (req, res) => {
                   ? `${protocol}://${hostUrl}/uploads/videos/${uniqueFilename}` 
                   : `${protocol}://${hostUrl}/uploads/${uniqueFilename}`;
               } catch (fsErr) {
-                console.error('Local copy error:', fsErr);
+                console.error('Local storage fallback error:', fsErr);
                 throw cloudErr;
               }
             }
@@ -167,9 +163,6 @@ export const uploadImage = async (req, res) => {
             try {
               const result = await uploadBufferToCloudinary(buffer, {
                 folder: targetFolder,
-                asset_folder: targetFolder,
-                use_filename: true,
-                unique_filename: true,
                 resource_type: resourceType,
               });
               if (result?.secure_url) {
@@ -210,10 +203,6 @@ export const uploadImage = async (req, res) => {
       });
     }
 
-
-
-
-
     // 2. Process Base64 Data URI in JSON body
     const base64Input = req.body?.image || req.body?.file || req.body?.avatar || req.body?.data;
     if (base64Input && typeof base64Input === 'string' && (base64Input.startsWith('data:image') || base64Input.startsWith('data:video'))) {
@@ -252,14 +241,14 @@ export const uploadImage = async (req, res) => {
       message: error.message || 'Error processing media upload to Cloudinary',
     });
   } finally {
-    // Clean up temporary disk files
+    // Clean up temporary disk files safely
     for (const tempPath of tempFilesToDelete) {
       try {
         if (fs.existsSync(tempPath)) {
           await fs.promises.unlink(tempPath);
         }
       } catch (e) {
-        console.warn('Failed to clean temp file:', tempPath, e.message);
+        // Ignored
       }
     }
   }

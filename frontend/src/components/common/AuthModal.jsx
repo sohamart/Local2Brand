@@ -181,6 +181,28 @@ export default function AuthModal() {
             </div>
           )}
 
+          {/* Important Email Verification Notice (Mobile Friendly) */}
+          {mode === 'register' && (
+            <div className="p-2.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/20 dark:border-purple-500/30 text-xs">
+              <div className="flex items-start gap-2">
+                <div className="w-5 h-5 rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                </div>
+                <div className="space-y-0.5 flex-1 min-w-0">
+                  <div className="font-bold text-slate-800 dark:text-slate-200 text-[10px] flex items-center gap-1.5">
+                    <span>Important Notice</span>
+                    <span className="px-1.5 py-0.2 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 text-[8px] font-extrabold uppercase tracking-wider">
+                      OTP Verification
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-snug">
+                    Please enter a valid active email. A <strong>6-digit verification code (OTP)</strong> will be sent to activate your account.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
               {mode === 'login' ? 'Email Address or Phone Number *' : 'Email Address *'}

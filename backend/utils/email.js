@@ -30,6 +30,7 @@ export const getClientUrl = (path = '') => {
 
 // Cached singleton transporter with connection pooling for lightning fast dispatch
 let cachedTransporter = null;
+let cachedFallbackTransporter = null;
 
 const createTransporter = () => {
   if (cachedTransporter) return cachedTransporter;
@@ -69,6 +70,35 @@ const createTransporter = () => {
   return null;
 };
 
+const createFallbackTransporter = () => {
+  if (cachedFallbackTransporter) return cachedFallbackTransporter;
+
+  const host = process.env.FALLBACK_EMAIL_HOST;
+  const port = process.env.FALLBACK_EMAIL_PORT || 587;
+  const user = process.env.FALLBACK_EMAIL_USER;
+  const pass = process.env.FALLBACK_EMAIL_PASS;
+
+  if (user && pass) {
+    if (host === 'smtp.gmail.com' || (!host && user.includes('@gmail.com'))) {
+      cachedFallbackTransporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass },
+      });
+    } else if (host) {
+      cachedFallbackTransporter = nodemailer.createTransport({
+        host,
+        port: Number(port),
+        secure: Number(port) === 465,
+        auth: { user, pass },
+        tls: { rejectUnauthorized: false },
+      });
+    }
+    return cachedFallbackTransporter;
+  }
+
+  return null;
+};
+
 // Helper to format status strings to clean title case (avoids ALL_CAPS spam filters)
 export const formatStatusTitle = (status = '') => {
   if (!status) return 'Updated';
@@ -83,7 +113,7 @@ export const formatStatusTitle = (status = '') => {
 export const sendEmail = async ({ to, subject, html, text, priority = 'normal', isImportant = true }) => {
   const fromEmail = `"LOCAL2BRAND" <${process.env.EMAIL_USER || 'stackaddacontact@gmail.com'}>`;
   const supportEmail = process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
-  const transporter = createTransporter();
+  let transporter = createTransporter();
 
   // Clean HTML to Plaintext converter
   const cleanPlainText = text || (html
@@ -107,26 +137,27 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
     : '');
 
   if (!transporter) {
-    console.log(`\n📧 [EMAIL SIMULATION] (Configure EMAIL_HOST/USER/PASS in .env for live sending)`);
+    console.log(`\n======================================================`);
+    console.log(`📧 [EMAIL SIMULATION] (Configure EMAIL_USER & EMAIL_PASS in .env for live sending)`);
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
-    console.log(`Content:\n${cleanPlainText || 'HTML Content Generated'}\n`);
+    console.log(`Content:\n${cleanPlainText || 'HTML Content Generated'}`);
+    console.log(`======================================================\n`);
     return { success: true, simulated: true };
   }
 
-  try {
-    const msgId = `<${Date.now()}.${Math.random().toString(36).substring(2, 9)}@local2brand.com>`;
-    const customHeaders = {
-      'X-Mailer': 'LOCAL2BRAND Notification Engine',
-      'MIME-Version': '1.0',
-      'Message-ID': msgId,
-      'List-Unsubscribe': `<mailto:${supportEmail}?subject=Unsubscribe>`,
-      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-      'Auto-Submitted': 'auto-generated',
-      'X-Auto-Response-Suppress': 'OOF, AutoReply',
-      'Feedback-ID': 'LOCAL2BRAND:Transactional:Client',
-    };
+  const customHeaders = {
+    'X-Mailer': 'LOCAL2BRAND Notification Engine',
+    'MIME-Version': '1.0',
+    'Message-ID': `<${Date.now()}.${Math.random().toString(36).substring(2, 9)}@local2brand.com>`,
+    'List-Unsubscribe': `<mailto:${supportEmail}?subject=Unsubscribe>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+    'Auto-Submitted': 'auto-generated',
+    'X-Auto-Response-Suppress': 'OOF, AutoReply',
+    'Feedback-ID': 'LOCAL2BRAND:Transactional:Client',
+  };
 
+  try {
     const info = await transporter.sendMail({
       from: fromEmail,
       replyTo: `"LOCAL2BRAND Team" <${supportEmail}>`,
@@ -139,7 +170,37 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
     console.log(`✅ Email sent successfully to ${to} (MessageId: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.warn(`⚠️ Email sending failed to ${to}:`, error.message);
+    console.warn(`⚠️ Primary email sending failed to ${to}:`, error.message);
+
+    // Try fallback transporter if configured
+    const fallbackTransporter = createFallbackTransporter();
+    if (fallbackTransporter) {
+      try {
+        const fallbackFrom = `"LOCAL2BRAND" <${process.env.FALLBACK_EMAIL_USER}>`;
+        const fbInfo = await fallbackTransporter.sendMail({
+          from: fallbackFrom,
+          replyTo: `"LOCAL2BRAND Team" <${supportEmail}>`,
+          to,
+          subject,
+          text: cleanPlainText,
+          html,
+          headers: customHeaders,
+        });
+        console.log(`✅ Email sent successfully via FALLBACK SMTP to ${to} (MessageId: ${fbInfo.messageId})`);
+        return { success: true, messageId: fbInfo.messageId };
+      } catch (fbErr) {
+        console.error(`❌ Fallback SMTP sending also failed:`, fbErr.message);
+      }
+    }
+
+    // Prominent Console Alert if Gmail Daily Limit or Connection blocked
+    console.log(`\n======================================================`);
+    console.log(`⚠️  [EMAIL DISPATCH NOTICE] Could not deliver to ${to}`);
+    console.log(`Reason: ${error.message}`);
+    console.log(`Subject: ${subject}`);
+    console.log(`Content:\n${cleanPlainText}`);
+    console.log(`======================================================\n`);
+
     return { success: false, error: error.message };
   }
 };
@@ -792,6 +853,64 @@ export const sendAdminCallbackAlert = async (callback) => {
   });
 
   return await sendEmail({ to: recipients, subject, html, text: `Instant callback request from ${callback.name} (${callback.phone}) for ${callback.topic}` });
+};
+
+// 8.1 Admin Real-Time Alert on New User Registration
+export const sendAdminNewUserAlertEmail = async ({ user }) => {
+  const clientUrl = getClientUrl();
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'stackaddacontact@gmail.com';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'stackaddacontact@gmail.com'])).filter(Boolean).join(', ');
+
+  const subject = `👤 [NEW USER REGISTRATION] ${user.name} (${user.email}) — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <div style="display: inline-block; background-color: #dbeafe; border: 1px solid #bfdbfe; color: #1e40af; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-bottom: 12px;">
+        ⚡ NEW CLIENT REGISTRATION
+      </div>
+
+      <table class="bg-box border-theme" style="width: 100% !important; max-width: 100%; table-layout: fixed; border-collapse: collapse; background-color: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-sizing: border-box;">
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; width: 34%; font-size: 12px; font-weight: 600; vertical-align: top;">User Name:</td>
+          <td class="text-title" style="padding: 11px 12px; font-weight: 800; color: #0f172a; width: 66%; font-size: 13px; vertical-align: top; word-break: break-word;">${user.name}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Email Address:</td>
+          <td style="padding: 11px 12px; color: #2563eb; font-weight: 700; font-size: 13px; vertical-align: top; word-break: break-all;">
+            <a href="mailto:${user.email}" style="color: #2563eb; text-decoration: none;">${user.email}</a>
+          </td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Phone / WhatsApp:</td>
+          <td style="padding: 11px 12px; font-weight: 900; color: #059669; font-family: monospace; font-size: 13px; vertical-align: top; word-break: break-all;">
+            ${user.phone ? `<a href="tel:${user.phone}" style="color: #059669; text-decoration: none;">${user.phone}</a>` : 'Not provided'}
+          </td>
+        </tr>
+        ${user.company ? `
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Company / Brand:</td>
+          <td class="text-title" style="padding: 11px 12px; font-weight: 700; color: #0f172a; font-size: 13px; vertical-align: top;">${user.company}</td>
+        </tr>` : ''}
+        <tr>
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Registered At:</td>
+          <td class="text-muted" style="padding: 11px 12px; color: #475569; font-size: 12px; vertical-align: top;">${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} (IST)</td>
+        </tr>
+      </table>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `New user registration: ${user.name} (${user.email}).`,
+    headerBadge: '👤 NEW USER REGISTRATION',
+    title: `New User Joined LOCAL2BRAND 🎉`,
+    subtitle: `${user.name} has created a new account.`,
+    contentHtml,
+    ctaText: 'View Users in Admin Panel',
+    ctaUrl: `${clientUrl}/admin/users`,
+  });
+
+  return await sendEmail({ to: recipients, subject, html, text: `New user registered: ${user.name} (${user.email}, ${user.phone || 'No phone'})` });
 };
 
 // 9. Email Verification OTP Email

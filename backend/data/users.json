@@ -48,9 +48,23 @@
     "phone": "",
     "company": "",
     "status": "active",
-    "emailOtp": "260099",
-    "emailOtpExpires": "2026-09-03T16:00:39.350Z",
-    "isEmailVerified": true,
-    "updatedAt": "2026-09-03T15:45:39.406Z"
+    "emailOtp": "259463",
+    "emailOtpExpires": "2026-09-05T07:57:37.348Z",
+    "isEmailVerified": false,
+    "updatedAt": "2026-09-05T07:42:37.409Z"
+  },
+  {
+    "_id": "6a9bc23b958aa27bb9fec0b8",
+    "id": "6a9bc23b958aa27bb9fec0b8",
+    "name": "LOCAL2BRAND Master Admin",
+    "email": "sohamduttabwn@gmail.com",
+    "role": "admin",
+    "avatar": "",
+    "phone": "",
+    "company": "",
+    "status": "active",
+    "emailOtp": "663313",
+    "emailOtpExpires": "2026-09-05T07:57:15.164Z",
+    "updatedAt": "2026-09-05T07:42:15.235Z"
   }
 ]

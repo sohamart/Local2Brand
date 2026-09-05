@@ -122,7 +122,7 @@ function BackgroundCountryArt({ country = 'India' }) {
   const videoPoster = theme?.videoPoster || 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1600&auto=format&fit=crop&q=85';
   const youtubeId = extractYouTubeId(videoSrc);
 
-  // Pure continuous playback without seeking interruptions
+  // Pure continuous playback with instant resume on tab switch
   const attemptPlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -132,14 +132,14 @@ function BackgroundCountryArt({ country = 'India' }) {
     video.playsInline = true;
     video.loop = true;
 
-    if (video.paused) {
+    if (video.paused && !document.hidden) {
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => setVideoPlaying(true))
           .catch(() => {});
       }
-    } else {
+    } else if (!video.paused) {
       setVideoPlaying(true);
     }
   }, [isMuted]);
@@ -156,30 +156,37 @@ function BackgroundCountryArt({ country = 'India' }) {
 
     attemptPlay();
 
-    const forceResume = () => {
-      if (video && video.paused) {
-        attemptPlay();
+    const handleTabResume = () => {
+      if (document.hidden) return;
+      const v = videoRef.current;
+      if (v) {
+        v.muted = isMuted;
+        v.playsInline = true;
+        if (v.paused) {
+          v.play()
+            .then(() => setVideoPlaying(true))
+            .catch(() => {});
+        }
       }
+      try {
+        window.dispatchEvent(new CustomEvent('l2b_tab_visible'));
+      } catch (e) {}
     };
 
-    // Keep playing even if tab changes or is minimized
-    const watchdog = setInterval(forceResume, 1500);
-
-    document.addEventListener('visibilitychange', forceResume);
-    window.addEventListener('focus', forceResume);
-    window.addEventListener('blur', forceResume);
-    window.addEventListener('click', forceResume, { passive: true });
-    window.addEventListener('touchstart', forceResume, { passive: true });
+    document.addEventListener('visibilitychange', handleTabResume);
+    window.addEventListener('focus', handleTabResume);
+    window.addEventListener('pageshow', handleTabResume);
+    window.addEventListener('click', handleTabResume, { passive: true });
+    window.addEventListener('touchstart', handleTabResume, { passive: true });
 
     return () => {
-      clearInterval(watchdog);
-      document.removeEventListener('visibilitychange', forceResume);
-      window.removeEventListener('focus', forceResume);
-      window.removeEventListener('blur', forceResume);
-      window.removeEventListener('click', forceResume);
-      window.removeEventListener('touchstart', forceResume);
+      document.removeEventListener('visibilitychange', handleTabResume);
+      window.removeEventListener('focus', handleTabResume);
+      window.removeEventListener('pageshow', handleTabResume);
+      window.removeEventListener('click', handleTabResume);
+      window.removeEventListener('touchstart', handleTabResume);
     };
-  }, [videoSrc, youtubeId, country, attemptPlay]);
+  }, [videoSrc, youtubeId, country, attemptPlay, isMuted]);
 
   return (
     <div className="fixed inset-0 w-full h-full min-h-screen pointer-events-none overflow-hidden z-0 select-none bg-slate-950">
@@ -233,13 +240,25 @@ function BackgroundCountryArt({ country = 'India' }) {
           disableRemotePlayback
           preload="auto"
           onPlaying={() => setVideoPlaying(true)}
-          onLoadedData={() => setVideoPlaying(true)}
-          onPause={(e) => {
-            // Prevent auto-pausing when tab switches
-            e.currentTarget.play().catch(() => {});
+          onLoadedData={() => {
+            setVideoPlaying(true);
+            attemptPlay();
+          }}
+          onCanPlay={() => {
+            attemptPlay();
+          }}
+          onWaiting={() => {
+            if (!document.hidden && videoRef.current) {
+              videoRef.current.play().catch(() => {});
+            }
+          }}
+          onStalled={() => {
+            if (!document.hidden && videoRef.current) {
+              videoRef.current.play().catch(() => {});
+            }
           }}
           onTimeUpdate={(e) => {
-            if (e.currentTarget.currentTime > 0.1 && !videoPlaying) {
+            if (e.currentTarget.currentTime > 0.05 && !videoPlaying) {
               setVideoPlaying(true);
             }
           }}

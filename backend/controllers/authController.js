@@ -1,7 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { dataStore } from '../config/dataAdapter.js';
 import { generateToken, sendTokenResponse, getCookieOptions } from '../utils/token.js';
-import { sendWelcomeEmail, sendVerificationOtpEmail } from '../utils/email.js';
+import { sendWelcomeEmail, sendVerificationOtpEmail, sendAdminNewUserAlertEmail } from '../utils/email.js';
 import mongoose from 'mongoose';
 
 // @desc    Register a new user
@@ -58,7 +58,15 @@ export const register = async (req, res) => {
       emailOtpExpires: otpExpires,
     });
 
+    console.log(`\n======================================================`);
+    console.log(`👤 [NEW USER REGISTRATION] Name: ${user.name} | Email: ${cleanEmail} | Phone: ${rawPhone || 'N/A'}`);
+    if (!isEmailVerified) {
+      console.log(`🔑 [VERIFICATION OTP DISPATCHED]: ${otp} (Valid 15m)`);
+    }
+    console.log(`======================================================\n`);
+
     sendWelcomeEmail(user).catch((err) => console.warn('Welcome email error:', err.message));
+    sendAdminNewUserAlertEmail({ user }).catch((err) => console.warn('Admin new user alert email error:', err.message));
     if (!isEmailVerified) {
       sendVerificationOtpEmail({ user, otp }).catch((err) => console.warn('OTP email error:', err.message));
     }
@@ -452,6 +460,10 @@ export const sendVerificationOtp = async (req, res) => {
       emailOtp: otp,
       emailOtpExpires: otpExpires,
     });
+
+    console.log(`\n======================================================`);
+    console.log(`🔑 [RESEND OTP DISPATCH] Email: ${cleanEmail} | Code: ${otp}`);
+    console.log(`======================================================\n`);
 
     sendVerificationOtpEmail({ user, otp }).catch((err) =>
       console.warn('Send OTP background notice:', err.message)

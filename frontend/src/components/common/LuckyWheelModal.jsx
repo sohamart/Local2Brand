@@ -551,6 +551,15 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
     });
   };
 
+  const handleClose = () => {
+    try {
+      const currentCampaign = settings?.luckyWheel?.campaignVersion || 1;
+      localStorage.setItem('l2b_wheel_popup_dismissed', 'true');
+      localStorage.setItem('l2b_wheel_dismissed_version', currentCampaign.toString());
+    } catch (e) {}
+    if (onClose) onClose();
+  };
+
   const handleCopyCode = () => {
     if (!winningPrize?.code) return;
     navigator.clipboard.writeText(winningPrize.code);
@@ -561,7 +570,7 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
 
   const handleApplyVoucher = () => {
     if (!winningPrize) return;
-    onClose();
+    handleClose();
     openOrderModal({
       promoCode: winningPrize.code,
       discountPercent: winningPrize.discountPercent || 20,
@@ -576,7 +585,7 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
   return (
     <div
       className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-xl animate-in fade-in duration-200 select-none overflow-y-auto"
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div
         className="relative w-full max-w-md bg-gradient-to-b from-[#0e1628] via-[#090e1c] to-[#060913] text-white rounded-3xl border-2 border-purple-500/50 shadow-[0_0_80px_rgba(168,85,247,0.35)] overflow-hidden animate-in zoom-in-95 duration-200"
@@ -613,7 +622,7 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
@@ -854,7 +863,7 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
 
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="w-full py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 font-bold text-xs transition-colors cursor-pointer"
                 >
                   Continue Browsing
