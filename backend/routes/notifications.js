@@ -309,10 +309,9 @@ router.get('/inbox', optionalAuth, async (req, res) => {
 
     const filter = andClauses.length > 0 ? { $and: andClauses } : {};
 
-    // High-speed lightweight projection (excludes heavy emailHtml for instantaneous list loads)
+    // Return full notification records immediately
     const [notifications, total, unreadCount] = await Promise.all([
       Notification.find(filter)
-        .select('-emailHtml')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNum)
