@@ -76,12 +76,13 @@ import ThemeToggle from '../components/common/ThemeToggle';
 import AshokaChakra from '../components/common/AshokaChakra';
 import api from '../services/api';
 
-import { COUNTRIES, INDIAN_STATES_AND_DISTRICTS } from '../data/locationData';
+import { COUNTRIES, COUNTRY_LOCATIONS, getStatesForCountry, getDistrictsForState } from '../data/locationData';
 import { COUNTRY_CULTURAL_THEMES, resolveCategoryFromTemplate, formatPriceByCountry } from '../data/countryThemes';
 import { demoWebsites, getDemoBySlug } from '../data/demos';
 import { STEP_AI_GUIDES } from '../data/stepAiData';
 import CulturalMascotArt from '../components/common/CulturalMascotArt';
 import BackgroundCountryArt from '../components/common/BackgroundCountryArt';
+import SearchableCombobox from '../components/common/SearchableCombobox';
 
 // Multilingual dictionary
 const TRANSLATIONS = {
@@ -2593,20 +2594,20 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     <span>{t.labels?.addressSection || 'Business Location & Address Details'}</span>
                   </div>
 
-                  {/* Country & State */}
+                  {/* Country & Searchable State */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5 flex items-center justify-between">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
                         <span>{t.labels?.country || 'Country'} <span className="text-red-500">*</span></span>
                         {formData.country && (
                           <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400">
-                            {currentCountryTheme.flag} {formData.country} Theme Active
+                            {currentCountryTheme.flag} {formData.country} Theme
                           </span>
                         )}
                       </label>
                       <select
                         value={formData.country || 'India'}
-                        onChange={e => handleAddressUpdate({ country: e.target.value, state: '', district: '' })}
+                        onChange={e => handleAddressUpdate({ country: e.target.value, state: '', district: '', otherDistrict: '' })}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700/60 focus:border-purple-500 text-slate-900 dark:text-white text-xs font-semibold outline-none shadow-xs transition-all cursor-pointer"
                       >
                         {COUNTRIES.map(c => (
@@ -2618,72 +2619,56 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                       {stepErrors.country && <p className="text-xs text-red-500 mt-1">{stepErrors.country}</p>}
                     </div>
 
+                    {/* Searchable State / Province / Division */}
                     <div>
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                        {t.labels?.state || 'State / Province'} <span className="text-red-500">*</span>
-                      </label>
-                      {formData.country === 'India' ? (
-                        <select
-                          value={formData.state}
-                          onChange={e => handleAddressUpdate({ state: e.target.value, district: '' })}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none"
-                        >
-                          <option value="">{t.labels?.selectState || '-- Select State / UT --'}</option>
-                          {Object.keys(INDIAN_STATES_AND_DISTRICTS).map(st => (
-                            <option key={st} value={st} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{st}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          placeholder="Enter state or province..."
-                          value={formData.state}
-                          onChange={e => handleAddressUpdate({ state: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none"
-                        />
-                      )}
-                      {stepErrors.state && <p className="text-xs text-red-500 mt-1">{stepErrors.state}</p>}
+                      <SearchableCombobox
+                        label={t.labels?.state || 'State / Province / Division'}
+                        required
+                        value={formData.state || ''}
+                        options={getStatesForCountry(formData.country || 'India')}
+                        placeholder={`-- Select State in ${formData.country || 'India'} --`}
+                        searchPlaceholder={`Search state in ${formData.country || 'India'}...`}
+                        onChange={(val) => handleAddressUpdate({ state: val, district: '', otherDistrict: '' })}
+                        error={stepErrors.state}
+                      />
                     </div>
                   </div>
 
-                  {/* District / City */}
+                  {/* Searchable District / City / County */}
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                      {t.labels?.district || 'District / City'} <span className="text-red-500">*</span>
-                    </label>
-                    {formData.country === 'India' && formData.state && INDIAN_STATES_AND_DISTRICTS[formData.state] ? (
-                      <select
-                        value={formData.district}
-                        onChange={e => handleAddressUpdate({ district: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none"
-                      >
-                        <option value="">{t.labels?.selectDistrict || '-- Select District / City --'}</option>
-                        {INDIAN_STATES_AND_DISTRICTS[formData.state].map(d => (
-                          <option key={d} value={d} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{d}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        placeholder="Enter City / District name..."
-                        value={formData.district}
-                        onChange={e => handleAddressUpdate({ district: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none"
-                      />
-                    )}
-                    {stepErrors.district && <p className="text-xs text-red-500 mt-1">{stepErrors.district}</p>}
+                    <SearchableCombobox
+                      label={t.labels?.district || 'District / City / County'}
+                      required
+                      value={formData.district || ''}
+                      options={getDistrictsForState(formData.country || 'India', formData.state)}
+                      placeholder={
+                        !formData.state
+                          ? 'Please select a state/province first...'
+                          : getDistrictsForState(formData.country || 'India', formData.state).length > 0
+                          ? `-- Select District / City in ${formData.state} --`
+                          : 'Type your district / city name...'
+                      }
+                      searchPlaceholder={
+                        formData.state
+                          ? `Search district in ${formData.state}...`
+                          : 'Search district or city...'
+                      }
+                      disabled={!formData.state && getStatesForCountry(formData.country || 'India').length > 0}
+                      onChange={(val) => handleAddressUpdate({ district: val, otherDistrict: '' })}
+                      error={stepErrors.district}
+                    />
                   </div>
 
                   {/* If Other District Selected */}
-                  {formData.district === 'Other' && (
+                  {(formData.district === 'Other' || formData.district?.toLowerCase() === 'other') && (
                     <div className="animate-in fade-in duration-200">
                       <label className="block text-[11px] font-bold uppercase tracking-wider text-purple-700 dark:text-purple-300 mb-1">
                         {t.labels?.specifyDistrict || 'Please specify your District / City'} <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        placeholder="Enter your exact city/district..."
-                        value={formData.otherDistrict}
+                        placeholder="Enter your exact city / district name..."
+                        value={formData.otherDistrict || ''}
                         onChange={e => handleAddressUpdate({ otherDistrict: e.target.value })}
                         className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none"
                       />
