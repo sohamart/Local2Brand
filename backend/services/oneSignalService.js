@@ -90,19 +90,33 @@ class OneSignalBackendService {
 
     let rawList = [];
     if (Array.isArray(inputs)) {
-      rawList = inputs.map(String).map((s) => s.trim()).filter(Boolean);
+      inputs.forEach((item) => {
+        if (typeof item === 'string') {
+          item.split(',').forEach((sub) => {
+            const clean = sub.trim().replace(/^[,\s]+|[,\s]+$/g, '');
+            if (clean) rawList.push(clean);
+          });
+        } else if (item) {
+          rawList.push(String(item).trim());
+        }
+      });
     } else if (typeof inputs === 'string') {
-      rawList = inputs.split(',').map((s) => s.trim()).filter(Boolean);
+      inputs.split(',').forEach((sub) => {
+        const clean = sub.trim().replace(/^[,\s]+|[,\s]+$/g, '');
+        if (clean) rawList.push(clean);
+      });
     }
 
     const emails = [];
     const directIds = [];
 
     for (const item of rawList) {
-      if (item.includes('@')) {
-        emails.push(item.toLowerCase().trim());
+      const cleanItem = item.trim().replace(/^[,\s]+|[,\s]+$/g, '');
+      if (!cleanItem) continue;
+      if (cleanItem.includes('@')) {
+        emails.push(cleanItem.toLowerCase());
       } else {
-        directIds.push(item.trim());
+        directIds.push(cleanItem);
       }
     }
 
