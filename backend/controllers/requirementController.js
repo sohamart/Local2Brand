@@ -760,6 +760,23 @@ export const deleteRequirement = async (req, res) => {
         sendRequirementDeletionEmail(doc, reason).catch((err) => console.warn('Client deletion email error:', err.message));
       }
       sendAdminRequirementDeletionAlert(doc, reason).catch((err) => console.warn('Admin deletion alert error:', err.message));
+
+      const targetUserId = doc.userId || doc.user?._id || doc.user;
+      const clientEmail = doc.clientInfo?.email || doc.email;
+      const reqId = doc.requirementId || id;
+      if (targetUserId || clientEmail) {
+        notificationDispatcher.dispatchToUser({
+          userId: targetUserId,
+          email: clientEmail,
+          title: `Order Cancelled: #${reqId}`,
+          message: `Your project requirement has been cancelled. Reason: ${reason}`,
+          type: 'order',
+          category: 'Orders',
+          link: `/track-order?id=${reqId}`,
+          data: { requirementId: reqId, status: 'Cancelled', reason },
+          priority: 'high',
+        }).catch(() => {});
+      }
     } catch (mailErr) {
       console.warn('Deletion email dispatch error:', mailErr.message);
     }

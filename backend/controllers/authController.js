@@ -68,6 +68,36 @@ export const register = async (req, res) => {
     sendAdminNewUserAlertEmail({ user }).catch((err) => console.warn('Admin new user alert email error:', err.message));
     sendVerificationOtpEmail({ user, otp, email: cleanEmail }).catch((err) => console.warn('OTP email error:', err.message));
 
+    // In-App Inbox Alert + Push Notification for Admin & User
+    try {
+      const notifMod = await import('../services/notificationDispatcher.js');
+      const dispatcher = notifMod.notificationDispatcher || notifMod.default;
+      if (dispatcher) {
+        dispatcher.dispatchToAdmin({
+          title: '👤 New User Registered',
+          message: `${user.name} (${cleanEmail}${rawPhone ? ' • ' + rawPhone : ''}) has created an account.`,
+          type: 'user',
+          category: 'Users',
+          link: '/admin/users',
+          data: { userId: user._id || user.id, email: cleanEmail, phone: rawPhone, name: user.name },
+          priority: 'normal',
+        }).catch(() => {});
+
+        dispatcher.dispatchToUser({
+          userId: user._id || user.id,
+          email: cleanEmail,
+          title: '🎉 Welcome to LOCAL2BRAND!',
+          message: `Hello ${user.name}! Your account is active. Explore website packages, track sprint deliveries, and manage requirements here.`,
+          type: 'system',
+          category: 'Welcome',
+          link: '/dashboard',
+          priority: 'high',
+        }).catch(() => {});
+      }
+    } catch (notifErr) {
+      console.warn('Registration notification notice:', notifErr.message);
+    }
+
     return sendTokenResponse(
       user,
       201,

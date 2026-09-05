@@ -243,23 +243,38 @@ export const createReview = async (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    // Push notification to Admins
-    oneSignalBackend.sendNotificationToAdmins({
-      title: '⭐ New Client Review Published',
-      message: `${name} gave a ${ratingNum}-star review for ${business || 'LOCAL2BRAND'}: "${comment.substring(0, 80)}..."`,
-      url: '/admin/reviews',
-      data: { type: 'new_review' }
-    }).catch((err) => console.warn('Review push alert error:', err.message));
+    // In-App Inbox Alert + Push Notification to Admins
+    try {
+      const notifMod = await import('../services/notificationDispatcher.js');
+      const dispatcher = notifMod.notificationDispatcher || notifMod.default;
+      if (dispatcher) {
+        dispatcher.dispatchToAdmin({
+          title: '⭐ New Client Review Published',
+          message: `${name} gave a ${ratingNum}-star review for ${business || 'LOCAL2BRAND'}: "${comment.substring(0, 80)}..."`,
+          type: 'system',
+          category: 'Reviews',
+          link: '/admin/reviews',
+          data: { type: 'new_review', rating: ratingNum, userName: name },
+          priority: 'normal',
+        }).catch(() => {});
 
-    // Personal push confirmation to user
-    const targetUserId = req.user?._id || req.user?.id;
-    if (targetUserId) {
-      oneSignalBackend.sendNotificationToUser(targetUserId, {
-        title: '⭐ Review Live on Showcase!',
-        message: 'Thank you for your feedback! Your review is now live on our official showcase.',
-        url: '/portfolio',
-        data: { type: 'review_published' }
-      }).catch((err) => console.warn('User review push confirmation error:', err.message));
+        // Personal inbox confirmation to user
+        const targetUserId = req.user?._id || req.user?.id;
+        if (targetUserId || email) {
+          dispatcher.dispatchToUser({
+            userId: targetUserId,
+            email,
+            title: '⭐ Review Published Live!',
+            message: 'Thank you for your feedback! Your review is now live on our official showcase.',
+            type: 'system',
+            category: 'Reviews',
+            link: '/portfolio',
+            priority: 'normal',
+          }).catch(() => {});
+        }
+      }
+    } catch (notifErr) {
+      console.warn('Review notification notice:', notifErr.message);
     }
 
     if (mongoose.connection.readyState === 1) {
