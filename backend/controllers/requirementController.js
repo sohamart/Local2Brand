@@ -85,11 +85,12 @@ export const saveRequirementDraft = async (req, res) => {
 
     let doc;
     if (mongoose.connection.readyState === 1) {
-      doc = await Requirement.findOneAndUpdate(
-        { requirementId },
-        { $set: payload },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
-      );
+      let existingDoc = await Requirement.findOne({ requirementId });
+      if (existingDoc) {
+        doc = await Requirement.findByIdAndUpdate(existingDoc._id, { $set: payload }, { new: true, setDefaultsOnInsert: true });
+      } else {
+        doc = await Requirement.create(payload);
+      }
     }
     
     // Always mirror in dataStore
@@ -106,7 +107,7 @@ export const saveRequirementDraft = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Progress saved successfully',
-      requirementId,
+      requirementId: doc.requirementId || requirementId,
       requirement: doc
     });
   } catch (error) {
@@ -116,14 +117,14 @@ export const saveRequirementDraft = async (req, res) => {
 };
 
 // @desc    Submit Finalized Requirement
-// @route   POST /api/requirements/:id/submit
+// @route   POST /api/requirements/:id/submit or POST /api/requirements/submit
 // @access  Public / Authenticated
 export const submitRequirement = async (req, res) => {
   try {
     const { id } = req.params; // requirementId or _id
     const finalData = req.body || {};
 
-    let targetId = (id && id !== 'new' && id !== 'undefined') ? id.trim() : (finalData.requirementId || generateRequirementId());
+    let targetId = (id && id !== 'new' && id !== 'undefined' && id.trim()) ? id.trim() : (finalData.requirementId || generateRequirementId());
 
     const validUserId = req.user?._id && mongoose.Types.ObjectId.isValid(req.user._id)
       ? req.user._id
@@ -176,39 +177,53 @@ export const submitRequirement = async (req, res) => {
       submittedAt: new Date()
     };
 
-    const query = mongoose.Types.ObjectId.isValid(targetId)
-      ? { $or: [{ requirementId: targetId }, { _id: targetId }] }
-      : { requirementId: targetId };
-
-    let doc;
+    let doc = null;
     if (mongoose.connection.readyState === 1) {
-      doc = await Requirement.findOneAndUpdate(
-        query,
-        { $set: updatePayload },
-        { new: true, upsert: true, setDefaultsOnInsert: true }
-      );
+      try {
+        let existingDoc = null;
+        if (mongoose.Types.ObjectId.isValid(targetId)) {
+          existingDoc = await Requirement.findOne({ $or: [{ requirementId: targetId }, { _id: targetId }] });
+        } else {
+          existingDoc = await Requirement.findOne({
+            $or: [
+              { requirementId: targetId },
+              { requirementId: { $regex: new RegExp(`^${targetId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } }
+            ]
+          });
+        }
+
+        if (existingDoc) {
+          doc = await Requirement.findByIdAndUpdate(existingDoc._id, { $set: updatePayload }, { new: true });
+        } else {
+          doc = await Requirement.create(updatePayload);
+        }
+      } catch (mongoErr) {
+        console.warn('MongoDB submission save error:', mongoErr.message);
+      }
     }
     
     // Always mirror in dataStore
-    const existingDs = dataStore.find('requirements', (r) => r.requirementId === targetId || r._id === targetId);
+    const existingDs = dataStore.find('requirements', (r) => r.requirementId?.toLowerCase() === targetId.toLowerCase() || r._id === targetId);
     if (existingDs) {
       dataStore.update('requirements', existingDs._id, updatePayload);
     } else {
       dataStore.create('requirements', updatePayload);
     }
     if (!doc) {
-      doc = dataStore.find('requirements', (r) => r.requirementId === targetId || r._id === targetId) || updatePayload;
+      doc = dataStore.find('requirements', (r) => r.requirementId?.toLowerCase() === targetId.toLowerCase() || r._id === targetId) || updatePayload;
     }
 
     if (!doc) {
-      return res.status(404).json({ success: false, message: 'Requirement session not found' });
+      return res.status(500).json({ success: false, message: 'Failed to record requirement submission' });
     }
+
+    const savedReqId = doc.requirementId || targetId;
 
     // Immediately respond to client so UI transitions in milliseconds
     res.status(200).json({
       success: true,
       message: 'Your website requirements have been submitted successfully.',
-      requirementId: doc.requirementId || targetId,
+      requirementId: savedReqId,
       requirement: doc
     });
 
@@ -304,61 +319,114 @@ export const getMyRequirements = async (req, res) => {
 // @access  Public / Authenticated
 export const getRequirementById = async (req, res) => {
   try {
-    const { id } = req.params;
-    let doc;
+    const rawId = req.params.id || '';
+    const cleanId = String(rawId).trim();
+    if (!cleanId) {
+      return res.status(400).json({ success: false, message: 'Order ID is required.' });
+    }
+
+    const escaped = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let doc = null;
+
+    // 1. Search in MongoDB Requirements
     if (mongoose.connection.readyState === 1) {
-      doc = await Requirement.findOne({
-        $or: [
-          { requirementId: id.trim() },
-          { requirementId: { $regex: new RegExp(`^${id.trim()}$`, 'i') } },
-          ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : [])
-        ]
-      });
-    } else {
+      try {
+        const orClauses = [
+          { requirementId: cleanId },
+          { requirementId: { $regex: new RegExp(`^${escaped}$`, 'i') } }
+        ];
+        if (mongoose.Types.ObjectId.isValid(cleanId)) {
+          orClauses.push({ _id: cleanId });
+        }
+        doc = await Requirement.findOne({ $or: orClauses });
+      } catch (dbErr) {
+        console.warn('MongoDB getRequirementById error:', dbErr.message);
+      }
+    }
+
+    // 2. Fallback to dataStore requirements if not found in MongoDB
+    if (!doc) {
       const allReqs = dataStore.read('requirements') || [];
       doc = allReqs.find(
         (r) =>
-          r.requirementId?.toLowerCase() === id.toLowerCase().trim() ||
-          r._id?.toString() === id.toString()
+          r.requirementId?.toLowerCase() === cleanId.toLowerCase() ||
+          r.requirementId === cleanId ||
+          r._id?.toString() === cleanId
       );
     }
 
+    // 3. Fallback to QueryLead in MongoDB if still not found
     if (!doc && mongoose.connection.readyState === 1) {
-      const { QueryLead } = await import('../models/QueryLead.js');
-      const lead = await QueryLead.findOne({
-        $or: [
-          { leadId: id.trim() },
-          { leadId: { $regex: new RegExp(`^${id.trim()}$`, 'i') } },
-          ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : [])
-        ]
-      });
-      if (lead) {
+      try {
+        const { QueryLead } = await import('../models/QueryLead.js');
+        const lead = await QueryLead.findOne({
+          $or: [
+            { leadId: cleanId },
+            { leadId: { $regex: new RegExp(`^${escaped}$`, 'i') } },
+            ...(mongoose.Types.ObjectId.isValid(cleanId) ? [{ _id: cleanId }] : [])
+          ]
+        });
+        if (lead) {
+          doc = {
+            requirementId: lead.leadId || `ORD-${lead._id.toString().slice(-6).toUpperCase()}`,
+            websiteTypeName: lead.websiteType || 'Custom Project',
+            websiteType: lead.websiteType || 'Custom Project',
+            clientInfo: {
+              businessName: lead.businessName || lead.name,
+              ownerName: lead.name,
+              mobile: lead.phone,
+              email: lead.email,
+            },
+            status: lead.status === 'in_progress' ? 'In Development' : lead.status === 'contacted' ? 'Under Review' : lead.status === 'completed' ? 'Completed' : 'Submitted',
+            budget: lead.budget || 'Standard Commercial',
+            timeline: lead.timeline || 'Express 48-72 Hours',
+            additionalNotes: lead.requirements || '',
+            createdAt: lead.createdAt
+          };
+        }
+      } catch (leadErr) {
+        console.warn('QueryLead fallback error:', leadErr.message);
+      }
+    }
+
+    // 4. Fallback to dataStore queries if still not found
+    if (!doc) {
+      const allQueries = dataStore.read('queries') || [];
+      const q = allQueries.find(
+        (item) =>
+          item.id === cleanId ||
+          item.leadId === cleanId ||
+          item.leadId?.toLowerCase() === cleanId.toLowerCase() ||
+          item._id?.toString() === cleanId
+      );
+      if (q) {
         doc = {
-          requirementId: lead.leadId || `ORD-${lead._id.toString().slice(-6).toUpperCase()}`,
-          websiteTypeName: lead.websiteType || 'Custom Project',
-          websiteType: lead.websiteType || 'Custom Project',
+          requirementId: q.leadId || q.id || `ORD-${String(q._id).slice(-6).toUpperCase()}`,
+          websiteTypeName: q.websiteType || q.service || 'Custom Project',
+          websiteType: q.websiteType || q.service || 'Custom Project',
           clientInfo: {
-            businessName: lead.businessName || lead.name,
-            ownerName: lead.name,
-            mobile: lead.phone,
-            email: lead.email,
+            businessName: q.businessName || q.name,
+            ownerName: q.name,
+            mobile: q.phone,
+            email: q.email,
           },
-          status: lead.status === 'in_progress' ? 'In Development' : lead.status === 'contacted' ? 'Under Review' : lead.status === 'completed' ? 'Completed' : 'Submitted',
-          budget: lead.budget || 'Standard Commercial',
-          timeline: lead.timeline || 'Express 48-72 Hours',
-          additionalNotes: lead.requirements || '',
-          createdAt: lead.createdAt
+          status: q.status === 'in_progress' ? 'In Development' : q.status === 'contacted' ? 'Under Review' : q.status === 'completed' ? 'Completed' : 'Submitted',
+          budget: q.budget || 'Standard Commercial',
+          timeline: q.timeline || 'Express 48-72 Hours',
+          additionalNotes: q.requirements || q.message || '',
+          createdAt: q.createdAt
         };
       }
     }
 
     if (!doc) {
-      return res.status(404).json({ success: false, message: `Requirement order "${id}" not found.` });
+      return res.status(404).json({ success: false, message: `Requirement order "${cleanId}" not found.` });
     }
 
-    res.status(200).json({ success: true, requirement: doc });
+    return res.status(200).json({ success: true, requirement: doc });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('getRequirementById error:', error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 

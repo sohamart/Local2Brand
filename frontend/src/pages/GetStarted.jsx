@@ -2090,12 +2090,20 @@ export default function GetStarted() {
       };
 
       const res = await api.post('/requirements/submit', requirementPayload);
+      
+      if (!res?.success || (!res?.requirement && !res?.requirementId)) {
+        throw new Error(res?.message || 'Server did not confirm order submission. Please try again.');
+      }
+
       const requirementId =
         res?.requirement?.requirementId ||
-        res?.data?.requirement?.requirementId ||
         res?.requirementId ||
-        res?.data?.requirementId ||
-        `REQ-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+        res?.data?.requirement?.requirementId ||
+        res?.data?.requirementId;
+
+      if (!requirementId) {
+        throw new Error('Server did not return a valid Order Tracking ID.');
+      }
 
       // Clear draft on successful submission
       localStorage.removeItem('l2b_get_started_draft');
@@ -2112,7 +2120,8 @@ export default function GetStarted() {
           estimatedPrice: priceBreakdown.totalApproxPrice,
           createdAt: new Date().toISOString()
         };
-        localStorage.setItem('l2b_user_orders', JSON.stringify([newOrderRecord, ...storedOrders.slice(0, 19)]));
+        const filtered = storedOrders.filter((o) => o.requirementId !== requirementId);
+        localStorage.setItem('l2b_user_orders', JSON.stringify([newOrderRecord, ...filtered.slice(0, 19)]));
       } catch (e) {}
 
       setSubmissionSuccess({
@@ -2121,18 +2130,11 @@ export default function GetStarted() {
         email: clientInfo.email,
         totalApproxPrice: priceBreakdown.totalApproxPrice
       });
-      toast.success('🎉 Project Order successfully submitted and recorded!');
+      toast.success(`🎉 Project Order ${requirementId} successfully submitted!`);
     } catch (err) {
       console.error('Submission error:', err);
-      // Fallback local successful generation if network glitch
-      const reqId = `REQ-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
-      setSubmissionSuccess({
-        id: reqId,
-        businessName: formData.businessName || 'New Project',
-        email: formData.emailAddress || 'client@local2brand.com',
-        totalApproxPrice: priceBreakdown.totalApproxPrice
-      });
-      toast.success('Project order recorded successfully!');
+      const errMsg = err.data?.message || err.message || 'Could not submit project specifications. Please check connection and retry.';
+      toast.error(`Order Submission Failed: ${errMsg}`);
     } finally {
       setIsSubmitting(false);
     }
