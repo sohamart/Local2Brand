@@ -1711,20 +1711,55 @@ export default function GetStarted() {
   // Helper for manual draft save
   const handleManualSaveDraft = () => {
     try {
+      const hasImagesAttached = Boolean(
+        formData.logoFile ||
+        (Array.isArray(formData.photosFiles) && formData.photosFiles.length > 0)
+      );
+
+      // Sanitize draft payload to prevent QuotaExceededError in localStorage
+      const draftFormData = { ...formData };
+      if (draftFormData.logoFile) {
+        const isCloudUrl = draftFormData.logoFile.url && !draftFormData.logoFile.url.startsWith('data:image');
+        draftFormData.logoFile = {
+          name: draftFormData.logoFile.name,
+          size: draftFormData.logoFile.size,
+          url: isCloudUrl ? draftFormData.logoFile.url : '',
+          dataUrl: isCloudUrl ? draftFormData.logoFile.url : ''
+        };
+      }
+      if (Array.isArray(draftFormData.photosFiles)) {
+        draftFormData.photosFiles = draftFormData.photosFiles.map(p => {
+          const isCloudUrl = p.url && !p.url.startsWith('data:image');
+          return {
+            name: p.name,
+            size: p.size,
+            url: isCloudUrl ? p.url : '',
+            dataUrl: isCloudUrl ? p.url : ''
+          };
+        });
+      }
+
       const payloadToStore = {
-        formData,
+        formData: draftFormData,
         currentStep,
         appliedTemplate: appliedTemplate || currentTemplateKey || '',
         isCouponApplied,
         couponCode,
         lastSaved: Date.now()
       };
+
       localStorage.setItem(draftStorageKey, JSON.stringify(payloadToStore));
       const now = new Date().toLocaleTimeString();
       setLastSavedTime(now);
-      toast.success(`💾 Form progress saved successfully at ${now}`);
+
+      if (hasImagesAttached) {
+        toast.success(`💾 Form progress saved successfully at ${now}! (Note: Cloud-synced media saved)`);
+      } else {
+        toast.success(`💾 Form progress saved successfully at ${now}`);
+      }
     } catch (e) {
-      toast.error('Failed to save draft locally.');
+      console.warn('Manual draft save notice:', e);
+      toast.error('Failed to save draft locally. Please check browser storage permissions.');
     }
   };
 

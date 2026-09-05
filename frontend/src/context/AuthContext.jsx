@@ -25,6 +25,7 @@ export function AuthProvider({ children }) {
     return null;
   });
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Component-based Auth Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -156,9 +157,14 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async (showToast = true, shouldRedirect = true) => {
+    setIsLoggingOut(true);
+
     try {
       await api.post('/auth/logout').catch(() => {});
     } catch (e) {}
+
+    // Graceful delay for user to enjoy the smooth logout animation and security sound/visuals
+    await new Promise((resolve) => setTimeout(resolve, 1200));
 
     api.setToken(null);
     setToken(null);
@@ -227,6 +233,11 @@ export function AuthProvider({ children }) {
       toast.info('Logged out successfully. All local session data cleared! 👋');
     }
 
+    // Brief exit delay
+    setTimeout(() => {
+      setIsLoggingOut(false);
+    }, 400);
+
     // Only redirect if user was in a protected dashboard
     if (shouldRedirect && typeof window !== 'undefined') {
       if (
@@ -271,6 +282,7 @@ export function AuthProvider({ children }) {
         user,
         token,
         loading,
+        isLoggingOut,
         isAdmin,
         isAuthModalOpen,
         openAuthModal,

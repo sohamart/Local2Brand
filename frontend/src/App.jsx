@@ -10,6 +10,7 @@ import LiquidBackground from './components/common/LiquidBackground';
 import CustomCursor from './components/common/CustomCursor';
 import CallbackModal from './components/common/CallbackModal';
 import AuthModal from './components/common/AuthModal';
+import LogoutOverlay from './components/common/LogoutOverlay';
 import AssistantChatbot from './components/common/AssistantChatbot';
 import Preloader from './components/common/Preloader';
 import MaintenanceMode from './components/common/MaintenanceMode';
@@ -263,6 +264,7 @@ function MainAppContent() {
       {/* Global Modals */}
       <CallbackModal />
       <AuthModal />
+      <LogoutOverlay />
 
       {/* Global Minimal Waterdrop Toastify Suite */}
       <ToastContainer
