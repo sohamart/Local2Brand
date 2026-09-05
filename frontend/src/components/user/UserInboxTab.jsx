@@ -66,6 +66,18 @@ export default function UserInboxTab() {
     } catch (err) {}
   };
 
+  const handleDeleteNotification = async (id, e) => {
+    if (e) e.stopPropagation();
+    try {
+      await notificationApi.deleteNotification(id);
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+      toast.success('Notification deleted');
+    } catch (err) {
+      toast.error('Failed to delete notification');
+    }
+  };
+
   const handleMarkAllRead = async () => {
     try {
       await notificationApi.markAllAsRead();
@@ -312,6 +324,15 @@ export default function UserInboxTab() {
                         <ExternalLink className="w-3 h-3" />
                       </Link>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteNotification(item._id, e)}
+                      className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                      title="Delete Notification"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               );
@@ -326,6 +347,7 @@ export default function UserInboxTab() {
           notification={selectedNotification}
           onClose={() => setSelectedNotification(null)}
           onMarkRead={(id) => handleMarkRead(id)}
+          onDelete={(id) => handleDeleteNotification(id)}
         />
       )}
     </div>

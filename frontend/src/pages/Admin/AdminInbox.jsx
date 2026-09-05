@@ -625,6 +625,7 @@ export default function AdminInbox() {
           notification={selectedNotification}
           onClose={() => setSelectedNotification(null)}
           onMarkRead={(id) => handleMarkRead(id)}
+          onDelete={(id) => handleDelete(id)}
         />
       )}
     </div>

@@ -1,9 +1,9 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, Mail, ExternalLink, Clock, Shield, Tag, CheckCircle2, User } from 'lucide-react';
+import { X, Mail, ExternalLink, Clock, Shield, Tag, CheckCircle2, User, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export default function NotificationDetailModal({ notification, onClose, onMarkRead }) {
+export default function NotificationDetailModal({ notification, onClose, onMarkRead, onDelete }) {
   if (!notification) return null;
 
   const formatDate = (dateString) => {
@@ -112,11 +112,11 @@ export default function NotificationDetailModal({ notification, onClose, onMarkR
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between gap-2.5 p-3 sm:p-5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
-          <div className="text-xs text-slate-400">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 sm:p-5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
+          <div className="flex items-center gap-3 text-xs text-slate-400">
             {notification.isRead ? (
               <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Read (expires in 3 days)
+                <CheckCircle2 className="w-3.5 h-3.5" /> Read
               </span>
             ) : (
               <button
@@ -125,6 +125,21 @@ export default function NotificationDetailModal({ notification, onClose, onMarkR
                 className="text-purple-600 dark:text-purple-400 hover:underline font-semibold cursor-pointer"
               >
                 Mark as Read
+              </button>
+            )}
+
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  onDelete(notification._id);
+                  onClose();
+                }}
+                className="text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                title="Delete this message"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
               </button>
             )}
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   Bell, 
@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Shield,
   Layers,
-  Inbox
+  Inbox,
+  Trash2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useOneSignal from '../../hooks/useOneSignal';
@@ -52,6 +53,15 @@ export default function NotificationBell({ className = '' }) {
   const [selectedNotification, setSelectedNotification] = useState(null);
 
   const dropdownRef = useRef(null);
+
+  // Always ensure newest notifications are strictly at the top
+  const sortedNotifications = useMemo(() => {
+    return [...notifications].sort((a, b) => {
+      const timeA = new Date(a.createdAt || 0).getTime();
+      const timeB = new Date(b.createdAt || 0).getTime();
+      return timeB - timeA;
+    });
+  }, [notifications]);
 
   // Fetch unread count for badge
   const fetchUnreadCount = useCallback(async () => {
@@ -129,12 +139,30 @@ export default function NotificationBell({ className = '' }) {
     if (e) e.stopPropagation();
     try {
       await notificationApi.markAsRead(id);
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
-      );
+      setNotifications((prev) => {
+        const updated = prev.map((n) => (n._id === id ? { ...n, isRead: true } : n));
+        try { localStorage.setItem('l2b_cached_inbox', JSON.stringify(updated)); } catch (e) {}
+        return updated;
+      });
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.warn('Error marking read:', err.message);
+    }
+  };
+
+  // Delete single item
+  const handleDeleteNotification = async (id, e) => {
+    if (e) e.stopPropagation();
+    try {
+      await notificationApi.deleteNotification(id);
+      setNotifications((prev) => {
+        const updated = prev.filter((n) => n._id !== id);
+        try { localStorage.setItem('l2b_cached_inbox', JSON.stringify(updated)); } catch (e) {}
+        return updated;
+      });
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (err) {
+      console.warn('Error deleting notification:', err.message);
     }
   };
 
@@ -142,7 +170,11 @@ export default function NotificationBell({ className = '' }) {
   const handleMarkAllRead = async () => {
     try {
       await notificationApi.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      setNotifications((prev) => {
+        const updated = prev.map((n) => ({ ...n, isRead: true }));
+        try { localStorage.setItem('l2b_cached_inbox', JSON.stringify(updated)); } catch (e) {}
+        return updated;
+      });
       setUnreadCount(0);
     } catch (err) {
       console.warn('Error marking all read:', err.message);
@@ -224,13 +256,13 @@ export default function NotificationBell({ className = '' }) {
       </div>
 
       {/* Notification Items List */}
-      <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800/60 p-1">
-        {loadingList ? (
+      <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800/60 p-1 overscroll-contain">
+        {loadingList && sortedNotifications.length === 0 ? (
           <div className="py-8 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2">
             <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
             <span>Loading alerts...</span>
           </div>
-        ) : notifications.length === 0 ? (
+        ) : sortedNotifications.length === 0 ? (
           <div className="py-10 px-4 text-center space-y-2">
             <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 flex items-center justify-center mx-auto">
               <Mail className="w-5 h-5" />
@@ -243,7 +275,7 @@ export default function NotificationBell({ className = '' }) {
             </p>
           </div>
         ) : (
-          notifications.map((item) => (
+          sortedNotifications.map((item) => (
             <div
               key={item._id}
               onClick={() => {
@@ -251,7 +283,7 @@ export default function NotificationBell({ className = '' }) {
                 setSelectedNotification(item);
                 setIsOpen(false);
               }}
-              className={`p-3 rounded-2xl transition-all cursor-pointer flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-900/60 ${
+              className={`p-3 rounded-2xl transition-all cursor-pointer flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-900/60 group/item ${
                 !item.isRead ? 'bg-purple-500/[0.04] dark:bg-purple-500/[0.08]' : ''
               }`}
             >
@@ -271,9 +303,19 @@ export default function NotificationBell({ className = '' }) {
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getCategoryBadgeClass(item.category)}`}>
                     {item.category || 'Alert'}
                   </span>
-                  <span className="text-[10px] text-slate-400 shrink-0 font-medium">
-                    {formatTimeAgo(item.createdAt)}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-slate-400 shrink-0 font-medium">
+                      {formatTimeAgo(item.createdAt)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteNotification(item._id, e)}
+                      className="p-1 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                      title="Delete notification"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
                 <h5 className={`text-xs leading-snug line-clamp-1 ${!item.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
                   {item.title}
@@ -395,6 +437,7 @@ export default function NotificationBell({ className = '' }) {
           notification={selectedNotification}
           onClose={() => setSelectedNotification(null)}
           onMarkRead={(id) => handleMarkRead(id)}
+          onDelete={(id) => handleDeleteNotification(id)}
         />
       )}
     </>
