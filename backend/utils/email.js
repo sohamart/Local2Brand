@@ -79,14 +79,17 @@ const createTransporter = () => {
 };
 
 const createFallbackTransporter = () => {
-  if (cachedFallbackTransporter) return cachedFallbackTransporter;
-
-  const host = process.env.FALLBACK_EMAIL_HOST;
+  const host = (process.env.FALLBACK_EMAIL_HOST || (process.env.GMAIL_USER ? 'smtp.gmail.com' : '')).trim();
   const port = process.env.FALLBACK_EMAIL_PORT || 587;
-  const user = process.env.FALLBACK_EMAIL_USER;
-  const pass = process.env.FALLBACK_EMAIL_PASS;
+  const user = (process.env.FALLBACK_EMAIL_USER || process.env.GMAIL_USER || '').trim();
+  const pass = (process.env.FALLBACK_EMAIL_PASS || process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS || '').trim();
 
-  if (user && pass) {
+  const currentKey = `${host}:${port}:${user}:${pass}`;
+  if (cachedFallbackTransporter && lastFallbackConfigKey === currentKey) {
+    return cachedFallbackTransporter;
+  }
+
+  if (user && pass && pass !== 'your_smtp_app_password') {
     if (host === 'smtp.gmail.com' || (!host && user.includes('@gmail.com'))) {
       cachedFallbackTransporter = nodemailer.createTransport({
         service: 'gmail',
@@ -101,6 +104,7 @@ const createFallbackTransporter = () => {
         tls: { rejectUnauthorized: false },
       });
     }
+    lastFallbackConfigKey = currentKey;
     return cachedFallbackTransporter;
   }
 
@@ -395,12 +399,15 @@ export const sendWelcomeEmail = async (user) => {
 export const sendRequirementConfirmationEmail = async (reqDoc) => {
   const clientUrl = getClientUrl();
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
-  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
-  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Your Business';
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || reqDoc.fullName || reqDoc.name || 'Valued Client';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || reqDoc.businessName || 'Your Business';
   const websiteType = reqDoc.websiteTypeName || reqDoc.websiteType || 'Custom Website';
-  const clientEmail = reqDoc.clientInfo?.email;
+  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
 
-  if (!clientEmail) return;
+  if (!clientEmail) {
+    console.warn(`sendRequirementConfirmationEmail notice: No client email found for ${reqId}`);
+    return { success: false, error: 'No client email provided' };
+  }
 
   const subject = `🎉 Order Confirmed: ${businessName} (${reqId}) — LOCAL2BRAND`;
 
@@ -557,13 +564,16 @@ export const sendAdminRequirementAlert = async (reqDoc) => {
 export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
   const clientUrl = getClientUrl();
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
-  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
-  const clientEmail = reqDoc.clientInfo?.email;
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || reqDoc.fullName || reqDoc.name || 'Valued Client';
+  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
   const status = reqDoc.status || 'Updated';
   const formattedStatus = formatStatusTitle(status);
   const pdfUrl = reqDoc.drivePdfLink || reqDoc.pdfUrl || reqDoc.documentUrl || reqDoc.attachmentUrl;
 
-  if (!clientEmail) return;
+  if (!clientEmail) {
+    console.warn(`sendRequirementStatusUpdateEmail notice: No client email found for ${reqId}`);
+    return { success: false, error: 'No client email provided' };
+  }
 
   const subject = `📋 [IMPORTANT] Order Update: ${formattedStatus} — ${reqDoc.clientInfo?.businessName || 'Your Website'} (${reqId})`;
 
@@ -1060,13 +1070,16 @@ export const sendVerificationOtpEmail = async ({ user, otp, email }) => {
 export const sendOrderDeliveredEmail = async (reqDoc) => {
   const clientUrl = getClientUrl();
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
-  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
-  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Your Business';
-  const clientEmail = reqDoc.clientInfo?.email;
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || reqDoc.fullName || reqDoc.name || 'Valued Client';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || reqDoc.businessName || 'Your Business';
+  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
   const liveUrl = reqDoc.liveUrl || reqDoc.domain || clientUrl;
   const pdfUrl = reqDoc.drivePdfLink || reqDoc.pdfUrl || reqDoc.invoicePdfUrl || reqDoc.documentUrl;
 
-  if (!clientEmail) return;
+  if (!clientEmail) {
+    console.warn(`sendOrderDeliveredEmail notice: No client email found for ${reqId}`);
+    return { success: false, error: 'No client email provided' };
+  }
 
   const subject = `🚀 [IMPORTANT] Project Delivered & Published Live: ${businessName} (${reqId}) — LOCAL2BRAND`;
 
@@ -1400,13 +1413,16 @@ export const sendGameRewardWinEmail = async ({ user, prize }) => {
 
 // 14. Requirement Deletion / Cancellation Notice (to Client)
 export const sendRequirementDeletionEmail = async (reqDoc, reason = '') => {
-  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email;
-  if (!clientEmail) return;
+  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
+  if (!clientEmail) {
+    console.warn('sendRequirementDeletionEmail notice: No recipient client email found');
+    return { success: false, error: 'No client email' };
+  }
 
   const clientUrl = getClientUrl();
   const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString().slice(-6).toUpperCase() : 'REQ-ID');
-  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
-  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Website Project';
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || reqDoc.fullName || reqDoc.name || 'Valued Client';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || reqDoc.businessName || 'Website Project';
 
   const subject = `Update regarding your project specification #${reqId} — LOCAL2BRAND`;
 
@@ -1468,13 +1484,16 @@ export const sendRequirementDeletionEmail = async (reqDoc, reason = '') => {
 
 // 14b. Requirement Rejection Notice (to Client)
 export const sendRequirementRejectedEmail = async (reqDoc, reason = '') => {
-  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email;
-  if (!clientEmail) return;
+  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
+  if (!clientEmail) {
+    console.warn('sendRequirementRejectedEmail notice: No recipient client email found');
+    return { success: false, error: 'No client email' };
+  }
 
   const clientUrl = getClientUrl();
   const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString().slice(-6).toUpperCase() : 'REQ-ID');
-  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
-  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Website Project';
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || reqDoc.fullName || reqDoc.name || 'Valued Client';
+  const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || reqDoc.businessName || 'Website Project';
 
   const subject = `Project Specification Review: #${reqId} (${businessName}) — LOCAL2BRAND`;
 
