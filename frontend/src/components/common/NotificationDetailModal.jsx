@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Mail, ExternalLink, Clock, Shield, Tag, CheckCircle2, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -30,7 +31,7 @@ export default function NotificationDetailModal({ notification, onClose, onMarkR
     return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20';
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-[999999999] flex items-center justify-center p-2.5 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
       <div 
         className="relative w-full max-w-2xl max-h-[86dvh] sm:max-h-[90vh] my-auto flex flex-col bg-white dark:bg-[#0e131f] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
@@ -151,4 +152,9 @@ export default function NotificationDetailModal({ notification, onClose, onMarkR
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+  return modalContent;
 }

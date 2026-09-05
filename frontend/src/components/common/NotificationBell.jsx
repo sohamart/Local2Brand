@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Bell, 
   BellRing, 
@@ -148,6 +149,162 @@ export default function NotificationBell({ className = '' }) {
 
   const inboxLink = isAdmin ? '/admin/inbox' : '/dashboard';
 
+  const popoverInnerContent = (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+            <Inbox className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                Inbox &amp; Alerts
+              </h4>
+              {unreadCount > 0 && (
+                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                  {unreadCount} new
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1">
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={handleMarkAllRead}
+              className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:underline px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1"
+              title="Mark all as read"
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+              <span>Mark Read</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Notification Items List */}
+      <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800/60 p-1">
+        {loadingList ? (
+          <div className="py-8 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2">
+            <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+            <span>Loading alerts...</span>
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="py-10 px-4 text-center space-y-2">
+            <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 flex items-center justify-center mx-auto">
+              <Mail className="w-5 h-5" />
+            </div>
+            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              No notifications yet
+            </p>
+            <p className="text-[11px] text-slate-400">
+              You will receive notifications here for orders, proposals, and updates.
+            </p>
+          </div>
+        ) : (
+          notifications.map((item) => (
+            <div
+              key={item._id}
+              onClick={() => {
+                handleMarkRead(item._id);
+                setSelectedNotification(item);
+                setIsOpen(false);
+              }}
+              className={`p-3 rounded-2xl transition-all cursor-pointer flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-900/60 ${
+                !item.isRead ? 'bg-purple-500/[0.04] dark:bg-purple-500/[0.08]' : ''
+              }`}
+            >
+              {/* Unread Indicator Dot / Category Icon */}
+              <div className="relative mt-1 shrink-0">
+                <div className="w-7 h-7 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                  <Mail className="w-3.5 h-3.5" />
+                </div>
+                {!item.isRead && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-600 ring-2 ring-white dark:ring-slate-900" />
+                )}
+              </div>
+
+              {/* Content Info */}
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center justify-between gap-1.5">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getCategoryBadgeClass(item.category)}`}>
+                    {item.category || 'Alert'}
+                  </span>
+                  <span className="text-[10px] text-slate-400 shrink-0 font-medium">
+                    {formatTimeAgo(item.createdAt)}
+                  </span>
+                </div>
+                <h5 className={`text-xs leading-snug line-clamp-1 ${!item.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
+                  {item.title}
+                </h5>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-tight">
+                  {item.message}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Push Settings Quick Toggle Section */}
+      {isSupported && (
+        <div className="border-t border-slate-100 dark:border-slate-800/80 p-3 bg-slate-50/50 dark:bg-slate-900/30 shrink-0 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-semibold">
+              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              <span>Web Push Alerts</span>
+            </div>
+
+            {isSubscribed ? (
+              <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                <Check className="w-3 h-3 stroke-[3]" /> Active
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (permission === 'granted') {
+                    await optIn();
+                  } else {
+                    await requestPermission();
+                  }
+                }}
+                disabled={pushLoading}
+                className="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+              >
+                {pushLoading ? 'Enabling...' : 'Turn On'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Footer "View All Inbox" */}
+      <div className="p-2.5 bg-slate-100/60 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 shrink-0 text-center">
+        <Link
+          to={inboxLink}
+          onClick={() => setIsOpen(false)}
+          className="w-full py-1.5 px-3 rounded-xl text-xs font-bold text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-all flex items-center justify-center gap-1"
+        >
+          <span>{isAdmin ? 'Open Admin Inbox Console' : 'View Full Inbox & History'}</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <div className={`relative inline-block ${className}`} ref={dropdownRef}>
@@ -181,173 +338,27 @@ export default function NotificationBell({ className = '' }) {
           ) : null}
         </button>
 
-        {/* Dropdown Popover Card */}
+        {/* Desktop Popover Card (Relative to trigger) */}
         {isOpen && (
-          <>
-            {/* Mobile Backdrop Overlay */}
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[99999998] sm:hidden animate-in fade-in duration-150"
-              onClick={() => setIsOpen(false)}
-            />
-
-            {/* Popover Box */}
-            <div className="fixed left-3 right-3 top-14 sm:top-full sm:mt-2 sm:left-auto sm:right-0 sm:absolute w-auto sm:w-88 md:w-96 max-w-md rounded-3xl bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-[99999999] flex flex-col max-h-[80dvh] sm:max-h-[560px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-              
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                    <Inbox className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                        Inbox &amp; Alerts
-                      </h4>
-                      {unreadCount > 0 && (
-                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                          {unreadCount} new
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  {unreadCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleMarkAllRead}
-                      className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:underline px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1"
-                      title="Mark all as read"
-                    >
-                      <CheckCheck className="w-3.5 h-3.5" />
-                      <span>Mark Read</span>
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setIsOpen(false)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                    aria-label="Close"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Notification Items List */}
-              <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800/60 p-1">
-                {loadingList ? (
-                  <div className="py-8 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2">
-                    <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                    <span>Loading alerts...</span>
-                  </div>
-                ) : notifications.length === 0 ? (
-                  <div className="py-10 px-4 text-center space-y-2">
-                    <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 flex items-center justify-center mx-auto">
-                      <Mail className="w-5 h-5" />
-                    </div>
-                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      No notifications yet
-                    </p>
-                    <p className="text-[11px] text-slate-400">
-                      You will receive notifications here for orders, proposals, and updates.
-                    </p>
-                  </div>
-                ) : (
-                  notifications.map((item) => (
-                    <div
-                      key={item._id}
-                      onClick={() => {
-                        handleMarkRead(item._id);
-                        setSelectedNotification(item);
-                        setIsOpen(false);
-                      }}
-                      className={`p-3 rounded-2xl transition-all cursor-pointer flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-900/60 ${
-                        !item.isRead ? 'bg-purple-500/[0.04] dark:bg-purple-500/[0.08]' : ''
-                      }`}
-                    >
-                      {/* Unread Indicator Dot / Category Icon */}
-                      <div className="relative mt-1 shrink-0">
-                        <div className="w-7 h-7 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                          <Mail className="w-3.5 h-3.5" />
-                        </div>
-                        {!item.isRead && (
-                          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-600 ring-2 ring-white dark:ring-slate-900" />
-                        )}
-                      </div>
-
-                      {/* Content Info */}
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <div className="flex items-center justify-between gap-1.5">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getCategoryBadgeClass(item.category)}`}>
-                            {item.category || 'Alert'}
-                          </span>
-                          <span className="text-[10px] text-slate-400 shrink-0 font-medium">
-                            {formatTimeAgo(item.createdAt)}
-                          </span>
-                        </div>
-                        <h5 className={`text-xs leading-snug line-clamp-1 ${!item.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
-                          {item.title}
-                        </h5>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-tight">
-                          {item.message}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Push Settings Quick Toggle Section */}
-              {isSupported && (
-                <div className="border-t border-slate-100 dark:border-slate-800/80 p-3 bg-slate-50/50 dark:bg-slate-900/30 shrink-0 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-semibold">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-                      <span>Web Push Alerts</span>
-                    </div>
-
-                    {isSubscribed ? (
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                        <Check className="w-3 h-3 stroke-[3]" /> Active
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (permission === 'granted') {
-                            await optIn();
-                          } else {
-                            await requestPermission();
-                          }
-                        }}
-                        disabled={pushLoading}
-                        className="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
-                      >
-                        {pushLoading ? 'Enabling...' : 'Turn On'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Footer "View All Inbox" */}
-              <div className="p-2.5 bg-slate-100/60 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 shrink-0 text-center">
-                <Link
-                  to={inboxLink}
-                  onClick={() => setIsOpen(false)}
-                  className="w-full py-1.5 px-3 rounded-xl text-xs font-bold text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-all flex items-center justify-center gap-1"
-                >
-                  <span>{isAdmin ? 'Open Admin Inbox Console' : 'View Full Inbox & History'}</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          </>
+          <div className="hidden sm:block absolute right-0 top-full mt-2 w-88 md:w-96 rounded-3xl bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col max-h-[560px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+            {popoverInnerContent}
+          </div>
         )}
       </div>
+
+      {/* Mobile Popover Modal (Rendered via createPortal to body to guarantee zero clipping by drawer/sticky header) */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
+        <div className="sm:hidden fixed inset-0 z-[999999999] flex flex-col justify-start p-3 pt-14 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div 
+            className="fixed inset-0"
+            onClick={() => setIsOpen(false)}
+          />
+          <div className="relative w-full max-h-[82dvh] rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-slate-800 shadow-2xl z-10 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+            {popoverInnerContent}
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Full Notification / Email Detail Modal */}
       {selectedNotification && (
