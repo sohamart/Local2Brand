@@ -35,10 +35,12 @@ import {
   Copy,
   Gift,
   X,
-  RefreshCw
+  RefreshCw,
+  Inbox
 } from 'lucide-react';
 
 import WriteReviewModal from '../../components/common/WriteReviewModal';
+import UserInboxTab from '../../components/user/UserInboxTab';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { useOrderModal } from '../../context/OrderModalContext';
@@ -227,13 +229,16 @@ export default function UserDashboard() {
     }
   }, [user, authLoading]);
 
-  // Handle URL track query parameter
+  // Handle URL track or tab query parameter
   useEffect(() => {
     const urlTrackId = searchParams.get('track');
+    const urlTab = searchParams.get('tab');
     if (urlTrackId) {
       setTrackSearchId(urlTrackId);
       setActiveTab('track');
       performTrackOrder(urlTrackId);
+    } else if (urlTab && ['requirements', 'inbox', 'track', 'reviews', 'callbacks', 'profile'].includes(urlTab)) {
+      setActiveTab(urlTab);
     }
   }, [searchParams]);
 
@@ -736,9 +741,8 @@ export default function UserDashboard() {
           </div>
         )}
 
-        {/* Tab Navigation Segmented Bar (5-Column Clean Grid) */}
-
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 sm:gap-2 mb-6 p-1 sm:p-1.5 bg-slate-200/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 w-full">
+        {/* Tab Navigation Segmented Bar (6-Column Responsive Grid) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 sm:gap-2 mb-6 p-1 sm:p-1.5 bg-slate-200/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800 w-full">
           <button
             onClick={() => setActiveTab('requirements')}
             className={`py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
@@ -748,7 +752,19 @@ export default function UserDashboard() {
             }`}
           >
             <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-500 shrink-0" />
-            <span className="truncate">My Orders & Specs ({requirements.length})</span>
+            <span className="truncate">Orders ({requirements.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('inbox')}
+            className={`py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer min-w-0 ${
+              activeTab === 'inbox'
+                ? 'bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-sm border border-slate-200/80 dark:border-slate-700'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Inbox className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 shrink-0" />
+            <span className="truncate">Inbox &amp; Alerts</span>
           </button>
 
           <button
@@ -760,7 +776,7 @@ export default function UserDashboard() {
             }`}
           >
             <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600 shrink-0" />
-            <span className="truncate">Track Roadmap</span>
+            <span className="truncate">Roadmap</span>
           </button>
 
           <button
@@ -799,6 +815,13 @@ export default function UserDashboard() {
             <span className="truncate">Settings</span>
           </button>
         </div>
+
+        {/* ======================================================== */}
+        {/* TAB 2: INBOX & ALERTS TAB                                */}
+        {/* ======================================================== */}
+        {activeTab === 'inbox' && (
+          <UserInboxTab />
+        )}
 
         {/* ======================================================== */}
         {/* TAB 1: ALL WEBSITE ORDERS & SPECIFICATIONS (DEFAULT)     */}

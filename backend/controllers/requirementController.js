@@ -12,6 +12,7 @@ import {
   sendAdminRequirementDeletionAlert
 } from '../utils/email.js';
 import oneSignalBackend from '../services/oneSignalService.js';
+import notificationDispatcher from '../services/notificationDispatcher.js';
 
 import mongoose from 'mongoose';
 
@@ -306,23 +307,61 @@ export const submitRequirement = async (req, res) => {
         sendRequirementConfirmationEmail(doc).catch((err) => console.warn('Client requirement email error:', err.message));
         sendAdminRequirementAlert(doc).catch((err) => console.warn('Admin requirement alert error:', err.message));
 
-        // Push notification to Admins
-        oneSignalBackend.sendNotificationToAdmins({
-          title: `🚀 New Order Submitted (${reqId})`,
-          message: `${clientName} submitted order for ${businessName}`,
-          url: '/admin/requirements',
-          data: { type: 'new_order', requirementId: reqId }
-        }).catch((err) => console.warn('Admin push alert error:', err.message));
+        // Dispatch to Admin Inbox + Push
+        notificationDispatcher.dispatchToAdmin({
+          title: `🚀 New Order: ${businessName} (${reqId})`,
+          message: `${clientName} submitted complete blueprint specs for ${businessName} (${doc.websiteType || 'Custom'}).`,
+          type: 'order',
+          category: 'Orders',
+          link: '/admin/requirements',
+          data: { requirementId: reqId, businessName, clientName, email: doc.clientInfo?.email },
+          emailHtml: `
+            <div style="font-family: sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px;">
+              <h2 style="color: #4f46e5; margin-bottom: 8px;">🚀 New Blueprint Order Received</h2>
+              <p>A new website blueprint specification has been submitted.</p>
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                <p><strong>Order ID:</strong> ${reqId}</p>
+                <p><strong>Business Name:</strong> ${businessName}</p>
+                <p><strong>Client Name:</strong> ${clientName}</p>
+                <p><strong>Email:</strong> ${doc.clientInfo?.email || 'N/A'}</p>
+                <p><strong>Phone:</strong> ${doc.clientInfo?.mobile || 'N/A'}</p>
+                <p><strong>Website Type:</strong> ${doc.websiteType || 'Custom'}</p>
+                <p><strong>Status:</strong> Submitted / Under Review</p>
+              </div>
+              <p>You can review full specification questions, images, and brand assets in the admin portal.</p>
+            </div>
+          `,
+          priority: 'high',
+        }).catch((err) => console.warn('Admin inbox dispatch error:', err.message));
 
-        // Push confirmation to User
-        const userTarget = doc.userId || doc.user?._id || doc.user || doc.clientInfo?.email || doc.email;
-        if (userTarget) {
-          oneSignalBackend.sendNotificationToUser(userTarget, {
-            title: `🎉 Order Confirmed (${reqId})`,
-            message: `We received your requirements for ${businessName}. Review in progress!`,
-            url: `/track-order?id=${reqId}`,
-            data: { type: 'order_received', requirementId: reqId }
-          }).catch((err) => console.warn('User push confirmation error:', err.message));
+        // Dispatch to User Personal Inbox + Push
+        const clientEmail = doc.clientInfo?.email || doc.email;
+        const clientUserId = doc.userId || doc.user?._id || doc.user;
+        if (clientUserId || clientEmail) {
+          notificationDispatcher.dispatchToUser({
+            userId: clientUserId,
+            email: clientEmail,
+            title: `🎉 Order Confirmed: ${businessName} (${reqId})`,
+            message: `We received your requirements for ${businessName}. Our design & engineering team has begun reviewing your project.`,
+            type: 'order',
+            category: 'Orders',
+            link: `/track-order?id=${reqId}`,
+            data: { requirementId: reqId, businessName, status: 'Submitted' },
+            emailHtml: `
+              <div style="font-family: sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px;">
+                <h2 style="color: #4f46e5; margin-bottom: 8px;">🎉 Order Confirmation: ${businessName}</h2>
+                <p>Dear ${clientName},</p>
+                <p>Thank you for submitting your website blueprint specifications with <strong>Local2Brand</strong>. Your project is now in our queue!</p>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                  <p><strong>Tracking Order ID:</strong> ${reqId}</p>
+                  <p><strong>Project:</strong> ${businessName} (${doc.websiteType || 'Custom'})</p>
+                  <p><strong>Current Status:</strong> Submitted / Under Review</p>
+                </div>
+                <p>You can track the live progress roadmap anytime from your dashboard or tracking page.</p>
+              </div>
+            `,
+            priority: 'normal',
+          }).catch((err) => console.warn('User inbox dispatch error:', err.message));
         }
       } catch (bgErr) {
         console.warn('Background requirement alert error:', bgErr.message);
@@ -607,18 +646,37 @@ export const updateRequirementStatus = async (req, res) => {
       sendRequirementStatusUpdateEmail(updated).catch((err) => console.warn('Status email update notice:', err.message));
     }
 
-    // Push notification to user on status change
-    const targetUserId = updated.userId || updated.user?._id || updated.user || updated.clientInfo?.email || updated.email;
+    // In-App Inbox Alert + Push Notification to User on status change
+    const targetUserId = updated.userId || updated.user?._id || updated.user;
+    const clientEmail = updated.clientInfo?.email || updated.email;
     const reqId = updated.requirementId || id;
     const bizName = updated.clientInfo?.businessName || updated.websiteTypeName || 'Your project';
 
-    if (targetUserId) {
-      oneSignalBackend.sendNotificationToUser(targetUserId, {
+    if (targetUserId || clientEmail) {
+      notificationDispatcher.dispatchToUser({
+        userId: targetUserId,
+        email: clientEmail,
         title: `Order Update: ${status} (${reqId})`,
-        message: `${bizName} has been updated to "${status}". Click to check progress roadmap.`,
-        url: `/track-order?id=${reqId}`,
-        data: { type: 'order_status_update', requirementId: reqId, status }
-      }).catch((err) => console.warn('Status push update notice:', err.message));
+        message: `${bizName} has been updated to "${status}". Click to check the live progress roadmap.`,
+        type: 'order',
+        category: 'Orders',
+        link: `/track-order?id=${reqId}`,
+        data: { requirementId: reqId, status, rejectionReason: finalRejectionReason },
+        emailHtml: `
+          <div style="font-family: sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px;">
+            <h2 style="color: #4f46e5; margin-bottom: 8px;">Order Roadmap Updated: ${status}</h2>
+            <p>Your project <strong>${bizName}</strong> (Order ID: ${reqId}) status has been updated to <strong>${status}</strong>.</p>
+            ${finalRejectionReason ? `<div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; margin: 12px 0; color: #991b1b;"><p><strong>Note:</strong> ${finalRejectionReason}</p></div>` : ''}
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+              <p><strong>Status:</strong> ${status}</p>
+              <p><strong>Order ID:</strong> ${reqId}</p>
+              ${resolvedPdfLink ? `<p><strong>Deliverables PDF:</strong> <a href="${resolvedPdfLink}" target="_blank" style="color: #4f46e5;">View PDF Document</a></p>` : ''}
+            </div>
+            <p>You can check full progress and timeline updates from your client dashboard.</p>
+          </div>
+        `,
+        priority: status === 'Completed' || status === 'Rejected' ? 'high' : 'normal',
+      }).catch((err) => console.warn('Status inbox update notice:', err.message));
     }
 
     res.status(200).json({

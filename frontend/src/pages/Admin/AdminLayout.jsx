@@ -34,12 +34,13 @@ import MarqueeTicker from '../../components/common/MarqueeTicker';
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard, exact: true },
+  { label: 'Central Inbox', href: '/admin/inbox', icon: Inbox },
   { label: 'Traffic & Live Analytics', href: '/admin/analytics', icon: Activity },
   { label: 'Requirement Submissions', href: '/admin/requirements', icon: Layers },
   { label: 'Cloudinary Storage', href: '/admin/media', icon: Cloud },
   { label: 'Pricing Packages', href: '/admin/pricing', icon: DollarSign },
   { label: 'Dynamic Form Builder', href: '/admin/form-builder', icon: Sliders },
-  { label: 'Project Inquiries', href: '/admin/leads', icon: Inbox },
+  { label: 'Project Inquiries', href: '/admin/leads', icon: FileText },
   { label: 'Callback Requests', href: '/admin/callbacks', icon: PhoneCall },
   { label: 'Client Reviews', href: '/admin/reviews', icon: Star },
   { label: 'Site Customizer', href: '/admin/settings', icon: Settings },

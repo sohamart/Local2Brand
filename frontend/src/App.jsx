@@ -57,6 +57,7 @@ import AdminCallbacks from './pages/Admin/AdminCallbacks';
 import AdminSettings from './pages/Admin/AdminSettings';
 import AdminServices from './pages/Admin/AdminServices';
 import AdminDemos from './pages/Admin/AdminDemos';
+import AdminInbox from './pages/Admin/AdminInbox';
 import AdminBroadcast from './pages/Admin/AdminBroadcast';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminReviews from './pages/Admin/AdminReviews';
@@ -107,6 +108,7 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }
         {/* Admin Panel Routes */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
+          <Route path="inbox" element={<AdminInbox />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="requirements" element={<AdminRequirements />} />
           <Route path="pricing" element={<AdminPricing />} />

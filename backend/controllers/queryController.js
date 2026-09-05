@@ -8,7 +8,7 @@ import {
   sendQueryDeletionEmail,
   sendAdminQueryDeletionAlert
 } from '../utils/email.js';
-import oneSignalBackend from '../services/oneSignalService.js';
+import notificationDispatcher from '../services/notificationDispatcher.js';
 
 
 export const createQueryLead = async (req, res) => {
@@ -65,14 +65,7 @@ export const createQueryLead = async (req, res) => {
       ipAddress: req.ip || '',
     });
 
-    dataStore.createNotification({
-      title: 'New Project Proposal Inquiry',
-      message: `${lead.name} requested a quote for ${lead.websiteType} (${lead.budget})`,
-      type: 'lead',
-      link: `/admin/leads`,
-    }).catch((err) => console.warn('Admin notification error:', err.message));
-
-    // Await delivery of all push notifications & emails before responding
+    // Await delivery of all push notifications & in-app alerts & emails
     const targetUser = lead.userId || lead.user?._id || lead.user || lead.email;
 
     await Promise.allSettled([
@@ -80,17 +73,23 @@ export const createQueryLead = async (req, res) => {
       (lead.industry === 'Direct Contact Form' || lead.websiteType?.includes('Contact Form'))
         ? sendContactFormConfirmationEmail(lead)
         : sendLeadConfirmationEmail(lead),
-      oneSignalBackend.sendNotificationToAdmins({
+      notificationDispatcher.dispatchToAdmin({
         title: '💼 New Proposal Inquiry',
         message: `${lead.name} requested quote for ${lead.businessName || lead.websiteType} (${lead.budget})`,
-        url: '/admin/leads',
-        data: { type: 'new_lead', leadId: lead._id }
+        type: 'lead',
+        category: 'Project Proposal',
+        link: '/admin/leads',
+        data: { leadId: lead._id || lead.id, name: lead.name, email: lead.email, websiteType: lead.websiteType, budget: lead.budget }
       }),
-      targetUser ? oneSignalBackend.sendNotificationToUser(targetUser, {
+      targetUser ? notificationDispatcher.dispatchToUser({
+        userId: validUserId,
+        email: lead.email,
         title: '💼 Project Inquiry Received',
-        message: `Hi ${lead.name}, we received your proposal request. Our engineering team is preparing your roadmap!`,
-        url: '/dashboard',
-        data: { type: 'lead_confirmation', leadId: lead._id }
+        message: `Hi ${lead.name}, we received your inquiry for ${lead.websiteType}. Our team is reviewing your requirements!`,
+        type: 'lead',
+        category: 'Inquiry Confirmed',
+        link: '/dashboard',
+        data: { leadId: lead._id || lead.id, websiteType: lead.websiteType }
       }) : Promise.resolve(),
     ]);
 
@@ -183,14 +182,18 @@ export const updateQueryStatus = async (req, res) => {
 
     const targetUser = lead.userId || lead.user?._id || lead.user || lead.email;
 
-    // Await delivery of status update email and push notification
+    // Await delivery of status update email + in-app notification + push
     await Promise.allSettled([
       lead.email ? sendLeadStatusUpdateEmail(lead) : Promise.resolve(),
-      targetUser && status ? oneSignalBackend.sendNotificationToUser(targetUser, {
-        title: `💼 Proposal Update: ${status}`,
-        message: `Your inquiry for ${lead.businessName || lead.websiteType || 'website project'} has been updated to "${status}".`,
-        url: '/dashboard',
-        data: { type: 'lead_status_update', leadId: lead._id, status }
+      targetUser && status ? notificationDispatcher.dispatchToUser({
+        userId: lead.userId || lead.user?._id || lead.user,
+        email: lead.email,
+        title: `💼 Proposal Status: ${String(status).replace(/_/g, ' ').toUpperCase()}`,
+        message: `Your inquiry for ${lead.businessName || lead.websiteType || 'website project'} has been updated to "${String(status).replace(/_/g, ' ').toUpperCase()}".${adminNotes ? ` Note: ${adminNotes}` : ''}`,
+        type: 'status',
+        category: 'Inquiry Status',
+        link: '/dashboard',
+        data: { leadId: lead._id || lead.id, status, adminNotes }
       }) : Promise.resolve(),
     ]);
 

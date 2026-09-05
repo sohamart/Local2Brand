@@ -7,7 +7,7 @@ import {
   sendCallbackDeletionEmail,
   sendAdminCallbackDeletionAlert
 } from '../utils/email.js';
-import oneSignalBackend from '../services/oneSignalService.js';
+import notificationDispatcher from '../services/notificationDispatcher.js';
 import mongoose from 'mongoose';
 
 
@@ -38,30 +38,29 @@ export const createCallback = async (req, res) => {
       user: validUserId,
     });
 
-    dataStore.createNotification({
-      title: 'New Callback Request',
-      message: `${callback.name} requested a call at ${callback.phone} (${callback.preferredTime})`,
-      type: 'callback',
-      link: `/admin/callbacks`,
-    }).catch((err) => console.warn('Admin notification error:', err.message));
-
-    // Asynchronous notifications with await to ensure delivery before response
+    // Asynchronous email + In-App notification + OneSignal push
     const callbackUserTarget = callback.user || validUserId || resolvedEmail;
 
     await Promise.allSettled([
       sendAdminCallbackAlert(callback),
       callback.email ? sendCallbackConfirmationEmail(callback) : Promise.resolve(),
-      oneSignalBackend.sendNotificationToAdmins({
+      notificationDispatcher.dispatchToAdmin({
         title: '📞 New Callback Request',
         message: `${callback.name} requested a call: ${callback.phone} (${callback.preferredTime})`,
-        url: '/admin/callbacks',
-        data: { type: 'callback_request', callbackId: callback._id || callback.id }
+        type: 'callback',
+        category: 'Callback Request',
+        link: '/admin/callbacks',
+        data: { callbackId: callback._id || callback.id, name: callback.name, phone: callback.phone, topic: callback.topic }
       }),
-      callbackUserTarget ? oneSignalBackend.sendNotificationToUser(callbackUserTarget, {
+      callbackUserTarget ? notificationDispatcher.dispatchToUser({
+        userId: callback.user || validUserId,
+        email: resolvedEmail,
         title: '📞 Callback Request Confirmed',
         message: `Hi ${callback.name}, our specialist will call you at ${callback.phone} (${callback.preferredTime}).`,
-        url: '/dashboard',
-        data: { type: 'callback_confirmation', callbackId: callback._id || callback.id }
+        type: 'callback',
+        category: 'Callback Confirmed',
+        link: '/dashboard',
+        data: { callbackId: callback._id || callback.id, phone: callback.phone, preferredTime: callback.preferredTime }
       }) : Promise.resolve(),
     ]);
 
@@ -134,14 +133,18 @@ export const updateCallbackStatus = async (req, res) => {
 
     const targetUser = callback.user || callback.userId || callback.email;
 
-    // Await delivery of status update email and push notification
+    // Await delivery of status update email + in-app notification + push
     await Promise.allSettled([
       callback.email ? sendCallbackStatusUpdateEmail(callback, status, adminNotes, resolvedPdf) : Promise.resolve(),
-      targetUser && status ? oneSignalBackend.sendNotificationToUser(targetUser, {
-        title: `📞 Callback Update: ${status}`,
-        message: `Your callback request status has been updated to "${status}".`,
-        url: '/dashboard',
-        data: { type: 'callback_status_update', callbackId: callback._id || callback.id, status }
+      targetUser && status ? notificationDispatcher.dispatchToUser({
+        userId: callback.user || callback.userId,
+        email: callback.email,
+        title: `📞 Callback Status: ${String(status).replace(/_/g, ' ').toUpperCase()}`,
+        message: `Your callback request regarding "${callback.topic || 'Website Consultation'}" is now marked as ${String(status).replace(/_/g, ' ').toUpperCase()}.${adminNotes ? ` Note: ${adminNotes}` : ''}`,
+        type: 'status',
+        category: 'Callback Status',
+        link: '/dashboard',
+        data: { callbackId: callback._id || callback.id, status, adminNotes }
       }) : Promise.resolve(),
     ]);
 
