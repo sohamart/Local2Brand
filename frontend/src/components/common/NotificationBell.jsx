@@ -208,23 +208,38 @@ export default function NotificationBell({ className = '' }) {
     return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20';
   };
 
+  // Lock body scroll on mobile when modal open
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 640) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   const inboxLink = isAdmin ? '/admin/inbox' : '/dashboard';
 
   const popoverInnerContent = (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div 
+      className="flex flex-col h-full max-h-[390px] overflow-hidden min-h-0"
+      onWheel={(e) => e.stopPropagation()}
+    >
       {/* Header */}
-      <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40 shrink-0">
+      <div className="px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/50 shrink-0">
         <div className="flex items-center justify-between gap-2">
           {/* Left: Icon + Title + Unread Count Badge */}
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs shrink-0">
-              <Inbox className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-lg bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs shrink-0">
+              <Inbox className="w-3.5 h-3.5" />
             </div>
-            <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
               Inbox &amp; Alerts
             </h4>
             {unreadCount > 0 && (
-              <span className="shrink-0 text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs">
+              <span className="shrink-0 text-[9.5px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs">
                 {unreadCount} new
               </span>
             )}
@@ -236,42 +251,45 @@ export default function NotificationBell({ className = '' }) {
               <button
                 type="button"
                 onClick={handleMarkAllRead}
-                className="px-2.5 py-1 rounded-xl text-[11px] font-bold text-purple-600 dark:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 flex items-center gap-1 cursor-pointer transition-all active:scale-95 whitespace-nowrap"
+                className="px-2 py-0.5 rounded-lg text-[10.5px] font-bold text-purple-600 dark:text-purple-300 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 flex items-center gap-1 cursor-pointer transition-all active:scale-95 whitespace-nowrap"
                 title="Mark all as read"
               >
-                <CheckCheck className="w-3.5 h-3.5" />
+                <CheckCheck className="w-3 h-3" />
                 <span>Mark Read</span>
               </button>
             )}
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center transition-colors cursor-pointer shrink-0"
               aria-label="Close"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Notification Items List */}
-      <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800/60 p-1 overscroll-contain">
+      <div 
+        className="overflow-y-auto flex-1 min-h-0 max-h-[220px] divide-y divide-slate-100 dark:divide-slate-800/60 p-1.5 overscroll-contain custom-scrollbar"
+        onWheel={(e) => e.stopPropagation()}
+      >
         {loadingList && sortedNotifications.length === 0 ? (
-          <div className="py-8 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2">
+          <div className="py-6 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2">
             <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
-            <span>Loading alerts...</span>
+            <span className="text-[11px]">Loading alerts...</span>
           </div>
         ) : sortedNotifications.length === 0 ? (
-          <div className="py-10 px-4 text-center space-y-2">
-            <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 flex items-center justify-center mx-auto">
-              <Mail className="w-5 h-5" />
+          <div className="py-8 px-4 text-center space-y-1.5">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 flex items-center justify-center mx-auto">
+              <Mail className="w-4 h-4" />
             </div>
             <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               No notifications yet
             </p>
             <p className="text-[11px] text-slate-400">
-              You will receive notifications here for orders, proposals, and updates.
+              Updates for orders, proposals, and callbacks will appear here.
             </p>
           </div>
         ) : (
@@ -283,14 +301,14 @@ export default function NotificationBell({ className = '' }) {
                 setSelectedNotification(item);
                 setIsOpen(false);
               }}
-              className={`p-3 rounded-2xl transition-all cursor-pointer flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-900/60 group/item ${
+              className={`p-2.5 rounded-xl transition-all cursor-pointer flex items-start gap-2.5 hover:bg-slate-50 dark:hover:bg-slate-900/60 group/item ${
                 !item.isRead ? 'bg-purple-500/[0.04] dark:bg-purple-500/[0.08]' : ''
               }`}
             >
-              {/* Unread Indicator Dot / Category Icon */}
-              <div className="relative mt-1 shrink-0">
-                <div className="w-7 h-7 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                  <Mail className="w-3.5 h-3.5" />
+              {/* Category Icon */}
+              <div className="relative mt-0.5 shrink-0">
+                <div className="w-6 h-6 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                  <Mail className="w-3 h-3" />
                 </div>
                 {!item.isRead && (
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-600 ring-2 ring-white dark:ring-slate-900" />
@@ -298,29 +316,29 @@ export default function NotificationBell({ className = '' }) {
               </div>
 
               {/* Content Info */}
-              <div className="flex-1 min-w-0 space-y-1">
+              <div className="flex-1 min-w-0 space-y-0.5">
                 <div className="flex items-center justify-between gap-1.5">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getCategoryBadgeClass(item.category)}`}>
+                  <span className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded border ${getCategoryBadgeClass(item.category)}`}>
                     {item.category || 'Alert'}
                   </span>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <span className="text-[10px] text-slate-400 shrink-0 font-medium">
                       {formatTimeAgo(item.createdAt)}
                     </span>
                     <button
                       type="button"
                       onClick={(e) => handleDeleteNotification(item._id, e)}
-                      className="p-1 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                      className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
                       title="Delete notification"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
-                <h5 className={`text-xs leading-snug line-clamp-1 ${!item.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
+                <h5 className={`text-[11.5px] leading-tight line-clamp-1 ${!item.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
                   {item.title}
                 </h5>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-tight">
+                <p className="text-[10.5px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-tight">
                   {item.message}
                 </p>
               </div>
@@ -331,15 +349,15 @@ export default function NotificationBell({ className = '' }) {
 
       {/* Push Settings Quick Toggle Section */}
       {isSupported && (
-        <div className="border-t border-slate-100 dark:border-slate-800/80 p-3 bg-slate-50/50 dark:bg-slate-900/30 shrink-0 space-y-2">
+        <div className="border-t border-slate-100 dark:border-slate-800/80 px-3 py-2 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
           <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-semibold">
-              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-semibold text-[11px]">
+              <Sparkles className="w-3 h-3 text-purple-500" />
               <span>Web Push Alerts</span>
             </div>
 
             {isSubscribed ? (
-              <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="flex items-center gap-1 text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400">
                 <Check className="w-3 h-3 stroke-[3]" /> Active
               </span>
             ) : (
@@ -353,7 +371,7 @@ export default function NotificationBell({ className = '' }) {
                   }
                 }}
                 disabled={pushLoading}
-                className="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
+                className="text-[10.5px] font-bold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer"
               >
                 {pushLoading ? 'Enabling...' : 'Turn On'}
               </button>
@@ -363,14 +381,14 @@ export default function NotificationBell({ className = '' }) {
       )}
 
       {/* Footer "View All Inbox" */}
-      <div className="p-2.5 bg-slate-100/60 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 shrink-0 text-center">
+      <div className="p-2 bg-slate-100/60 dark:bg-slate-900/60 border-t border-slate-100 dark:border-slate-800 shrink-0 text-center">
         <Link
           to={inboxLink}
           onClick={() => setIsOpen(false)}
-          className="w-full py-1.5 px-3 rounded-xl text-xs font-bold text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-all flex items-center justify-center gap-1"
+          className="w-full py-1 px-3 rounded-lg text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:bg-purple-500/10 transition-all flex items-center justify-center gap-1"
         >
           <span>{isAdmin ? 'Open Admin Inbox Console' : 'View Full Inbox & History'}</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-3 h-3" />
         </Link>
       </div>
     </div>
@@ -411,7 +429,10 @@ export default function NotificationBell({ className = '' }) {
 
         {/* Desktop Popover Card (Relative to trigger) */}
         {isOpen && (
-          <div className="hidden sm:block absolute right-0 top-full mt-2 w-88 md:w-96 rounded-3xl bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col max-h-[560px] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+          <div 
+            className="hidden sm:block absolute right-0 top-full mt-2 w-[340px] sm:w-[360px] max-h-[390px] rounded-2xl bg-white/95 dark:bg-[#0c1017]/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            onWheel={(e) => e.stopPropagation()}
+          >
             {popoverInnerContent}
           </div>
         )}
@@ -424,7 +445,10 @@ export default function NotificationBell({ className = '' }) {
             className="fixed inset-0"
             onClick={() => setIsOpen(false)}
           />
-          <div className="relative w-full max-h-[82dvh] rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-slate-800 shadow-2xl z-10 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+          <div 
+            className="relative w-full max-h-[68dvh] rounded-3xl bg-white dark:bg-[#0c1017] border border-slate-200 dark:border-slate-800 shadow-2xl z-10 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
+            onWheel={(e) => e.stopPropagation()}
+          >
             {popoverInnerContent}
           </div>
         </div>,

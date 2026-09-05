@@ -180,6 +180,21 @@ export default function FloatingMobileInbox() {
     return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20';
   };
 
+  // Lock body scroll when mobile inbox is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
+
   const inboxLink = isAdmin ? '/admin/inbox' : '/dashboard';
 
   return (
@@ -232,14 +247,17 @@ export default function FloatingMobileInbox() {
           />
 
           {/* Modal Container */}
-          <div className="relative w-full max-h-[85dvh] rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0c1017] border-t sm:border border-slate-200 dark:border-slate-800 shadow-2xl z-10 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-250">
+          <div 
+            className="relative w-full max-h-[70dvh] rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0c1017] border-t sm:border border-slate-200 dark:border-slate-800 shadow-2xl z-10 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-250"
+            onWheel={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
-            <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/60 shrink-0">
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/60 shrink-0">
               <div className="flex items-center justify-between gap-2">
                 {/* Left: Icon + Title + Unread Count Badge */}
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs shrink-0">
-                    <Inbox className="w-4 h-4" />
+                  <div className="w-7 h-7 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shadow-xs shrink-0">
+                    <Inbox className="w-3.5 h-3.5" />
                   </div>
                   <h4 className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
                     Inbox &amp; Alerts
@@ -267,26 +285,29 @@ export default function FloatingMobileInbox() {
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className="w-8 h-8 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                    className="w-7 h-7 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
                     aria-label="Close"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Notification Items List */}
-            <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800/60 p-2 overscroll-contain">
+            <div 
+              className="overflow-y-auto flex-1 min-h-0 max-h-[38dvh] divide-y divide-slate-100 dark:divide-slate-800/60 p-2 overscroll-contain custom-scrollbar"
+              onWheel={(e) => e.stopPropagation()}
+            >
               {loadingList && sortedNotifications.length === 0 ? (
-                <div className="py-12 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2">
-                  <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                <div className="py-10 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2">
+                  <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
                   <span>Loading inbox messages...</span>
                 </div>
               ) : sortedNotifications.length === 0 ? (
-                <div className="py-12 px-4 text-center space-y-2">
-                  <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 flex items-center justify-center mx-auto">
-                    <Mail className="w-6 h-6" />
+                <div className="py-10 px-4 text-center space-y-2">
+                  <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800/60 text-slate-400 flex items-center justify-center mx-auto">
+                    <Mail className="w-5 h-5" />
                   </div>
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
                     Your inbox is clear!
@@ -304,26 +325,26 @@ export default function FloatingMobileInbox() {
                       setSelectedNotification(item);
                       setIsOpen(false);
                     }}
-                    className={`p-3.5 rounded-2xl transition-all cursor-pointer flex items-start gap-3 active:scale-[0.99] group/item ${
+                    className={`p-3 rounded-2xl transition-all cursor-pointer flex items-start gap-2.5 active:scale-[0.99] group/item ${
                       !item.isRead
                         ? 'bg-purple-500/[0.06] dark:bg-purple-500/[0.12] border border-purple-500/20'
                         : 'hover:bg-slate-50 dark:hover:bg-slate-900/60'
                     }`}
                   >
                     {/* Unread Icon */}
-                    <div className="relative mt-1 shrink-0">
-                      <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                        <Mail className="w-4 h-4" />
+                    <div className="relative mt-0.5 shrink-0">
+                      <div className="w-7 h-7 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                        <Mail className="w-3.5 h-3.5" />
                       </div>
                       {!item.isRead && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-purple-600 ring-2 ring-white dark:ring-slate-900" />
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-purple-600 ring-2 ring-white dark:ring-slate-900" />
                       )}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex-1 min-w-0 space-y-0.5">
                       <div className="flex items-center justify-between gap-1.5">
-                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${getCategoryBadgeClass(item.category)}`}>
+                        <span className={`text-[9.5px] font-extrabold px-1.5 py-0.2 rounded border ${getCategoryBadgeClass(item.category)}`}>
                           {item.category || 'Notification'}
                         </span>
                         <div className="flex items-center gap-1.5">
@@ -333,7 +354,7 @@ export default function FloatingMobileInbox() {
                           <button
                             type="button"
                             onClick={(e) => handleDeleteNotification(item._id, e)}
-                            className="p-1 rounded-lg text-slate-300 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
                             title="Delete notification"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -354,16 +375,16 @@ export default function FloatingMobileInbox() {
 
             {/* Quick Web Push Alerts Opt-in Bar */}
             {isSupported && (
-              <div className="border-t border-slate-100 dark:border-slate-800/80 px-4 py-2.5 bg-slate-50/70 dark:bg-slate-900/40 shrink-0">
+              <div className="border-t border-slate-100 dark:border-slate-800/80 px-3.5 py-2 bg-slate-50/70 dark:bg-slate-900/40 shrink-0">
                 <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-bold">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                  <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-bold text-[11px]">
+                    <Sparkles className="w-3 h-3 text-purple-500" />
                     <span>Push Notifications</span>
                   </div>
 
                   {isSubscribed ? (
-                    <span className="flex items-center gap-1 text-[11px] font-black text-emerald-600 dark:text-emerald-400">
-                      <Check className="w-3.5 h-3.5 stroke-[3]" /> Enabled
+                    <span className="flex items-center gap-1 text-[10.5px] font-black text-emerald-600 dark:text-emerald-400">
+                      <Check className="w-3 h-3 stroke-[3]" /> Enabled
                     </span>
                   ) : (
                     <button
@@ -376,7 +397,7 @@ export default function FloatingMobileInbox() {
                         }
                       }}
                       disabled={pushLoading}
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-black text-white bg-gradient-to-r from-purple-600 to-indigo-600 cursor-pointer shadow-xs active:scale-95"
+                      className="px-2 py-0.5 rounded-lg text-[10.5px] font-black text-white bg-gradient-to-r from-purple-600 to-indigo-600 cursor-pointer shadow-xs active:scale-95"
                     >
                       {pushLoading ? 'Activating...' : 'Enable Push'}
                     </button>
@@ -386,14 +407,14 @@ export default function FloatingMobileInbox() {
             )}
 
             {/* Footer */}
-            <div className="p-3 bg-slate-100/80 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 shrink-0">
+            <div className="p-2.5 bg-slate-100/80 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-800 shrink-0">
               <Link
                 to={inboxLink}
                 onClick={() => setIsOpen(false)}
-                className="w-full py-2.5 px-4 rounded-2xl text-xs font-black text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 transition-all flex items-center justify-center gap-1.5 shadow-md shadow-purple-500/20 active:scale-98"
+                className="w-full py-2 px-3.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 transition-all flex items-center justify-center gap-1 shadow-sm shadow-purple-500/20 active:scale-98"
               >
                 <span>{isAdmin ? 'Open Admin Inbox Console' : 'View Full Inbox & Archives'}</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
