@@ -12,16 +12,17 @@ const uploadFileToCloudinary = (filePath, options = {}) => {
   return new Promise((resolve, reject) => {
     try {
       const stats = fs.statSync(filePath);
-      const isLarge = stats.size > 30 * 1024 * 1024; // If > 30MB, use chunked upload_large
+      const isVideo = options.resource_type === 'video';
+      const isLarge = stats.size > 40 * 1024 * 1024; // If > 40MB, use chunked upload_large
 
-      console.log(`☁️ Uploading to Cloudinary [Size: ${(stats.size / (1024 * 1024)).toFixed(1)} MB, Method: ${isLarge ? 'upload_large' : 'upload'}]...`);
+      console.log(`☁️ Uploading to Cloudinary [Size: ${(stats.size / (1024 * 1024)).toFixed(2)} MB, Resource: ${options.resource_type || 'auto'}, Method: ${isLarge ? 'upload_large' : 'upload'}]...`);
 
       if (isLarge) {
         cloudinary.uploader.upload_large(
           filePath,
           {
-            resource_type: options.resource_type || 'video',
-            chunk_size: 20 * 1024 * 1024, // 20 MB chunks
+            resource_type: isVideo ? 'video' : 'auto',
+            chunk_size: 6 * 1024 * 1024, // 6 MB chunks (Cloudinary standard)
             timeout: 1200000,
             ...options,
           },
@@ -38,7 +39,7 @@ const uploadFileToCloudinary = (filePath, options = {}) => {
         cloudinary.uploader.upload(
           filePath,
           {
-            resource_type: options.resource_type || 'auto',
+            resource_type: isVideo ? 'video' : 'auto',
             timeout: 600000,
             ...options,
           },
