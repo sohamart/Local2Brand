@@ -809,7 +809,7 @@ const filterDemosForCategory = (demosList, category) => {
 
 
 export default function GetStarted() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { settings } = useSiteSettings();
   const navigate = useNavigate();
   const location = useLocation();
@@ -2309,8 +2309,87 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
       {/* Main Form Body Container: Fixed navbar offset pt-18 */}
       <main className="w-[95%] max-w-4xl mx-auto pt-16 sm:pt-20 flex-1 flex flex-col">
         
+        {/* ==================================================== */}
+        {/* AUTHENTICATION GATE: Required Login Before Starting */}
+        {/* ==================================================== */}
+        {!user && !authLoading ? (
+          <div className="my-auto py-8 sm:py-12 animate-in fade-in zoom-in duration-300">
+            {/* Cultural Banner preview even while logged out */}
+            <div className="mb-6">
+              <CulturalMascotArt country={formData.country || 'India'} lang={lang} />
+            </div>
+
+            <div className="glass-panel p-6 sm:p-10 rounded-3xl border border-white/90 dark:border-slate-800 shadow-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl text-center max-w-xl mx-auto relative overflow-hidden">
+              
+              {/* Glowing Top Radiant Stripe */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600" />
+              
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-tr from-purple-600/10 via-indigo-600/10 to-pink-600/10 dark:from-purple-900/30 dark:to-pink-900/30 border border-purple-200 dark:border-purple-800/80 flex items-center justify-center mx-auto mb-5 text-purple-600 dark:text-purple-400 shadow-lg shadow-purple-500/10">
+                <Lock className="w-8 h-8 sm:w-10 sm:h-10 text-purple-600 dark:text-purple-400" />
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-300 text-xs font-bold mb-3">
+                <Sparkles size={13} className="text-purple-500" />
+                <span>Client Authentication Required</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
+                Sign In to Start Your Project 🚀
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mb-6 leading-relaxed max-w-md mx-auto">
+                Please log in or create a client account to customize your website specifications, lock transparent pricing, and submit your project requirements.
+              </p>
+
+              {/* Value Highlights Grid */}
+              <div className="grid grid-cols-2 gap-3 text-left mb-6">
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Zap className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span>48h Fast Delivery</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Express sprint deployment</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span>Free Domain &amp; SSL</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Zero hidden server charges</p>
+                </div>
+              </div>
+
+              {/* Action CTA Buttons */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <Link
+                  to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+                  className="w-full sm:flex-1 py-3.5 rounded-2xl text-sm font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <span>Sign In to Continue</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+
+                <Link
+                  to={`/register?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+                  className="w-full sm:flex-1 py-3.5 rounded-2xl text-sm font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2"
+                >
+                  <span>Create Account</span>
+                </Link>
+              </div>
+
+              <div className="mt-5 text-center text-[11px] text-slate-400 dark:text-slate-500">
+                ⚡ Selected template and choices will be seamlessly preserved upon login.
+              </div>
+
+            </div>
+          </div>
+        ) : (
+          <>
         {/* Step Progress Tracker Card (Inside Scrollable Form Area) */}
-        <div className="mb-4 bg-white/80 dark:bg-[#0B1120]/80 p-3.5 sm:p-5 rounded-3xl border border-white/80 dark:border-slate-800/80 backdrop-blur-2xl shadow-xl dark:shadow-2xl transition-all">
+        <div className="mb-4 bg-white/92 dark:bg-[#0B1120]/85 p-3.5 sm:p-5 rounded-3xl border border-white/90 dark:border-slate-800/80 backdrop-blur-2xl shadow-[0_12px_36px_-6px_rgba(99,102,241,0.16),0_4px_16px_-4px_rgba(0,0,0,0.06)] dark:shadow-2xl ring-1 ring-white/80 dark:ring-0 relative overflow-hidden transition-all">
+          {/* Glowing Top Radiant Accent Stripe */}
+          <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-purple-600 via-indigo-500 to-pink-500" />
+          
           <div className="flex items-center justify-between mb-2 sm:mb-3">
             <div>
               <span className="text-[11px] sm:text-xs font-mono font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
@@ -2321,7 +2400,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
               </h2>
             </div>
             <div className="text-right">
-              <span className="text-[11px] sm:text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-400/10 px-2.5 py-0.5 sm:py-1 rounded-full border border-emerald-200 dark:border-emerald-400/30">
+              <span className="text-[11px] sm:text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 sm:py-1 rounded-full border border-emerald-400/30 shadow-xs">
                 {Math.round((currentStep / totalSteps) * 100)}%
               </span>
             </div>
@@ -2347,7 +2426,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 return (
                   <span
                     key={s.id}
-                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-purple-600 text-white font-black shadow-md shadow-purple-600/30 ring-2 ring-purple-400/30 shrink-0"
+                    className="flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black shadow-lg shadow-purple-600/30 ring-2 ring-purple-400/40 shrink-0"
                   >
                     <span>{stepNum}.</span>
                     <span className="truncate max-w-[85px] sm:max-w-[100px]">{s.title.split(' ')[0]}</span>
@@ -2361,7 +2440,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     key={s.id}
                     type="button"
                     onClick={() => setCurrentStep(stepNum)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 cursor-pointer shrink-0 transition-all font-bold"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-full text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-400/30 cursor-pointer shrink-0 transition-all font-bold shadow-xs"
                   >
                     <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                     <span>{stepNum}.</span>
@@ -2374,7 +2453,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
               return (
                 <span
                   key={s.id}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-slate-400 dark:text-slate-600 bg-slate-100/70 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800/60 cursor-not-allowed shrink-0"
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full text-slate-400 dark:text-slate-600 bg-slate-100/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/60 cursor-not-allowed shrink-0"
                   title="Complete current step to unlock"
                 >
                   <Lock className="w-2.5 h-2.5 text-slate-400 dark:text-slate-500" />
@@ -2392,8 +2471,9 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
         </div>
 
         {/* Step Content Container Card */}
-        <div className="bg-white/80 sm:bg-white/85 dark:bg-slate-900/80 sm:dark:bg-slate-900/85 p-4 sm:p-8 rounded-3xl border border-white/80 dark:border-slate-800/80 backdrop-blur-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-950/60 mb-6 flex-1 transition-all">
-
+        <div className="bg-white/92 sm:bg-white/95 dark:bg-slate-900/85 sm:dark:bg-slate-900/90 p-4 sm:p-8 rounded-3xl border border-white/90 dark:border-slate-800/80 backdrop-blur-3xl shadow-[0_20px_60px_-10px_rgba(99,102,241,0.18),0_8px_24px_-4px_rgba(0,0,0,0.06)] dark:shadow-slate-950/80 mb-6 flex-1 ring-1 ring-white/80 dark:ring-0 relative overflow-hidden transition-all">
+          {/* Glowing Top Radiant Accent Stripe */}
+          <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-purple-600 via-blue-500 to-emerald-500" />
 
           {/* ==================================================== */}
           {/* STEP 1: CLIENT DETAILS & STRUCTURED ADDRESS */}
@@ -4374,7 +4454,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:opacity-95 text-white text-xs font-black flex items-center gap-2 shadow-lg shadow-purple-500/20 cursor-pointer active:scale-95 transition-all shrink-0 self-start sm:self-center"
                   >
                     <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-                    <span>🤖 Real AI Smart Summary &amp; Chat</span>
+                    <span>📋 Real AI Smart Summary &amp; Blueprint</span>
                   </button>
                 </div>
               </div>
@@ -4613,13 +4693,12 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
             </div>
           )}
         </div>
-      </main>
 
-      {/* Upward Smooth Gradient Backdrop (Light Slate in light mode, Dark Black in dark mode) */}
-      <div className="fixed bottom-0 left-0 right-0 h-24 sm:h-28 pointer-events-none z-30 bg-gradient-to-t from-slate-200/90 via-slate-100/40 to-transparent dark:from-black dark:via-black/75 to-transparent transition-all" />
+      {/* Upward Smooth Gradient Backdrop (Cinematic Translucent Glass in Light Mode, Deep Black in Dark Mode) */}
+      <div className="fixed bottom-0 left-0 right-0 h-24 sm:h-28 pointer-events-none z-30 bg-gradient-to-t from-slate-950/30 via-indigo-950/15 via-purple-950/5 to-transparent backdrop-blur-[1.5px] dark:from-slate-950/95 dark:via-slate-950/75 dark:to-transparent transition-all" />
 
       {/* FLOATING BOTTOM ACTIONS DOCK: 95% Width Mobile Responsive */}
-      <div className="fixed bottom-2 sm:bottom-4 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 w-[95%] sm:max-w-5xl z-40 bg-white/85 dark:bg-[#0B1120]/85 backdrop-blur-2xl border border-white/70 dark:border-slate-800/80 rounded-2xl sm:rounded-3xl px-3 sm:px-6 py-2.5 sm:py-3 shadow-2xl dark:shadow-slate-950/80 flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden transition-all">
+      <div className="fixed bottom-2 sm:bottom-4 left-2 right-2 sm:left-1/2 sm:-translate-x-1/2 w-[95%] sm:max-w-5xl z-40 bg-white/92 dark:bg-[#0B1120]/90 backdrop-blur-3xl border border-white/95 dark:border-slate-800/80 rounded-2xl sm:rounded-3xl px-3 sm:px-6 py-2.5 sm:py-3.5 shadow-[0_-12px_40px_-5px_rgba(99,102,241,0.20),0_6px_24px_-4px_rgba(0,0,0,0.1)] dark:shadow-slate-950/90 ring-1 ring-white/90 dark:ring-0 flex items-center justify-between gap-1.5 sm:gap-2 overflow-hidden transition-all">
         
         {/* Dynamic National Flag Minimal Top Stripe */}
         {formData.country && (
@@ -4654,7 +4733,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
         </div>
 
         {/* Center: Live Price Display (No fake discounts unless coupon applied) */}
-        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/80 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl border border-slate-200/90 dark:border-slate-700/80 shrink-0">
+        <div className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-50/90 via-teal-50/90 to-emerald-50/90 dark:from-slate-800/90 dark:via-slate-800/90 dark:to-slate-800/90 px-3 sm:px-4 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl border border-emerald-300/80 dark:border-slate-700/80 shadow-xs shrink-0">
           <span className="text-sm select-none shrink-0">{currentCountryTheme.flag}</span>
           <div className="flex flex-col text-left">
             {isCouponApplied && priceBreakdown.discountAmount > 0 && (
@@ -4704,10 +4783,13 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
           )}
         </div>
       </div>
+          </>
+        )}
+      </main>
 
 
       {/* ==================================================== */}
-      {/* AI REQUIREMENT GUIDE & REAL INTERACTIVE CHATBOT DRAWER */}
+      {/* AI REQUIREMENT GUIDE & LIVE ARCHITECTURE BLUEPRINT DRAWER */}
       {/* ==================================================== */}
       {showAiDrawer && (
         <div 
@@ -4722,7 +4804,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
             onWheel={e => e.stopPropagation()}
             onTouchMove={e => e.stopPropagation()}
           >
-            {/* Drawer Header (Fixed Height) */}
+            {/* Drawer Header */}
             <div className="p-3.5 sm:p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/90 dark:bg-slate-950/80 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center shadow-md shadow-purple-500/30 shrink-0">
@@ -4731,15 +4813,15 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
-                      AI Project Advisor
+                      AI Project Architecture Blueprint
                     </h4>
                     <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                      Live AI
+                      Live AI Spec
                     </span>
                   </div>
                   <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">
-                    Step {currentStep}: {t.steps[currentStep - 1]?.title || 'Smart Advisory'}
+                    Step {currentStep}: {t.steps[currentStep - 1]?.title || 'Blueprint Summary'}
                   </p>
                 </div>
               </div>
@@ -4773,232 +4855,46 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
               </div>
             </div>
 
-            {/* Navigation Tabs (Fixed Height) */}
-            <div className="px-3.5 sm:px-4 py-2 flex gap-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
-              <button
-                type="button"
-                onClick={() => setAiDrawerTab('chat')}
-                className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  aiDrawerTab === 'chat'
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                <Bot className="w-3.5 h-3.5" />
-                <span>Interactive AI Chat</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setAiDrawerTab('blueprint')}
-                className={`flex-1 py-1.5 sm:py-2 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                  aiDrawerTab === 'blueprint'
-                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Live Blueprint</span>
-              </button>
-            </div>
-
-            {/* Main Area: Flex Column with scroll isolation */}
-            <div className="flex-1 min-h-0 flex flex-col p-3 sm:p-4 overflow-hidden">
-              {aiDrawerTab === 'chat' ? (
-                <div className="flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
-                  
-                  {/* Current Step Guidance Banner (shrink-0) */}
-                  <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-50 via-indigo-50 to-pink-50 dark:from-purple-950/40 dark:via-indigo-950/30 dark:to-pink-950/20 border border-purple-200 dark:border-purple-800/60 shrink-0 shadow-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1">
-                        <Lightbulb className="w-3 h-3 text-amber-500 shrink-0" />
-                        Step {currentStep}: {currentStepGuide.title || 'Guidance'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenAiAssistant(true)}
-                        className="text-[10px] font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <RefreshCw className="w-2.5 h-2.5" /> Re-summarize Step
-                      </button>
-                    </div>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 line-clamp-2">
-                      {currentStepGuide.purpose || 'Ask any question regarding this step to get instant personalized advice.'}
-                    </p>
-                  </div>
-
-                  {/* Quick Action Suggestion Chips (shrink-0) */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 shrink-0">
-                    {[
-                      { label: '✨ Summarize this step', prompt: `Summarize key things I should choose in Step ${currentStep} (${t.steps[currentStep-1]?.title}) in simple terms.` },
-                      { label: '💡 Best features for my brand', prompt: `What are the most essential and high-converting features for my ${formData.selectedCategory || 'business'} website?` },
-                      { label: '💰 Budget & Cost breakdown', prompt: `Explain my current investment estimate of ₹${priceBreakdown.totalApproxPrice.toLocaleString('en-IN')} and how I can optimize cost.` },
-                      { label: '🎨 Color & Visual advice', prompt: `Recommend the top 3 modern visual styles and color palettes for my ${formData.selectedCategory || 'business'} website.` }
-                    ].map((chip, cidx) => (
-                      <button
-                        key={cidx}
-                        type="button"
-                        onClick={() => handleSendAiChatMessage(chip.prompt)}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-purple-100 dark:bg-slate-800 dark:hover:bg-purple-950 text-slate-700 dark:text-slate-300 hover:text-purple-700 dark:hover:text-purple-300 text-[11px] font-semibold whitespace-nowrap border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shrink-0 active:scale-95"
-                      >
-                        {chip.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Chat Messages Stream — 100% Scrollable, Zero Visible Scrollbars */}
-                  <div
-                    ref={aiChatScrollRef}
-                    onWheel={e => e.stopPropagation()}
-                    onTouchMove={e => e.stopPropagation()}
-                    className="flex-1 min-h-[220px] max-h-[calc(100vh-270px)] overflow-y-auto space-y-3 p-3 rounded-2xl bg-slate-50/90 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800/80 no-scrollbar overscroll-contain shadow-inner"
-                    style={{
-                      WebkitOverflowScrolling: 'touch',
-                      touchAction: 'pan-y',
-                      scrollbarWidth: 'none',
-                      msOverflowStyle: 'none'
-                    }}
-                  >
-                    {aiChatMessages.length === 0 && (
-                      <div className="h-full min-h-[160px] flex flex-col items-center justify-center text-center p-4 text-slate-400">
-                        <Sparkles className="w-8 h-8 text-purple-400 mb-2 animate-bounce" />
-                        <p className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                          {summaryLang === 'bn' ? 'প্রজেক্ট সম্পর্কে যেকোনো প্রশ্ন লিখুন' : summaryLang === 'hi' ? 'प्रोजेक्ट के बारे में कोई भी सवाल पूछें' : 'Ask any question or get smart advice for this step'}
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-1">
-                          Our AI will analyze your live inputs and assist you in real time.
-                        </p>
-                      </div>
-                    )}
-
-                    {aiChatMessages.map((msg, midx) => {
-                      const isUser = msg.role === 'user';
-                      return (
-                        <div
-                          key={midx}
-                          className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in duration-200`}
-                        >
-                          {!isUser && (
-                            <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
-                              <Sparkles className="w-3.5 h-3.5" />
-                            </div>
-                          )}
-                          <div
-                            className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed ${
-                              isUser
-                                ? 'bg-purple-600 text-white rounded-br-xs shadow-md shadow-purple-600/20'
-                                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-xs shadow-xs'
-                            }`}
-                          >
-                            <div
-                              className="whitespace-pre-wrap space-y-1 break-words leading-relaxed"
-                              dangerouslySetInnerHTML={{ __html: formatInlineMarkdown(msg.content) }}
-                            />
-                            <div className="flex items-center justify-between gap-2 mt-1.5 pt-1 border-t border-black/5 dark:border-white/5 text-[9px] opacity-70">
-                              <span>{new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              {!isUser && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(msg.content);
-                                    toast.success('Copied to clipboard!');
-                                  }}
-                                  className="hover:underline flex items-center gap-0.5 cursor-pointer font-bold"
-                                >
-                                  <Copy className="w-2.5 h-2.5" /> Copy
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-
-                    {aiChatLoading && (
-                      <div className="flex gap-2.5 items-center text-xs text-purple-600 dark:text-purple-400 p-2 animate-pulse">
-                        <div className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        </div>
-                        <span className="font-semibold text-[11px]">AI Advisor is analyzing your project details...</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Chat Input Bar (shrink-0) */}
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSendAiChatMessage();
-                    }}
-                    className="flex items-center gap-2 pt-1 shrink-0"
-                  >
-                    <input
-                      type="text"
-                      placeholder={summaryLang === 'bn' ? 'এই স্টেপ বা ওয়েবসাইট সম্পর্কে লিখুন...' : summaryLang === 'hi' ? 'इस स्टेप या वेबसाइट के बारे में पूछें...' : 'Ask AI about features, budget or this step...'}
-                      value={aiChatInput}
-                      onChange={(e) => setAiChatInput(e.target.value)}
-                      disabled={aiChatLoading}
-                      className="flex-1 px-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-xs outline-none transition-colors"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!aiChatInput.trim() || aiChatLoading}
-                      className="p-2.5 sm:px-4 sm:py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-purple-600/30 active:scale-95 transition-all cursor-pointer shrink-0"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">Send</span>
-                    </button>
-                  </form>
-                </div>
-              ) : (
-                /* Live Blueprint Tab */
-                <div 
-                  className="flex-1 min-h-0 overflow-y-auto space-y-3 pr-1 no-scrollbar"
-                  onWheel={e => e.stopPropagation()}
-                  onTouchMove={e => e.stopPropagation()}
-                  style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            {/* Main Area: Clean Live Dynamic Architecture Blueprint */}
+            <div 
+              className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3.5 no-scrollbar"
+              onWheel={e => e.stopPropagation()}
+              onTouchMove={e => e.stopPropagation()}
+              style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {/* Summary Header Pill */}
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                  Live Dynamic Architecture Blueprint
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(liveAiSummaryText);
+                    toast.success('📋 Blueprint copied to clipboard!');
+                  }}
+                  className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      Live Dynamic Architecture Blueprint
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(liveAiSummaryText);
-                        toast.success('📋 Blueprint copied to clipboard!');
-                      }}
-                      className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      <Copy className="w-3 h-3" /> Copy
-                    </button>
-                  </div>
+                  <Copy className="w-3 h-3" /> Copy Blueprint
+                </button>
+              </div>
 
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 font-mono whitespace-pre-wrap leading-relaxed max-h-[340px] overflow-y-auto no-scrollbar">
-                    {liveAiSummaryText}
-                  </div>
+              {/* Formatted Code / Spec Box */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 font-mono whitespace-pre-wrap leading-relaxed max-h-[420px] overflow-y-auto shadow-inner overscroll-contain">
+                {liveAiSummaryText}
+              </div>
 
-                  <div className="p-3 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/40 space-y-1 text-xs text-purple-950 dark:text-purple-200">
-                    <strong className="block font-bold">💡 How this Blueprint is used:</strong>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-300">
-                      This blueprint is passed directly to our senior web architects upon submission to begin wireframing and engineering your custom site.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAiDrawerTab('chat');
-                      handleSendAiChatMessage('Can you review this full blueprint and suggest any missing crucial features or upgrades?');
-                    }}
-                    className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-purple-600/30 cursor-pointer transition-all"
-                  >
-                    <Bot className="w-4 h-4" /> Ask AI to Review Full Blueprint
-                  </button>
-                </div>
-              )}
+              {/* Informative Note */}
+              <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/40 space-y-1 text-xs text-purple-950 dark:text-purple-200">
+                <strong className="block font-bold">💡 Architectural Scope Review:</strong>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                  This blueprint dynamically updates as you complete the form. Upon submission, it is passed directly to our senior web architects to begin rapid sprint wireframing and production deployment.
+                </p>
+              </div>
             </div>
 
-            {/* Drawer Footer (Fixed Height) */}
+            {/* Drawer Footer */}
             <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-slate-50/90 dark:bg-slate-950/80 shrink-0">
               <button
                 type="button"
@@ -5006,14 +4902,14 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                   navigator.clipboard.writeText(liveAiSummaryText);
                   toast.success('📋 AI Summary copied to clipboard!');
                 }}
-                className="py-2 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
+                className="py-2.5 px-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
               >
                 <Copy className="w-3.5 h-3.5" /> Copy Blueprint
               </button>
               <button
                 type="button"
                 onClick={() => setShowAiDrawer(false)}
-                className="py-2 px-5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs cursor-pointer shadow-xs transition-colors"
+                className="py-2.5 px-6 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs cursor-pointer shadow-md shadow-purple-600/25 transition-colors"
               >
                 Done
               </button>

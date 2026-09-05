@@ -39,19 +39,29 @@ const createTransporter = () => {
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
 
-  if (host && user && pass && pass !== 'your_smtp_app_password') {
-    cachedTransporter = nodemailer.createTransport({
-      host,
-      port: Number(port),
-      secure: Number(port) === 465,
-      pool: true,
-      maxConnections: 5,
-      maxMessages: 100,
-      auth: {
-        user,
-        pass,
-      },
-    });
+  if (user && pass && pass !== 'your_smtp_app_password') {
+    if (host === 'smtp.gmail.com' || (!host && user.includes('@gmail.com'))) {
+      cachedTransporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user,
+          pass,
+        },
+      });
+    } else if (host) {
+      cachedTransporter = nodemailer.createTransport({
+        host,
+        port: Number(port),
+        secure: Number(port) === 465,
+        auth: {
+          user,
+          pass,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
+    }
     return cachedTransporter;
   }
 

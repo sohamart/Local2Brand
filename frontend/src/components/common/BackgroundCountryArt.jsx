@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, memo } from 'react';
 import { getEffectiveCountryTheme } from '../../data/countryThemes';
 import api from '../../services/api';
 
@@ -17,7 +17,6 @@ function extractYouTubeId(url) {
 
 function getOptimizedVideoUrl(url) {
   if (!url || typeof url !== 'string') return url;
-  // If Cloudinary video, auto inject sub-second fast-start streaming & compression parameters
   if (url.includes('cloudinary.com') && url.includes('/upload/')) {
     if (!url.includes('q_auto') && !url.includes('f_auto') && !url.includes('vc_auto')) {
       return url.replace('/upload/', '/upload/f_auto,q_auto:eco,vc_auto,w_1280,ac_none/');
@@ -26,11 +25,10 @@ function getOptimizedVideoUrl(url) {
   return url;
 }
 
-export default function BackgroundCountryArt({ country = 'India' }) {
+function BackgroundCountryArt({ country = 'India' }) {
   const videoRef = useRef(null);
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
-  const lastSaveTimeRef = useRef(0);
   const [dynamicThemes, setDynamicThemes] = useState(() => {
     try {
       const cached = localStorage.getItem('l2b_country_themes_cache');
@@ -40,11 +38,10 @@ export default function BackgroundCountryArt({ country = 'India' }) {
     }
   });
 
-  // Live Real-Time Multi-Tab Sync with Cloudinary Video/Poster Changes
+  // Live Multi-Tab Sync with Cloudinary Video/Poster Changes
   useEffect(() => {
     let isMounted = true;
 
-    // 1. Initial backend sync
     api.get('/settings').then(res => {
       if (isMounted && res?.settings?.countryThemes) {
         setDynamicThemes(res.settings.countryThemes);
@@ -54,16 +51,11 @@ export default function BackgroundCountryArt({ country = 'India' }) {
       }
     }).catch(() => {});
 
-    // 2. Custom local event listener
     const handleThemesUpdate = (e) => {
       if (!isMounted) return;
-      const newThemes = e.detail;
-      if (newThemes) {
-        setDynamicThemes(newThemes);
-      }
+      if (e.detail) setDynamicThemes(e.detail);
     };
 
-    // 3. Storage event listener (other tabs)
     const handleStorageChange = (e) => {
       if (!isMounted) return;
       if (e.key === 'l2b_country_themes_cache' && e.newValue) {
@@ -73,18 +65,6 @@ export default function BackgroundCountryArt({ country = 'India' }) {
       }
     };
 
-    // 4. BroadcastChannel for instant cross-tab sync
-    let bc = null;
-    try {
-      bc = new BroadcastChannel('l2b_country_themes_sync');
-      bc.onmessage = (event) => {
-        if (!isMounted) return;
-        if (event.data?.type === 'THEMES_UPDATED' && event.data?.themes) {
-          setDynamicThemes(event.data.themes);
-        }
-      };
-    } catch (err) {}
-
     window.addEventListener('l2b_country_themes_updated', handleThemesUpdate);
     window.addEventListener('storage', handleStorageChange);
 
@@ -92,16 +72,12 @@ export default function BackgroundCountryArt({ country = 'India' }) {
       isMounted = false;
       window.removeEventListener('l2b_country_themes_updated', handleThemesUpdate);
       window.removeEventListener('storage', handleStorageChange);
-      if (bc) {
-        try { bc.close(); } catch (e) {}
-      }
     };
   }, []);
 
   const theme = getEffectiveCountryTheme(country, dynamicThemes);
   let rawVideoSrc = theme?.videoBg || 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-temple-complex-at-sunset-42867-large.mp4';
   
-  // Sanitize stale local /india.mp4 path to CDN video
   if (rawVideoSrc === '/india.mp4') {
     rawVideoSrc = 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-temple-complex-at-sunset-42867-large.mp4';
   }
@@ -110,7 +86,7 @@ export default function BackgroundCountryArt({ country = 'India' }) {
   const videoPoster = theme?.videoPoster || 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1600&auto=format&fit=crop&q=85';
   const youtubeId = extractYouTubeId(videoSrc);
 
-  // Helper to ensure video keeps playing continuously
+  // Pure continuous playback without seeking interruptions
   const attemptPlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -120,91 +96,71 @@ export default function BackgroundCountryArt({ country = 'India' }) {
     video.playsInline = true;
     video.loop = true;
 
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => setVideoPlaying(true))
-        .catch(() => {});
+    if (video.paused) {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setVideoPlaying(true))
+          .catch(() => {});
+      }
+    } else {
+      setVideoPlaying(true);
     }
   }, []);
 
-  // Reset state when country or video source changes
   useEffect(() => {
     setVideoPlaying(false);
     setVideoFailed(false);
   }, [videoSrc, youtubeId, country]);
 
-  // Video playback lifecycle, timestamp restore across refresh & persistent auto-play
   useEffect(() => {
     if (youtubeId) return;
-
     const video = videoRef.current;
     if (!video) return;
 
-    video.muted = true;
-    video.defaultMuted = true;
-    video.playsInline = true;
-    video.loop = true;
-
-    // Restore playback timestamp from sessionStorage across page refresh
-    const storageKey = `l2b_bg_video_time_${encodeURIComponent(country)}`;
-    const savedTimeStr = sessionStorage.getItem(storageKey);
-    if (savedTimeStr) {
-      const savedTime = parseFloat(savedTimeStr);
-      if (!isNaN(savedTime) && savedTime > 0) {
-        try {
-          video.currentTime = savedTime;
-        } catch (e) {}
-      }
-    }
-
     attemptPlay();
 
-    // Auto-resume playing when tab is re-opened, focused or unminimized
     const handleVisibilityChange = () => {
-      if (!document.hidden && video) {
+      if (!document.hidden && video && video.paused) {
         attemptPlay();
       }
     };
 
     const handleWindowFocus = () => {
-      if (video) {
+      if (video && video.paused) {
         attemptPlay();
       }
     };
 
-    // Global touch/click trigger in case mobile browser strict policy pauses initial autoplay
     const handleUserInteraction = () => {
-      if (video) {
+      if (video && video.paused) {
         attemptPlay();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleWindowFocus);
-    window.addEventListener('click', handleUserInteraction, { passive: true });
-    window.addEventListener('touchstart', handleUserInteraction, { passive: true });
-    window.addEventListener('scroll', handleUserInteraction, { passive: true });
+    window.addEventListener('click', handleUserInteraction, { passive: true, once: true });
+    window.addEventListener('touchstart', handleUserInteraction, { passive: true, once: true });
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleWindowFocus);
       window.removeEventListener('click', handleUserInteraction);
       window.removeEventListener('touchstart', handleUserInteraction);
-      window.removeEventListener('scroll', handleUserInteraction);
     };
   }, [videoSrc, youtubeId, country, attemptPlay]);
 
   return (
     <div className="fixed inset-0 w-full h-full min-h-screen pointer-events-none overflow-hidden z-0 select-none bg-slate-950">
       
-      {/* 1. High-Resolution Scenic Poster / Thumbnail (ONLY visible while video is buffering or if video fails) */}
+      {/* 1. Scenic Poster / Thumbnail (ONLY while video is buffering or if video fails) */}
       {videoPoster && (
         <img
           src={videoPoster}
           alt=""
           aria-hidden="true"
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 scale-105 filter saturate-125 contrast-105 ${
+          className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 scale-[1.14] filter saturate-125 contrast-105 ${
             videoPlaying && !videoFailed
               ? 'opacity-0 pointer-events-none'
               : 'opacity-80 sm:opacity-65 dark:opacity-50 sm:dark:opacity-35'
@@ -225,14 +181,15 @@ export default function BackgroundCountryArt({ country = 'India' }) {
             tabIndex="-1"
             onLoad={() => setVideoPlaying(true)}
             onError={() => setVideoFailed(true)}
-            className="yt-bg-iframe filter saturate-125 contrast-105"
+            className="yt-bg-iframe filter saturate-125 contrast-105 scale-[1.20]"
           />
         </div>
       )}
 
-      {/* 3. Direct HTML5 MP4 / WebM Video Player (100% Full Screen on Mobile & PC, Infinite Loop, Non-stop Playback) */}
+      {/* 3. Direct HTML5 Full-Length Smooth Looping Video Player */}
       {!videoFailed && !youtubeId && (
         <video
+          id="global-bg-country-video"
           ref={videoRef}
           key={videoSrc}
           src={videoSrc}
@@ -243,48 +200,17 @@ export default function BackgroundCountryArt({ country = 'India' }) {
           webkit-playsinline="true"
           preload="auto"
           onPlaying={() => setVideoPlaying(true)}
-          onLoadedMetadata={(e) => {
-            const storageKey = `l2b_bg_video_time_${encodeURIComponent(country)}`;
-            const savedTimeStr = sessionStorage.getItem(storageKey);
-            if (savedTimeStr) {
-              const savedTime = parseFloat(savedTimeStr);
-              if (!isNaN(savedTime) && savedTime > 0 && savedTime < e.currentTarget.duration) {
-                try {
-                  e.currentTarget.currentTime = savedTime;
-                } catch (err) {}
-              }
-            }
-            attemptPlay();
-          }}
           onLoadedData={() => setVideoPlaying(true)}
           onTimeUpdate={(e) => {
-            const current = e.currentTarget.currentTime;
-            if (current > 0.1 && !videoPlaying) {
+            if (e.currentTarget.currentTime > 0.1 && !videoPlaying) {
               setVideoPlaying(true);
-            }
-            // Periodically persist playback timestamp every 1s across page refreshes
-            const now = Date.now();
-            if (now - lastSaveTimeRef.current > 1000) {
-              lastSaveTimeRef.current = now;
-              try {
-                const storageKey = `l2b_bg_video_time_${encodeURIComponent(country)}`;
-                sessionStorage.setItem(storageKey, current.toString());
-              } catch (err) {}
             }
           }}
           onError={() => {
             setVideoFailed(true);
             setVideoPlaying(false);
           }}
-          onEnded={(e) => {
-            try {
-              const storageKey = `l2b_bg_video_time_${encodeURIComponent(country)}`;
-              sessionStorage.setItem(storageKey, '0');
-              e.currentTarget.currentTime = 0;
-              e.currentTarget.play().catch(() => {});
-            } catch (err) {}
-          }}
-          className={`absolute inset-0 w-full h-full min-w-full min-h-full object-cover scale-105 filter saturate-125 contrast-105 transition-opacity duration-1000 ${
+          className={`absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center scale-[1.14] filter saturate-125 contrast-105 transition-opacity duration-1000 ${
             videoPlaying
               ? 'opacity-80 sm:opacity-65 dark:opacity-55 sm:dark:opacity-40'
               : 'opacity-0'
@@ -296,12 +222,13 @@ export default function BackgroundCountryArt({ country = 'India' }) {
 
       {/* Smooth Soft Radial Vignette Mask */}
       <div 
-        className="absolute inset-0 bg-radial-[ellipse_at_center,_transparent_50%,_rgba(255,255,255,0.60)_95%] dark:bg-radial-[ellipse_at_center,_transparent_40%,_rgba(8,11,17,0.70)_95%]" 
+        className="absolute inset-0 bg-radial-[ellipse_at_center,_transparent_60%,_rgba(248,250,252,0.45)_95%] dark:bg-radial-[ellipse_at_center,_transparent_40%,_rgba(8,11,17,0.70)_95%]" 
       />
       
       {/* Dynamic Cultural Color Hue Tint */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${theme?.bgGradient || 'from-transparent to-transparent'} opacity-20 dark:opacity-25 transition-all duration-1000`} />
+      <div className={`absolute inset-0 bg-gradient-to-br ${theme?.bgGradient || 'from-purple-500/10 via-indigo-500/5 to-pink-500/10'} opacity-30 dark:opacity-25 transition-all duration-1000`} />
     </div>
   );
 }
 
+export default memo(BackgroundCountryArt);

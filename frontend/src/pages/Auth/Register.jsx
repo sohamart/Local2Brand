@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Lock, Mail, User, Phone, Building, ArrowRight, Sparkles, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SEO } from '../../components/common/CommonUI';
@@ -22,6 +22,9 @@ export default function Register() {
 
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = searchParams.get('redirect') || '/dashboard';
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -61,7 +64,7 @@ export default function Register() {
         ...formData,
         phone: fullPhone
       });
-      navigate('/dashboard');
+      navigate(redirectPath);
     } catch (err) {
       setError(err.message || 'Registration failed. Please check your details.');
     } finally {

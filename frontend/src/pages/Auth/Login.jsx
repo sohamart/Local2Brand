@@ -16,9 +16,9 @@ export default function Login() {
   const { login } = useAuth();
   const { settings } = useSiteSettings();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const redirectPath = location.state?.from || '/dashboard';
+  const searchParams = new URLSearchParams(location.search);
+  const queryRedirect = searchParams.get('redirect');
+  const redirectPath = location.state?.from || queryRedirect || '/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();

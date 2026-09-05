@@ -1,600 +1,294 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, Heart, Zap, Award, Flame } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { Sparkles, Globe, Compass, ShieldCheck, Zap, Video as VideoIcon } from 'lucide-react';
+import { getEffectiveCountryTheme } from '../../data/countryThemes';
 
-export default function CulturalMascotArt({ country = 'India', lang = 'en' }) {
-  const [interactiveCount, setInteractiveCount] = useState(0);
-  const [showSparkle, setShowSparkle] = useState(false);
+function extractYouTubeId(url) {
+  if (!url || typeof url !== 'string') return null;
+  const regExp = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/))([\w-]{11})/;
+  const match = url.match(regExp);
+  if (match && match[1]) return match[1];
+  if (/^[\w-]{11}$/.test(url.trim())) return url.trim();
+  return null;
+}
+
+function getOptimizedVideoUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+    if (!url.includes('q_auto') && !url.includes('f_auto') && !url.includes('vc_auto')) {
+      return url.replace('/upload/', '/upload/f_auto,q_auto:eco,vc_auto,w_1280,ac_none/');
+    }
+  }
+  return url;
+}
+
+function getCountryFlagUrl(countryCode) {
+  if (!countryCode) return 'https://flagcdn.com/w160/in.png';
+  const c = countryCode.toLowerCase().trim();
+  if (c === 'global' || c === 'other') return 'https://flagcdn.com/w160/un.png';
+  return `https://flagcdn.com/w160/${c}.png`;
+}
+
+function CulturalMascotArt({ country = 'India', lang = 'en' }) {
+  const bgVideoRef = useRef(null);
+  const [videoPlaying, setVideoPlaying] = useState(true);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [interactiveSparkle, setInteractiveSparkle] = useState(false);
+  const [flagImgError, setFlagImgError] = useState(false);
+
+  const theme = getEffectiveCountryTheme(country);
+  
+  let rawVideoSrc = theme?.videoBg || 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-temple-complex-at-sunset-42867-large.mp4';
+  if (rawVideoSrc === '/india.mp4') {
+    rawVideoSrc = 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-temple-complex-at-sunset-42867-large.mp4';
+  }
+  const videoSrc = getOptimizedVideoUrl(rawVideoSrc);
+  const videoPoster = theme?.videoPoster || 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1600&auto=format&fit=crop&q=85';
+  const youtubeId = extractYouTubeId(videoSrc);
+
+  const flagCode = theme?.code || 'IN';
+  const flagUrl = getCountryFlagUrl(flagCode);
+
+  const attemptPlay = useCallback(() => {
+    const video = bgVideoRef.current;
+    if (!video) return;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.loop = true;
+
+    // Instant timestamp sync with background video
+    const mainBgVideo = document.getElementById('global-bg-country-video');
+    if (mainBgVideo && !mainBgVideo.paused && mainBgVideo.currentTime > 0) {
+      try {
+        if (Math.abs(video.currentTime - mainBgVideo.currentTime) > 0.2) {
+          video.currentTime = mainBgVideo.currentTime;
+        }
+      } catch (e) {}
+    }
+
+    if (video.paused) {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setVideoPlaying(true))
+          .catch(() => {});
+      }
+    } else {
+      setVideoPlaying(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    setVideoPlaying(true);
+    setVideoFailed(false);
+    setFlagImgError(false);
+  }, [videoSrc, youtubeId, country]);
+
+  // Smooth uninterrupted playback & synchronization
+  useEffect(() => {
+    if (youtubeId) return;
+
+    attemptPlay();
+
+    // Periodic micro-sync to keep both videos on the exact same frame
+    const syncInterval = setInterval(() => {
+      const mainBgVideo = document.getElementById('global-bg-country-video');
+      const video = bgVideoRef.current;
+      if (mainBgVideo && video && !mainBgVideo.paused && !video.paused) {
+        if (Math.abs(video.currentTime - mainBgVideo.currentTime) > 0.4) {
+          try {
+            video.currentTime = mainBgVideo.currentTime;
+          } catch (e) {}
+        }
+      }
+    }, 2000);
+
+    const handleUserTouch = () => {
+      attemptPlay();
+    };
+
+    window.addEventListener('click', handleUserTouch, { passive: true, once: true });
+    window.addEventListener('touchstart', handleUserTouch, { passive: true, once: true });
+
+    return () => {
+      clearInterval(syncInterval);
+      window.removeEventListener('click', handleUserTouch);
+      window.removeEventListener('touchstart', handleUserTouch);
+    };
+  }, [videoSrc, youtubeId, country, attemptPlay]);
 
   const handleMascotClick = () => {
-    setInteractiveCount(prev => prev + 1);
-    setShowSparkle(true);
-    setTimeout(() => setShowSparkle(false), 1200);
-  };
-
-  // Render specific illustrated animated scene based on country
-  const renderCulturalScene = () => {
-    switch (country) {
-      case 'India':
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            {/* Left: Animated Durga Puja & Festive Dhunuchi Dancer Mascot */}
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-                title="Click for celebratory Durga Puja blessings & sparkles! ✨"
-              >
-                {/* Glowing Trishul & Halo */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-amber-400/30 blur-xs animate-ping" />
-                
-                {/* Durga Maa & Child Avatar Container */}
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-red-600 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>🔱</span>
-                    {/* Floating festive diya */}
-                    <span className="absolute bottom-0 right-0 text-xs animate-pulse">🪔</span>
-                  </div>
-                </div>
-
-                {/* Micro interaction heart badge */}
-                {interactiveCount > 0 && (
-                  <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[9px] font-black shadow-xs animate-in zoom-in">
-                    +{interactiveCount}
-                  </span>
-                )}
-              </div>
-
-              {/* Cultural Narrative Text */}
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>স্বাগতম • Namaste Bharat</span>
-                    <span className="text-base animate-pulse">🇮🇳</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
-                    Durga Puja &amp; Festive Heritage
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  Celebrating Shakti, innovation &amp; timeless digital craftsmanship
-                </p>
-                
-                {/* Micro animated cultural elements */}
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
-                  <span className="flex items-center gap-0.5 animate-pulse">🪔 Diyas</span>
-                  <span>•</span>
-                  <span className="flex items-center gap-0.5">🌸 Lotus Blessings</span>
-                  <span>•</span>
-                  <span className="flex items-center gap-0.5">🥁 Dhak &amp; Sitar</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Tiranga & Taj Arch Wave */}
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">
-                  Made for India 🇮🇳
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Bengal &amp; Pan-India Tech
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 dark:bg-orange-500/20 border border-orange-400/40 flex items-center justify-center text-xl shadow-xs animate-pulse">
-                🦚
-              </div>
-            </div>
-
-            {/* Background subtle cultural decorative motifs */}
-            <div className="absolute right-12 -bottom-2 text-4xl opacity-10 dark:opacity-5 pointer-events-none select-none">
-              🕌 🪔 🌸
-            </div>
-          </div>
-        );
-
-      case 'Bangladesh':
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            {/* Left: Pohela Boishakh & Royal Bengal Tiger Mascot */}
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-                title="শুভ নববর্ষ! Click for Boishakhi melodies! ✨"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 via-red-600 to-emerald-700 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>🐅</span>
-                    <span className="absolute bottom-0 right-0 text-xs animate-pulse">🌺</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>স্বাগতম বাংলাদেশ</span>
-                    <span className="text-base">🇧🇩</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
-                    পহেলা বৈশাখ ও সোনার বাংলা
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  পদ্মা-মেঘনার নদীমাতৃক সৌন্দর্য ও স্মার্ট ডিজিটাল বাংলাদেশ
-                </p>
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                  <span>🌾 সোনালী ধান</span>
-                  <span>•</span>
-                  <span>⛵ পালতোলা নৌকা</span>
-                  <span>•</span>
-                  <span>🪕 একতারা সুর</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  Lal Sabuj 🇧🇩
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Dhaka &amp; Chittagong
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-400/40 flex items-center justify-center text-xl shadow-xs">
-                🌾
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'United Arab Emirates':
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-                title="Marhaba! Click for Dubai Golden Falcon glow! ✨"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-yellow-400 to-emerald-600 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>🦅</span>
-                    <span className="absolute bottom-0 right-0 text-xs">🕌</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>Marhaba UAE • مرحباً</span>
-                    <span className="text-base">🇦🇪</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
-                    Dubai &amp; Abu Dhabi Luxury
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  Futuristic skyline architecture &amp; high-velocity Gulf innovation
-                </p>
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
-                  <span>👑 Arabian Oud</span>
-                  <span>•</span>
-                  <span>🌴 Palm Jumeirah</span>
-                  <span>•</span>
-                  <span>✨ Gold Standard</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  Gulf Elite 🇦🇪
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Burj Skyline Tech
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/40 flex items-center justify-center text-xl shadow-xs">
-                🕌
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'United States':
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-rose-600 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>🗽</span>
-                    <span className="absolute bottom-0 right-0 text-xs">🚀</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>Welcome USA</span>
-                    <span className="text-base">🇺🇸</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700">
-                    Silicon Valley &amp; NYC Edition
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  Enterprise-scale software engineering &amp; modern brand aesthetics
-                </p>
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-blue-700 dark:text-blue-300">
-                  <span>⚡ Silicon Valley</span>
-                  <span>•</span>
-                  <span>⭐ Wall Street</span>
-                  <span>•</span>
-                  <span>🚀 Apollo Velocity</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                  Enterprise 🇺🇸
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Global Leader
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-400/40 flex items-center justify-center text-xl shadow-xs">
-                ⭐
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'United Kingdom':
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-red-600 via-blue-800 to-amber-500 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>💂</span>
-                    <span className="absolute bottom-0 right-0 text-xs">👑</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>Welcome Great Britain</span>
-                    <span className="text-base">🇬🇧</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700">
-                    London Royal Standard
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  Westminster royal heritage &amp; London Tech City precision
-                </p>
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-red-700 dark:text-rose-300">
-                  <span>👑 Royal Crown</span>
-                  <span>•</span>
-                  <span>🏰 Big Ben</span>
-                  <span>•</span>
-                  <span>🫖 Fine Earl Grey</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
-                  British Edition 🇬🇧
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  London Tech City
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-400/40 flex items-center justify-center text-xl shadow-xs">
-                👑
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'Canada':
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-red-600 via-rose-500 to-slate-200 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>🍁</span>
-                    <span className="absolute bottom-0 right-0 text-xs">🦫</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>Bienvenue Canada</span>
-                    <span className="text-base">🇨🇦</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700">
-                    Maple &amp; Aurora Edition
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  Toronto &amp; Vancouver digital clean excellence &amp; northern spirit
-                </p>
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-red-700 dark:text-rose-300">
-                  <span>🍁 Red Maple</span>
-                  <span>•</span>
-                  <span>🌌 Aurora Glow</span>
-                  <span>•</span>
-                  <span>🏔️ Rocky Peaks</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-red-600 dark:text-red-400">
-                  Coast to Coast 🇨🇦
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Maple Tech
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-400/40 flex items-center justify-center text-xl shadow-xs">
-                🍁
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'Australia':
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-emerald-600 to-blue-600 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>🦘</span>
-                    <span className="absolute bottom-0 right-0 text-xs">🐨</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>G'day Australia</span>
-                    <span className="text-base">🇦🇺</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700">
-                    Sydney &amp; Melbourne Edition
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  Sydney Harbour sails, Gold Coast vibrancy &amp; modern Pacific tech
-                </p>
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                  <span>🦘 Kangaroo</span>
-                  <span>•</span>
-                  <span>🐨 Koala Sanctuary</span>
-                  <span>•</span>
-                  <span>🏄 Bondi Surf</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  Aussie Edition 🇦🇺
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Harbour Tech
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-400/40 flex items-center justify-center text-xl shadow-xs">
-                🦘
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'Singapore':
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-red-600 via-rose-500 to-indigo-600 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>🦁</span>
-                    <span className="absolute bottom-0 right-0 text-xs">🌴</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>Welcome Singapore</span>
-                    <span className="text-base">🇸🇬</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-300 dark:border-rose-700">
-                    Smart Lion City
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  Marina Bay Sands, Supertree garden lights &amp; global fintech gateway
-                </p>
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-rose-700 dark:text-rose-300">
-                  <span>🦁 Merlion Spout</span>
-                  <span>•</span>
-                  <span>🌴 Supertree Grove</span>
-                  <span>•</span>
-                  <span>⚡ Smart Nation</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
-                  Lion City 🇸🇬
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Smart Nation
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-400/40 flex items-center justify-center text-xl shadow-xs">
-                🦁
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'Germany':
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-red-600 to-slate-900 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>⚙️</span>
-                    <span className="absolute bottom-0 right-0 text-xs">🦅</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>Willkommen Deutschland</span>
-                    <span className="text-base">🇩🇪</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
-                    Deutsche Präzision
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  World-renowned German engineering precision &amp; modern European architecture
-                </p>
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
-                  <span>⚙️ Precision Code</span>
-                  <span>•</span>
-                  <span>🏛️ Brandenburg Gate</span>
-                  <span>•</span>
-                  <span>🥨 Black Forest</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  Deutsche Edition 🇩🇪
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Engineering Tech
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-400/40 flex items-center justify-center text-xl shadow-xs">
-                🦅
-              </div>
-            </div>
-          </div>
-        );
-
-      default: // Global
-        return (
-          <div className="relative w-full h-full flex items-center justify-between overflow-hidden select-none">
-            <div className="flex items-center gap-3 relative z-10">
-              <div 
-                onClick={handleMascotClick}
-                className="relative cursor-pointer group transition-transform active:scale-90"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-600 p-0.5 shadow-md group-hover:rotate-3 transition-transform">
-                  <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden text-2xl sm:text-3xl">
-                    <span className="animate-bounce" style={{ animationDuration: '2.5s' }}>🌐</span>
-                    <span className="absolute bottom-0 right-0 text-xs">✨</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1">
-                    <span>Global Universal Edition</span>
-                    <span className="text-base">🌐</span>
-                  </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700">
-                    Worldwide Standard
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-tight mt-0.5">
-                  Cloud-native microservices &amp; global edge performance
-                </p>
-                <div className="flex items-center gap-2 mt-1 text-[10px] font-semibold text-purple-700 dark:text-purple-300">
-                  <span>✨ Edge CDN</span>
-                  <span>•</span>
-                  <span>⚡ 99.9% Uptime</span>
-                  <span>•</span>
-                  <span>🛡️ Bank-grade Security</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 relative z-10 pr-2">
-              <div className="flex flex-col items-end text-right">
-                <span className="text-[10px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
-                  Worldwide 🌐
-                </span>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  Next-Gen Architecture
-                </span>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-400/40 flex items-center justify-center text-xl shadow-xs">
-                ✨
-              </div>
-            </div>
-          </div>
-        );
-    }
+    setInteractiveSparkle(true);
+    setTimeout(() => setInteractiveSparkle(false), 1400);
   };
 
   return (
-    <div className="w-full relative rounded-2xl sm:rounded-3xl p-3 sm:p-4 bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 backdrop-blur-xl shadow-xs transition-all duration-300">
-      {renderCulturalScene()}
+    <div className="w-full relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/90 dark:border-slate-800/90 shadow-[0_12px_40px_-8px_rgba(99,102,241,0.18),0_4px_16px_-4px_rgba(0,0,0,0.06)] dark:shadow-slate-950/80 backdrop-blur-2xl transition-all duration-500 group bg-white/90 dark:bg-slate-950/85 ring-1 ring-white/80 dark:ring-0">
+      
+      {/* Radiant Top Glow Stripe in Accent Colors */}
+      <div className={`absolute top-0 left-0 right-0 h-[3px] z-20 bg-gradient-to-r ${theme?.flagStripe || 'from-purple-600 via-indigo-500 to-pink-600'} opacity-90`} />
+
+      {/* 1. Full Atmospheric Country Scenic Background Video (Slightly Zoomed to Crop Black Bars) */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none">
+        {/* Poster Fallback / Loading Background */}
+        {videoPoster && (
+          <img
+            src={videoPoster}
+            alt=""
+            aria-hidden="true"
+            className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 scale-[1.14] filter saturate-125 contrast-105 ${
+              videoPlaying && !videoFailed ? 'opacity-0' : 'opacity-85 dark:opacity-60'
+            }`}
+          />
+        )}
+
+        {/* Embedded HTML5 Full-Length Smooth Video */}
+        {!videoFailed && !youtubeId && (
+          <video
+            ref={bgVideoRef}
+            key={`bg-${videoSrc}`}
+            src={videoSrc}
+            autoPlay
+            loop
+            muted
+            playsInline
+            webkit-playsinline="true"
+            preload="auto"
+            onPlaying={() => setVideoPlaying(true)}
+            onLoadedData={() => {
+              setVideoPlaying(true);
+              const mainBgVideo = document.getElementById('global-bg-country-video');
+              if (mainBgVideo && mainBgVideo.currentTime > 0 && bgVideoRef.current) {
+                try {
+                  bgVideoRef.current.currentTime = mainBgVideo.currentTime;
+                } catch (e) {}
+              }
+            }}
+            onError={() => {
+              setVideoFailed(true);
+              setVideoPlaying(false);
+            }}
+            className="absolute inset-0 w-full h-full min-w-full min-h-full object-cover object-center scale-[1.14] filter saturate-125 contrast-105 opacity-85 dark:opacity-60"
+          >
+            <source src={videoSrc} type="video/mp4" />
+          </video>
+        )}
+
+        {/* YouTube Iframe Fallback */}
+        {!videoFailed && youtubeId && (
+          <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none opacity-85 dark:opacity-60">
+            <iframe
+              key={youtubeId}
+              src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&playsinline=1&rel=0&iv_load_policy=3&modestbranding=1&disablekb=1&fs=0`}
+              title="Country Cultural Video"
+              allow="autoplay; encrypted-media"
+              tabIndex="-1"
+              onLoad={() => setVideoPlaying(true)}
+              onError={() => setVideoFailed(true)}
+              className="w-full h-full scale-[1.20] pointer-events-none"
+            />
+          </div>
+        )}
+
+        {/* Dynamic Cultural Ambient Color Gradient Overlay */}
+        <div className={`absolute inset-0 bg-gradient-to-r ${theme?.flagStripe || 'from-purple-600/30 via-indigo-600/20 to-pink-600/30'} opacity-25 dark:opacity-35 mix-blend-overlay`} />
+        
+        {/* Balanced Light/Dark Gradient Mask: Keeps text crystal clear on the left, let scenic video glow on the right */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/70 to-white/20 dark:from-slate-950/95 dark:via-slate-950/70 dark:to-slate-950/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-white/75 via-transparent to-white/25 dark:from-slate-950/75 dark:via-transparent dark:to-slate-950/25" />
+      </div>
+
+      {/* 2. Banner Foreground Content (Light & Dark Responsive) */}
+      <div className="relative z-10 p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3.5 sm:gap-5">
+        
+        {/* Left: Country Flag Picture Avatar + Cultural Greeting */}
+        <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+          
+          {/* Flag Image Badge / Country Avatar */}
+          <div
+            onClick={handleMascotClick}
+            className="relative cursor-pointer group/mascot shrink-0 transition-transform active:scale-95"
+            title="Click for celebratory sparkles! ✨"
+          >
+            <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-amber-500 to-rose-600 p-0.5 shadow-xl shadow-purple-500/25 group-hover/mascot:scale-105 transition-all ring-2 ring-white/90 dark:ring-slate-800">
+              <div className="w-full h-full rounded-[14px] bg-white dark:bg-slate-900 flex items-center justify-center relative overflow-hidden border border-white/60 dark:border-slate-800 shadow-inner">
+                {!flagImgError ? (
+                  <img
+                    src={flagUrl}
+                    alt={`${country} Flag`}
+                    onError={() => setFlagImgError(true)}
+                    className="w-full h-full object-cover rounded-[14px] group-hover/mascot:scale-110 transition-transform duration-300"
+                    loading="eager"
+                  />
+                ) : (
+                  <span className="text-2xl sm:text-3xl transform group-hover/mascot:scale-110 transition-transform">
+                    {theme?.flag || '🌐'}
+                  </span>
+                )}
+                {interactiveSparkle && (
+                  <span className="absolute inset-0 flex items-center justify-center text-2xl animate-ping bg-purple-500/20">
+                    ✨
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Live active pulsing dot */}
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-slate-950 shadow-xs"></span>
+            </span>
+          </div>
+
+          {/* Cultural Greeting & Subtext */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+              <span className="text-sm sm:text-base font-black text-slate-950 dark:text-white tracking-tight flex items-center gap-1.5">
+                <span>{theme?.greeting || 'Welcome'}</span>
+              </span>
+              <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-purple-100/90 dark:bg-purple-950/80 border border-purple-300/80 dark:border-purple-700 text-purple-900 dark:text-purple-300 backdrop-blur-md shadow-xs uppercase tracking-wider">
+                {theme?.badge || `${country} Edition`}
+              </span>
+            </div>
+
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 line-clamp-1">
+              {theme?.subGreeting || theme?.tagline || 'World-class digital engineering & fast website deployment'}
+            </p>
+
+            {/* Cultural Motifs & City Highlight */}
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] font-bold text-amber-800 dark:text-amber-300 mt-1">
+              <span className="truncate max-w-[220px] sm:max-w-none">{theme?.culturalPattern || theme?.festiveMotif}</span>
+              {theme?.defaultCity && (
+                <>
+                  <span className="text-slate-400 dark:text-slate-600">•</span>
+                  <span className="text-slate-800 dark:text-slate-200 hidden sm:inline">{theme.defaultCity}</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Clean Ambient Info & Currency Standard */}
+        <div className="flex items-center justify-between md:justify-end gap-2.5 w-full md:w-auto pt-2 md:pt-0 border-t border-slate-200/80 dark:border-slate-800/80 md:border-0 shrink-0">
+          
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/90 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-[10px] font-bold shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="uppercase tracking-wider">CULTURAL THEME ACTIVE</span>
+          </div>
+
+          <div className="text-right hidden sm:block pl-2 border-l border-slate-200/90 dark:border-slate-800">
+            <div className="text-[10px] uppercase font-bold tracking-wider text-slate-600 dark:text-slate-400">Standard</div>
+            <div className="text-xs font-black text-emerald-700 dark:text-emerald-400 font-mono">
+              {theme?.currency || 'INR'} ({theme?.symbol || '₹'}) • 48h Fast Track
+            </div>
+          </div>
+
+        </div>
+
+      </div>
     </div>
   );
 }
+
+export default memo(CulturalMascotArt);
+

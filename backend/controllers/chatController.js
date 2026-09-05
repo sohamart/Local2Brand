@@ -229,15 +229,34 @@ export const handleChatMessage = async (req, res) => {
     let detectedName = capturedOrder.name || currentUser?.name || 'Valued Client';
     const isBengali = /[\u0980-\u09FF]/.test(message);
 
-    // Check if an order was already registered in this chat session to prevent duplicate spamming
-    const alreadyHasOrderInSession = (session.messages || []).some((m) => m.requirementCreated || (m.content && m.content.includes('Order ID: `REQ-')));
+    // Strict validation to prevent premature order creation:
+    // 1. Must have concrete business name (not placeholder)
+    // 2. Must have explicit website category
+    // 3. Must have verified client owner name
+    // 4. Must have valid 10-digit phone number
+    // 5. Must have valid client email
+    // 6. Must have explicit final order confirmation intent in response to an order review
+    const isExplicitOrderPlacement = /\b(place\s*order|submit\s*order|confirm\s*order|book\s*order|confirm\s*project|order\s*confirm|অর্ডার\s*কনফার্ম|অর্ডার\s*বুক|প্রজেক্ট\s*কনফার্ম|বুক\s*করুন)\b/i.test(message) ||
+      (isConfirmIntent && capturedOrder.businessName && capturedOrder.businessName !== 'Custom Client Project' && capturedOrder.websiteType && capturedOrder.phone && capturedOrder.email && (session.messages || []).some(m => m.content && (m.content.includes('Order Review') || m.content.includes('Business Name') || m.content.includes('Shall I confirm') || m.content.includes('ব্যবসার নাম'))));
 
-    // Finalize and Confirm Requirement when user confirms or provides complete contact details for project
+    const hasAllMandatoryOrderFields = Boolean(
+      capturedOrder.businessName &&
+      capturedOrder.businessName !== 'Custom Client Project' &&
+      capturedOrder.businessName.length >= 3 &&
+      capturedOrder.websiteType &&
+      detectedPhone &&
+      detectedPhone.length >= 10 &&
+      detectedEmail &&
+      detectedEmail.includes('@') &&
+      detectedName &&
+      detectedName !== 'Valued Client'
+    );
+
+    // Finalize and Confirm Requirement ONLY when all mandatory details are collected and user explicitly confirms
     if (
       !alreadyHasOrderInSession &&
-      detectedPhone &&
-      (detectedEmail || currentUser) &&
-      (isConfirmIntent || (hasOrderIntent && message.length > 25 && detectedPhone.length >= 10))
+      hasAllMandatoryOrderFields &&
+      isExplicitOrderPlacement
     ) {
       try {
         const reqId = generateRequirementId();
