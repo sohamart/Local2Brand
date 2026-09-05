@@ -245,6 +245,7 @@ class OneSignalBackendService {
       firefox_icon: icon || DEFAULT_ICON,
       safari_icon: icon || DEFAULT_ICON,
       priority: 10,
+      ttl: 259200, // 72 hours queue retention for offline/sleeping phones
       data: {
         ...data,
         sentAt: new Date().toISOString(),

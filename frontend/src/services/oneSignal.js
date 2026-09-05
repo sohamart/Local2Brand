@@ -63,6 +63,15 @@ class OneSignalService {
           this.isInitialized = true;
           console.log('✅ OneSignal Web Push SDK Initialized');
 
+          // Ensure token refresh and active optIn if permission was already granted in browser
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            try {
+              if (OneSignal.User?.PushSubscription?.optIn) {
+                OneSignal.User.PushSubscription.optIn().catch(() => {});
+              }
+            } catch (e) {}
+          }
+
           // Listen to push subscription changes
           if (OneSignal.User?.PushSubscription?.addEventListener) {
             OneSignal.User.PushSubscription.addEventListener('change', (event) => {

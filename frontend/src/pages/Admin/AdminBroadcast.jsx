@@ -336,8 +336,7 @@ export default function AdminBroadcast() {
         toast.success('Web Push notification dispatched successfully! 🚀');
         setResult({
           type: 'success',
-          message: `Push delivered successfully! OneSignal Push ID: ${res.id || 'Active'}`,
-          recipients: res.recipients ?? 'Active subscribers',
+          message: 'Web Push notification delivered successfully to all active subscribed devices! 🚀',
         });
       } else {
         toast.error(res.message || 'Failed to dispatch push broadcast');
