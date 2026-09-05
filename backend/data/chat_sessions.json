@@ -72,5 +72,42 @@
     "lastActiveAt": "2026-08-31T19:24:11.243Z",
     "createdAt": "2026-08-31T19:24:03.438Z",
     "updatedAt": "2026-08-31T19:24:03.438Z"
+  },
+  {
+    "_id": "chat_1788606307777_6ofxn",
+    "sessionId": "test_session_call_999",
+    "user": null,
+    "title": "New Conversation",
+    "messages": [],
+    "ip": "",
+    "userAgent": "",
+    "lastActiveAt": "2026-09-05T11:05:07.777Z",
+    "createdAt": "2026-09-05T11:05:07.777Z",
+    "updatedAt": "2026-09-05T11:05:07.777Z"
+  },
+  {
+    "_id": "chat_1788606339726_trhst",
+    "sessionId": "test_session_call_1001",
+    "user": null,
+    "title": "New Conversation",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Please call me at 9876543210. My name is Soham Dutta and my email is sohamduttabwn@gmail.com. I want to discuss a new website.",
+        "timestamp": "2026-09-05T11:05:47.677Z"
+      },
+      {
+        "role": "assistant",
+        "content": "Hello Soham Dutta! I've registered an instant callback request for you. Our team will get in touch with you shortly at 9876543210 to discuss your new website project.\n\nBefore we proceed, I'd like to confirm a few details:\n\n* **Your Name**: Soham Dutta\n* **Email**: sohamduttabwn@gmail.com\n* **Phone**: 9876543210\n\nTo better understand your requirements, could you please tell me a bit about your business or the type of website you're looking to build? What industry or domain does it belong to (e.g., e-commerce, cafe, agency, portfolio)?\n\n---\n📞 **Your Consultation Call is Scheduled!**\n- 👤 **Name:** Soham Dutta\n- 📱 **Phone:** 9876543210\n- ⏰ **Slot:** ⚡ ASAP (Within 15-30 mins)\n- 💬 **Topic:** Custom Business Website\n\nOur founder and senior tech lead will call you shortly to discuss your project. 🚀",
+        "provider": "OpenRouter",
+        "model": "meta-llama/llama-3.3-70b-instruct",
+        "timestamp": "2026-09-05T11:05:47.677Z"
+      }
+    ],
+    "ip": "",
+    "userAgent": "",
+    "lastActiveAt": "2026-09-05T11:05:47.678Z",
+    "createdAt": "2026-09-05T11:05:39.726Z",
+    "updatedAt": "2026-09-05T11:05:39.726Z"
   }
 ]

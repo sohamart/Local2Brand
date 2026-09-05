@@ -39,8 +39,8 @@ export const handleChatMessage = async (req, res) => {
     const sessionId = clientSessionId || `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const userId = req.user ? (req.user._id || req.user.id) : null;
     const clientMeta = {
-      ip: req.ip || req.headers['x-forwarded-for'] || '',
-      userAgent: req.headers['user-agent'] || '',
+      ip: req.ip || req.headers?.['x-forwarded-for'] || '',
+      userAgent: req.headers?.['user-agent'] || '',
     };
 
     // Load or initialize chat session from MongoDB / data adapter
@@ -251,6 +251,7 @@ export const handleChatMessage = async (req, res) => {
       detectedName &&
       detectedName !== 'Valued Client'
     );
+    const alreadyHasOrderInSession = (session.messages || []).some(m => m.content && (m.content.includes('Order ID:') || m.content.includes('অর্ডার সফলভাবে কনফার্ম')));
 
     // Finalize and Confirm Requirement ONLY when all mandatory details are collected and user explicitly confirms
     if (
@@ -324,6 +325,49 @@ export const handleChatMessage = async (req, res) => {
         aiResponse.text += orderBanner;
       } catch (reqErr) {
         console.warn('AI chat requirement create notice:', reqErr.message);
+      }
+    }
+
+    // 2. Intelligent Consultation Callback Auto-Scheduler in AI Chat
+    const isCallbackIntent = /\b(call\s*me|request\s*callback|schedule\s*a?\s*call|book\s*a?\s*call|phone\s*me|call\s*korun|call\s*koro|phone\s*korun|amake\s*call|কল\s*করুন|কথা\s*বলতে\s*চাই|কলব্যাক|কথা\s*বলব|ফোন\s*করুন)\b/i.test(message) ||
+      (detectedPhone && /\b(call|phone|talk|consultation|founder|number|kotha|call\s*korbe|bolun)\b/i.test(message));
+
+    const alreadyHasCallbackInSession = (session.messages || []).some(m => m.content && (m.content.includes('Callback Scheduled') || m.content.includes('কলব্যাক শিডিউল')));
+
+    if (!requirementCreated && !alreadyHasCallbackInSession && isCallbackIntent && detectedPhone && detectedPhone.length >= 10) {
+      try {
+        const callbackPayload = {
+          name: detectedName !== 'Valued Client' ? detectedName : (currentUser?.name || 'Valued Client'),
+          phone: detectedPhone,
+          email: detectedEmail || (currentUser?.email || ''),
+          preferredTime: '⚡ ASAP (Within 15-30 mins)',
+          topic: capturedOrder.websiteTypeName || 'Direct AI Chat Consultation',
+          notes: `Auto-scheduled via AI Chatbot Session ${sessionId}. Client note: "${message.slice(0, 300)}"`,
+          user: userId && mongoose.Types.ObjectId.isValid(userId) ? userId : null,
+        };
+
+        const cb = await dataStore.createCallback(callbackPayload);
+        callbackCreated = true;
+
+        sendAdminCallbackAlert(cb).catch((err) => console.warn('AI chat admin callback alert error:', err.message));
+        if (cb.email) {
+          sendCallbackConfirmationEmail(cb).catch((err) => console.warn('AI chat client callback email error:', err.message));
+        }
+
+        dataStore.createNotification({
+          title: 'New AI Chat Callback Request',
+          message: `${cb.name} requested a call at ${cb.phone} (${cb.preferredTime})`,
+          type: 'callback',
+          link: '/admin/callbacks',
+        }).catch((err) => console.warn('Notification error:', err.message));
+
+        const callbackBanner = isBengali
+          ? `\n\n---\n📞 **আপনার কনসালটেশন কল শিডিউল করা হয়েছে!**\n- 👤 **নাম:** ${cb.name}\n- 📱 **ফোন:** ${cb.phone}\n- ⏰ **সময়:** ${cb.preferredTime}\n- 💬 **আলোচনার বিষয়:** ${cb.topic}\n\nআমাদের ফাউন্ডার ও সিনিয়র ইঞ্জিনিয়ারিং টিম খুব শীঘ্রই আপনার ফোনে যোগাযোগ করবে। 🚀`
+          : `\n\n---\n📞 **Your Consultation Call is Scheduled!**\n- 👤 **Name:** ${cb.name}\n- 📱 **Phone:** ${cb.phone}\n- ⏰ **Slot:** ${cb.preferredTime}\n- 💬 **Topic:** ${cb.topic}\n\nOur founder and senior tech lead will call you shortly to discuss your project. 🚀`;
+
+        aiResponse.text += callbackBanner;
+      } catch (cbErr) {
+        console.warn('AI chat callback create notice:', cbErr.message);
       }
     }
 

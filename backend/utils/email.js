@@ -435,6 +435,33 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
   `;
 };
 
+// Universal Helper to Resolve Actual Client Email across diverse schemas and drafts
+export const resolveClientEmail = (doc) => {
+  if (!doc) return '';
+  const candidates = [
+    doc.clientInfo?.email,
+    doc.email,
+    doc.emailAddress,
+    doc.answers?.emailAddress,
+    doc.answers?.email,
+    doc.fullFormData?.emailAddress,
+    doc.fullFormData?.email,
+    doc.user?.email,
+  ];
+
+  for (const c of candidates) {
+    if (c && typeof c === 'string') {
+      const clean = c.trim().toLowerCase();
+      if (clean.includes('@') && !clean.includes('customer@local2brand.com') && !clean.includes('@client.local2brand.com')) {
+        return clean;
+      }
+    }
+  }
+
+  const raw = doc.clientInfo?.email || doc.email || doc.emailAddress || '';
+  return typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+};
+
 // 1. Welcome Email
 export const sendWelcomeEmail = async (user) => {
   const clientUrl = getClientUrl();
@@ -475,7 +502,7 @@ export const sendRequirementConfirmationEmail = async (reqDoc) => {
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || reqDoc.fullName || reqDoc.name || 'Valued Client';
   const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || reqDoc.businessName || 'Your Business';
   const websiteType = reqDoc.websiteTypeName || reqDoc.websiteType || 'Custom Website';
-  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
+  const clientEmail = resolveClientEmail(reqDoc);
 
   if (!clientEmail) {
     console.warn(`sendRequirementConfirmationEmail notice: No client email found for ${reqId}`);
@@ -638,7 +665,7 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
   const clientUrl = getClientUrl();
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || reqDoc.fullName || reqDoc.name || 'Valued Client';
-  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
+  const clientEmail = resolveClientEmail(reqDoc);
   const status = reqDoc.status || 'Updated';
   const formattedStatus = formatStatusTitle(status);
   const pdfUrl = reqDoc.drivePdfLink || reqDoc.pdfUrl || reqDoc.documentUrl || reqDoc.attachmentUrl;
@@ -773,25 +800,28 @@ export const sendLeadConfirmationEmail = async (lead) => {
   return await sendEmail({ to: lead.email, subject, html, text: `Thank you for your inquiry, ${lead.name}!`, isImportant: true, priority: 'high' });
 };
 
-// 6. Admin Notification on New Lead
+// 6. Admin Notification on New Lead or Contact Form Message
 export const sendAdminNewLeadAlert = async (lead) => {
   const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
   const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
 
-  const subject = `🚨 [IMPORTANT INCOMING LEAD] ${lead.name} — ${lead.websiteType} (${lead.budget})`;
+  const isContactForm = lead.industry === 'Direct Contact Form' || lead.websiteType?.includes('Contact Form') || lead.budget === 'Custom Quotation';
+  const subject = isContactForm
+    ? `🚨 [NEW CONTACT MESSAGE] ${lead.name} (${lead.phone}) — LOCAL2BRAND`
+    : `🚨 [IMPORTANT INCOMING LEAD] ${lead.name} — ${lead.websiteType} (${lead.budget})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
       <div style="display: inline-block; background-color: #fef3c7; border: 1px solid #fde68a; color: #b45309; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-bottom: 12px;">
-        ⚡ NEW INCOMING PROJECT PROPOSAL
+        ${isContactForm ? '💬 NEW CONTACT MESSAGE / INQUIRY' : '⚡ NEW INCOMING PROJECT PROPOSAL'}
       </div>
 
       <!-- Adaptive Spec Table -->
       <table class="bg-box border-theme" style="width: 100% !important; max-width: 100%; table-layout: fixed; border-collapse: collapse; background-color: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-sizing: border-box;">
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
-          <td class="text-muted" style="padding: 11px 12px; color: #64748b; width: 34%; font-size: 12px; font-weight: 600; vertical-align: top;">Client Name:</td>
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; width: 34%; font-size: 12px; font-weight: 600; vertical-align: top;">Sender / Client:</td>
           <td class="text-title" style="padding: 11px 12px; font-weight: 800; color: #0f172a; width: 66%; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.name}</td>
         </tr>
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
@@ -806,21 +836,19 @@ export const sendAdminNewLeadAlert = async (lead) => {
             <a href="mailto:${lead.email}" style="color: #2563eb; text-decoration: none;">${lead.email}</a>
           </td>
         </tr>
+        ${lead.businessName ? `
+          <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+            <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Business:</td>
+            <td class="text-title" style="padding: 11px 12px; font-weight: 700; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.businessName}</td>
+          </tr>
+        ` : ''}
         <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
-          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Business:</td>
-          <td class="text-title" style="padding: 11px 12px; font-weight: 700; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.businessName || 'N/A'}</td>
-        </tr>
-        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
-          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Type &amp; Domain:</td>
-          <td class="text-body" style="padding: 11px 12px; color: #334155; font-weight: 600; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.websiteType} (${lead.industry || 'Web'})</td>
-        </tr>
-        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
-          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Budget / Time:</td>
-          <td style="padding: 11px 12px; font-weight: 800; color: #d97706; font-size: 13px; vertical-align: top;">${lead.budget} &bull; ${lead.timeline}</td>
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Category:</td>
+          <td class="text-body" style="padding: 11px 12px; color: #334155; font-weight: 600; font-size: 13px; vertical-align: top; word-break: break-word;">${lead.websiteType}</td>
         </tr>
         ${lead.requirements ? `
           <tr>
-            <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Specs / Notes:</td>
+            <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Message / Requirements:</td>
             <td class="text-muted" style="padding: 11px 12px; color: #475569; font-size: 12px; font-style: italic; vertical-align: top; word-break: break-word;">${lead.requirements}</td>
           </tr>
         ` : ''}
@@ -829,16 +857,74 @@ export const sendAdminNewLeadAlert = async (lead) => {
   `;
 
   const html = wrapAgencyEmail({
-    preheader: `New proposal from ${lead.name} (${lead.phone}) for ${lead.websiteType}.`,
-    headerBadge: '🚨 IMPORTANT • ADMIN INCOMING LEAD',
-    title: `New Project Proposal: ${lead.websiteType}`,
-    subtitle: `Client: ${lead.name} &bull; ${lead.websiteType}`,
+    preheader: `New contact message from ${lead.name} (${lead.phone}).`,
+    headerBadge: isContactForm ? '💬 ADMIN CONTACT ALERT' : '🚨 IMPORTANT • ADMIN INCOMING LEAD',
+    title: isContactForm ? `New Contact Message: ${lead.name}` : `New Project Proposal: ${lead.websiteType}`,
+    subtitle: `Client: ${lead.name} &bull; ${lead.phone}`,
     contentHtml,
     ctaText: 'Open Leads Desk in Admin',
     ctaUrl: `${clientUrl}/admin/leads`,
   });
 
-  return await sendEmail({ to: recipients, subject, html, text: `New lead from ${lead.name}: ${lead.phone}`, isImportant: true, priority: 'high' });
+  return await sendEmail({ to: recipients, subject, html, text: `New inquiry from ${lead.name}: ${lead.phone}`, isImportant: true, priority: 'high' });
+};
+
+// 6a. Contact Form Confirmation Email (to Client) - Clean Message Intake Note
+export const sendContactFormConfirmationEmail = async (contactDoc) => {
+  if (!contactDoc.email) return;
+  const clientUrl = getClientUrl();
+  const contactName = contactDoc.name || 'Valued Client';
+  const subject = `💬 We Received Your Message — LOCAL2BRAND Client Desk`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
+        Hi ${contactName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Thank you for contacting <strong>LOCAL2BRAND</strong>. We have received your inquiry / consultation note. Our engineering &amp; client relations team is reviewing your message.
+      </p>
+
+      <table class="bg-box border-theme" style="width: 100% !important; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin: 14px 0; background-color: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-sizing: border-box;">
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; width: 34%; font-size: 12px; font-weight: 600; vertical-align: top;">Name:</td>
+          <td class="text-title" style="padding: 11px 12px; font-weight: 800; color: #0f172a; font-size: 13px; vertical-align: top; word-break: break-word;">${contactDoc.name}</td>
+        </tr>
+        <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+          <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Phone:</td>
+          <td style="padding: 11px 12px; font-weight: 800; color: #059669; font-family: monospace; font-size: 14px; vertical-align: top;">${contactDoc.phone}</td>
+        </tr>
+        ${contactDoc.businessName ? `
+          <tr class="border-theme" style="border-bottom: 1px solid #e2e8f0;">
+            <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Business / Brand:</td>
+            <td class="text-title" style="padding: 11px 12px; font-weight: 700; color: #0f172a; font-size: 13px; vertical-align: top;">${contactDoc.businessName}</td>
+          </tr>
+        ` : ''}
+        ${contactDoc.requirements ? `
+          <tr>
+            <td class="text-muted" style="padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 600; vertical-align: top;">Message:</td>
+            <td class="text-body" style="padding: 11px 12px; color: #334155; font-size: 13px; vertical-align: top; word-break: break-word;">${contactDoc.requirements}</td>
+          </tr>
+        ` : ''}
+      </table>
+
+      <p class="text-muted" style="margin: 12px 0 0 0; color: #64748b; font-size: 12px; line-height: 1.5;">
+        ⚡ <strong>Next Step:</strong> Our team will get in touch with you at <strong>${contactDoc.phone}</strong>. If you need urgent assistance, you can also request an instant phone call.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Thank you for reaching out to LOCAL2BRAND. We have received your inquiry.`,
+    headerBadge: '💬 MESSAGE RECEIVED • CLIENT DESK',
+    title: `Message Received! 👋`,
+    subtitle: `We will connect with you shortly.`,
+    contentHtml,
+    ctaText: 'Visit LOCAL2BRAND Website',
+    ctaUrl: clientUrl,
+  });
+
+  return await sendEmail({ to: contactDoc.email, subject, html, text: `Thank you for contacting LOCAL2BRAND, ${contactName}! We received your inquiry and will contact you at ${contactDoc.phone}.`, isImportant: true, priority: 'high' });
 };
 
 // 6b. Lead / Proposal Status Update Email (to Client)
@@ -1145,7 +1231,7 @@ export const sendOrderDeliveredEmail = async (reqDoc) => {
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || reqDoc.fullName || reqDoc.name || 'Valued Client';
   const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || reqDoc.businessName || 'Your Business';
-  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
+  const clientEmail = resolveClientEmail(reqDoc);
   const liveUrl = reqDoc.liveUrl || reqDoc.domain || clientUrl;
   const pdfUrl = reqDoc.drivePdfLink || reqDoc.pdfUrl || reqDoc.invoicePdfUrl || reqDoc.documentUrl;
 
@@ -1385,52 +1471,6 @@ export const sendCallbackResolutionEmail = async (callback) => {
   return await sendCallbackStatusUpdateEmail(callback, 'resolved');
 };
 
-// 12. Direct Contact Form Submission Email (to Client)
-export const sendContactFormConfirmationEmail = async (contact) => {
-  if (!contact.email) return;
-  const clientUrl = getClientUrl();
-  const subject = `✉️ [IMPORTANT] Message Received: We're reviewing your inquiry — LOCAL2BRAND ✉️`;
-
-  const contentHtml = `
-    <div style="margin: 10px 0 16px 0;">
-      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
-        Hi ${contact.name},
-      </p>
-      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
-        Thank you for reaching out to <strong>LOCAL2BRAND</strong>. We have received your message regarding <strong>${contact.businessName || contact.websiteType || 'your website'}</strong>.
-      </p>
-
-      <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin: 14px 0; box-sizing: border-box;">
-        <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Your Message:</div>
-        <div class="text-body" style="font-size: 13px; color: #475569; font-style: italic; line-height: 1.5; word-break: break-word;">"${contact.requirements || contact.message || 'General project inquiry'}"</div>
-      </div>
-
-      <p class="text-muted" style="margin: 12px 0 0 0; color: #64748b; font-size: 12px; line-height: 1.5;">
-        ⚡ Our team responds to all inquiries within <strong>15–30 minutes</strong> during standard business hours.
-      </p>
-    </div>
-  `;
-
-  const html = wrapAgencyEmail({
-    preheader: `We have received your message and assigned an engineer to review your requirements.`,
-    headerBadge: '✉️ IMPORTANT • DIRECT INQUIRY CONFIRMATION',
-    title: `Message Received! 👋`,
-    subtitle: `Our team will get back to you shortly.`,
-    contentHtml,
-    ctaText: 'Explore Ready Website Demos',
-    ctaUrl: `${clientUrl}/demos`,
-  });
-
-  return await sendEmail({
-    to: contact.email,
-    subject,
-    html,
-    text: `Thank you for contacting LOCAL2BRAND, ${contact.name}!`,
-    isImportant: true,
-    priority: 'high',
-  });
-};
-
 // 13. Game Reward Won Email (Automatic Notification to Logged-in Users)
 export const sendGameRewardWinEmail = async ({ user, prize }) => {
   if (!user || !user.email || !prize) return;
@@ -1486,7 +1526,7 @@ export const sendGameRewardWinEmail = async ({ user, prize }) => {
 
 // 14. Requirement Deletion / Cancellation Notice (to Client)
 export const sendRequirementDeletionEmail = async (reqDoc, reason = '') => {
-  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
+  const clientEmail = resolveClientEmail(reqDoc);
   if (!clientEmail) {
     console.warn('sendRequirementDeletionEmail notice: No recipient client email found');
     return { success: false, error: 'No client email' };
@@ -1557,7 +1597,7 @@ export const sendRequirementDeletionEmail = async (reqDoc, reason = '') => {
 
 // 14b. Requirement Rejection Notice (to Client)
 export const sendRequirementRejectedEmail = async (reqDoc, reason = '') => {
-  const clientEmail = reqDoc.clientInfo?.email || reqDoc.email || reqDoc.emailAddress || reqDoc.answers?.emailAddress || reqDoc.fullFormData?.emailAddress;
+  const clientEmail = resolveClientEmail(reqDoc);
   if (!clientEmail) {
     console.warn('sendRequirementRejectedEmail notice: No recipient client email found');
     return { success: false, error: 'No client email' };

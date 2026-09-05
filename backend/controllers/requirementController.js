@@ -521,11 +521,12 @@ export const updateRequirementStatus = async (req, res) => {
     if (mongoose.connection.readyState === 1) {
       try {
         const { default: Requirement } = await import('../models/Requirement.js');
+        await import('../models/User.js');
         updated = await Requirement.findOneAndUpdate(
           { $or: [{ requirementId: id }, ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : [])] },
           { $set: updatePayload },
           { new: true }
-        );
+        ).populate('user');
       } catch (e) {
         console.warn('MongoDB update status notice:', e.message);
       }
@@ -544,14 +545,12 @@ export const updateRequirementStatus = async (req, res) => {
     }
 
     // Automatically send appropriate status/delivery/rejection email to client
-    if (updated.clientInfo?.email || updated.email) {
-      if (status === 'Rejected' || status === 'Cancelled') {
-        sendRequirementRejectedEmail(updated, finalRejectionReason).catch((err) => console.warn('Rejection email notice:', err.message));
-      } else if (status === 'Completed' || status === 'Delivered') {
-        sendOrderDeliveredEmail(updated).catch((err) => console.warn('Delivery handover email notice:', err.message));
-      } else {
-        sendRequirementStatusUpdateEmail(updated).catch((err) => console.warn('Status email update notice:', err.message));
-      }
+    if (status === 'Rejected' || status === 'Cancelled') {
+      sendRequirementRejectedEmail(updated, finalRejectionReason).catch((err) => console.warn('Rejection email notice:', err.message));
+    } else if (status === 'Completed' || status === 'Delivered') {
+      sendOrderDeliveredEmail(updated).catch((err) => console.warn('Delivery handover email notice:', err.message));
+    } else {
+      sendRequirementStatusUpdateEmail(updated).catch((err) => console.warn('Status email update notice:', err.message));
     }
 
     res.status(200).json({

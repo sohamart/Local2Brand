@@ -1,5 +1,14 @@
 [
   {
+    "_id": "notif_1788606347675",
+    "title": "New AI Chat Callback Request",
+    "message": "Soham Dutta requested a call at 9876543210 (⚡ ASAP (Within 15-30 mins))",
+    "type": "callback",
+    "link": "/admin/callbacks",
+    "isRead": false,
+    "createdAt": "2026-09-05T11:05:47.675Z"
+  },
+  {
     "_id": "notif_1788275839582",
     "title": "Test Requirement Submitted",
     "message": "Kolkata Biryani Hub submitted requirements",
