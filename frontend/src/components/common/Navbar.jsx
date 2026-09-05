@@ -728,7 +728,6 @@ export default function Navbar() {
 
             {/* 4. MOBILE RIGHT ACTION BUTTONS */}
             <div className="flex items-center gap-1.5 sm:gap-2 md:hidden">
-              <NotificationBell />
               <ThemeToggle />
 
               {!user ? (
@@ -816,8 +815,9 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {/* Right: Theme Toggle & Close (X) Button */}
+            {/* Right: Notification Bell, Theme Toggle & Close (X) Button */}
             <div className="flex items-center gap-2">
+              <NotificationBell />
               <ThemeToggle />
               <button
                 onClick={() => setMobileMenuOpen(false)}
