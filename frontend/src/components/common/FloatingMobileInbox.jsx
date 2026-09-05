@@ -40,9 +40,11 @@ export default function FloatingMobileInbox() {
     }
   }, []);
 
-  // Fetch recent inbox items when modal opens
-  const fetchRecentNotifications = useCallback(async () => {
-    setLoadingList(true);
+  // Fetch recent inbox items (pre-fetched and silently revalidated)
+  const fetchRecentNotifications = useCallback(async (isInitial = false) => {
+    if (isInitial && notifications.length === 0) {
+      setLoadingList(true);
+    }
     try {
       const res = await notificationApi.getInbox({ limit: 12 });
       if (res?.success) {
@@ -52,23 +54,27 @@ export default function FloatingMobileInbox() {
         }
       }
     } catch (err) {
-      console.warn('Failed to load mobile notifications:', err.message);
+      // Silent non-blocking
     } finally {
       setLoadingList(false);
     }
-  }, []);
+  }, [notifications.length]);
 
+  // Initial load on mount & periodic polling
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
+    fetchRecentNotifications(false);
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 20000);
     return () => clearInterval(interval);
-  }, [fetchUnreadCount, user]);
+  }, [fetchUnreadCount, fetchRecentNotifications, user]);
 
   useEffect(() => {
     if (isOpen) {
-      fetchRecentNotifications();
+      fetchRecentNotifications(notifications.length === 0);
     }
-  }, [isOpen, fetchRecentNotifications]);
+  }, [isOpen, fetchRecentNotifications, notifications.length]);
 
   const handleMarkRead = async (id, e) => {
     if (e) e.stopPropagation();

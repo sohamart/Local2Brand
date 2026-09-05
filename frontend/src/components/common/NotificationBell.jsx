@@ -47,9 +47,11 @@ export default function NotificationBell({ className = '' }) {
     }
   }, []);
 
-  // Fetch recent inbox items when popover opens
-  const fetchRecentNotifications = useCallback(async () => {
-    setLoadingList(true);
+  // Fetch recent inbox items when popover opens (with silent background revalidation)
+  const fetchRecentNotifications = useCallback(async (isInitial = false) => {
+    if (isInitial && notifications.length === 0) {
+      setLoadingList(true);
+    }
     try {
       const res = await notificationApi.getInbox({ limit: 8 });
       if (res?.success) {
@@ -59,25 +61,28 @@ export default function NotificationBell({ className = '' }) {
         }
       }
     } catch (err) {
-      console.warn('Failed to load notifications:', err.message);
+      // Non-blocking
     } finally {
       setLoadingList(false);
     }
-  }, []);
+  }, [notifications.length]);
 
-  // Periodic unread count polling
+  // Periodic unread count polling & background prefetch
   useEffect(() => {
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
+    fetchRecentNotifications(false);
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 20000);
     return () => clearInterval(interval);
-  }, [fetchUnreadCount, user]);
+  }, [fetchUnreadCount, fetchRecentNotifications, user]);
 
-  // When popover opens, fetch recent list
+  // When popover opens, revalidate
   useEffect(() => {
     if (isOpen) {
-      fetchRecentNotifications();
+      fetchRecentNotifications(notifications.length === 0);
     }
-  }, [isOpen, fetchRecentNotifications]);
+  }, [isOpen, fetchRecentNotifications, notifications.length]);
 
   // Close dropdown on outside click
   useEffect(() => {

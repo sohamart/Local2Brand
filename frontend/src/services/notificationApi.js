@@ -19,6 +19,11 @@ export const notificationApi = {
     return api.get('/notifications/unread-count');
   },
 
+  // Get single notification with full details & HTML email replica
+  getNotificationById: async (id) => {
+    return api.get(`/notifications/${id}`);
+  },
+
   // Mark single notification as read
   markAsRead: async (id) => {
     return api.put(`/notifications/${id}/read`);

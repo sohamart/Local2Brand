@@ -56,6 +56,10 @@ const notificationSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    expiresAt: {
+      type: Date,
+      default: null,
+    },
     priority: {
       type: String,
       enum: ['high', 'normal', 'low'],
@@ -67,9 +71,14 @@ const notificationSchema = new mongoose.Schema(
   }
 );
 
+// High-speed compound indexes for fast inbox filtering
 notificationSchema.index({ recipient: 1, isRead: 1, createdAt: -1 });
 notificationSchema.index({ recipientRole: 1, isRead: 1, createdAt: -1 });
-notificationSchema.index({ recipientEmail: 1, createdAt: -1 });
+notificationSchema.index({ recipientEmail: 1, isRead: 1, createdAt: -1 });
+notificationSchema.index({ readAt: 1, isRead: 1 });
+
+// MongoDB TTL index: automatically deletes document when expiresAt timestamp arrives (3 days after read)
+notificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const Notification = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
 export default Notification;

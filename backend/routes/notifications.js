@@ -229,6 +229,18 @@ router.get('/inbox', protect, async (req, res) => {
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 25));
     const skip = (pageNum - 1) * limitNum;
 
+    const now = new Date();
+    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+
+    // Asynchronous non-blocking background cleanup for read items older than 3 days
+    Notification.deleteMany({
+      isRead: true,
+      $or: [
+        { expiresAt: { $lte: now } },
+        { readAt: { $lte: threeDaysAgo } }
+      ]
+    }).catch(() => {});
+
     // Scope query based on role
     const conditions = [];
 
@@ -251,7 +263,25 @@ router.get('/inbox', protect, async (req, res) => {
       }
     }
 
-    const filter = { $or: conditions };
+    const filter = {
+      $or: conditions,
+      // Exclude read notifications older than 3 days
+      $and: [
+        {
+          $or: [
+            { isRead: false },
+            { 
+              isRead: true, 
+              $or: [
+                { expiresAt: { $gt: now } },
+                { readAt: { $gt: threeDaysAgo } },
+                { expiresAt: null, readAt: null }
+              ] 
+            }
+          ]
+        }
+      ]
+    };
 
     if (type && type !== 'all') {
       filter.type = type;
@@ -263,20 +293,20 @@ router.get('/inbox', protect, async (req, res) => {
 
     if (search && typeof search === 'string' && search.trim()) {
       const s = search.trim();
-      filter.$and = [
-        {
-          $or: [
-            { title: { $regex: s, $options: 'i' } },
-            { message: { $regex: s, $options: 'i' } },
-            { category: { $regex: s, $options: 'i' } },
-            { recipientEmail: { $regex: s, $options: 'i' } },
-          ],
-        },
-      ];
+      filter.$and.push({
+        $or: [
+          { title: { $regex: s, $options: 'i' } },
+          { message: { $regex: s, $options: 'i' } },
+          { category: { $regex: s, $options: 'i' } },
+          { recipientEmail: { $regex: s, $options: 'i' } },
+        ],
+      });
     }
 
+    // High-speed lightweight projection (excludes heavy emailHtml for instantaneous list loads)
     const [notifications, total, unreadCount] = await Promise.all([
       Notification.find(filter)
+        .select('-emailHtml')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNum)
@@ -347,15 +377,42 @@ router.get('/unread-count', protect, async (req, res) => {
   }
 });
 
-// @desc    Mark a single notification as read
+// @desc    Get a single notification with full details & HTML email replica
+// @route   GET /api/notifications/:id
+// @access  Private
+router.get('/:id', protect, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const notification = await Notification.findById(id).lean();
+
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      notification,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch notification details',
+    });
+  }
+});
+
+// @desc    Mark a single notification as read (auto expires 3 days after read)
 // @route   PUT /api/notifications/:id/read
 // @access  Private
 router.put('/:id/read', protect, async (req, res) => {
   try {
     const { id } = req.params;
+    const now = new Date();
+    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Auto delete 3 days after read
+
     const notification = await Notification.findByIdAndUpdate(
       id,
-      { isRead: true, readAt: new Date() },
+      { isRead: true, readAt: now, expiresAt },
       { new: true }
     );
 
@@ -375,7 +432,7 @@ router.put('/:id/read', protect, async (req, res) => {
   }
 });
 
-// @desc    Mark all notifications in scope as read
+// @desc    Mark all notifications in scope as read (auto expires 3 days after read)
 // @route   PUT /api/notifications/read-all
 // @access  Private
 router.put('/read-all', protect, async (req, res) => {
@@ -400,15 +457,18 @@ router.put('/read-all', protect, async (req, res) => {
       }
     }
 
+    const now = new Date();
+    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Auto delete 3 days after read
+
     const result = await Notification.updateMany(
       { $or: conditions, isRead: false },
-      { isRead: true, readAt: new Date() }
+      { isRead: true, readAt: now, expiresAt }
     );
 
     return res.status(200).json({
       success: true,
       modifiedCount: result.modifiedCount,
-      message: 'All notifications marked as read',
+      message: 'All notifications marked as read (will auto-archive in 3 days)',
     });
   } catch (error) {
     return res.status(500).json({
