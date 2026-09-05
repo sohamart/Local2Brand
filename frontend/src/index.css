@@ -97,6 +97,36 @@
   animation: gradientFlow 4s ease infinite;
 }
 
+@keyframes bellSwing {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  8%, 24% {
+    transform: rotate(14deg);
+  }
+  16%, 32% {
+    transform: rotate(-14deg);
+  }
+  40% {
+    transform: rotate(8deg);
+  }
+  48% {
+    transform: rotate(-5deg);
+  }
+  56% {
+    transform: rotate(2deg);
+  }
+  64% {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-bell-swing {
+  animation: bellSwing 2.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+  transform-origin: top center;
+  display: inline-block;
+}
+
 
 * {
   border-color: rgba(226, 232, 240, 0.5);

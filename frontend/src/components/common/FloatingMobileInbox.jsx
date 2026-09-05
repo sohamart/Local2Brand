@@ -139,19 +139,19 @@ export default function FloatingMobileInbox() {
         >
           {/* Ambient Glow Aura when there are unread messages */}
           {unreadCount > 0 && (
-            <span className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 opacity-60 blur-md animate-pulse pointer-events-none" />
+            <span className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 opacity-50 blur-md animate-pulse pointer-events-none" />
           )}
 
-          {/* Premium Glassmorphic Squircle Container */}
-          <div className="relative w-12 h-12 rounded-2xl bg-white/95 dark:bg-[#0b1120]/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-[0_8px_20px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all duration-300 group-hover:border-amber-400 dark:group-hover:border-amber-500">
-            {/* Bell Icon with distinctive warm amber / violet highlight */}
+          {/* Premium Glassmorphic Squircle Container with Subtle Light Border */}
+          <div className="relative w-12 h-12 rounded-2xl bg-white/95 dark:bg-[#0b1120]/95 backdrop-blur-xl border border-purple-400/40 dark:border-purple-400/35 ring-1 ring-slate-900/10 dark:ring-white/15 shadow-[0_8px_22px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.45)] flex items-center justify-center transition-all duration-300 group-hover:border-purple-500 dark:group-hover:border-purple-300">
+            {/* Bell Icon with continuous natural ringing swing animation */}
             {unreadCount > 0 ? (
-              <div className="relative">
-                <BellRing className="w-5 h-5 text-amber-500 dark:text-amber-400 animate-wiggle drop-shadow-xs" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#0b1120]" />
+              <div className="relative flex items-center justify-center">
+                <BellRing className="w-5 h-5 text-amber-500 dark:text-amber-400 animate-bell-swing drop-shadow-xs" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#0b1120] animate-ping" />
               </div>
             ) : (
-              <Bell className="w-5 h-5 text-slate-700 dark:text-slate-200 transition-colors group-hover:text-amber-500" />
+              <Bell className="w-5 h-5 text-slate-700 dark:text-slate-200 animate-bell-swing transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400" />
             )}
           </div>
 
