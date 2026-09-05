@@ -12,6 +12,7 @@ import CallbackModal from './components/common/CallbackModal';
 import AuthModal from './components/common/AuthModal';
 import LogoutOverlay from './components/common/LogoutOverlay';
 import AssistantChatbot from './components/common/AssistantChatbot';
+import FloatingMobileInbox from './components/common/FloatingMobileInbox';
 import NotificationPrompt from './components/common/NotificationPrompt';
 import Preloader from './components/common/Preloader';
 import MaintenanceMode from './components/common/MaintenanceMode';
@@ -261,8 +262,11 @@ function MainAppContent() {
         </PageTransition>
       </div>
 
-      {/* Floating Interactive Assistant */}
+      {/* Floating Interactive Assistant (Bottom-Right) */}
       {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <AssistantChatbot />}
+
+      {/* Floating Mobile Inbox & Notifications Trigger (Bottom-Left on Mobile, opposite to Chatbot) */}
+      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <FloatingMobileInbox />}
 
       {/* Global Push Notification Permission Prompt */}
       <NotificationPrompt />
