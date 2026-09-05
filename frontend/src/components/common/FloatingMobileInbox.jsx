@@ -123,36 +123,38 @@ export default function FloatingMobileInbox() {
 
   return (
     <>
-      {/* Floating Trigger Button on Mobile (Opposite to Assistant Chatbot on bottom-right) */}
-      <div className="fixed bottom-4 left-4 z-[99990] md:hidden pointer-events-auto">
+      {/* Floating Notification Bell Trigger on Mobile (Opposite to Assistant Chatbot on bottom-right) */}
+      <div className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-[99990] md:hidden pointer-events-auto">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          aria-label="Open Notifications & Inbox"
-          className="w-14 h-14 rounded-full p-[2px] overflow-hidden flex items-center justify-center transition-all duration-300 transform active:scale-95 cursor-pointer relative group shadow-xl shadow-purple-500/20 dark:shadow-purple-900/40"
+          aria-label="Notifications & Inbox"
+          className="relative group transition-transform duration-200 active:scale-95 cursor-pointer"
         >
-          {/* Subtle Rotating Shimmer Border */}
-          <span className="absolute -inset-[150%] rounded-full chatbot-laser-border pointer-events-none opacity-80" />
+          {/* Ambient Glow Aura when there are unread messages */}
+          {unreadCount > 0 && (
+            <span className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 opacity-60 blur-md animate-pulse pointer-events-none" />
+          )}
 
-          {/* High-Contrast Core */}
-          <div className="w-full h-full rounded-full bg-white dark:bg-[#070d19] border-2 border-purple-500/70 dark:border-purple-400/80 flex flex-col items-center justify-center relative z-10 select-none shadow-inner">
+          {/* Premium Glassmorphic Squircle Container */}
+          <div className="relative w-12 h-12 rounded-2xl bg-white/95 dark:bg-[#0b1120]/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-[0_8px_20px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_25px_rgba(0,0,0,0.5)] flex items-center justify-center transition-all duration-300 group-hover:border-amber-400 dark:group-hover:border-amber-500">
+            {/* Bell Icon with distinctive warm amber / violet highlight */}
             {unreadCount > 0 ? (
-              <BellRing className="w-5 h-5 text-purple-600 dark:text-purple-400 animate-wiggle" />
+              <div className="relative">
+                <BellRing className="w-5 h-5 text-amber-500 dark:text-amber-400 animate-wiggle drop-shadow-xs" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#0b1120]" />
+              </div>
             ) : (
-              <Inbox className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            )}
-            
-            <span className="font-black text-[8.5px] tracking-wider uppercase text-purple-900 dark:text-purple-300 leading-none mt-0.5">
-              Inbox
-            </span>
-
-            {/* Pulsing Unread Badge Pill */}
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-purple-600 text-white text-[10px] font-black flex items-center justify-center shadow-lg shadow-pink-500/50 animate-pulse border border-white dark:border-slate-900">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
+              <Bell className="w-5 h-5 text-slate-700 dark:text-slate-200 transition-colors group-hover:text-amber-500" />
             )}
           </div>
+
+          {/* Prominent High-Contrast Floating Notification Count Badge */}
+          {unreadCount > 0 && (
+            <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] px-1.5 rounded-full bg-gradient-to-r from-rose-500 to-red-600 text-white text-[10.5px] font-black tracking-tight flex items-center justify-center shadow-lg shadow-rose-500/50 border-2 border-white dark:border-[#0b1120] animate-bounce">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
         </button>
       </div>
 
