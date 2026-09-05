@@ -105,18 +105,23 @@ export const getAllCallbacks = async (req, res) => {
 
 export const updateCallbackStatus = async (req, res) => {
   try {
-    const { status, adminNotes } = req.body;
+    const { status, adminNotes, drivePdfLink, pdfUrl, documentUrl } = req.body;
+    const resolvedPdf = drivePdfLink || pdfUrl || documentUrl;
     const updates = {};
     if (status) updates.status = status;
     if (adminNotes !== undefined) updates.adminNotes = adminNotes;
+    if (resolvedPdf !== undefined) {
+      updates.drivePdfLink = resolvedPdf;
+      updates.pdfUrl = resolvedPdf;
+    }
 
     const callback = await dataStore.updateCallback(req.params.id, updates);
     if (!callback) return res.status(404).json({ success: false, message: 'Callback request not found' });
 
-    // Instantly notify client on any status change or admin notes
+    // Instantly notify client on any status change, pdf link, or admin notes
     if (callback.email) {
       setImmediate(() => {
-        sendCallbackStatusUpdateEmail(callback, status, adminNotes).catch((err) =>
+        sendCallbackStatusUpdateEmail(callback, status, adminNotes, resolvedPdf).catch((err) =>
           console.warn('Callback status update email notice:', err.message)
         );
       });

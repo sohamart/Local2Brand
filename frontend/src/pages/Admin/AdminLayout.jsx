@@ -97,12 +97,21 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-slate-100/70 dark:bg-[#07090e] text-slate-900 dark:text-slate-100 transition-colors duration-200">
       
+      {/* Mobile Backdrop Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-40 lg:hidden transition-opacity cursor-pointer"
+          aria-label="Close sidebar overlay"
+        />
+      )}
+
       {/* 1. Desktop & Mobile Sidebar */}
       <aside
         data-lenis-prevent="true"
         onWheel={(e) => e.stopPropagation()}
         className={`fixed inset-y-0 left-0 z-50 w-64 h-dvh max-h-screen bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-r border-slate-200 dark:border-slate-800 flex flex-col justify-between transition-transform duration-300 overflow-hidden ${
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          mobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Top Logo */}

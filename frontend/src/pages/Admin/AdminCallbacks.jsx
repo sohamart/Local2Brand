@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PhoneCall, Trash2, CheckCircle2, Clock, Filter, Phone, Mail, User, AlertCircle, RefreshCw, MessageSquare, ExternalLink } from 'lucide-react';
+import { PhoneCall, Trash2, CheckCircle2, Clock, Filter, Phone, Mail, User, AlertCircle, RefreshCw, MessageSquare, ExternalLink, Eye, X } from 'lucide-react';
 import api from '../../services/api';
 import { SEO } from '../../components/common/CommonUI';
 import { toast } from 'react-toastify';
@@ -10,6 +10,11 @@ export default function AdminCallbacks() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCallback, setSelectedCallback] = useState(null);
+  const [cbStatus, setCbStatus] = useState('pending');
+  const [cbNotes, setCbNotes] = useState('');
+  const [cbDrivePdfLink, setCbDrivePdfLink] = useState('');
+  const [isSavingCb, setIsSavingCb] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState(new Date());
 
@@ -46,10 +51,54 @@ export default function AdminCallbacks() {
         setCallbacks((prev) =>
           prev.map((c) => (c._id === id ? { ...c, status: newStatus } : c))
         );
-        toast.success(`Callback status changed to "${newStatus}"`);
+        if (selectedCallback && selectedCallback._id === id) {
+          setSelectedCallback((prev) => ({ ...prev, status: newStatus }));
+          setCbStatus(newStatus);
+        }
+        toast.success(`Callback status changed to "${newStatus}" & email sent!`);
       }
     } catch (err) {
       toast.error('Failed to update status: ' + (err.message || 'Error'));
+    }
+  };
+
+  const handleOpenCallbackModal = (cb) => {
+    setSelectedCallback(cb);
+    setCbStatus(cb.status || 'pending');
+    setCbNotes(cb.adminNotes || cb.notes || '');
+    setCbDrivePdfLink(cb.drivePdfLink || cb.pdfUrl || '');
+  };
+
+  const handleSaveCallbackDetails = async () => {
+    if (!selectedCallback) return;
+    try {
+      setIsSavingCb(true);
+      const res = await api.put(`/callbacks/${selectedCallback._id}`, {
+        status: cbStatus,
+        adminNotes: cbNotes,
+        drivePdfLink: cbDrivePdfLink,
+        pdfUrl: cbDrivePdfLink,
+      });
+      if (res?.success) {
+        setCallbacks((prev) =>
+          prev.map((c) =>
+            c._id === selectedCallback._id
+              ? { ...c, status: cbStatus, adminNotes: cbNotes, drivePdfLink: cbDrivePdfLink }
+              : c
+          )
+        );
+        setSelectedCallback((prev) => ({
+          ...prev,
+          status: cbStatus,
+          adminNotes: cbNotes,
+          drivePdfLink: cbDrivePdfLink,
+        }));
+        toast.success(`Callback updated & notification email dispatched! 🚀`);
+      }
+    } catch (err) {
+      toast.error('Failed to update callback: ' + (err.message || 'Error'));
+    } finally {
+      setIsSavingCb(false);
     }
   };
 
@@ -58,6 +107,7 @@ export default function AdminCallbacks() {
     try {
       await api.delete(`/callbacks/${id}`);
       setCallbacks((prev) => prev.filter((c) => c._id !== id));
+      if (selectedCallback && selectedCallback._id === id) setSelectedCallback(null);
       toast.success('Callback request deleted from database. Notifications dispatched.');
     } catch (err) {
       toast.error('Delete failed: ' + (err.message || 'Error'));
@@ -189,14 +239,24 @@ export default function AdminCallbacks() {
                         </a>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(cb._id)}
-                        className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
-                        title="Delete callback request"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenCallbackModal(cb)}
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-950/50 transition-colors cursor-pointer"
+                          title="Inspect, attach Google Drive PDF & update status"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(cb._id)}
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                          title="Delete callback request"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 text-xs space-y-1.5 border border-slate-100 dark:border-slate-800/80">
@@ -222,6 +282,19 @@ export default function AdminCallbacks() {
                           <p className="text-slate-600 dark:text-slate-300 text-[11px] italic bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
                             {cb.notes}
                           </p>
+                        </div>
+                      )}
+                      {cb.drivePdfLink && (
+                        <div className="pt-1">
+                          <a
+                            href={cb.drivePdfLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                          >
+                            <span>📄 View Drive PDF Document</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
                         </div>
                       )}
                     </div>
@@ -277,6 +350,129 @@ export default function AdminCallbacks() {
             })
           )}
         </div>
+
+        {/* Callback Inspection & Google Drive PDF Attachment Modal */}
+        {selectedCallback && (
+          <div
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-text modal-touch-scroll"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setSelectedCallback(null);
+            }}
+          >
+            <div
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
+              className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[88vh] sm:max-h-[92vh] flex flex-col min-h-0"
+            >
+              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950 shrink-0">
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                    Consultation Desk: {selectedCallback.name}
+                  </h3>
+                  <p className="text-[10px] font-mono text-slate-400">ID: {selectedCallback._id}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedCallback(null)}
+                  className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div
+                data-lenis-prevent="true"
+                onWheel={(e) => e.stopPropagation()}
+                className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs flex-1 min-h-0 custom-scrollbar modal-touch-scroll overscroll-contain"
+                style={{ WebkitOverflowScrolling: 'touch' }}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                  <div><strong className="block text-slate-400 text-[10px]">Client Phone:</strong> <a href={`tel:${selectedCallback.phone}`} className="text-emerald-600 font-bold hover:underline font-mono">{selectedCallback.phone}</a></div>
+                  <div><strong className="block text-slate-400 text-[10px]">Client Email:</strong> {selectedCallback.email ? <a href={`mailto:${selectedCallback.email}`} className="text-blue-600 hover:underline">{selectedCallback.email}</a> : 'Not provided'}</div>
+                  <div><strong className="block text-slate-400 text-[10px]">Preferred Slot:</strong> <strong className="text-amber-600 dark:text-amber-400">{selectedCallback.preferredTime || '⚡ ASAP'}</strong></div>
+                  <div><strong className="block text-slate-400 text-[10px]">Topic:</strong> <span className="font-bold text-purple-600 dark:text-purple-400">{selectedCallback.topic || 'General Consultation'}</span></div>
+                </div>
+
+                {/* Status & Google Drive PDF Link Attachment */}
+                <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                        Consultation Status
+                      </label>
+                      <select
+                        value={cbStatus}
+                        onChange={(e) => setCbStatus(e.target.value)}
+                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-purple-500 cursor-pointer"
+                      >
+                        <option value="pending">⏳ Pending Call</option>
+                        <option value="called">📞 Called / Discussion In Progress</option>
+                        <option value="resolved">✅ Resolved / Proposal Sent</option>
+                        <option value="cancelled">❌ Cancelled</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                          <span>📄 Google Drive PDF Proposal</span>
+                        </label>
+                        {cbDrivePdfLink && (
+                          <a
+                            href={cbDrivePdfLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
+                          >
+                            <span>Preview</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                      </div>
+                      <input
+                        type="url"
+                        value={cbDrivePdfLink}
+                        onChange={(e) => setCbDrivePdfLink(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/... or PDF link"
+                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-indigo-600 dark:text-indigo-400 font-mono focus:outline-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <strong className="block text-slate-500 uppercase font-bold text-[10px] mb-1">
+                      Consultant Notes &amp; Recommendations:
+                    </strong>
+                    <textarea
+                      rows={3}
+                      value={cbNotes}
+                      onChange={(e) => setCbNotes(e.target.value)}
+                      placeholder="Add meeting minutes, project budget discussed, or follow-up notes..."
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      onClick={handleSaveCallbackDetails}
+                      disabled={isSavingCb}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm cursor-pointer hover:opacity-95 disabled:opacity-50"
+                    >
+                      {isSavingCb ? 'Saving & Dispatching Email...' : 'Save & Dispatch Consultation Email 🚀'}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(selectedCallback._id)}
+                      className="text-xs font-bold text-rose-600 hover:underline cursor-pointer"
+                    >
+                      Delete Request
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

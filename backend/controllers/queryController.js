@@ -146,15 +146,20 @@ export const getQueryById = async (req, res) => {
 
 export const updateQueryStatus = async (req, res) => {
   try {
-    const { status, adminNotes } = req.body;
+    const { status, adminNotes, drivePdfLink, pdfUrl, documentUrl } = req.body;
+    const resolvedPdf = drivePdfLink || pdfUrl || documentUrl;
     const updates = {};
     if (status) updates.status = status;
     if (adminNotes !== undefined) updates.adminNotes = adminNotes;
+    if (resolvedPdf !== undefined) {
+      updates.drivePdfLink = resolvedPdf;
+      updates.pdfUrl = resolvedPdf;
+    }
 
     const lead = await dataStore.updateLead(req.params.id, updates);
     if (!lead) return res.status(404).json({ success: false, message: 'Inquiry not found' });
 
-    if (status) {
+    if (lead.email) {
       sendLeadStatusUpdateEmail(lead).catch((err) => console.warn('Status update email error:', err.message));
     }
 

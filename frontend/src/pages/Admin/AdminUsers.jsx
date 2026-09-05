@@ -298,8 +298,8 @@ export default function AdminUsers() {
           )}
         </div>
 
-        {/* Users Table Container */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        {/* Desktop Users Table Container (hidden on mobile, block on md+) */}
+        <div className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-wider">
@@ -538,6 +538,198 @@ export default function AdminUsers() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* Dedicated Mobile Card View (< md) */}
+        <div className="block md:hidden space-y-3.5">
+          {loading && users.length === 0 ? (
+            <div className="py-16 text-center text-slate-400 text-xs bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+              <DashboardLoader
+                title="Loading User Directory..."
+                subtitle="Fetching registered client profiles..."
+                role="admin"
+              />
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-xs bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+              <div className="w-10 h-10 mx-auto rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center mb-2">
+                <Users className="w-5 h-5" />
+              </div>
+              No users found matching your criteria.
+            </div>
+          ) : (
+            filteredUsers.map((u) => {
+              const isCurrent = u._id === currentUser?.id || u.id === currentUser?.id;
+              const isBusy = actionLoadingId === u._id || actionLoadingId === `otp_${u._id}`;
+              const cleanPhone = (u.phone || '').replace(/[^0-9]/g, '');
+              const waNumber = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+
+              return (
+                <div
+                  key={u._id || u.id}
+                  className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
+                >
+                  {/* Top user row */}
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        onClick={() => setInspectingUser(u)}
+                        className="w-11 h-11 rounded-2xl overflow-hidden bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center font-black text-sm shadow-xs border border-white/80 dark:border-slate-700 shrink-0 cursor-pointer"
+                      >
+                        {u.avatar ? (
+                          <img
+                            src={u.avatar}
+                            alt={u.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          u.name?.[0]?.toUpperCase() || 'U'
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="font-extrabold text-slate-900 dark:text-white text-sm flex items-center gap-1.5 truncate">
+                          <span
+                            onClick={() => setInspectingUser(u)}
+                            className="hover:text-purple-600 cursor-pointer truncate"
+                          >
+                            {u.name || 'Unnamed Client'}
+                          </span>
+                          {isCurrent && (
+                            <span className="text-[9px] bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 px-1.5 py-0.2 rounded font-bold shrink-0">
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-slate-400 text-[11px] truncate">
+                          {u.company || 'Individual Client'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Role & Status badges */}
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleRoleToggle(u._id || u.id, u.role)}
+                        disabled={isCurrent || isBusy}
+                        className={`px-2 py-0.5 rounded-full text-[9px] font-black border cursor-pointer ${
+                          u.role === 'admin'
+                            ? 'bg-purple-50 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300'
+                            : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300'
+                        }`}
+                      >
+                        {u.role ? u.role.toUpperCase() : 'USER'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleStatusToggle(u._id || u.id, u.status)}
+                        disabled={isCurrent || isBusy}
+                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold cursor-pointer ${
+                          u.status === 'active'
+                            ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                            : 'bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-300 border border-red-200 dark:border-red-800'
+                        }`}
+                      >
+                        {u.status || 'active'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Contact Info Card */}
+                  <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
+                    <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 truncate">
+                      <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <a href={`mailto:${u.email}`} className="hover:underline truncate text-[11px]">
+                        {u.email}
+                      </a>
+                    </div>
+                    {u.phone && (
+                      <div className="flex items-center justify-between text-[11px]">
+                        <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 font-mono">
+                          <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <a href={`tel:${u.phone}`} className="text-emerald-600 hover:underline">
+                            {u.phone}
+                          </a>
+                        </div>
+                        <a
+                          href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi ${u.name || 'there'}! 👋 This is from LOCAL2BRAND Admin Team.`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] flex items-center gap-1"
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                          <span>WhatsApp</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Verification Status & Orders */}
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {u.isEmailVerified ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-600/40">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                          <span>Verified</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-600/40">
+                          <AlertCircle className="w-3 h-3 text-amber-500" />
+                          <span>Unverified</span>
+                        </span>
+                      )}
+
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                        📦 {u.ordersCount || 0} Orders
+                      </span>
+                    </div>
+
+                    {/* Quick action buttons */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleVerification(u._id || u.id)}
+                        disabled={isBusy}
+                        className={`text-[10px] font-bold px-2 py-1 rounded-xl border cursor-pointer ${
+                          u.isEmailVerified
+                            ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
+                        }`}
+                      >
+                        {u.isEmailVerified ? 'Unverify' : 'Verify ✅'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setInspectingUser(u)}
+                        className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 cursor-pointer"
+                        title="View Full Profile"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+
+                      {!isCurrent && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteUser(u._id || u.id)}
+                          disabled={isBusy}
+                          className="p-1.5 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-600 hover:bg-red-100 cursor-pointer"
+                          title="Delete User"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* User Inspection Modal Drawer */}

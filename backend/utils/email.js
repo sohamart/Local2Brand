@@ -118,7 +118,7 @@ export const formatStatusTitle = (status = '') => {
     .join(' ');
 };
 
-export const sendEmail = async ({ to, subject, html, text, priority = 'normal', isImportant = true }) => {
+export const sendEmail = async ({ to, subject, html, text, priority = 'high', isImportant = true }) => {
   const fromEmail = process.env.EMAIL_FROM || `"LOCAL2BRAND" <${process.env.EMAIL_USER || 'local2brand@zohomail.in'}>`;
   const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
   let transporter = createTransporter();
@@ -154,6 +154,26 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
     return { success: true, simulated: true };
   }
 
+  // High-Priority / Important MIME headers for Primary Inbox placement
+  const emailHeaders = {};
+  if (isImportant || priority === 'high') {
+    emailHeaders['X-Priority'] = '1 (Highest)';
+    emailHeaders['X-MSMail-Priority'] = 'High';
+    emailHeaders['Importance'] = 'High';
+    emailHeaders['Priority'] = 'urgent';
+  } else {
+    emailHeaders['X-Priority'] = '3 (Normal)';
+    emailHeaders['X-MSMail-Priority'] = 'Normal';
+    emailHeaders['Importance'] = 'Normal';
+  }
+
+  // Anti-spam compliance & Deliverability headers (RFC 2369 / RFC 8058)
+  const appClientUrl = getClientUrl();
+  emailHeaders['List-Unsubscribe'] = `<mailto:${supportEmail}?subject=Unsubscribe>, <${appClientUrl}>`;
+  emailHeaders['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
+  emailHeaders['X-Entity-Ref-ID'] = `L2B-DISPATCH-${Date.now()}`;
+  emailHeaders['X-Auto-Response-Suppress'] = 'OOF, AutoReply';
+
   try {
     const info = await transporter.sendMail({
       from: fromEmail,
@@ -162,6 +182,8 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
       subject,
       text: cleanPlainText,
       html,
+      headers: emailHeaders,
+      priority: isImportant || priority === 'high' ? 'high' : 'normal',
     });
     console.log(`✅ Email sent successfully to ${to} (MessageId: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
@@ -180,6 +202,8 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
           subject,
           text: cleanPlainText,
           html,
+          headers: emailHeaders,
+          priority: isImportant || priority === 'high' ? 'high' : 'normal',
         });
         console.log(`✅ Email sent successfully via FALLBACK SMTP to ${to} (MessageId: ${fbInfo.messageId})`);
         return { success: true, messageId: fbInfo.messageId };
@@ -201,8 +225,11 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
 };
 
 // Universal Device-Adaptive (Light & Dark Theme Responsive) Agency Email Generator
-const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml, ctaText, ctaUrl, footerNote, orderId }) => {
+export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml, ctaText, ctaUrl, footerNote, orderId }) => {
   const currentYear = new Date().getFullYear();
+  const clientUrl = getClientUrl();
+  const logoImgUrl = `${clientUrl}/logo.jpg`;
+
   return `
 <!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
@@ -260,14 +287,10 @@ const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml,
         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto; text-align: center;">
           <tr>
             <td align="center" style="vertical-align: middle;">
-              <!-- Brand Logo Emblem -->
-              <div style="width: 52px; height: 52px; margin: 0 auto; background: linear-gradient(135deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); border-radius: 14px; padding: 2px; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);">
-                <div style="background-color: #0f172a; width: 100%; height: 100%; border-radius: 12px; display: table; text-align: center;">
-                  <span style="display: table-cell; vertical-align: middle; font-size: 20px; font-weight: 900; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; letter-spacing: -0.5px;">
-                    L<span style="color: #c026d3;">2</span>B
-                  </span>
-                </div>
-              </div>
+              <!-- Brand Logo Image -->
+              <a href="${clientUrl}" target="_blank" style="text-decoration: none; display: inline-block;">
+                <img src="${logoImgUrl}" alt="LOCAL2BRAND" width="56" height="56" style="width: 56px; height: 56px; border-radius: 14px; display: block; margin: 0 auto; object-fit: cover; border: 1.5px solid #e2e8f0; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.2);" />
+              </a>
             </td>
           </tr>
         </table>
@@ -538,10 +561,11 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
   const clientEmail = reqDoc.clientInfo?.email;
   const status = reqDoc.status || 'Updated';
   const formattedStatus = formatStatusTitle(status);
+  const pdfUrl = reqDoc.drivePdfLink || reqDoc.pdfUrl || reqDoc.documentUrl || reqDoc.attachmentUrl;
 
   if (!clientEmail) return;
 
-  const subject = `Order Update: ${formattedStatus} — ${reqDoc.clientInfo?.businessName || 'Your Website'} (${reqId})`;
+  const subject = `📋 [IMPORTANT] Order Update: ${formattedStatus} — ${reqDoc.clientInfo?.businessName || 'Your Website'} (${reqId})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -564,6 +588,23 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
         </div>
       ` : ''}
 
+      ${pdfUrl ? `
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #6366f1; border-radius: 14px; padding: 16px; margin: 16px 0; text-align: center; box-sizing: border-box;">
+          <div style="font-size: 11px; font-weight: 800; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+            📄 Official Project PDF Document / Proposal Attached
+          </div>
+          <p style="margin: 0 0 10px 0; font-size: 12px; color: #475569;">
+            Our engineering team has attached the official project document / quotation PDF for your review:
+          </p>
+          <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 10px 22px; font-size: 13px; font-weight: 800; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">
+            📥 Open / Download PDF Document (Google Drive)
+          </a>
+          <div style="font-size: 11px; color: #64748b; margin-top: 8px; word-break: break-all;">
+            Direct Link: <a href="${pdfUrl}" target="_blank" style="color: #4f46e5; text-decoration: underline;">${pdfUrl}</a>
+          </div>
+        </div>
+      ` : ''}
+
       ${reqDoc.internalNotes ? `
         <div class="bg-box border-theme" style="background-color: #f8fafc; border-radius: 12px; padding: 12px 16px; border: 1px solid #e2e8f0; margin-top: 14px; box-sizing: border-box;">
           <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Engineer Notes:</div>
@@ -575,7 +616,7 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
 
   const html = wrapAgencyEmail({
     preheader: `Your website order ${reqId} is now ${formattedStatus}. Track milestones live.`,
-    headerBadge: '📋 PROJECT ROADMAP UPDATE',
+    headerBadge: '📋 IMPORTANT • PROJECT ROADMAP UPDATE',
     title: `Order Status: ${formattedStatus}`,
     subtitle: `Current Phase: ${formattedStatus} &bull; Order ID: ${reqId}`,
     orderId: reqId,
@@ -584,14 +625,21 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
     ctaUrl: `${clientUrl}/track-order?id=${reqId}`,
   });
 
-  return await sendEmail({ to: clientEmail, subject, html, text: `Your order ${reqId} status is now ${formattedStatus}` });
+  return await sendEmail({
+    to: clientEmail,
+    subject,
+    html,
+    text: `Your order ${reqId} status is now ${formattedStatus}`,
+    isImportant: true,
+    priority: 'high',
+  });
 };
 
 // 5. Project Inquiry / Lead Submitted Email (to Client)
 export const sendLeadConfirmationEmail = async (lead) => {
   const clientUrl = getClientUrl();
   const leadIdShort = (lead._id || '').toString().slice(-6).toUpperCase();
-  const subject = `Proposal Received: ${lead.websiteType} (#${leadIdShort}) — LOCAL2BRAND`;
+  const subject = `📋 [IMPORTANT] Proposal Received: ${lead.websiteType} (#${leadIdShort}) — LOCAL2BRAND`;
   
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -630,7 +678,7 @@ export const sendLeadConfirmationEmail = async (lead) => {
 
   const html = wrapAgencyEmail({
     preheader: `We have received your website inquiry for ${lead.websiteType}.`,
-    headerBadge: '📋 PROPOSAL INTAKE CONFIRMATION',
+    headerBadge: '📋 IMPORTANT • PROPOSAL INTAKE CONFIRMATION',
     title: `Inquiry Received! 🎉`,
     subtitle: `Reference: #${leadIdShort}`,
     orderId: `#${leadIdShort}`,
@@ -639,7 +687,7 @@ export const sendLeadConfirmationEmail = async (lead) => {
     ctaUrl: `${clientUrl}/dashboard`,
   });
 
-  return await sendEmail({ to: lead.email, subject, html, text: `Thank you for your inquiry, ${lead.name}!` });
+  return await sendEmail({ to: lead.email, subject, html, text: `Thank you for your inquiry, ${lead.name}!`, isImportant: true, priority: 'high' });
 };
 
 // 6. Admin Notification on New Lead
@@ -649,7 +697,7 @@ export const sendAdminNewLeadAlert = async (lead) => {
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
   const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
 
-  const subject = `[New Proposal] ${lead.name} submitted ${lead.websiteType} (${lead.budget})`;
+  const subject = `🚨 [IMPORTANT INCOMING LEAD] ${lead.name} — ${lead.websiteType} (${lead.budget})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -699,7 +747,7 @@ export const sendAdminNewLeadAlert = async (lead) => {
 
   const html = wrapAgencyEmail({
     preheader: `New proposal from ${lead.name} (${lead.phone}) for ${lead.websiteType}.`,
-    headerBadge: '📋 ADMIN INCOMING LEAD',
+    headerBadge: '🚨 IMPORTANT • ADMIN INCOMING LEAD',
     title: `New Project Proposal: ${lead.websiteType}`,
     subtitle: `Client: ${lead.name} &bull; ${lead.websiteType}`,
     contentHtml,
@@ -707,7 +755,7 @@ export const sendAdminNewLeadAlert = async (lead) => {
     ctaUrl: `${clientUrl}/admin/leads`,
   });
 
-  return await sendEmail({ to: recipients, subject, html, text: `New lead from ${lead.name}: ${lead.phone}` });
+  return await sendEmail({ to: recipients, subject, html, text: `New lead from ${lead.name}: ${lead.phone}`, isImportant: true, priority: 'high' });
 };
 
 // 6b. Lead / Proposal Status Update Email (to Client)
@@ -717,7 +765,9 @@ export const sendLeadStatusUpdateEmail = async (lead) => {
   const leadIdShort = (lead._id || '').toString().slice(-6).toUpperCase();
   const status = lead.status || 'Updated';
   const formattedStatus = formatStatusTitle(status);
-  const subject = `Proposal Status Update: ${formattedStatus} — ${lead.websiteType || 'LOCAL2BRAND'} (#${leadIdShort})`;
+  const pdfUrl = lead.drivePdfLink || lead.pdfUrl || lead.attachmentUrl;
+  const notes = lead.adminNotes || '';
+  const subject = `🔔 [IMPORTANT] Proposal Status: ${formattedStatus} — ${lead.websiteType || 'LOCAL2BRAND'} (#${leadIdShort})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -725,19 +775,43 @@ export const sendLeadStatusUpdateEmail = async (lead) => {
         Hi ${lead.name},
       </p>
       <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
-        The status of your project proposal for <strong>${lead.websiteType}</strong> has been updated to:
+        The status of your project proposal for <strong>${lead.websiteType}</strong> has been updated:
       </p>
 
       <div class="bg-box border-theme" style="background-color: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 18px 22px; margin: 16px 0; text-align: center; box-sizing: border-box;">
         <div style="font-size: 11px; color: #166534; text-transform: uppercase; font-weight: 800; margin-bottom: 4px; letter-spacing: 0.5px;">Current Status</div>
         <div style="font-size: 20px; font-weight: 900; color: #15803d; letter-spacing: 0.5px;">${formattedStatus}</div>
       </div>
+
+      ${pdfUrl ? `
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #6366f1; border-radius: 14px; padding: 16px; margin: 16px 0; text-align: center; box-sizing: border-box;">
+          <div style="font-size: 11px; font-weight: 800; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+            📄 Official Project Proposal PDF Document Attached
+          </div>
+          <p style="margin: 0 0 10px 0; font-size: 12px; color: #475569;">
+            Our strategy &amp; technical estimation team has prepared your customized project proposal PDF:
+          </p>
+          <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 10px 22px; font-size: 13px; font-weight: 800; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">
+            📥 Open / Download Proposal PDF (Google Drive)
+          </a>
+          <div style="font-size: 11px; color: #64748b; margin-top: 8px; word-break: break-all;">
+            Direct Link: <a href="${pdfUrl}" target="_blank" style="color: #4f46e5; text-decoration: underline;">${pdfUrl}</a>
+          </div>
+        </div>
+      ` : ''}
+
+      ${notes ? `
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border-radius: 12px; padding: 12px 16px; border: 1px solid #e2e8f0; margin-top: 14px; box-sizing: border-box;">
+          <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Admin &amp; Strategy Notes:</div>
+          <div class="text-body" style="font-size: 13px; color: #334155; word-break: break-word;">${notes}</div>
+        </div>
+      ` : ''}
     </div>
   `;
 
   const html = wrapAgencyEmail({
     preheader: `Your proposal #${leadIdShort} status is now ${formattedStatus}.`,
-    headerBadge: '📋 PROPOSAL STATUS UPDATE',
+    headerBadge: '📋 IMPORTANT • PROPOSAL STATUS UPDATE',
     title: `Proposal Status: ${formattedStatus}`,
     subtitle: `Reference: #${leadIdShort} &bull; ${formattedStatus}`,
     orderId: `#${leadIdShort}`,
@@ -746,7 +820,14 @@ export const sendLeadStatusUpdateEmail = async (lead) => {
     ctaUrl: `${clientUrl}/dashboard`,
   });
 
-  return await sendEmail({ to: lead.email, subject, html, text: `Your proposal #${leadIdShort} status is now ${status}` });
+  return await sendEmail({
+    to: lead.email,
+    subject,
+    html,
+    text: `Your proposal #${leadIdShort} status is now ${status}`,
+    isImportant: true,
+    priority: 'high',
+  });
 };
 
 // 7. Callback Scheduled Email (to Client)
@@ -754,7 +835,7 @@ export const sendCallbackConfirmationEmail = async (callback) => {
   if (!callback.email) return;
   const clientUrl = getClientUrl();
   const cbId = (callback._id || '').toString().slice(-6).toUpperCase();
-  const subject = `Founder Callback Confirmed — LOCAL2BRAND 📞`;
+  const subject = `📞 [IMPORTANT] Founder Callback Confirmed — LOCAL2BRAND 📞`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -789,7 +870,7 @@ export const sendCallbackConfirmationEmail = async (callback) => {
 
   const html = wrapAgencyEmail({
     preheader: `Your 15-min consultation callback is confirmed for ${callback.preferredTime}.`,
-    headerBadge: '📞 FOUNDER CALLBACK QUEUE',
+    headerBadge: '📞 IMPORTANT • FOUNDER CALLBACK QUEUE',
     title: `Callback Request Confirmed! 📞`,
     subtitle: `We'll call you at ${callback.phone} (${callback.preferredTime})`,
     orderId: cbId ? `CALL-${cbId}` : undefined,
@@ -798,7 +879,7 @@ export const sendCallbackConfirmationEmail = async (callback) => {
     ctaUrl: `${clientUrl}/dashboard`,
   });
 
-  return await sendEmail({ to: callback.email, subject, html, text: `Callback request received for ${callback.phone}` });
+  return await sendEmail({ to: callback.email, subject, html, text: `Callback request received for ${callback.phone}`, isImportant: true, priority: 'high' });
 };
 
 // 8. Admin & Brand Instant Alert on Callback Request
@@ -808,7 +889,7 @@ export const sendAdminCallbackAlert = async (callback) => {
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
   const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
 
-  const subject = `🚨 [INSTANT CALLBACK REQUEST] ${callback.name} — ${callback.phone}`;
+  const subject = `🚨 [IMPORTANT CALLBACK REQUEST] ${callback.name} — ${callback.phone}`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -854,7 +935,7 @@ export const sendAdminCallbackAlert = async (callback) => {
 
   const html = wrapAgencyEmail({
     preheader: `Instant callback request from ${callback.name} (${callback.phone}).`,
-    headerBadge: '🚨 FOUNDER CALLBACK ALERT',
+    headerBadge: '🚨 IMPORTANT • FOUNDER CALLBACK ALERT',
     title: `Instant Callback Request! 📞`,
     subtitle: `Client: ${callback.name} &bull; ${callback.phone}`,
     contentHtml,
@@ -862,7 +943,7 @@ export const sendAdminCallbackAlert = async (callback) => {
     ctaUrl: `${clientUrl}/admin/callbacks`,
   });
 
-  return await sendEmail({ to: recipients, subject, html, text: `Instant callback request from ${callback.name} (${callback.phone}) for ${callback.topic}` });
+  return await sendEmail({ to: recipients, subject, html, text: `Instant callback request from ${callback.name} (${callback.phone}) for ${callback.topic}`, isImportant: true, priority: 'high' });
 };
 
 // 8.1 Admin Real-Time Alert on New User Registration
@@ -983,10 +1064,11 @@ export const sendOrderDeliveredEmail = async (reqDoc) => {
   const businessName = reqDoc.clientInfo?.businessName || reqDoc.websiteTypeName || 'Your Business';
   const clientEmail = reqDoc.clientInfo?.email;
   const liveUrl = reqDoc.liveUrl || reqDoc.domain || clientUrl;
+  const pdfUrl = reqDoc.drivePdfLink || reqDoc.pdfUrl || reqDoc.invoicePdfUrl || reqDoc.documentUrl;
 
   if (!clientEmail) return;
 
-  const subject = `🚀 Project Delivered & Published Live: ${businessName} (${reqId}) — LOCAL2BRAND`;
+  const subject = `🚀 [IMPORTANT] Project Delivered & Published Live: ${businessName} (${reqId}) — LOCAL2BRAND`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -1028,6 +1110,23 @@ export const sendOrderDeliveredEmail = async (reqDoc) => {
         </tr>
       </table>
 
+      ${pdfUrl ? `
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #10b981; border-radius: 14px; padding: 16px; margin: 16px 0; text-align: center; box-sizing: border-box;">
+          <div style="font-size: 11px; font-weight: 800; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+            📄 Official Handover &amp; Invoice PDF Document Attached
+          </div>
+          <p style="margin: 0 0 10px 0; font-size: 12px; color: #475569;">
+            You can access and download your project delivery dossier / documentation from Google Drive:
+          </p>
+          <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #059669; color: #ffffff; padding: 10px 22px; font-size: 13px; font-weight: 800; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);">
+            📥 Download Handover PDF Document (Google Drive)
+          </a>
+          <div style="font-size: 11px; color: #64748b; margin-top: 8px; word-break: break-all;">
+            Direct Link: <a href="${pdfUrl}" target="_blank" style="color: #059669; text-decoration: underline;">${pdfUrl}</a>
+          </div>
+        </div>
+      ` : ''}
+
       ${reqDoc.internalNotes ? `
         <div class="bg-box border-theme" style="background-color: #f8fafc; border-radius: 12px; padding: 12px 16px; border: 1px solid #e2e8f0; margin-top: 14px; box-sizing: border-box;">
           <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Engineer Final Handover Notes:</div>
@@ -1054,16 +1153,24 @@ export const sendOrderDeliveredEmail = async (reqDoc) => {
     ctaUrl: `${clientUrl}/dashboard`,
   });
 
-  return await sendEmail({ to: clientEmail, subject, html, text: `Project ${reqId} for ${businessName} is now live and completed!` });
+  return await sendEmail({
+    to: clientEmail,
+    subject,
+    html,
+    text: `Project ${reqId} for ${businessName} is now live and completed!`,
+    isImportant: true,
+    priority: 'high',
+  });
 };
 
 // 11. Callback Status Update Email (to Client) - Handles called, resolved, cancelled, pending
-export const sendCallbackStatusUpdateEmail = async (callback, newStatus = '', customNotes = '') => {
+export const sendCallbackStatusUpdateEmail = async (callback, newStatus = '', customNotes = '', customPdfUrl = '') => {
   if (!callback.email) return;
   const clientUrl = getClientUrl();
   const cbId = (callback._id || callback.id || '').toString().slice(-6).toUpperCase();
   const status = (newStatus || callback.status || 'updated').toLowerCase();
   const notes = customNotes || callback.adminNotes || '';
+  const pdfUrl = customPdfUrl || callback.drivePdfLink || callback.pdfUrl;
 
   let badge = '📞 CONSULTATION UPDATE';
   let title = 'Callback Request Status Updated';
@@ -1135,6 +1242,23 @@ export const sendCallbackStatusUpdateEmail = async (callback, newStatus = '', cu
         ` : ''}
       </table>
 
+      ${pdfUrl ? `
+        <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #6366f1; border-radius: 14px; padding: 16px; margin: 16px 0; text-align: center; box-sizing: border-box;">
+          <div style="font-size: 11px; font-weight: 800; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+            📄 Consultation Roadmap / Scope PDF Attached
+          </div>
+          <p style="margin: 0 0 10px 0; font-size: 12px; color: #475569;">
+            Please find your customized project strategy / proposal document attached via Google Drive:
+          </p>
+          <a href="${pdfUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #4f46e5; color: #ffffff; padding: 10px 22px; font-size: 13px; font-weight: 800; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);">
+            📥 Open / Download Strategy PDF (Google Drive)
+          </a>
+          <div style="font-size: 11px; color: #64748b; margin-top: 8px; word-break: break-all;">
+            Direct Link: <a href="${pdfUrl}" target="_blank" style="color: #4f46e5; text-decoration: underline;">${pdfUrl}</a>
+          </div>
+        </div>
+      ` : ''}
+
       ${notes ? `
         <div class="bg-box border-theme" style="background-color: #f8fafc; border-radius: 12px; padding: 14px 16px; border: 1px solid #e2e8f0; margin: 14px 0; box-sizing: border-box;">
           <div class="text-muted" style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Consultant Notes &amp; Recommendations:</div>
@@ -1162,9 +1286,11 @@ export const sendCallbackStatusUpdateEmail = async (callback, newStatus = '', cu
 
   return await sendEmail({
     to: callback.email,
-    subject: `Consultation Update: ${statusText} — LOCAL2BRAND (#${cbId})`,
+    subject: `📞 [IMPORTANT] Consultation Update: ${statusText} — LOCAL2BRAND (#${cbId})`,
     html,
-    text: `Your callback request #${cbId} for ${callback.phone} status is now: ${statusText}.`
+    text: `Your callback request #${cbId} for ${callback.phone} status is now: ${statusText}.`,
+    isImportant: true,
+    priority: 'high',
   });
 };
 
@@ -1177,7 +1303,7 @@ export const sendCallbackResolutionEmail = async (callback) => {
 export const sendContactFormConfirmationEmail = async (contact) => {
   if (!contact.email) return;
   const clientUrl = getClientUrl();
-  const subject = `Message Received: We're reviewing your inquiry — LOCAL2BRAND ✉️`;
+  const subject = `✉️ [IMPORTANT] Message Received: We're reviewing your inquiry — LOCAL2BRAND ✉️`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -1201,7 +1327,7 @@ export const sendContactFormConfirmationEmail = async (contact) => {
 
   const html = wrapAgencyEmail({
     preheader: `We have received your message and assigned an engineer to review your requirements.`,
-    headerBadge: '✉️ DIRECT INQUIRY CONFIRMATION',
+    headerBadge: '✉️ IMPORTANT • DIRECT INQUIRY CONFIRMATION',
     title: `Message Received! 👋`,
     subtitle: `Our team will get back to you shortly.`,
     contentHtml,
@@ -1209,7 +1335,14 @@ export const sendContactFormConfirmationEmail = async (contact) => {
     ctaUrl: `${clientUrl}/demos`,
   });
 
-  return await sendEmail({ to: contact.email, subject, html, text: `Thank you for contacting LOCAL2BRAND, ${contact.name}!` });
+  return await sendEmail({
+    to: contact.email,
+    subject,
+    html,
+    text: `Thank you for contacting LOCAL2BRAND, ${contact.name}!`,
+    isImportant: true,
+    priority: 'high',
+  });
 };
 
 // 13. Game Reward Won Email (Automatic Notification to Logged-in Users)

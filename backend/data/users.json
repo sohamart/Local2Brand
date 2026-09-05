@@ -47,11 +47,11 @@
     "avatar": "",
     "phone": "",
     "company": "",
-    "status": "active",
+    "status": "suspended",
     "emailOtp": "",
     "emailOtpExpires": null,
     "isEmailVerified": true,
-    "updatedAt": "2026-09-05T08:58:34.708Z"
+    "updatedAt": "2026-09-05T09:06:06.030Z"
   },
   {
     "_id": "6a9bc23b958aa27bb9fec0b8",
@@ -68,18 +68,16 @@
     "updatedAt": "2026-09-05T08:04:52.656Z"
   },
   {
-    "_id": "6a9bd9ba6645e0adbc6a2126",
-    "id": "6a9bd9ba6645e0adbc6a2126",
-    "name": "New Client User",
-    "email": "new_client_1788598714499@gmail.com",
-    "password": "$2b$10$SjmjUE.Q5oBG3Yj2hN5rjuCamj0mcSSK4gkh23UYynsqnBpU//u9W",
-    "passwordHash": "$2b$10$SjmjUE.Q5oBG3Yj2hN5rjuCamj0mcSSK4gkh23UYynsqnBpU//u9W",
-    "role": "user",
+    "_id": "6a9b2223684426b7f92a2cb6",
+    "id": "6a9b2223684426b7f92a2cb6",
+    "name": "LOCAL2BRAND Master Admin",
+    "email": "sohamduttabwn@gmail.com",
+    "role": "admin",
     "avatar": "",
-    "phone": "9887020111",
+    "phone": "",
     "company": "",
     "status": "active",
-    "isEmailVerified": false,
-    "createdAt": "2026-09-05T08:58:35.159Z"
+    "emailOtp": "836535",
+    "emailOtpExpires": "2026-09-05T09:19:25.194Z"
   }
 ]

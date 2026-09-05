@@ -99,6 +99,16 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
+    // Clear previous user's cached draft and data
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('l2b_get_started_draft');
+        localStorage.removeItem('l2b_user_profile');
+        localStorage.removeItem('l2b_user_orders');
+        localStorage.removeItem('l2b_won_voucher');
+      } catch (e) {}
+    }
+
     const res = await api.post('/auth/login', { email, password });
     if (res.success && res.user) {
       if (res.token) {
@@ -107,6 +117,9 @@ export function AuthProvider({ children }) {
       }
       setUser(res.user);
       localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('l2b_auth_login', { detail: res.user }));
+      }
       toast.success(`Welcome back, ${res.user.name || 'User'}! 👋`);
       return res.user;
     }
@@ -115,6 +128,15 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (userData) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('l2b_get_started_draft');
+        localStorage.removeItem('l2b_user_profile');
+        localStorage.removeItem('l2b_user_orders');
+        localStorage.removeItem('l2b_won_voucher');
+      } catch (e) {}
+    }
+
     const res = await api.post('/auth/register', userData);
     if (res.success && res.user) {
       if (res.token) {
@@ -123,6 +145,9 @@ export function AuthProvider({ children }) {
       }
       setUser(res.user);
       localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('l2b_auth_login', { detail: res.user }));
+      }
       toast.success(`Welcome to LOCAL2BRAND, ${res.user.name || 'User'}! 🎉`);
       return res.user;
     }
@@ -139,34 +164,76 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
 
-    // Thoroughly clean all user session and chatbot keys
+    // Thoroughly clean all user session, orders, drafts, vouchers, cookies and storage keys
     if (typeof window !== 'undefined') {
       try {
         localStorage.removeItem('l2b_cached_user');
         localStorage.removeItem('l2b_auth_token');
+        localStorage.removeItem('l2b_user_profile');
+        localStorage.removeItem('l2b_user_orders');
+        localStorage.removeItem('l2b_get_started_draft');
+        localStorage.removeItem('l2b_won_voucher');
         localStorage.removeItem('l2b_chat_messages');
         localStorage.removeItem('l2b_chat_session_id');
         localStorage.removeItem('l2b_chat_session_time');
+        localStorage.removeItem('l2b_admin_bypass_expiry');
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('admin_token');
 
-        // Clear all user-specific prefixed keys
+        // Clear all user-specific prefixed keys from localStorage
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && (key.startsWith('l2b_chat_') || key.startsWith('l2b_form_progress_') || key.startsWith('l2b_draft_'))) {
-            keysToRemove.push(key);
+          if (key && (
+            key.startsWith('l2b_chat_') ||
+            key.startsWith('l2b_form_') ||
+            key.startsWith('l2b_draft_') ||
+            key.startsWith('l2b_user_') ||
+            key.startsWith('user_') ||
+            key === 'profile' ||
+            key === 'auth'
+          )) {
+            if (key !== 'l2b_theme' && key !== 'l2b_lang') {
+              keysToRemove.push(key);
+            }
           }
         }
         keysToRemove.forEach((k) => localStorage.removeItem(k));
-      } catch (e) {}
+        sessionStorage.clear();
+
+        // Clear all browser cookies accessible to JS
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i];
+          const eqPos = cookie.indexOf("=");
+          const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+          if (name) {
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+            document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+          }
+        }
+
+        // Notify active forms and components
+        window.dispatchEvent(new CustomEvent('l2b_auth_logout'));
+      } catch (e) {
+        console.warn('Storage clear notice during logout:', e);
+      }
     }
 
     if (showToast) {
-      toast.info('Logged out successfully. See you soon! 👋');
+      toast.info('Logged out successfully. All local session data cleared! 👋');
     }
 
     // Only redirect if user was in a protected dashboard
     if (shouldRedirect && typeof window !== 'undefined') {
-      if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/dashboard')) {
+      if (
+        window.location.pathname.startsWith('/admin') ||
+        window.location.pathname.startsWith('/dashboard') ||
+        window.location.pathname.startsWith('/user')
+      ) {
         window.location.href = '/';
       }
     }

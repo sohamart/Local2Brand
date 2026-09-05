@@ -1351,24 +1351,18 @@ export default function GetStarted() {
     setStepErrors({});
   }, [currentStep]);
 
-  // Auto-fill personal details from user session, URL parameters, or state while remaining 100% changeable
+  // Auto-fill personal details from current active user session or state
   useEffect(() => {
-    let localProfile = null;
-    try {
-      const stored = localStorage.getItem('l2b_user_profile') || localStorage.getItem('user');
-      if (stored) localProfile = JSON.parse(stored);
-    } catch (e) {}
-
     const stateData = location.state || {};
 
-    const resolvedName = stateData.fullName || stateData.name || searchParams.get('name') || user?.name || user?.fullName || localProfile?.name || '';
-    const resolvedBusiness = stateData.businessName || stateData.company || searchParams.get('business') || searchParams.get('brand') || user?.businessName || user?.company || user?.brandName || localProfile?.businessName || '';
-    const resolvedPhone = stateData.mobileNumber || stateData.phone || stateData.mobile || searchParams.get('phone') || searchParams.get('mobile') || user?.phone || user?.mobile || localProfile?.phone || '';
-    const resolvedWhatsapp = stateData.whatsappNumber || stateData.whatsapp || searchParams.get('whatsapp') || user?.whatsapp || user?.whatsappNumber || user?.phone || localProfile?.whatsapp || localProfile?.phone || '';
-    const resolvedEmail = stateData.emailAddress || stateData.email || searchParams.get('email') || user?.email || localProfile?.email || '';
-    const resolvedAddress = stateData.businessAddress || stateData.address || searchParams.get('address') || user?.address || user?.businessAddress || localProfile?.address || '';
-    const resolvedCity = stateData.cityLocation || stateData.city || searchParams.get('city') || user?.city || user?.location || localProfile?.city || '';
-    const resolvedWebsite = stateData.existingWebsite || stateData.website || searchParams.get('website') || user?.website || localProfile?.website || '';
+    const resolvedEmail = user?.email || stateData.emailAddress || stateData.email || searchParams.get('email') || '';
+    const resolvedName = user?.name || user?.fullName || stateData.fullName || stateData.name || searchParams.get('name') || '';
+    const resolvedPhone = user?.phone || user?.mobile || stateData.mobileNumber || stateData.phone || stateData.mobile || searchParams.get('phone') || searchParams.get('mobile') || '';
+    const resolvedWhatsapp = user?.whatsapp || user?.phone || user?.mobile || stateData.whatsappNumber || stateData.whatsapp || searchParams.get('whatsapp') || '';
+    const resolvedBusiness = user?.businessName || user?.company || user?.brandName || stateData.businessName || stateData.company || searchParams.get('business') || searchParams.get('brand') || '';
+    const resolvedAddress = user?.address || user?.businessAddress || stateData.businessAddress || stateData.address || searchParams.get('address') || '';
+    const resolvedCity = user?.city || user?.location || stateData.cityLocation || stateData.city || searchParams.get('city') || '';
+    const resolvedWebsite = user?.website || stateData.existingWebsite || stateData.website || searchParams.get('website') || '';
     
     // Auto category mapping from query / template / state with foolproof keyword matching
     const targetTemplateSlug = stateData.selectedDemo || stateData.templateId || searchParams.get('title') || searchParams.get('template') || templateId || appliedTemplate || '';
@@ -1386,20 +1380,84 @@ export default function GetStarted() {
       }
     }
 
-    setFormData(prev => ({
-      ...prev,
-      fullName: prev.fullName || resolvedName,
-      businessName: prev.businessName || resolvedBusiness,
-      mobileNumber: prev.mobileNumber || resolvedPhone,
-      whatsappNumber: prev.whatsappNumber || resolvedWhatsapp,
-      emailAddress: prev.emailAddress || resolvedEmail,
-      businessAddress: prev.businessAddress || resolvedAddress,
-      cityLocation: prev.cityLocation || resolvedCity,
-      existingWebsite: prev.existingWebsite || resolvedWebsite,
-      selectedCategory: resolvedCategory || prev.selectedCategory || '',
-      appliedTemplateName: targetTemplateSlug || prev.appliedTemplateName
-    }));
+    setFormData(prev => {
+      if (user?.email) {
+        return {
+          ...prev,
+          fullName: resolvedName || prev.fullName,
+          businessName: resolvedBusiness || prev.businessName,
+          mobileNumber: resolvedPhone || prev.mobileNumber,
+          whatsappNumber: resolvedWhatsapp || prev.whatsappNumber,
+          emailAddress: user.email, // Strictly guarantee active user's email
+          businessAddress: resolvedAddress || prev.businessAddress,
+          cityLocation: resolvedCity || prev.cityLocation,
+          existingWebsite: resolvedWebsite || prev.existingWebsite,
+          selectedCategory: resolvedCategory || prev.selectedCategory || '',
+          appliedTemplateName: targetTemplateSlug || prev.appliedTemplateName
+        };
+      } else {
+        return {
+          ...prev,
+          fullName: prev.fullName || resolvedName,
+          businessName: prev.businessName || resolvedBusiness,
+          mobileNumber: prev.mobileNumber || resolvedPhone,
+          whatsappNumber: prev.whatsappNumber || resolvedWhatsapp,
+          emailAddress: prev.emailAddress || resolvedEmail,
+          businessAddress: prev.businessAddress || resolvedAddress,
+          cityLocation: prev.cityLocation || resolvedCity,
+          existingWebsite: prev.existingWebsite || resolvedWebsite,
+          selectedCategory: resolvedCategory || prev.selectedCategory || '',
+          appliedTemplateName: targetTemplateSlug || prev.appliedTemplateName
+        };
+      }
+    });
   }, [user, location.state, searchParams, templateId, appliedTemplate, dbDemosList]);
+
+  // Listen to Global Auth Logout / Login events to immediately clean or bind user data
+  useEffect(() => {
+    const handleLogoutEvent = () => {
+      setFormData(prev => ({
+        ...prev,
+        fullName: '',
+        businessName: '',
+        mobileNumber: '',
+        whatsappNumber: '',
+        emailAddress: '',
+        businessAddress: '',
+        cityLocation: '',
+        streetAddress: '',
+        pincode: '',
+        district: '',
+        state: ''
+      }));
+      setPendingDraft(null);
+      setShowDraftModal(false);
+      localStorage.removeItem('l2b_get_started_draft');
+    };
+
+    const handleLoginEvent = (e) => {
+      const loggedUser = e?.detail;
+      if (loggedUser) {
+        setFormData(prev => ({
+          ...prev,
+          fullName: loggedUser.name || loggedUser.fullName || '',
+          emailAddress: loggedUser.email || '',
+          mobileNumber: loggedUser.phone || loggedUser.mobile || '',
+          whatsappNumber: loggedUser.whatsapp || loggedUser.phone || loggedUser.mobile || '',
+          businessName: loggedUser.businessName || loggedUser.company || '',
+          cityLocation: loggedUser.city || loggedUser.location || '',
+          businessAddress: loggedUser.address || loggedUser.businessAddress || ''
+        }));
+      }
+    };
+
+    window.addEventListener('l2b_auth_logout', handleLogoutEvent);
+    window.addEventListener('l2b_auth_login', handleLoginEvent);
+    return () => {
+      window.removeEventListener('l2b_auth_logout', handleLogoutEvent);
+      window.removeEventListener('l2b_auth_login', handleLoginEvent);
+    };
+  }, []);
 
   // Draft Modal State & Prompt logic
   const [pendingDraft, setPendingDraft] = useState(null);
@@ -1435,9 +1493,17 @@ export default function GetStarted() {
         );
 
         if (hasMeaningfulData) {
+          // If user is currently logged in, force user email over stale draft email
+          const draftToApply = { ...parsed.formData };
+          if (user?.email) {
+            draftToApply.emailAddress = user.email;
+            if (user.name) draftToApply.fullName = user.name;
+            if (user.phone) draftToApply.mobileNumber = user.phone;
+          }
+
           if (isPageReload) {
             // On browser refresh (F5), seamlessly preserve the active form without popup
-            setFormData(prev => ({ ...prev, ...parsed.formData }));
+            setFormData(prev => ({ ...prev, ...draftToApply }));
             if (parsed.currentStep && parsed.currentStep > 1) {
               setCurrentStep(parsed.currentStep);
             }
@@ -1449,7 +1515,7 @@ export default function GetStarted() {
             }
           } else if (!directRouteTemplate || directRouteTemplate === 'Custom Website') {
             // Plain /get-started navigation -> prompt user with resume vs fresh modal
-            setPendingDraft(parsed);
+            setPendingDraft({ ...parsed, formData: draftToApply });
             setShowDraftModal(true);
           } else {
             // User specifically clicked a template from Demos / LiveDemoViewer -> Apply that template directly!
@@ -1460,12 +1526,18 @@ export default function GetStarted() {
     } catch (e) {
       console.warn('Draft detection failed:', e);
     }
-  }, []);
+  }, [user]);
 
   const handleResumeDraft = () => {
     if (pendingDraft) {
       if (pendingDraft.formData) {
-        setFormData(prev => ({ ...prev, ...pendingDraft.formData }));
+        const draftForm = { ...pendingDraft.formData };
+        if (user?.email) {
+          draftForm.emailAddress = user.email;
+          if (user.name) draftForm.fullName = user.name;
+          if (user.phone) draftForm.mobileNumber = user.phone;
+        }
+        setFormData(prev => ({ ...prev, ...draftForm }));
       }
       if (pendingDraft.currentStep && pendingDraft.currentStep > 1) {
         setCurrentStep(pendingDraft.currentStep);
@@ -1970,12 +2042,42 @@ export default function GetStarted() {
         country: formData.country || 'India'
       };
 
+      // Extract all uploaded photos & logos
+      const extractedImages = [];
+      if (formData.logoFile?.dataUrl) {
+        extractedImages.push({
+          name: formData.logoFile.name || 'Brand Logo',
+          size: formData.logoFile.size || '',
+          dataUrl: formData.logoFile.dataUrl,
+          url: formData.logoFile.dataUrl,
+          type: 'logo'
+        });
+      }
+      if (Array.isArray(formData.photosFiles)) {
+        formData.photosFiles.forEach((file, idx) => {
+          if (file?.dataUrl) {
+            extractedImages.push({
+              name: file.name || `Photo ${idx + 1}`,
+              size: file.size || '',
+              dataUrl: file.dataUrl,
+              url: file.dataUrl,
+              type: 'photo'
+            });
+          }
+        });
+      }
+      const imageUrls = extractedImages.map(img => img.dataUrl);
+
       const requirementPayload = {
         websiteType,
         websiteTypeName,
         appliedTemplate: appliedTemplate || '',
         selectedDemo: appliedTemplate || '',
         clientInfo,
+        images: imageUrls,
+        uploadedImages: extractedImages,
+        logoFile: formData.logoFile,
+        photosFiles: formData.photosFiles,
         designPreferences: {
           visualStyle: formData.visualStyle || 'Modern',
           colorTheme: formData.colorTheme || 'Default',

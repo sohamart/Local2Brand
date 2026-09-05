@@ -1,5 +1,5 @@
 import { dataStore } from '../config/dataAdapter.js';
-import { sendEmail, getClientUrl } from '../utils/email.js';
+import { sendEmail, getClientUrl, wrapAgencyEmail } from '../utils/email.js';
 import { getLiveTelemetryStats } from './telemetryController.js';
 import mongoose from 'mongoose';
 
@@ -290,105 +290,59 @@ export const sendBroadcastEmail = async (req, res) => {
       ? (actionUrl.startsWith('http://') || actionUrl.startsWith('https://') ? actionUrl : getClientUrl(actionUrl))
       : getClientUrl();
 
-    const ctaButton = actionText && actionUrl
-      ? `<div style="margin-top: 24px; margin-bottom: 8px; text-align: center;">
-           <a href="${resolvedActionUrl}" target="_blank" style="background: linear-gradient(135deg, #7c3aed 0%, #c026d3 50%, #f43f5e 100%); background-color: #9333ea; color: #ffffff !important; padding: 14px 34px; text-decoration: none; border-radius: 12px; font-size: 14px; font-weight: 900; display: inline-block; box-shadow: 0 8px 24px rgba(192, 38, 211, 0.45); letter-spacing: 0.4px;">
-             ${actionText} &rarr;
-           </a>
-         </div>`
-      : '';
-
-    const formattedHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="color-scheme" content="light">
-  <meta name="supported-color-schemes" content="light">
-  <title>${subject}</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 0; width: 100% !important; background-color: #f4f6fb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-  </style>
-</head>
-<body style="margin: 0; padding: 20px 8px; background-color: #f4f6fb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-  <div style="width: 100%; max-width: 520px; margin: 0 auto; box-sizing: border-box;">
-    
-    <div style="background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); box-sizing: border-box; width: 100%;">
-      
-      <div style="height: 4px; width: 100%; background: linear-gradient(90deg, #6366f1 0%, #a855f7 50%, #ec4899 100%); line-height: 4px; font-size: 4px;">&nbsp;</div>
-
-      <div style="padding: 26px 20px 18px 20px; text-align: center; border-bottom: 1px solid #f1f5f9; background-color: #ffffff; box-sizing: border-box;">
-        <div style="display: inline-block; padding: 4px 12px; border-radius: 9999px; background-color: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px;">
-          📢 ${isImportant ? '⚡ PRIORITY CLIENT NOTIFICATION' : 'OFFICIAL AGENCY BROADCAST'}
-        </div>
-        <h1 style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.2;">
-          LOCAL<span style="color: #7c3aed;">2</span>BRAND
-        </h1>
-        <p style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">
-          High-Performance Digital Agency &amp; Engineering
-        </p>
-      </div>
-
-      <div style="padding: 20px 20px 8px 20px; background-color: #ffffff; box-sizing: border-box;">
-        ${heading ? `<h2 style="margin: 0 0 6px 0; font-size: 19px; font-weight: 800; color: #0f172a; line-height: 1.35;">${heading}</h2>` : ''}
-      </div>
-
-      <div style="padding: 6px 20px 24px 20px; font-size: 14px; line-height: 1.6; color: #334155; background-color: #ffffff; box-sizing: border-box;">
+    const contentHtml = `
+      <div style="margin: 10px 0 16px 0;">
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 12px; box-sizing: border-box;">
           <div style="color: #334155; font-size: 14px; line-height: 1.7; word-break: break-word;">
             ${messageHtml.replace(/\n/g, '<br/>')}
           </div>
-          ${ctaButton}
         </div>
       </div>
-
-      <div style="padding: 20px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; box-sizing: border-box;">
-        <p style="margin: 0 0 8px 0; font-size: 11px; color: #64748b; line-height: 1.5;">
-          You received this official dispatch as a registered client on LOCAL2BRAND.
-        </p>
-        <div style="font-size: 11px; color: #475569; margin-bottom: 8px;">
-          <span>✉️ Official Contact: <a href="mailto:local2brand@zohomail.in" style="color: #6366f1; text-decoration: none; font-weight: 600;">local2brand@zohomail.in</a></span>
-          <span style="margin: 0 4px; color: #cbd5e1;">•</span>
-          <span>Admin: <a href="mailto:sohamduttabwn@gmail.com" style="color: #6366f1; text-decoration: none; font-weight: 600;">sohamduttabwn@gmail.com</a></span>
-        </div>
-        <p style="margin: 0; font-size: 11px; color: #94a3b8; font-weight: 600;">
-          &copy; ${new Date().getFullYear()} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved.
-        </p>
-      </div>
-
-    </div>
-  </div>
-</body>
-</html>
     `;
 
-    // Fast Parallel Broadcast Dispatch with Promise.allSettled
-    const sendResults = await Promise.allSettled(
-      recipients.map((email) =>
-        sendEmail({
-          to: email,
-          subject: subject,
-          html: formattedHtml,
-          text: messageHtml,
-          isImportant: Boolean(isImportant),
-          priority: isImportant ? 'high' : 'normal',
-        })
-      )
-    );
+    const formattedHtml = wrapAgencyEmail({
+      preheader: messageHtml.slice(0, 100).replace(/\n/g, ' '),
+      headerBadge: isImportant ? '⚡ PRIORITY CLIENT NOTIFICATION' : '📢 OFFICIAL AGENCY BROADCAST',
+      title: heading || subject,
+      subtitle: isImportant ? 'Important announcement from LOCAL2BRAND Founding Team' : 'Official Update from LOCAL2BRAND Desk',
+      contentHtml,
+      ctaText: actionText || '',
+      ctaUrl: actionText && actionUrl ? resolvedActionUrl : '',
+    });
 
+    // Throttled Sequential/Batch Dispatch to prevent SMTP burst rate-limit & spam classification
     let sentCount = 0;
     let failedCount = 0;
+    const BATCH_SIZE = 2;
 
-    sendResults.forEach((res) => {
-      if (res.status === 'fulfilled' && res.value && res.value.success) {
-        sentCount++;
-      } else {
-        failedCount++;
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const batch = recipients.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.allSettled(
+        batch.map((email) =>
+          sendEmail({
+            to: email,
+            subject: subject,
+            html: formattedHtml,
+            text: messageHtml,
+            isImportant: Boolean(isImportant),
+            priority: isImportant ? 'high' : 'normal',
+          })
+        )
+      );
+
+      batchResults.forEach((res) => {
+        if (res.status === 'fulfilled' && res.value && res.value.success) {
+          sentCount++;
+        } else {
+          failedCount++;
+        }
+      });
+
+      // Small throttle sleep between batches
+      if (i + BATCH_SIZE < recipients.length) {
+        await new Promise((resolve) => setTimeout(resolve, 400));
       }
-    });
+    }
 
     return res.status(200).json({
       success: true,

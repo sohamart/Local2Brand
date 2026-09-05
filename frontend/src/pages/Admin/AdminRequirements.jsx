@@ -57,6 +57,318 @@ const STATUS_COLORS = {
   'Cancelled': 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-300'
 };
 
+const CATEGORY_PREFIXES = {
+  restaurant: 'rest',
+  cafe: 'cafe',
+  salon: 'salon',
+  gym: 'gym',
+  hotel: 'hotel',
+  real_estate: 're',
+  photography: 'photo',
+  boutique: 'boutique',
+  coaching: 'coaching',
+  clinic: 'clinic',
+  jewellery: 'jewel',
+  showroom: 'showroom',
+  other: 'other'
+};
+
+const ALL_CATEGORY_PREFIXES = ['rest', 'cafe', 'salon', 'gym', 'hotel', 're', 'photo', 'boutique', 'coaching', 'clinic', 'jewel', 'showroom', 'other'];
+
+const EXCLUDED_ANSWER_KEYS = new Set([
+  'fullName', 'businessName', 'mobileNumber', 'whatsappNumber', 'emailAddress',
+  'country', 'state', 'district', 'otherDistrict', 'streetAddress', 'pincode',
+  'businessAddress', 'cityLocation', 'existingWebsite', 'socialLinks',
+  'selectedCategory', 'appliedTemplateName',
+  'visualStyle', 'visualStyleOther', 'colorTheme', 'customColorCode', 'customColorDesc',
+  'hasLogo', 'hasPhotos', 'hasContent', 'referenceWebsites', 'designInstructions',
+  'logoFile', 'photosFiles', 'contentDocFile', 'images', 'uploadedImages',
+  'domainStatus', 'domainName', 'domainExtension', 'domainExtensions', 'domainOtherExtension', 'domainNotes',
+  'hostingStatus', 'hostingPlan', 'hostingCustomDesc',
+  'backendRequirement', 'backendCustomDesc', 'whatsappIntegration', 'whatsappNumberForIntegration', 'whatsappCountryCode', 'whatsappCustomDesc',
+  'otherIntegrations', 'customIntegrationText',
+  'budgetBracket', 'customBudget', 'expectedLaunchDate', 'additionalRequirements', 'anythingElse',
+  'priceBreakdown', 'fullFormData', 'clientInfo', 'status', 'requirementId', '_id', '__v', 'createdAt', 'updatedAt', 'submittedAt',
+  'user', 'userId', 'ipAddress', 'orderMethods', 'paymentMethods', 'adminPanelType', 'adminFeatures', 'selectedFeatures', 'selectedPages'
+]);
+
+const FIELD_LABELS = {
+  // Restaurant
+  restCuisine: 'Restaurant Cuisine / Type',
+  restFeatures: 'Required Restaurant Features',
+  restSocial: 'Social Platforms',
+  restSocialOther: 'Other Social Media',
+  restStyle: 'Preferred Visual Style',
+  restStyleOther: 'Custom Style Notes',
+  restColors: 'Color Theme / Palette',
+  restRefWebsite: 'Reference Website URL',
+  restHasLogo: 'Has Brand Logo?',
+  restProvidePhotos: 'Will Provide Photos & Content?',
+  restAdditionalReq: 'Additional Restaurant Notes',
+
+  // Cafe
+  cafeName: 'Café / Coffee Shop Name',
+  cafeFeatures: 'Café Specific Features',
+  cafeStyle: 'Café Visual Style',
+  cafeColors: 'Café Color Theme',
+  cafeHasLogo: 'Has Brand Logo?',
+  cafePhotosAvailable: 'Photos & Menu Available?',
+  cafeAdditionalReq: 'Additional Café Notes',
+
+  // Salon
+  salonFeatures: 'Salon / Spa Features',
+  salonStyle: 'Salon Design Style',
+  salonColors: 'Salon Color Palette',
+  salonHasLogo: 'Has Brand Logo?',
+  salonPhotosAvailable: 'Service / Salon Photos Available?',
+  salonAdditionalReq: 'Additional Salon Notes',
+
+  // Gym
+  gymFeatures: 'Gym / Fitness Features',
+  gymStyle: 'Gym Design Style',
+  gymColors: 'Gym Color Palette',
+  gymHasLogo: 'Has Brand Logo?',
+  gymPhotosAvailable: 'Gym / Equipment Photos Available?',
+  gymAdditionalReq: 'Additional Gym Notes',
+
+  // Hotel
+  hotelFeatures: 'Hotel / Resort Features',
+  hotelStyle: 'Hotel Design Style',
+  hotelColors: 'Hotel Color Palette',
+  hotelPhotosAvailable: 'Room / Property Photos Available?',
+  hotelAdditionalReq: 'Additional Hotel Notes',
+
+  // Real Estate
+  rePropertyTypes: 'Property Types Handled',
+  reFeatures: 'Real Estate Features',
+  reStyle: 'Real Estate Design Style',
+  reHasLogo: 'Has Brand Logo?',
+  rePhotosAvailable: 'Property Photos Available?',
+  reAdditionalReq: 'Additional Real Estate Notes',
+
+  // Photography
+  photoStudioName: 'Studio / Brand Name',
+  photoTypes: 'Photography Types / Genres',
+  photoFeatures: 'Photography Features',
+  photoPortfolioLinks: 'Portfolio / Social Links',
+  photoPackagesOffered: 'Packages & Pricing Offered',
+  photoStyle: 'Studio Design Style',
+  photoColors: 'Brand Colors',
+  photoPhotosAvailable: 'High-Res Samples Available?',
+  photoHasLogo: 'Has Brand Logo?',
+  photoAdditionalReq: 'Additional Photography Notes',
+
+  // Boutique
+  boutiqueBusinessName: 'Boutique / Shop Name',
+  boutiqueProducts: 'Products & Apparel Offered',
+  boutiqueFeatures: 'Boutique Features',
+  boutiquePriceRange: 'Price Range / Segment',
+  boutiqueDeliveryAvailable: 'Delivery / Shipping Available?',
+  boutiqueSocialLinks: 'Social Media Profiles',
+  boutiqueStyle: 'Boutique Design Style',
+  boutiqueColors: 'Color Theme',
+  boutiquePhotosAvailable: 'Product Catalog Photos Ready?',
+  boutiqueHasLogo: 'Has Brand Logo?',
+  boutiqueAdditionalReq: 'Additional Boutique Notes',
+
+  // Coaching
+  coachingInstituteName: 'Institute / Academy Name',
+  coachingCourses: 'Courses & Programs Offered',
+  coachingTargetAudience: 'Target Students / Audience',
+  coachingClassMode: 'Mode of Instruction (Online/Offline/Hybrid)',
+  coachingFeatures: 'Coaching Features',
+  coachingBatchTimings: 'Batch Timings & Schedule',
+  coachingSocialLinks: 'Social / YouTube Links',
+  coachingStyle: 'Website Design Style',
+  coachingColors: 'Brand Colors',
+  coachingHasLogo: 'Has Brand Logo?',
+  coachingAdditionalReq: 'Additional Coaching Notes',
+
+  // Clinic
+  clinicName: 'Clinic / Hospital Name',
+  clinicDoctorName: 'Lead Doctor / Specialist Name',
+  clinicSpecialty: 'Medical Specialty / Department',
+  clinicTimings: 'Consultation & OPD Timings',
+  clinicFeatures: 'Clinic Features & Booking',
+  clinicSocialLinks: 'Social / Profile Links',
+  clinicStyle: 'Clinic Design Style',
+  clinicColors: 'Color Theme',
+  clinicDoctorPhotoAvailable: 'Doctor / Clinic Photos Ready?',
+  clinicHasLogo: 'Has Brand Logo?',
+  clinicAdditionalReq: 'Additional Medical Notes',
+
+  // Jewellery
+  jewelShopName: 'Jewellery / Gift Shop Name',
+  jewelItemsHandled: 'Jewellery / Product Types',
+  jewelFeatures: 'Jewellery Features',
+  jewelPriceSegment: 'Price Segment',
+  jewelCustomOrders: 'Custom / Bespoke Orders Accepted?',
+  jewelSocialLinks: 'Social / Instagram Links',
+  jewelStyle: 'Jewellery Website Style',
+  jewelColors: 'Color Palette',
+  jewelPhotosAvailable: 'High-Res Jewelry Photos Ready?',
+  jewelHasLogo: 'Has Brand Logo?',
+  jewelAdditionalReq: 'Additional Jewellery Notes',
+
+  // Showroom
+  showroomBusinessName: 'Showroom / Dealership Name',
+  showroomBusinessType: 'Vehicle Type (Cars / Bikes / Both)',
+  showroomBrands: 'Brands Handled / Represented',
+  showroomServices: 'Services Offered (Sales / Service / Test Drives)',
+  showroomFeatures: 'Showroom Features',
+  showroomStyle: 'Showroom Design Style',
+  showroomPhotosAvailable: 'Inventory / Vehicle Photos Ready?',
+  showroomHasLogo: 'Has Brand Logo?',
+  showroomAdditionalReq: 'Additional Showroom Notes',
+
+  // Other
+  otherCategoryDescription: 'Custom Category Specification',
+  otherFeatures: 'Key Features Required',
+  otherFeaturesCustom: 'Custom Features Description',
+  otherRequirementsNotes: 'Special Project Notes'
+};
+
+const detectActiveCategory = (req) => {
+  if (!req) return '';
+  const rawCat = (
+    req.selectedCategory ||
+    req.answers?.selectedCategory ||
+    req.fullFormData?.selectedCategory ||
+    req.websiteType ||
+    req.websiteTypeName ||
+    ''
+  ).toLowerCase();
+
+  for (const [catKey, prefix] of Object.entries(CATEGORY_PREFIXES)) {
+    if (rawCat.includes(catKey) || rawCat.includes(prefix)) {
+      return catKey;
+    }
+  }
+
+  const allKeys = Object.keys({ ...(req.answers || {}), ...(req.fullFormData || {}) });
+  for (const [catKey, prefix] of Object.entries(CATEGORY_PREFIXES)) {
+    if (allKeys.some(k => k.startsWith(prefix) && (req.answers?.[k] || req.fullFormData?.[k]))) {
+      return catKey;
+    }
+  }
+
+  return 'other';
+};
+
+export const getCleanCategoryAnswers = (req) => {
+  if (!req) return [];
+  const rawAnswers = { ...(req.answers || {}), ...(req.fullFormData || {}) };
+  const activeCategory = detectActiveCategory(req);
+  const activePrefix = CATEGORY_PREFIXES[activeCategory] || '';
+  const otherPrefixes = ALL_CATEGORY_PREFIXES.filter(p => p !== activePrefix);
+
+  const cleanList = [];
+
+  for (const [rawKey, val] of Object.entries(rawAnswers)) {
+    if (EXCLUDED_ANSWER_KEYS.has(rawKey)) continue;
+
+    // Check if key belongs to an unrelated category
+    const belongsToOtherCategory = otherPrefixes.some(p => {
+      if (p === 're') {
+        return rawKey.startsWith('reProperty') || rawKey.startsWith('reFeatures') || rawKey.startsWith('reStyle') || rawKey.startsWith('reHasLogo') || rawKey.startsWith('rePhotos') || rawKey.startsWith('reAdditional');
+      }
+      return rawKey.toLowerCase().startsWith(p.toLowerCase());
+    });
+
+    if (belongsToOtherCategory) continue;
+
+    // Check if empty or N/A
+    if (val === null || val === undefined || val === '') continue;
+    if (Array.isArray(val) && val.length === 0) continue;
+    if (typeof val === 'string' && (val.trim() === '' || val.trim().toLowerCase() === 'n/a' || val.trim().toLowerCase() === 'none')) continue;
+
+    const label = FIELD_LABELS[rawKey] || rawKey.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+    let formattedVal = val;
+    if (Array.isArray(val)) {
+      formattedVal = val.join(', ');
+    } else if (typeof val === 'boolean') {
+      formattedVal = val ? 'Yes' : 'No';
+    } else if (typeof val === 'object') {
+      continue;
+    }
+
+    cleanList.push({
+      key: rawKey,
+      label,
+      value: String(formattedVal)
+    });
+  }
+
+  return cleanList;
+};
+
+export const getAllRequirementPhotos = (req) => {
+  if (!req) return [];
+  const photos = [];
+  const seenUrls = new Set();
+
+  const addPhoto = (item, type = 'photo', label = '') => {
+    if (!item) return;
+    let url = '';
+    let name = '';
+    let size = '';
+
+    if (typeof item === 'string' && item.trim()) {
+      url = item.trim();
+      name = label || url.split('/').pop()?.split('?')[0] || 'Image';
+    } else if (typeof item === 'object' && item !== null) {
+      url = item.dataUrl || item.url || item.secure_url || item.src || item.path || '';
+      name = item.name || label || item.original_filename || 'Uploaded Image';
+      size = item.size || '';
+    }
+
+    if (url && !seenUrls.has(url)) {
+      seenUrls.add(url);
+      photos.push({ url, name, size, type });
+    }
+  };
+
+  // 1. Check direct images
+  if (Array.isArray(req.images)) {
+    req.images.forEach((img, i) => addPhoto(img, 'photo', `Photo ${i + 1}`));
+  }
+  if (Array.isArray(req.uploadedImages)) {
+    req.uploadedImages.forEach((img, i) => addPhoto(img, img?.type || 'photo', img?.name || `Photo ${i + 1}`));
+  }
+
+  // 2. Check logoFile and logoUrl
+  if (req.logoUrl) addPhoto(req.logoUrl, 'logo', 'Brand Logo');
+  if (req.logoFile) addPhoto(req.logoFile, 'logo', req.logoFile.name || 'Brand Logo');
+  if (req.clientInfo?.logoUrl) addPhoto(req.clientInfo.logoUrl, 'logo', 'Brand Logo');
+
+  // 3. Check photosFiles array
+  if (Array.isArray(req.photosFiles)) {
+    req.photosFiles.forEach((img, i) => addPhoto(img, 'photo', img?.name || `Photo ${i + 1}`));
+  }
+
+  // 4. Check nested answers
+  if (req.answers) {
+    if (req.answers.logoFile) addPhoto(req.answers.logoFile, 'logo', req.answers.logoFile.name || 'Brand Logo');
+    if (Array.isArray(req.answers.photosFiles)) {
+      req.answers.photosFiles.forEach((img, i) => addPhoto(img, 'photo', img?.name || `Photo ${i + 1}`));
+    }
+    if (Array.isArray(req.answers.images)) {
+      req.answers.images.forEach((img, i) => addPhoto(img, 'photo', `Photo ${i + 1}`));
+    }
+  }
+
+  // 5. Check nested fullFormData
+  if (req.fullFormData) {
+    if (req.fullFormData.logoFile) addPhoto(req.fullFormData.logoFile, 'logo', req.fullFormData.logoFile.name || 'Brand Logo');
+    if (Array.isArray(req.fullFormData.photosFiles)) {
+      req.fullFormData.photosFiles.forEach((img, i) => addPhoto(img, 'photo', img?.name || `Photo ${i + 1}`));
+    }
+  }
+
+  return photos;
+};
+
 export default function AdminRequirements() {
   const [requirements, setRequirements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,11 +379,13 @@ export default function AdminRequirements() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeInspectTab, setActiveInspectTab] = useState('all_steps'); // 'all_steps' | 'workflow' | 'client' | 'media'
   const [copiedId, setCopiedId] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
 
   // Edit State
   const [editStatus, setEditStatus] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editQuotedAmount, setEditQuotedAmount] = useState('');
+  const [editDrivePdfLink, setEditDrivePdfLink] = useState('');
 
   const fetchRequirements = async (silent = false) => {
     try {
@@ -122,6 +436,7 @@ export default function AdminRequirements() {
     setEditStatus(req.status || 'Submitted');
     setEditNotes(req.internalNotes || '');
     setEditQuotedAmount(req.quotedAmount || '');
+    setEditDrivePdfLink(req.drivePdfLink || req.pdfUrl || '');
     setActiveInspectTab('all_steps');
   };
 
@@ -139,7 +454,9 @@ export default function AdminRequirements() {
       const res = await api.patch(`/requirements/admin/${selectedReq.requirementId || selectedReq._id}/status`, {
         status: editStatus,
         internalNotes: editNotes,
-        quotedAmount: editQuotedAmount
+        quotedAmount: editQuotedAmount,
+        drivePdfLink: editDrivePdfLink,
+        pdfUrl: editDrivePdfLink
       });
       if (res.success) {
         setSelectedReq(res.requirement);
@@ -583,7 +900,7 @@ export default function AdminRequirements() {
                 }`}
               >
                 <ImageIcon className="w-3.5 h-3.5" />
-                <span>Media &amp; Photos ({selectedReq.images?.length || 0})</span>
+                <span>Media &amp; Photos ({getAllRequirementPhotos(selectedReq).length})</span>
               </button>
             </div>
 
@@ -674,25 +991,34 @@ export default function AdminRequirements() {
 
                   {/* STEP 3: Industry Specific Questions & Answers */}
                   <div className="p-4 sm:p-5 rounded-2xl bg-purple-50/40 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/70 space-y-3">
-                    <div className="flex items-center gap-2 border-b border-purple-200 dark:border-purple-800/70 pb-2">
-                      <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center font-black text-[10px]">3</span>
-                      <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">Industry Tailored Specifications &amp; Dynamic Answers</h4>
+                    <div className="flex items-center justify-between border-b border-purple-200 dark:border-purple-800/70 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center font-black text-[10px]">3</span>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">Industry Tailored Specifications &amp; Dynamic Answers</h4>
+                      </div>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-purple-100 dark:bg-purple-900/80 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700">
+                        {selectedReq.websiteTypeName || selectedReq.websiteType || detectActiveCategory(selectedReq) || 'Industry Specs'}
+                      </span>
                     </div>
-                    {selectedReq.answers && Object.keys(selectedReq.answers).length > 0 ? (
+
+                    {getCleanCategoryAnswers(selectedReq).length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {Object.entries(selectedReq.answers).map(([qKey, aVal]) => (
-                          <div key={qKey} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1">
+                        {getCleanCategoryAnswers(selectedReq).map((item) => (
+                          <div key={item.key} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 shadow-xs">
                             <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-300 uppercase tracking-wider block">
-                              {qKey.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}
+                              {item.label}
                             </span>
-                            <div className="text-xs font-bold text-slate-900 dark:text-white">
-                              {Array.isArray(aVal) ? aVal.join(', ') : typeof aVal === 'boolean' ? (aVal ? 'Yes' : 'No') : String(aVal || 'N/A')}
+                            <div className="text-xs font-bold text-slate-900 dark:text-white leading-relaxed">
+                              {item.value}
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-slate-500 italic p-2">Standard industry configurations applied.</div>
+                      <div className="p-3.5 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-slate-500 text-xs italic flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-purple-500 shrink-0" />
+                        <span>Standard {selectedReq.websiteTypeName || selectedReq.websiteType || 'industry'} configurations applied with default template specifications.</span>
+                      </div>
                     )}
                   </div>
 
@@ -864,29 +1190,32 @@ export default function AdminRequirements() {
                         <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center font-black text-[10px]">10</span>
                         <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">Uploaded Photos, Assets &amp; Logo</h4>
                       </div>
-                      <span className="text-xs font-bold text-purple-600">
-                        {selectedReq.images?.length || 0} Files
+                      <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                        {getAllRequirementPhotos(selectedReq).length} Files
                       </span>
                     </div>
-                    {selectedReq.images && selectedReq.images.length > 0 ? (
+                    {getAllRequirementPhotos(selectedReq).length > 0 ? (
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {selectedReq.images.map((imgUrl, i) => (
-                          <a
+                        {getAllRequirementPhotos(selectedReq).map((item, i) => (
+                          <div
                             key={i}
-                            href={imgUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group relative aspect-video rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 block shadow-xs"
+                            className="group relative aspect-video rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 block shadow-xs cursor-pointer"
+                            onClick={() => setPreviewImage(item.url)}
                           >
-                            <img src={imgUrl} alt={`Upload ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                              <ExternalLink className="w-4 h-4" />
+                            <img src={item.url} alt={item.name || `Upload ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                            <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-white text-[9px] font-bold">
+                              {item.type === 'logo' ? 'Brand Logo' : 'Photo'}
                             </div>
-                          </a>
+                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                              <Eye className="w-4 h-4" />
+                            </div>
+                          </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-slate-500 italic">No media assets uploaded by client (Stock assets / Demo photos will be used).</div>
+                      <div className="text-slate-500 italic p-3 text-center bg-white/40 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                        No media assets uploaded by client (Stock assets / Demo photos will be used).
+                      </div>
                     )}
                   </div>
 
@@ -960,6 +1289,35 @@ export default function AdminRequirements() {
                           Displays prominently on the client's live Track Order page.
                         </span>
                       </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span>📄 Google Drive PDF / Document Link (Optional)</span>
+                        </label>
+                        {editDrivePdfLink && (
+                          <a
+                            href={editDrivePdfLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                          >
+                            <span>Open Drive Preview</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                      <input
+                        type="url"
+                        value={editDrivePdfLink}
+                        onChange={(e) => setEditDrivePdfLink(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/... or document PDF link"
+                        className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-indigo-600 dark:text-indigo-400 font-mono focus:outline-purple-500"
+                      />
+                      <span className="text-[10px] text-slate-500 mt-1 block">
+                        Will be prominently rendered as a high-priority Google Drive PDF attachment button in the client's status email.
+                      </span>
                     </div>
 
                     <div>
@@ -1042,27 +1400,61 @@ export default function AdminRequirements() {
               {/* TAB 4: MEDIA & PHOTOS */}
               {activeInspectTab === 'media' && (
                 <div className="space-y-4">
-                  {selectedReq.images && selectedReq.images.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      {selectedReq.images.map((img, i) => (
-                        <div key={i} className="p-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2">
-                          <img src={img} alt={`Media ${i + 1}`} className="w-full aspect-video object-cover rounded-xl" />
-                          <a
-                            href={img}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full py-1 rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold text-[11px] flex items-center justify-center gap-1 hover:bg-purple-100"
+                  {getAllRequirementPhotos(selectedReq).length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {getAllRequirementPhotos(selectedReq).map((item, i) => (
+                        <div key={i} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5 shadow-sm">
+                          <div
+                            className="relative aspect-video rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer group"
+                            onClick={() => setPreviewImage(item.url)}
                           >
-                            <span>Open Full Size</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
+                            <img src={item.url} alt={item.name || `Media ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-xs text-white text-[10px] font-black uppercase tracking-wider">
+                              {item.type === 'logo' ? '🏷️ Brand Logo' : '📷 Gallery Photo'}
+                            </div>
+                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                              <Eye className="w-5 h-5" />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between text-xs pt-1">
+                            <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[180px]" title={item.name}>
+                              {item.name || `File ${i + 1}`}
+                            </span>
+                            {item.size && (
+                              <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                                {item.size}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-700">
+                            <button
+                              type="button"
+                              onClick={() => setPreviewImage(item.url)}
+                              className="flex-1 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/60 cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Zoom Preview</span>
+                            </button>
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1 hover:bg-slate-300 dark:hover:bg-slate-600"
+                              title="Open original in new tab"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="p-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
                       <ImageIcon className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                      <p className="font-semibold">No media photos were uploaded with this specification.</p>
+                      <p className="font-semibold text-xs">No media photos or logo files uploaded with this specification.</p>
+                      <p className="text-[11px] text-slate-400 mt-1">Default curated industry stock assets or template media will be deployed.</p>
                     </div>
                   )}
                 </div>
@@ -1271,6 +1663,49 @@ export default function AdminRequirements() {
                     <span>{deleteActionType === 'reject' ? 'Confirm Rejection & Send Email' : 'Delete Permanently & Purge Cloudinary'}</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* PHOTO / LOGO FULL SCREEN LIGHTBOX MODAL                  */}
+      {/* ======================================================== */}
+      {previewImage && (
+        <div
+          data-lenis-prevent="true"
+          className="fixed inset-0 z-[130] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-md animate-in fade-in"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute -top-12 right-0 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-colors"
+              title="Close Preview"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <img
+              src={previewImage}
+              alt="Full Preview"
+              className="max-w-full max-h-[82vh] object-contain rounded-2xl shadow-2xl border border-white/20 bg-slate-900"
+            />
+            <div className="mt-3 flex items-center gap-3">
+              <a
+                href={previewImage}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-purple-500 transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open Original in New Tab</span>
+              </a>
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer transition-colors"
+              >
+                Close Preview
               </button>
             </div>
           </div>

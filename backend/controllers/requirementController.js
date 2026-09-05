@@ -48,6 +48,27 @@ export const saveRequirementDraft = async (req, res) => {
       businessName: existingClientInfo.businessName || websiteTypeName,
     };
 
+    // Extract images if any
+    const rawImages = [];
+    if (Array.isArray(data.images)) rawImages.push(...data.images);
+    if (Array.isArray(data.uploadedImages)) rawImages.push(...data.uploadedImages);
+    if (data.logoFile) rawImages.push(data.logoFile);
+    if (Array.isArray(data.photosFiles)) rawImages.push(...data.photosFiles);
+    if (data.answers?.logoFile) rawImages.push(data.answers.logoFile);
+    if (Array.isArray(data.answers?.photosFiles)) rawImages.push(...data.answers.photosFiles);
+    if (data.fullFormData?.logoFile) rawImages.push(data.fullFormData.logoFile);
+    if (Array.isArray(data.fullFormData?.photosFiles)) rawImages.push(...data.fullFormData.photosFiles);
+
+    const uniqueImages = [];
+    const seenUrls = new Set();
+    for (const item of rawImages) {
+      const url = typeof item === 'string' ? item : (item?.dataUrl || item?.url || item?.secure_url);
+      if (url && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        uniqueImages.push(typeof item === 'string' ? item : (item.dataUrl || item.url || item.secure_url || ''));
+      }
+    }
+
     const payload = {
       ...data,
       websiteType,
@@ -57,6 +78,8 @@ export const saveRequirementDraft = async (req, res) => {
       user: validUserId,
       userId: req.user?._id?.toString() || req.user?.id || (validUserId ? String(validUserId) : null),
       clientInfo,
+      images: uniqueImages.length > 0 ? uniqueImages : (data.images || []),
+      uploadedImages: uniqueImages.length > 0 ? uniqueImages : (data.uploadedImages || []),
       ipAddress: req.ip || req.connection?.remoteAddress || ''
     };
 
@@ -118,6 +141,27 @@ export const submitRequirement = async (req, res) => {
       businessName: existingClientInfo.businessName || websiteTypeName,
     };
 
+    // Robustly extract all uploaded media, logo & photos
+    const rawImages = [];
+    if (Array.isArray(finalData.images)) rawImages.push(...finalData.images);
+    if (Array.isArray(finalData.uploadedImages)) rawImages.push(...finalData.uploadedImages);
+    if (finalData.logoFile) rawImages.push(finalData.logoFile);
+    if (Array.isArray(finalData.photosFiles)) rawImages.push(...finalData.photosFiles);
+    if (finalData.answers?.logoFile) rawImages.push(finalData.answers.logoFile);
+    if (Array.isArray(finalData.answers?.photosFiles)) rawImages.push(...finalData.answers.photosFiles);
+    if (finalData.fullFormData?.logoFile) rawImages.push(finalData.fullFormData.logoFile);
+    if (Array.isArray(finalData.fullFormData?.photosFiles)) rawImages.push(...finalData.fullFormData.photosFiles);
+
+    const uniqueImages = [];
+    const seenUrls = new Set();
+    for (const item of rawImages) {
+      const url = typeof item === 'string' ? item : (item?.dataUrl || item?.url || item?.secure_url);
+      if (url && !seenUrls.has(url)) {
+        seenUrls.add(url);
+        uniqueImages.push(typeof item === 'string' ? item : (item.dataUrl || item.url || item.secure_url || ''));
+      }
+    }
+
     const updatePayload = {
       ...finalData,
       websiteType,
@@ -126,6 +170,8 @@ export const submitRequirement = async (req, res) => {
       user: validUserId,
       userId: req.user?._id?.toString() || req.user?.id || (validUserId ? String(validUserId) : null),
       clientInfo,
+      images: uniqueImages.length > 0 ? uniqueImages : (finalData.images || []),
+      uploadedImages: uniqueImages.length > 0 ? uniqueImages : (finalData.uploadedImages || []),
       status: 'Submitted',
       submittedAt: new Date()
     };
@@ -378,8 +424,9 @@ export const getAllRequirements = async (req, res) => {
 export const updateRequirementStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, internalNotes, quotedAmount, rejectionReason, reason, clientInfo, formData, answers } = req.body;
+    const { status, internalNotes, quotedAmount, rejectionReason, reason, clientInfo, formData, answers, drivePdfLink, pdfUrl, documentUrl } = req.body;
     const finalRejectionReason = rejectionReason || reason || (status === 'Rejected' ? internalNotes : '');
+    const resolvedPdfLink = drivePdfLink || pdfUrl || documentUrl;
 
     const updatePayload = {
       updatedAt: new Date()
@@ -391,6 +438,10 @@ export const updateRequirementStatus = async (req, res) => {
     if (clientInfo !== undefined) updatePayload.clientInfo = clientInfo;
     if (formData !== undefined) updatePayload.formData = formData;
     if (answers !== undefined) updatePayload.answers = answers;
+    if (resolvedPdfLink !== undefined) {
+      updatePayload.drivePdfLink = resolvedPdfLink;
+      updatePayload.pdfUrl = resolvedPdfLink;
+    }
 
     if (status === 'Rejected' || status === 'Cancelled') {
       updatePayload.rejectionReason = finalRejectionReason;

@@ -29,6 +29,9 @@ export default function AdminLeads() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedLead, setSelectedLead] = useState(null);
   const [adminNoteText, setAdminNoteText] = useState('');
+  const [leadDrivePdfLink, setLeadDrivePdfLink] = useState('');
+  const [leadStatus, setLeadStatus] = useState('pending');
+  const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
@@ -69,24 +72,51 @@ export default function AdminLeads() {
       );
       if (selectedLead && selectedLead._id === id) {
         setSelectedLead((prev) => ({ ...prev, status: newStatus }));
+        setLeadStatus(newStatus);
       }
-      toast.success(`Inquiry status updated to "${newStatus}"`);
+      toast.success(`Inquiry status updated to "${newStatus}" & email sent!`);
     } catch (err) {
       toast.error('Failed to update status: ' + err.message);
     }
   };
 
-  const handleSaveNotes = async () => {
+  const handleInspectLead = (lead) => {
+    setSelectedLead(lead);
+    setAdminNoteText(lead.adminNotes || '');
+    setLeadDrivePdfLink(lead.drivePdfLink || lead.pdfUrl || '');
+    setLeadStatus(lead.status || 'pending');
+  };
+
+  const handleSaveLeadDetails = async () => {
     if (!selectedLead) return;
     try {
-      await api.put(`/queries/${selectedLead._id}`, { adminNotes: adminNoteText });
-      setLeads((prev) =>
-        prev.map((l) => (l._id === selectedLead._id ? { ...l, adminNotes: adminNoteText } : l))
-      );
-      setSelectedLead((prev) => ({ ...prev, adminNotes: adminNoteText }));
-      toast.success('Admin notes saved successfully');
+      setIsSaving(true);
+      const res = await api.put(`/queries/${selectedLead._id}`, {
+        status: leadStatus,
+        adminNotes: adminNoteText,
+        drivePdfLink: leadDrivePdfLink,
+        pdfUrl: leadDrivePdfLink,
+      });
+      if (res?.success) {
+        setLeads((prev) =>
+          prev.map((l) =>
+            l._id === selectedLead._id
+              ? { ...l, status: leadStatus, adminNotes: adminNoteText, drivePdfLink: leadDrivePdfLink }
+              : l
+          )
+        );
+        setSelectedLead((prev) => ({
+          ...prev,
+          status: leadStatus,
+          adminNotes: adminNoteText,
+          drivePdfLink: leadDrivePdfLink,
+        }));
+        toast.success('Proposal details saved & notification email dispatched! 🚀');
+      }
     } catch (err) {
-      toast.error('Failed to save notes: ' + err.message);
+      toast.error('Failed to save proposal details: ' + err.message);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -256,26 +286,21 @@ export default function AdminLeads() {
                           <option value="cancelled">Cancelled</option>
                         </select>
                       </td>
-
                       <td className="p-4 text-slate-400 whitespace-nowrap">
                         {new Date(lead.createdAt).toLocaleDateString()}
                       </td>
 
                       <td className="p-4 text-right space-x-2 whitespace-nowrap">
                         <button
-                          onClick={() => {
-                            setSelectedLead(lead);
-                            setAdminNoteText(lead.adminNotes || '');
-                          }}
+                          onClick={() => handleInspectLead(lead)}
                           className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-purple-100 hover:text-purple-700 transition-colors cursor-pointer shadow-2xs"
-                          title="View Full Details"
+                          title="Inspect Lead Details & PDF Proposal"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-
                         <button
                           onClick={() => handleDeleteLead(lead._id)}
-                          className="p-2 rounded-xl bg-red-50 dark:bg-red-950/60 text-red-600 hover:bg-red-100 transition-colors cursor-pointer shadow-2xs"
+                          className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-rose-100 hover:text-rose-600 transition-colors cursor-pointer shadow-2xs"
                           title="Delete Lead"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -289,51 +314,44 @@ export default function AdminLeads() {
           </div>
         </div>
 
-        {/* Dedicated Mobile Card View (< md) */}
-        <div className="block md:hidden space-y-4">
+        {/* Mobile View: Dedicated Responsive Cards (Touch Optimized) */}
+        <div className="block md:hidden space-y-3.5">
           {loading && leads.length === 0 ? (
             <div className="py-12 flex items-center justify-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
               <DashboardLoader
-                title="Loading Inquiries..."
-                subtitle="Fetching customer submissions..."
+                title="Loading Project Inquiries..."
+                subtitle="Fetching incoming quote requests and lead submissions..."
                 role="admin"
               />
             </div>
           ) : leads.length === 0 ? (
-            <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-xs text-slate-400">
-              <div className="w-10 h-10 mx-auto rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center mb-2">
-                <Inbox className="w-5 h-5" />
-              </div>
+            <div className="p-8 text-center text-xs text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
               No inquiries found matching criteria.
             </div>
           ) : (
             leads.map((lead) => {
-              const cleanPhone = (lead.phone || '').replace(/\D/g, '');
-              const waNumber = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+              const waNumber = (lead.phone || '').replace(/[^0-9]/g, '');
               return (
                 <div
                   key={lead._id}
                   className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                    <div className="space-y-0.5">
+                      <div className="font-black text-slate-900 dark:text-white text-sm">
                         {lead.name}
-                      </h3>
-                      {lead.businessName && (
-                        <div className="text-[11px] font-bold text-purple-600 dark:text-purple-400">
-                          {lead.businessName}
-                        </div>
-                      )}
-                      <div className="text-[10px] text-slate-400 mt-0.5">
-                        {new Date(lead.createdAt).toLocaleString()}
                       </div>
+                      {lead.businessName && (
+                        <span className="inline-block text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full">
+                          {lead.businessName}
+                        </span>
+                      )}
                     </div>
 
                     <select
                       value={lead.status}
                       onChange={(e) => handleStatusChange(lead._id, e.target.value)}
-                      className="text-[10px] font-black p-1.5 rounded-xl border bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none"
+                      className="px-2 py-1 rounded-xl text-[10px] font-black border bg-slate-50 dark:bg-slate-800 focus:outline-none cursor-pointer"
                     >
                       <option value="pending">Pending</option>
                       <option value="in_progress">In Progress</option>
@@ -379,10 +397,7 @@ export default function AdminLeads() {
                     </a>
 
                     <button
-                      onClick={() => {
-                        setSelectedLead(lead);
-                        setAdminNoteText(lead.adminNotes || '');
-                      }}
+                      onClick={() => handleInspectLead(lead)}
                       className="px-2 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-bold text-[11px] flex items-center justify-center gap-1 border border-purple-200 dark:border-purple-800 cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />
@@ -395,7 +410,7 @@ export default function AdminLeads() {
           )}
         </div>
 
-        {/* Lead Details Modal */}
+        {/* Lead Details & Proposal Document Modal */}
         {selectedLead && (
           <div
             data-lenis-prevent="true"
@@ -467,22 +482,71 @@ export default function AdminLeads() {
                   </div>
                 )}
 
-                {/* Admin Internal Notes Editor */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                  <strong className="block text-slate-500 uppercase font-bold text-[10px]">Internal Admin Notes (Private):</strong>
-                  <textarea
-                    rows={3}
-                    value={adminNoteText}
-                    onChange={(e) => setAdminNoteText(e.target.value)}
-                    placeholder="Add internal notes regarding phone call discussions, quotation updates, or developer assignments..."
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
-                  />
-                  <div className="flex items-center justify-between pt-1">
+                {/* Status & Google Drive PDF Proposal Dispatch Section */}
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                        Inquiry / Proposal Status
+                      </label>
+                      <select
+                        value={leadStatus}
+                        onChange={(e) => setLeadStatus(e.target.value)}
+                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-purple-500 cursor-pointer"
+                      >
+                        <option value="pending">⏳ Pending Review</option>
+                        <option value="in_progress">⚙️ In Progress / Scoping</option>
+                        <option value="contacted">📞 Contacted Client</option>
+                        <option value="completed">✅ Proposal Approved / Completed</option>
+                        <option value="cancelled">❌ Cancelled / Closed</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                          <span>📄 Google Drive PDF Proposal</span>
+                        </label>
+                        {leadDrivePdfLink && (
+                          <a
+                            href={leadDrivePdfLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5"
+                          >
+                            <span>Preview</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        )}
+                      </div>
+                      <input
+                        type="url"
+                        value={leadDrivePdfLink}
+                        onChange={(e) => setLeadDrivePdfLink(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/... or PDF link"
+                        className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-indigo-600 dark:text-indigo-400 font-mono focus:outline-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <strong className="block text-slate-500 uppercase font-bold text-[10px] mb-1">Internal Admin Notes / Client Strategy:</strong>
+                    <textarea
+                      rows={3}
+                      value={adminNoteText}
+                      onChange={(e) => setAdminNoteText(e.target.value)}
+                      placeholder="Add internal notes or client discussion summary to include in the update email..."
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
                     <button
-                      onClick={handleSaveNotes}
-                      className="px-4 py-2 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm cursor-pointer"
+                      onClick={handleSaveLeadDetails}
+                      disabled={isSaving}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm cursor-pointer hover:opacity-95 disabled:opacity-50"
                     >
-                      Save Notes
+                      {isSaving ? 'Saving & Dispatching Email...' : 'Save Status & Dispatch PDF Email 🚀'}
                     </button>
                     <button
                       onClick={() => handleDeleteLead(selectedLead._id)}
