@@ -1344,6 +1344,9 @@ export default function GetStarted() {
   const [stepErrors, setStepErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [uploadProgressText, setUploadProgressText] = useState('');
 
   // Scroll to top on step change
   useEffect(() => {
@@ -1600,8 +1603,25 @@ export default function GetStarted() {
 
     const timer = setTimeout(() => {
       try {
+        // Strip heavy base64 strings from draft before saving to localStorage to prevent QuotaExceededError
+        const draftFormData = { ...formData };
+        if (draftFormData.logoFile && typeof draftFormData.logoFile.dataUrl === 'string' && draftFormData.logoFile.dataUrl.startsWith('data:image')) {
+          draftFormData.logoFile = {
+            name: draftFormData.logoFile.name,
+            size: draftFormData.logoFile.size,
+            url: draftFormData.logoFile.url && !draftFormData.logoFile.url.startsWith('data:image') ? draftFormData.logoFile.url : ''
+          };
+        }
+        if (Array.isArray(draftFormData.photosFiles)) {
+          draftFormData.photosFiles = draftFormData.photosFiles.map(p => ({
+            name: p.name,
+            size: p.size,
+            url: (p.url && !p.url.startsWith('data:image')) ? p.url : ''
+          }));
+        }
+
         const payloadToStore = {
-          formData,
+          formData: draftFormData,
           currentStep,
           appliedTemplate: appliedTemplate || currentTemplateKey || '',
           isCouponApplied,
@@ -1610,7 +1630,9 @@ export default function GetStarted() {
         };
         localStorage.setItem(draftStorageKey, JSON.stringify(payloadToStore));
         setLastSavedTime(new Date().toLocaleTimeString());
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Draft auto-save notice:', e);
+      }
     }, 600);
     return () => clearTimeout(timer);
   }, [formData, currentStep, appliedTemplate, isCouponApplied, couponCode, draftStorageKey, currentTemplateKey]);
@@ -1747,45 +1769,132 @@ export default function GetStarted() {
     toast.info('Template removed. Category selection is now unlocked.');
   };
 
-  // Helper for file upload conversion (base64)
-  const handleFileUpload = (e, fieldType) => {
-    const files = Array.from(e.target.files);
+  // Helper for asynchronous file upload to Cloudinary/Server CDN
+  const handleFileUpload = async (e, fieldType) => {
+    const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
     if (fieldType === 'logo') {
       const file = files[0];
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
+      if (file.size > 15 * 1024 * 1024) {
+        toast.error('Logo file size exceeds 15MB. Please choose a smaller image.');
+        return;
+      }
+      setIsUploadingLogo(true);
+      setUploadProgressText(`Uploading ${file.name}...`);
+
+      // Read local preview first so user immediately sees their file
+      const localPreview = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.readAsDataURL(file);
+      });
+
+      setFormData(prev => ({
+        ...prev,
+        logoFile: {
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`,
+          dataUrl: localPreview,
+          url: '',
+          isUploading: true
+        }
+      }));
+
+      try {
+        const uploadRes = await api.uploadFile(file);
+        const remoteUrl = uploadRes?.url || (uploadRes?.urls && uploadRes.urls[0]) || '';
+        if (remoteUrl) {
+          setFormData(prev => ({
+            ...prev,
+            logoFile: {
+              name: file.name,
+              size: `${(file.size / 1024).toFixed(1)} KB`,
+              dataUrl: remoteUrl,
+              url: remoteUrl,
+              isUploading: false
+            }
+          }));
+          toast.success(`🎉 Logo "${file.name}" uploaded to Cloud CDN!`);
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            logoFile: {
+              name: file.name,
+              size: `${(file.size / 1024).toFixed(1)} KB`,
+              dataUrl: localPreview,
+              url: localPreview,
+              isUploading: false
+            }
+          }));
+          toast.info(`Logo "${file.name}" attached.`);
+        }
+      } catch (err) {
+        console.warn('Logo cloud upload notice, retaining local attachment:', err.message);
         setFormData(prev => ({
           ...prev,
           logoFile: {
             name: file.name,
             size: `${(file.size / 1024).toFixed(1)} KB`,
-            dataUrl: uploadEvent.target.result
+            dataUrl: localPreview,
+            url: localPreview,
+            isUploading: false
           }
         }));
-        toast.success(`Logo "${file.name}" uploaded.`);
-      };
-      reader.readAsDataURL(file);
+        toast.info(`Logo "${file.name}" attached.`);
+      } finally {
+        setIsUploadingLogo(false);
+        setUploadProgressText('');
+      }
     } else if (fieldType === 'photos') {
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (uploadEvent) => {
-          setFormData(prev => ({
-            ...prev,
-            photosFiles: [
-              ...(prev.photosFiles || []),
-              {
-                name: file.name,
-                size: `${(file.size / 1024).toFixed(1)} KB`,
-                dataUrl: uploadEvent.target.result
-              }
-            ]
-          }));
-        };
-        reader.readAsDataURL(file);
-      });
-      toast.success(`Added ${files.length} photo(s).`);
+      setIsUploadingPhotos(true);
+      const total = files.length;
+      let uploadedCount = 0;
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > 25 * 1024 * 1024) {
+          toast.warn(`Skipped "${file.name}" (exceeds 25MB)`);
+          continue;
+        }
+
+        setUploadProgressText(`Uploading photo ${i + 1} of ${total}...`);
+
+        const localPreview = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(ev.target.result);
+          reader.readAsDataURL(file);
+        });
+
+        let finalUrl = localPreview;
+        try {
+          const uploadRes = await api.uploadFile(file);
+          const remoteUrl = uploadRes?.url || (uploadRes?.urls && uploadRes.urls[0]) || '';
+          if (remoteUrl) {
+            finalUrl = remoteUrl;
+          }
+        } catch (err) {
+          console.warn('Photo upload notice, using local preview:', err.message);
+        }
+
+        setFormData(prev => ({
+          ...prev,
+          photosFiles: [
+            ...(prev.photosFiles || []),
+            {
+              name: file.name,
+              size: `${(file.size / 1024).toFixed(1)} KB`,
+              dataUrl: finalUrl,
+              url: finalUrl
+            }
+          ]
+        }));
+        uploadedCount++;
+      }
+
+      setIsUploadingPhotos(false);
+      setUploadProgressText('');
+      toast.success(`📸 Added ${uploadedCount} photo(s) successfully!`);
     } else if (fieldType === 'contentDoc') {
       const file = files[0];
       setFormData(prev => ({
@@ -2066,31 +2175,63 @@ export default function GetStarted() {
         country: formData.country || 'India'
       };
 
-      // Extract all uploaded photos & logos
+      // Extract all uploaded photos & logos - ensuring clean URLs
       const extractedImages = [];
-      if (formData.logoFile?.dataUrl) {
-        extractedImages.push({
-          name: formData.logoFile.name || 'Brand Logo',
-          size: formData.logoFile.size || '',
-          dataUrl: formData.logoFile.dataUrl,
-          url: formData.logoFile.dataUrl,
-          type: 'logo'
-        });
+      const imageUrls = [];
+
+      if (formData.logoFile) {
+        let logoUrl = formData.logoFile.url || formData.logoFile.dataUrl || '';
+        // If logo is still raw base64 dataUrl, upload it asynchronously
+        if (logoUrl && typeof logoUrl === 'string' && logoUrl.startsWith('data:image')) {
+          try {
+            const upRes = await api.post('/upload', { image: logoUrl });
+            if (upRes?.url) logoUrl = upRes.url;
+          } catch (e) {
+            console.warn('Logo async upload on submit notice:', e);
+          }
+        }
+        if (logoUrl) {
+          imageUrls.push(logoUrl);
+          extractedImages.push({
+            name: formData.logoFile.name || 'Brand Logo',
+            size: formData.logoFile.size || '',
+            dataUrl: logoUrl,
+            url: logoUrl,
+            type: 'logo'
+          });
+        }
       }
+
       if (Array.isArray(formData.photosFiles)) {
-        formData.photosFiles.forEach((file, idx) => {
-          if (file?.dataUrl) {
+        for (let idx = 0; idx < formData.photosFiles.length; idx++) {
+          const file = formData.photosFiles[idx];
+          if (!file) continue;
+          let pUrl = file.url || file.dataUrl || '';
+          if (pUrl && typeof pUrl === 'string' && pUrl.startsWith('data:image')) {
+            try {
+              const upRes = await api.post('/upload', { image: pUrl });
+              if (upRes?.url) pUrl = upRes.url;
+            } catch (e) {
+              console.warn('Photo async upload on submit notice:', e);
+            }
+          }
+          if (pUrl) {
+            imageUrls.push(pUrl);
             extractedImages.push({
               name: file.name || `Photo ${idx + 1}`,
               size: file.size || '',
-              dataUrl: file.dataUrl,
-              url: file.dataUrl,
+              dataUrl: pUrl,
+              url: pUrl,
               type: 'photo'
             });
           }
-        });
+        }
       }
-      const imageUrls = extractedImages.map(img => img.dataUrl);
+
+      // Sanitize answers & fullFormData so we never bloat the JSON body with redundant base64 copies
+      const sanitizedFormData = { ...formData };
+      delete sanitizedFormData.logoFile;
+      delete sanitizedFormData.photosFiles;
 
       const requirementPayload = {
         websiteType,
@@ -2100,8 +2241,8 @@ export default function GetStarted() {
         clientInfo,
         images: imageUrls,
         uploadedImages: extractedImages,
-        logoFile: formData.logoFile,
-        photosFiles: formData.photosFiles,
+        logoFile: extractedImages.find(img => img.type === 'logo') || null,
+        photosFiles: extractedImages.filter(img => img.type === 'photo'),
         designPreferences: {
           visualStyle: formData.visualStyle || 'Modern',
           colorTheme: formData.colorTheme || 'Default',
@@ -2122,8 +2263,8 @@ export default function GetStarted() {
         estimatedPrice: priceBreakdown.totalApproxPrice,
         priceBreakdown,
         appliedCoupon: isCouponApplied ? couponCode : null,
-        fullFormData: formData,
-        answers: formData,
+        fullFormData: sanitizedFormData,
+        answers: sanitizedFormData,
         status: 'Submitted'
       };
 
@@ -4082,7 +4223,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 </div>
               </div>
 
-              {/* RICH MEDIA UPLOAD CARDS WITH INSTANT THUMBNAIL PREVIEWS */}
+              {/* RICH MEDIA UPLOAD CARDS WITH INSTANT THUMBNAIL PREVIEWS & LIVE CLOUD UPLOAD PROGRESS */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 
                 {/* Logo Upload Card */}
@@ -4094,17 +4235,28 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">PNG, JPG, SVG or WebP formats supported</p>
                   </div>
 
-                  {formData.logoFile ? (
+                  {isUploadingLogo ? (
+                    <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-600 flex flex-col items-center justify-center gap-2 text-center animate-pulse">
+                      <Loader2 className="w-6 h-6 text-purple-600 dark:text-purple-400 animate-spin" />
+                      <span className="text-xs font-bold text-purple-700 dark:text-purple-300">{uploadProgressText || 'Uploading Logo to Cloud...'}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400">Please wait while image is being optimized</span>
+                    </div>
+                  ) : formData.logoFile ? (
                     <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <img
-                          src={formData.logoFile.dataUrl}
+                          src={formData.logoFile.dataUrl || formData.logoFile.url}
                           alt="Logo Preview"
                           className="w-10 h-10 object-contain rounded-lg bg-slate-100 dark:bg-slate-800 border p-1"
                         />
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{formData.logoFile.name}</p>
-                          <p className="text-[10px] text-slate-400">{formData.logoFile.size}</p>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-slate-400">{formData.logoFile.size}</span>
+                            {formData.logoFile.url?.startsWith('http') && (
+                              <span className="px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold">Cloud Synced</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <button
@@ -4120,7 +4272,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-purple-500 cursor-pointer transition-colors text-center">
                       <UploadCloud className="w-6 h-6 text-purple-500 mb-1" />
                       <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Click to Browse Logo</span>
-                      <span className="text-[10px] text-slate-400">Max size 5MB</span>
+                      <span className="text-[10px] text-slate-400">Max size 15MB</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -4140,24 +4292,31 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Upload multiple food, shop or product photos</p>
                   </div>
 
-                  <label className="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-purple-500 cursor-pointer transition-colors text-center mb-2">
-                    <Plus className="w-5 h-5 text-purple-500 mb-0.5" />
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Add Business Photos</span>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={e => handleFileUpload(e, 'photos')}
-                      className="hidden"
-                    />
-                  </label>
+                  {isUploadingPhotos ? (
+                    <div className="p-3 mb-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-600 flex items-center justify-center gap-2 text-center animate-pulse">
+                      <Loader2 className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" />
+                      <span className="text-xs font-bold text-purple-700 dark:text-purple-300">{uploadProgressText || 'Uploading photos...'}</span>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-purple-500 cursor-pointer transition-colors text-center mb-2">
+                      <Plus className="w-5 h-5 text-purple-500 mb-0.5" />
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Add Business Photos</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={e => handleFileUpload(e, 'photos')}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
 
                   {/* Thumbnail Grid */}
                   {formData.photosFiles && formData.photosFiles.length > 0 && (
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-32 overflow-y-auto p-1">
                       {formData.photosFiles.map((photo, idx) => (
                         <div key={idx} className="relative group rounded-lg overflow-hidden border aspect-square bg-slate-100 dark:bg-slate-900">
-                          <img src={photo.dataUrl} alt={photo.name} className="w-full h-full object-cover" />
+                          <img src={photo.dataUrl || photo.url} alt={photo.name} className="w-full h-full object-cover" />
                           <button
                             type="button"
                             onClick={() => handleRemovePhoto(idx)}
