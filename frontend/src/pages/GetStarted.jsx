@@ -2210,60 +2210,44 @@ export default function GetStarted() {
         country: formData.country || 'India'
       };
 
-      // Extract all uploaded photos & logos - ensuring clean URLs
+      // Extract all uploaded photos & logos - zero-bloat lightweight metadata
       const extractedImages = [];
       const imageUrls = [];
 
       if (formData.logoFile) {
-        let logoUrl = formData.logoFile.url || formData.logoFile.dataUrl || '';
-        // If logo is still raw base64 dataUrl, upload it asynchronously
-        if (logoUrl && typeof logoUrl === 'string' && logoUrl.startsWith('data:image')) {
-          try {
-            const upRes = await api.post('/upload', { image: logoUrl });
-            if (upRes?.url) logoUrl = upRes.url;
-          } catch (e) {
-            console.warn('Logo async upload on submit notice:', e);
-          }
-        }
+        const logoUrl = (formData.logoFile.url && !formData.logoFile.url.startsWith('data:image'))
+          ? formData.logoFile.url
+          : '';
         if (logoUrl) {
           imageUrls.push(logoUrl);
-          extractedImages.push({
-            name: formData.logoFile.name || 'Brand Logo',
-            size: formData.logoFile.size || '',
-            dataUrl: logoUrl,
-            url: logoUrl,
-            type: 'logo'
-          });
         }
+        extractedImages.push({
+          name: formData.logoFile.name || 'Brand Logo',
+          size: formData.logoFile.size || '',
+          url: logoUrl,
+          type: 'logo'
+        });
       }
 
       if (Array.isArray(formData.photosFiles)) {
-        for (let idx = 0; idx < formData.photosFiles.length; idx++) {
-          const file = formData.photosFiles[idx];
-          if (!file) continue;
-          let pUrl = file.url || file.dataUrl || '';
-          if (pUrl && typeof pUrl === 'string' && pUrl.startsWith('data:image')) {
-            try {
-              const upRes = await api.post('/upload', { image: pUrl });
-              if (upRes?.url) pUrl = upRes.url;
-            } catch (e) {
-              console.warn('Photo async upload on submit notice:', e);
-            }
+        formData.photosFiles.forEach((file, idx) => {
+          if (!file) return;
+          const photoUrl = (file.url && !file.url.startsWith('data:image'))
+            ? file.url
+            : '';
+          if (photoUrl) {
+            imageUrls.push(photoUrl);
           }
-          if (pUrl) {
-            imageUrls.push(pUrl);
-            extractedImages.push({
-              name: file.name || `Photo ${idx + 1}`,
-              size: file.size || '',
-              dataUrl: pUrl,
-              url: pUrl,
-              type: 'photo'
-            });
-          }
-        }
+          extractedImages.push({
+            name: file.name || `Photo ${idx + 1}`,
+            size: file.size || '',
+            url: photoUrl,
+            type: 'photo'
+          });
+        });
       }
 
-      // Sanitize answers & fullFormData so we never bloat the JSON body with redundant base64 copies
+      // Compact, zero-bloat sanitized formData without large binary objects
       const sanitizedFormData = { ...formData };
       delete sanitizedFormData.logoFile;
       delete sanitizedFormData.photosFiles;

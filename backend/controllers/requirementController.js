@@ -178,6 +178,10 @@ export const submitRequirement = async (req, res) => {
     };
 
     let doc = null;
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB().catch(() => {});
+    }
+
     if (mongoose.connection.readyState === 1) {
       try {
         let existingDoc = null;
