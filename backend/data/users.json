@@ -47,11 +47,11 @@
     "avatar": "",
     "phone": "",
     "company": "",
-    "status": "suspended",
+    "status": "active",
     "emailOtp": "",
     "emailOtpExpires": null,
     "isEmailVerified": true,
-    "updatedAt": "2026-09-05T09:06:06.030Z"
+    "updatedAt": "2026-09-05T09:26:20.343Z"
   },
   {
     "_id": "6a9bc23b958aa27bb9fec0b8",
