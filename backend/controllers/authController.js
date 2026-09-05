@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { dataStore } from '../config/dataAdapter.js';
 import { generateToken, sendTokenResponse, getCookieOptions } from '../utils/token.js';
 import { sendWelcomeEmail, sendVerificationOtpEmail, sendAdminNewUserAlertEmail } from '../utils/email.js';
+import { fetchAllMergedRequirements } from './requirementController.js';
 import mongoose from 'mongoose';
 
 // @desc    Register a new user
@@ -302,74 +303,44 @@ export const getAllUsers = async (req, res) => {
     const rawUsers = await dataStore.getAllUsers();
     
     // Fetch requirements, leads, and callbacks to aggregate live stats per user
-    let requirements = [];
-    let leads = [];
-    let callbacks = [];
-
-    if (mongoose.connection.readyState === 1) {
-      try {
-        const { default: Requirement } = await import('../models/Requirement.js');
-        requirements = await Requirement.find().lean();
-      } catch (e) {
-        console.warn('getAllUsers requirements query notice:', e.message);
-      }
-      try {
-        const { default: QueryLead } = await import('../models/QueryLead.js');
-        leads = await QueryLead.find().lean();
-      } catch (e) {
-        console.warn('getAllUsers leads query notice:', e.message);
-      }
-      try {
-        const { default: CallbackRequest } = await import('../models/CallbackRequest.js');
-        callbacks = await CallbackRequest.find().lean();
-      } catch (e) {
-        console.warn('getAllUsers callbacks query notice:', e.message);
-      }
-    }
-
-    if (requirements.length === 0) {
-      requirements = dataStore.read('requirements') || [];
-    }
-    if (leads.length === 0) {
-      leads = (await dataStore.getAllLeads?.()) || [];
-    }
-    if (callbacks.length === 0) {
-      callbacks = (await dataStore.getAllCallbacks?.()) || [];
-    }
+    const requirements = await fetchAllMergedRequirements();
+    const leads = (await dataStore.getAllLeads?.()) || [];
+    const callbacks = (await dataStore.getAllCallbacks?.()) || [];
 
     const enrichedUsers = rawUsers.map((u) => {
       const userEmail = (u.email || '').toLowerCase().trim();
       const userId = String(u._id || u.id || '');
-      const userPhone = (u.phone || '').replace(/\D/g, '').slice(-10);
+      const userPhone = (u.phone || '').replace(/\D/g, '');
       
       const userOrders = requirements.filter((r) => {
-        const clientEmail = (r.clientInfo?.email || r.email || '').toLowerCase().trim();
+        if (!r) return false;
+        const clientEmail = (r.clientInfo?.email || r.email || r.fullFormData?.emailAddress || r.answers?.emailAddress || '').toLowerCase().trim();
         const rUser = String(r.user?._id || r.user || r.userId || '');
-        const clientPhone = (r.clientInfo?.mobile || r.clientInfo?.phone || r.phone || '').replace(/\D/g, '').slice(-10);
+        const clientPhone = (r.clientInfo?.mobile || r.clientInfo?.phone || r.phone || r.fullFormData?.mobileNumber || r.answers?.mobileNumber || '').replace(/\D/g, '');
         
-        return (
-          (clientEmail && clientEmail === userEmail) ||
-          (rUser && rUser === userId) ||
-          (userPhone && clientPhone && userPhone.length >= 10 && userPhone === clientPhone)
-        );
+        const matchUser = userId && rUser && (rUser === userId || rUser === String(u._id) || rUser === String(u.id));
+        const matchEmail = userEmail && clientEmail && (clientEmail === userEmail || clientEmail.includes(userEmail) || userEmail.includes(clientEmail));
+        const matchPhone = userPhone && userPhone.length >= 7 && clientPhone && (clientPhone.includes(userPhone.slice(-10)) || userPhone.includes(clientPhone.slice(-10)));
+
+        return matchUser || matchEmail || matchPhone;
       });
 
       const userLeads = leads.filter((l) => {
+        if (!l) return false;
         const leadEmail = (l.email || '').toLowerCase().trim();
-        const leadPhone = (l.phone || '').replace(/\D/g, '').slice(-10);
-        return (
-          (leadEmail && leadEmail === userEmail) ||
-          (userPhone && leadPhone && userPhone.length >= 10 && userPhone === leadPhone)
-        );
+        const leadPhone = (l.phone || '').replace(/\D/g, '');
+        const matchEmail = userEmail && leadEmail && (leadEmail === userEmail || leadEmail.includes(userEmail));
+        const matchPhone = userPhone && userPhone.length >= 7 && leadPhone && (leadPhone.includes(userPhone.slice(-10)) || userPhone.includes(leadPhone.slice(-10)));
+        return matchEmail || matchPhone;
       });
 
       const userCallbacks = callbacks.filter((c) => {
+        if (!c) return false;
         const cbEmail = (c.email || '').toLowerCase().trim();
-        const cbPhone = (c.phone || '').replace(/\D/g, '').slice(-10);
-        return (
-          (cbEmail && cbEmail === userEmail) ||
-          (userPhone && cbPhone && userPhone.length >= 10 && userPhone === cbPhone)
-        );
+        const cbPhone = (c.phone || '').replace(/\D/g, '');
+        const matchEmail = userEmail && cbEmail && (cbEmail === userEmail || cbEmail.includes(userEmail));
+        const matchPhone = userPhone && userPhone.length >= 7 && cbPhone && (cbPhone.includes(userPhone.slice(-10)) || userPhone.includes(cbPhone.slice(-10)));
+        return matchEmail || matchPhone;
       });
 
       return {
