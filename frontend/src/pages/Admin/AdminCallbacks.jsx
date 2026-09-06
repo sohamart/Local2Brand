@@ -20,10 +20,10 @@ export default function AdminCallbacks() {
 
   useEffect(() => {
     fetchCallbacks(false);
-    // Real-time live auto-refresh every 3 seconds while on this page
+    // Real-time live auto-refresh every 15 seconds while on this page
     const pollInterval = setInterval(() => {
       fetchCallbacks(true);
-    }, 3000);
+    }, 15000);
     return () => clearInterval(pollInterval);
   }, [statusFilter]);
 

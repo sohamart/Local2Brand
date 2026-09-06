@@ -84,10 +84,10 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchDashboardData(false);
-    // Real-time silent live polling every 3s
+    // Real-time silent live polling every 15s
     const timer = setInterval(() => {
       fetchDashboardData(true);
-    }, 3000);
+    }, 15000);
     return () => clearInterval(timer);
   }, []);
 

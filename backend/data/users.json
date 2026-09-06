@@ -79,5 +79,16 @@
     "status": "active",
     "emailOtp": "836535",
     "emailOtpExpires": "2026-09-05T09:19:25.194Z"
+  },
+  {
+    "_id": "6a9551f5ef178dc4ce9260cf",
+    "id": "6a9551f5ef178dc4ce9260cf",
+    "name": "LOCAL2BRAND Master Admin",
+    "email": "sohamduttabwn@gmail.com",
+    "role": "admin",
+    "avatar": "https://res.cloudinary.com/tm2pwzjj/image/upload/v1788680878/local2brand_assets/egxerq1njesaadftii6c.jpg",
+    "phone": "",
+    "company": "",
+    "status": "active"
   }
 ]

@@ -610,20 +610,21 @@ export default function Navbar() {
                     className="flex items-center gap-2 py-1 pl-1.5 pr-2.5 rounded-full bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 hover:border-purple-400 dark:hover:border-purple-600 transition-all cursor-pointer shadow-xs"
                     aria-expanded={userDropdownOpen}
                   >
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm overflow-hidden border border-white/40 dark:border-slate-700">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 text-white flex items-center justify-center text-[11px] font-black shrink-0 shadow-sm overflow-hidden border border-white/40 dark:border-slate-700 relative">
                       {user?.avatar ? (
                         <img
                           key={user.avatar}
                           src={user.avatar}
-                          alt={user.name}
+                          alt={user.name || 'User'}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.style.opacity = '0';
                           }}
                         />
-                      ) : (
-                        user?.name?.[0]?.toUpperCase() || 'U'
-                      )}
+                      ) : null}
+                      <span className="absolute inset-0 flex items-center justify-center -z-10 font-bold">
+                        {user?.name ? user.name[0].toUpperCase() : 'U'}
+                      </span>
                     </div>
 
                     <span className="max-w-[80px] truncate text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -838,20 +839,21 @@ export default function Navbar() {
                 {user ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 text-white flex items-center justify-center font-black text-base shadow-md overflow-hidden border-2 border-white/60 dark:border-slate-700 shrink-0">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 text-white flex items-center justify-center font-black text-base shadow-md overflow-hidden border-2 border-white/60 dark:border-slate-700 shrink-0 relative">
                         {user?.avatar ? (
                           <img
                             key={user.avatar}
                             src={user.avatar}
-                            alt={user.name}
+                            alt={user.name || 'User'}
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.style.opacity = '0';
                             }}
                           />
-                        ) : (
-                          user?.name?.[0]?.toUpperCase() || 'U'
-                        )}
+                        ) : null}
+                        <span className="absolute inset-0 flex items-center justify-center -z-10 font-bold">
+                          {user?.name ? user.name[0].toUpperCase() : 'U'}
+                        </span>
                       </div>
                       <div className="min-w-0">
                         <span className="font-extrabold text-sm text-slate-900 dark:text-white block truncate">{user.name}</span>

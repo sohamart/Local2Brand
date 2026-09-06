@@ -806,7 +806,7 @@ export default function AdminRequirements() {
         <div
           data-lenis-prevent="true"
           onWheel={(e) => e.stopPropagation()}
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-text modal-touch-scroll"
+          className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in select-text modal-touch-scroll"
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedReq(null);
           }}
@@ -814,94 +814,99 @@ export default function AdminRequirements() {
           <div
             data-lenis-prevent="true"
             onWheel={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[88vh] sm:max-h-[92vh] h-[88vh] sm:h-[92vh] flex flex-col min-h-0"
+            className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-none sm:rounded-3xl shadow-2xl border-0 sm:border border-slate-200 dark:border-slate-800 overflow-hidden h-full sm:h-[92vh] sm:max-h-[92vh] flex flex-col min-h-0"
           >
 
-            
             {/* Modal Fixed Top Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950/80 shrink-0">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-2xl l2b-gradient-bg text-white flex items-center justify-center font-bold shadow-sm shrink-0">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-black text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950 px-2 py-0.5 rounded-md">
-                      {selectedReq.requirementId}
-                    </span>
-                    <button
-                      onClick={() => handleCopyId(selectedReq.requirementId)}
-                      className="text-slate-400 hover:text-purple-600 cursor-pointer"
-                      title="Copy Order ID"
-                    >
-                      {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shrink-0 ${STATUS_COLORS[selectedReq.status] || STATUS_COLORS.Submitted}`}>
-                      {selectedReq.status || 'Submitted'}
-                    </span>
+            <div className="p-3.5 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 shrink-0">
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl l2b-gradient-bg text-white flex items-center justify-center font-bold shadow-sm shrink-0">
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate mt-0.5">
-                    {selectedReq.clientInfo?.businessName || selectedReq.websiteTypeName || 'Project Submission'}
-                  </h3>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+                      <span className="font-mono text-[11px] sm:text-xs font-black text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950 px-2 py-0.5 rounded-md">
+                        {selectedReq.requirementId}
+                      </span>
+                      <button
+                        onClick={() => handleCopyId(selectedReq.requirementId)}
+                        className="text-slate-400 hover:text-purple-600 cursor-pointer p-0.5"
+                        title="Copy Order ID"
+                      >
+                        {copiedId ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider border shrink-0 ${STATUS_COLORS[selectedReq.status] || STATUS_COLORS.Submitted}`}>
+                        {selectedReq.status || 'Submitted'}
+                      </span>
+                    </div>
+                    <h3 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white truncate mt-0.5">
+                      {selectedReq.clientInfo?.businessName || selectedReq.websiteTypeName || 'Project Submission'}
+                    </h3>
+                  </div>
                 </div>
-              </div>
 
-              <button
-                onClick={() => setSelectedReq(null)}
-                className="p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
+                <button
+                  onClick={() => setSelectedReq(null)}
+                  className="p-1.5 sm:p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Segmented Navigation Bar */}
-            <div className="px-4 sm:px-6 pt-3 pb-2 bg-slate-100/60 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 overflow-x-auto shrink-0">
+            <div className="px-3 sm:px-6 py-2 bg-slate-100/80 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar shrink-0">
               <button
                 onClick={() => setActiveInspectTab('all_steps')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   activeInspectTab === 'all_steps'
                     ? 'bg-purple-600 text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                 }`}
               >
-                <Layers className="w-3.5 h-3.5" />
-                <span>12-Step Form Breakdown &amp; All Answers</span>
+                <Layers className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">12-Step Form Breakdown &amp; Answers</span>
+                <span className="sm:hidden">12 Steps</span>
               </button>
 
               <button
                 onClick={() => setActiveInspectTab('workflow')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   activeInspectTab === 'workflow'
                     ? 'bg-purple-600 text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                 }`}
               >
-                <Sliders className="w-3.5 h-3.5" />
-                <span>Workflow &amp; Quota Manager</span>
+                <Sliders className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Workflow &amp; Quota Manager</span>
+                <span className="sm:hidden">Workflow &amp; Quote</span>
               </button>
 
               <button
                 onClick={() => setActiveInspectTab('client')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   activeInspectTab === 'client'
                     ? 'bg-purple-600 text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                 }`}
               >
-                <User className="w-3.5 h-3.5" />
-                <span>Client &amp; Social Profile</span>
+                <User className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Client &amp; Social Profile</span>
+                <span className="sm:hidden">Client</span>
               </button>
 
               <button
                 onClick={() => setActiveInspectTab('media')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   activeInspectTab === 'media'
                     ? 'bg-purple-600 text-white shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
                 }`}
               >
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span>Media &amp; Photos ({getAllRequirementPhotos(selectedReq).length})</span>
+                <ImageIcon className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Media &amp; Photos ({getAllRequirementPhotos(selectedReq).length})</span>
+                <span className="sm:hidden">Media ({getAllRequirementPhotos(selectedReq).length})</span>
               </button>
             </div>
 
@@ -1464,46 +1469,52 @@ export default function AdminRequirements() {
             </div>
 
             {/* Modal Fixed Bottom Footer */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-              <span className="text-[11px] text-slate-500 font-mono">
-                Order ID: <strong>{selectedReq.requirementId}</strong> • Submitted: {new Date(selectedReq.createdAt || selectedReq.submittedAt).toLocaleString()}
-              </span>
+            <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 shrink-0">
+              <div className="text-[10px] sm:text-[11px] text-slate-500 font-mono flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                <span>Order: <strong className="text-purple-600 dark:text-purple-400 font-bold">{selectedReq.requirementId}</strong></span>
+                <span className="text-slate-400">•</span>
+                <span className="truncate">{new Date(selectedReq.createdAt || selectedReq.submittedAt).toLocaleDateString()}</span>
+              </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => handleOpenDeleteModal(selectedReq, e, 'reject')}
-                  className="px-3.5 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
-                  title="Reject this submission with reason"
-                >
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  <span>Reject Order</span>
-                </button>
+              <div className="flex items-center flex-wrap sm:flex-nowrap gap-1.5 sm:gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={(e) => handleOpenDeleteModal(selectedReq, e, 'reject')}
+                    className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800 font-bold text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Reject this submission with reason"
+                  >
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Reject</span>
+                  </button>
 
-                <button
-                  onClick={(e) => handleOpenDeleteModal(selectedReq, e, 'delete')}
-                  className="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-colors"
-                  title="Delete this order permanently from database"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Delete</span>
-                </button>
+                  <button
+                    onClick={(e) => handleOpenDeleteModal(selectedReq, e, 'delete')}
+                    className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800 font-bold text-[11px] sm:text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                    title="Delete this order permanently from database"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Delete</span>
+                  </button>
+                </div>
 
-                <a
-                  href={`https://wa.me/${selectedReq.clientInfo?.mobile?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${selectedReq.clientInfo?.ownerName || 'Client'}, this is the LOCAL2BRAND Engineering Desk regarding your website order ${selectedReq.requirementId}.`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500 flex items-center gap-1.5 shadow-xs"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>WhatsApp</span>
-                </a>
+                <div className="flex items-center gap-1.5">
+                  <a
+                    href={`https://wa.me/${selectedReq.clientInfo?.mobile?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${selectedReq.clientInfo?.ownerName || 'Client'}, this is the LOCAL2BRAND Engineering Desk regarding your website order ${selectedReq.requirementId}.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-emerald-600 text-white font-bold text-[11px] sm:text-xs hover:bg-emerald-500 flex items-center gap-1.5 shadow-xs transition-colors"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>WhatsApp</span>
+                  </a>
 
-                <button
-                  onClick={() => setSelectedReq(null)}
-                  className="px-5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
-                >
-                  Close
-                </button>
+                  <button
+                    onClick={() => setSelectedReq(null)}
+                    className="px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
 

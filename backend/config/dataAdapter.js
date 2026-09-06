@@ -549,26 +549,37 @@ export const dataStore = {
   },
 
   async updateUser(id, updates) {
-    const cleanId = String(id).trim();
+    const cleanId = String(id || '').trim();
     let mongoUpdated = null;
-    await ensureDb();
+    await ensureDb().catch(() => {});
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
         if (mongoose.Types.ObjectId.isValid(cleanId)) {
-          mongoUpdated = await User.findByIdAndUpdate(cleanId, { $set: updates }, { new: true });
+          mongoUpdated = await User.findByIdAndUpdate(cleanId, { $set: updates }, { new: true }).lean();
         }
-        if (!mongoUpdated) {
+        if (!mongoUpdated && (cleanId === 'admin_master_001' || cleanId === 'admin_default_id_001' || cleanId.toLowerCase().includes('admin'))) {
+          const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
           mongoUpdated = await User.findOneAndUpdate(
-            { $or: [{ email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim() }, { role: 'admin' }] },
+            { email: adminEmail },
             { $set: updates },
             { new: true }
-          );
+          ).lean() || await User.findOneAndUpdate(
+            { role: 'admin' },
+            { $set: updates },
+            { new: true }
+          ).lean();
         }
       } catch (err) {
         console.warn('MongoDB updateUser fallback notice:', err.message);
       }
     }
+
+    if (mongoUpdated) {
+      const { passwordHash: _, password: __, ...safeUser } = mongoUpdated;
+      return safeUser;
+    }
+
     const users = readLocalStore('users') || [];
     const index = users.findIndex((u) => u && (String(u._id || u.id) === cleanId || (u.role === 'admin' && (cleanId === 'admin_master_001' || cleanId === 'admin_default_id_001'))));
     if (index === -1) {
@@ -582,15 +593,12 @@ export const dataStore = {
         phone: updates.phone || '',
         company: updates.company || '',
         status: 'active',
-        ...updates
       };
       users.push(adminUser);
-      writeLocalStore('users', users);
-      return mongoUpdated || adminUser;
+      return adminUser;
     }
     users[index] = { ...users[index], ...updates, updatedAt: new Date().toISOString() };
-    writeLocalStore('users', users);
-    return mongoUpdated || users[index];
+    return users[index];
   },
 
   async deleteUser(id) {
