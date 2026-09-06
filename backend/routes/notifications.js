@@ -2,8 +2,10 @@ import express from 'express';
 import oneSignalBackend from '../services/oneSignalService.js';
 import Notification from '../models/Notification.js';
 import { protect, optionalAuth } from '../middleware/auth.js';
+import { ensureDb, isDbConnected, dataStore } from '../config/dataAdapter.js';
 
 const router = express.Router();
+
 
 // ==========================================
 // 1. PUBLIC / HEALTH STATUS ROUTES
@@ -219,9 +221,10 @@ router.post('/broadcast', async (req, res) => {
 // @access  Public / Optional Auth
 router.get('/inbox', optionalAuth, async (req, res) => {
   try {
+    await ensureDb().catch(() => {});
     const user = req.user;
 
-    const { page = 1, limit = 25, type, unreadOnly, search } = req.query;
+    const { page = 1, limit = 25, type, category, unreadOnly, search } = req.query;
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 25));
     const skip = (pageNum - 1) * limitNum;
@@ -229,115 +232,155 @@ router.get('/inbox', optionalAuth, async (req, res) => {
     const now = new Date();
     const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
 
-    // Asynchronous non-blocking background cleanup for read items older than 3 days
-    Notification.deleteMany({
-      isRead: true,
-      $or: [
-        { expiresAt: { $lte: now } },
-        { readAt: { $lte: threeDaysAgo } }
-      ]
-    }).catch(() => {});
+    if (isDbConnected()) {
+      // Asynchronous non-blocking background cleanup for read items older than 3 days
+      Notification.deleteMany({
+        isRead: true,
+        $or: [
+          { expiresAt: { $lte: now } },
+          { readAt: { $lte: threeDaysAgo } }
+        ]
+      }).catch(() => {});
 
-    // Scope query based on role or guest
-    const conditions = [];
+      // Scope query based on role or guest
+      const conditions = [];
 
-    if (user) {
-      if (user.role === 'admin') {
-        // Admin sees: admin-targeted alerts, global broadcasts, alerts assigned to admin user, or sent to admin email
-        conditions.push(
-          { recipientRole: 'admin' },
-          { recipientRole: 'all' },
-          { recipient: user._id },
-          { recipientEmail: user.email?.toLowerCase().trim() }
-        );
-      } else {
-        // Regular user sees: personal notifications (by user ID), personal notifications by email, or global broadcasts
-        conditions.push(
-          { recipient: user._id },
-          { recipientRole: 'all' }
-        );
-        if (user.email) {
-          conditions.push({ recipientEmail: user.email.toLowerCase().trim() });
+      if (user) {
+        if (user.role === 'admin') {
+          // Admin sees: admin-targeted alerts, global broadcasts, alerts assigned to admin user, or sent to admin email
+          conditions.push(
+            { recipientRole: 'admin' },
+            { recipientRole: 'all' },
+            { recipient: user._id },
+            { recipientEmail: user.email?.toLowerCase().trim() }
+          );
+        } else {
+          // Regular user sees: personal notifications (by user ID), personal notifications by email, or global broadcasts
+          conditions.push(
+            { recipient: user._id },
+            { recipientRole: 'all' }
+          );
+          if (user.email) {
+            conditions.push({ recipientEmail: user.email.toLowerCase().trim() });
+          }
         }
+      } else {
+        // Unauthenticated visitor sees global announcements & broadcasts
+        conditions.push({ recipientRole: 'all' });
       }
-    } else {
-      // Unauthenticated visitor sees global announcements & broadcasts
-      conditions.push({ recipientRole: 'all' });
-    }
 
-    const andClauses = [];
+      const andClauses = [];
 
-    // 1. Recipient Scope
-    if (conditions.length > 0) {
-      andClauses.push({ $or: conditions });
-    }
+      // 1. Recipient Scope
+      if (conditions.length > 0) {
+        andClauses.push({ $or: conditions });
+      }
 
-    // 2. Exclude read notifications older than 3 days (keep unread and recent read)
-    andClauses.push({
-      $or: [
-        { isRead: false },
-        { isRead: { $exists: false } },
-        { readAt: null },
-        { readAt: { $gt: threeDaysAgo } },
-        { expiresAt: { $gt: now } },
-        { expiresAt: null }
-      ]
-    });
-
-    // 3. Type filter
-    if (type && type !== 'all') {
-      andClauses.push({ type });
-    }
-
-    // 4. Unread only
-    if (unreadOnly === 'true' || unreadOnly === true) {
-      andClauses.push({ isRead: false });
-    }
-
-    // 5. Search filter
-    if (search && typeof search === 'string' && search.trim()) {
-      const s = search.trim();
+      // 2. Exclude read notifications older than 3 days (keep unread and recent read)
       andClauses.push({
         $or: [
-          { title: { $regex: s, $options: 'i' } },
-          { message: { $regex: s, $options: 'i' } },
-          { category: { $regex: s, $options: 'i' } },
-          { recipientEmail: { $regex: s, $options: 'i' } },
-        ],
+          { isRead: false },
+          { isRead: { $exists: false } },
+          { readAt: null },
+          { readAt: { $gt: threeDaysAgo } },
+          { expiresAt: { $gt: now } },
+          { expiresAt: null }
+        ]
+      });
+
+      // 3. Category & Type filter
+      if (category && category !== 'all') {
+        andClauses.push({
+          $or: [
+            { category: { $regex: category, $options: 'i' } },
+            { type: { $regex: category, $options: 'i' } }
+          ]
+        });
+      } else if (type && type !== 'all') {
+        andClauses.push({ type });
+      }
+
+      // 4. Unread only
+      if (unreadOnly === 'true' || unreadOnly === true) {
+        andClauses.push({ isRead: false });
+      }
+
+      // 5. Search filter
+      if (search && typeof search === 'string' && search.trim()) {
+        const s = search.trim();
+        andClauses.push({
+          $or: [
+            { title: { $regex: s, $options: 'i' } },
+            { message: { $regex: s, $options: 'i' } },
+            { category: { $regex: s, $options: 'i' } },
+            { recipientEmail: { $regex: s, $options: 'i' } },
+          ],
+        });
+      }
+
+      const filter = andClauses.length > 0 ? { $and: andClauses } : {};
+
+      // Return full notification records immediately
+      const [notifications, total, unreadCount] = await Promise.all([
+        Notification.find(filter)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limitNum)
+          .lean(),
+        Notification.countDocuments(filter),
+        Notification.countDocuments({
+          $and: [
+            { $or: conditions },
+            { isRead: false }
+          ]
+        }),
+      ]);
+
+      const pages = Math.ceil(total / limitNum) || 1;
+
+      return res.status(200).json({
+        success: true,
+        notifications,
+        total,
+        unreadCount,
+        page: pageNum,
+        pages,
+        pagination: {
+          total,
+          pages,
+          page: pageNum,
+          limit: limitNum
+        }
       });
     }
 
-    const filter = andClauses.length > 0 ? { $and: andClauses } : {};
-
-    // Return full notification records immediately
-    const [notifications, total, unreadCount] = await Promise.all([
-      Notification.find(filter)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
-      Notification.countDocuments(filter),
-      Notification.countDocuments({
-        $and: [
-          { $or: conditions },
-          { isRead: false }
-        ]
-      }),
-    ]);
-
+    // Fallback store if DB is initializing
+    const localNotifs = await dataStore.getNotifications(50);
     return res.status(200).json({
       success: true,
-      notifications,
-      total,
-      unreadCount,
-      page: pageNum,
-      pages: Math.ceil(total / limitNum) || 1,
+      notifications: localNotifs,
+      total: localNotifs.length,
+      unreadCount: localNotifs.filter(n => !n.isRead).length,
+      page: 1,
+      pages: 1,
+      pagination: {
+        total: localNotifs.length,
+        pages: 1,
+        page: 1,
+        limit: limitNum
+      }
     });
   } catch (error) {
     console.error('Fetch inbox error:', error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to fetch notifications inbox',
+    const fallbackNotifs = await dataStore.getNotifications(25).catch(() => []);
+    return res.status(200).json({
+      success: true,
+      notifications: fallbackNotifs,
+      total: fallbackNotifs.length,
+      unreadCount: 0,
+      page: 1,
+      pages: 1,
+      pagination: { total: fallbackNotifs.length, pages: 1, page: 1, limit: 25 },
     });
   }
 });
@@ -347,6 +390,7 @@ router.get('/inbox', optionalAuth, async (req, res) => {
 // @access  Public / Optional Auth
 router.get('/unread-count', optionalAuth, async (req, res) => {
   try {
+    await ensureDb().catch(() => {});
     const user = req.user;
     const conditions = [];
 
@@ -371,21 +415,30 @@ router.get('/unread-count', optionalAuth, async (req, res) => {
       conditions.push({ recipientRole: 'all' });
     }
 
-    const unreadCount = await Notification.countDocuments({
-      $and: [
-        { $or: conditions },
-        { isRead: false }
-      ]
-    });
+    if (isDbConnected()) {
+      const unreadCount = await Notification.countDocuments({
+        $and: [
+          { $or: conditions },
+          { isRead: false }
+        ]
+      });
 
+      return res.status(200).json({
+        success: true,
+        unreadCount,
+      });
+    }
+
+    const localNotifs = await dataStore.getNotifications(25).catch(() => []);
     return res.status(200).json({
       success: true,
-      unreadCount,
+      unreadCount: localNotifs.filter(n => !n.isRead).length,
     });
   } catch (error) {
     return res.status(200).json({ success: true, unreadCount: 0 });
   }
 });
+
 
 // @desc    Get a single notification with full details & HTML email replica
 // @route   GET /api/notifications/:id

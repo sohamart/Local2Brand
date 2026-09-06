@@ -1,33 +1,44 @@
-import { dataStore } from '../config/dataAdapter.js';
+import { dataStore, isDbConnected, ensureDb } from '../config/dataAdapter.js';
 import { sendEmail, getClientUrl, wrapAgencyEmail } from '../utils/email.js';
 import { getLiveTelemetryStats } from './telemetryController.js';
 import { fetchAllMergedRequirements } from './requirementController.js';
 import oneSignalBackend from '../services/oneSignalService.js';
 import mongoose from 'mongoose';
+import User from '../models/User.js';
+import Requirement from '../models/Requirement.js';
+import QueryLead from '../models/QueryLead.js';
+import CallbackRequest from '../models/CallbackRequest.js';
+import Notification from '../models/Notification.js';
 
 export const getAdminStats = async (req, res) => {
   try {
-    const requirements = await fetchAllMergedRequirements();
+    await ensureDb().catch(() => {});
 
+    let requirements = [];
     let allUsers = [];
-    if (mongoose.connection.readyState === 1) {
+    let leads = [];
+    let callbacks = [];
+    let notifications = [];
+
+    if (isDbConnected()) {
       try {
-        const { User } = await import('../models/User.js');
-        allUsers = await User.find().select('-password').sort({ createdAt: -1 });
-      } catch (e) {
-        console.warn('MongoDB User fetch notice in stats:', e.message);
+        [requirements, allUsers, leads, callbacks, notifications] = await Promise.all([
+          Requirement.find().select('status websiteTypeName websiteType createdAt').sort({ createdAt: -1 }).lean(),
+          User.find().select('_id name email role phone company status createdAt').sort({ createdAt: -1 }).lean(),
+          QueryLead.find().select('status websiteType createdAt').sort({ createdAt: -1 }).lean(),
+          CallbackRequest.find().select('status createdAt').sort({ createdAt: -1 }).lean(),
+          Notification.find().select('title message type isRead createdAt link data').sort({ createdAt: -1 }).limit(15).lean(),
+        ]);
+      } catch (dbErr) {
+        console.warn('MongoDB stats parallel query notice:', dbErr.message);
       }
     }
-    
-    if (allUsers.length === 0) {
-      allUsers = await dataStore.getAllUsers();
-    }
 
-    const [leads, callbacks, notifications] = await Promise.all([
-      dataStore.getAllLeads(),
-      dataStore.getAllCallbacks(),
-      dataStore.getNotifications(15),
-    ]);
+    if (!requirements || requirements.length === 0) requirements = await fetchAllMergedRequirements();
+    if (!allUsers || allUsers.length === 0) allUsers = await dataStore.getAllUsers();
+    if (!leads || leads.length === 0) leads = await dataStore.getAllLeads();
+    if (!callbacks || callbacks.length === 0) callbacks = await dataStore.getAllCallbacks();
+    if (!notifications || notifications.length === 0) notifications = await dataStore.getNotifications(15);
 
     const totalRequirements = requirements.length;
     const pendingRequirements = requirements.filter((r) => r.status === 'Submitted' || r.status === 'Draft' || r.status === 'Under Review').length;
@@ -180,22 +191,18 @@ export const sendBroadcastEmail = async (req, res) => {
     let allLeads = [];
     let allCallbacks = [];
 
-    if (mongoose.connection.readyState === 1) {
+    if (isDbConnected()) {
       try {
-        const { User } = await import('../models/User.js');
-        allUsers = await User.find().select('email name role createdAt');
+        allUsers = await User.find().select('email name role createdAt').lean();
       } catch (e) {}
       try {
-        const { default: Requirement } = await import('../models/Requirement.js');
-        allRequirements = await Requirement.find().select('clientInfo email status createdAt submittedAt');
+        allRequirements = await Requirement.find().select('clientInfo email status createdAt submittedAt').lean();
       } catch (e) {}
       try {
-        const { default: QueryLead } = await import('../models/QueryLead.js');
-        allLeads = await QueryLead.find().select('email phone name createdAt');
+        allLeads = await QueryLead.find().select('email phone name createdAt').lean();
       } catch (e) {}
       try {
-        const { default: CallbackRequest } = await import('../models/CallbackRequest.js');
-        allCallbacks = await CallbackRequest.find().select('email phone name createdAt');
+        allCallbacks = await CallbackRequest.find().select('email phone name createdAt').lean();
       } catch (e) {}
     }
 

@@ -107,3 +107,4 @@ const portfolioDemoSchema = new mongoose.Schema(
 );
 
 export const PortfolioDemo = mongoose.models.PortfolioDemo || mongoose.model('PortfolioDemo', portfolioDemoSchema);
+export default PortfolioDemo;

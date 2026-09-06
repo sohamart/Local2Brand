@@ -185,23 +185,22 @@ export const getReviews = async (req, res) => {
 export const getMyReviews = async (req, res) => {
   try {
     const userId = req.user?._id || req.user?.id;
-    const userEmail = req.user?.email;
+    const userEmail = req.user?.email ? req.user.email.toLowerCase().trim() : '';
 
     if (mongoose.connection.readyState === 1) {
-      const query = {
-        $or: [
-          ...(userId && mongoose.Types.ObjectId.isValid(userId) ? [{ user: userId }] : []),
-          ...(userEmail ? [{ userEmail: userEmail.toLowerCase().trim() }] : []),
-        ],
-      };
-      const reviews = await Review.find(query.length > 0 ? query : { user: userId }).sort({ createdAt: -1 });
+      const orConditions = [
+        ...(userId && mongoose.Types.ObjectId.isValid(userId) ? [{ user: userId }] : []),
+        ...(userEmail ? [{ userEmail }] : []),
+      ];
+
+      const reviews = await Review.find(orConditions.length > 0 ? { $or: orConditions } : { user: userId }).sort({ createdAt: -1 });
       return res.status(200).json({ success: true, count: reviews.length, reviews });
     } else {
       const reviews = readLocalStore('reviews') || [];
       const userReviews = reviews.filter(
         (r) =>
           (userId && String(r.user) === String(userId)) ||
-          (userEmail && r.userEmail?.toLowerCase() === userEmail.toLowerCase())
+          (userEmail && r.userEmail?.toLowerCase() === userEmail)
       );
       return res.status(200).json({ success: true, count: userReviews.length, reviews: userReviews });
     }
@@ -210,6 +209,7 @@ export const getMyReviews = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message || 'Error fetching your reviews' });
   }
 };
+
 
 /**
  * Create review (Public / Authenticated)

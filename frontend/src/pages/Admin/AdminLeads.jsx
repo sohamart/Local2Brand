@@ -36,10 +36,10 @@ export default function AdminLeads() {
 
   useEffect(() => {
     fetchLeads(false);
-    // Real-time live auto-refresh every 3s for new project proposals
+    // Real-time live auto-refresh every 15s for new project proposals
     const pollTimer = setInterval(() => {
       fetchLeads(true);
-    }, 3000);
+    }, 15000);
     return () => clearInterval(pollTimer);
   }, [statusFilter, search]);
 

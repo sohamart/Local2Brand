@@ -65,15 +65,20 @@ export default function AdminInbox() {
       if (res?.success) {
         setNotifications(res.notifications || []);
         setUnreadCount(res.unreadCount || 0);
-        setTotalPages(res.pagination?.pages || 1);
-        setTotalCount(res.pagination?.total || (res.notifications || []).length);
+        setTotalPages(res.pagination?.pages || res.pages || 1);
+        setTotalCount(res.pagination?.total || res.total || (res.notifications || []).length);
+      } else {
+        setNotifications(res?.notifications || []);
       }
     } catch (err) {
-      toast.error('Failed to load inbox notifications');
+      console.warn('Admin inbox fetch notice:', err.message);
+      // Only notify if user explicitly interacted, or quietly set empty array
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
   }, [page, selectedCategory, unreadOnly, searchTerm]);
+
 
   useEffect(() => {
     fetchInbox();

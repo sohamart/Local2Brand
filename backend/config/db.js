@@ -1,12 +1,8 @@
 import mongoose from 'mongoose';
-import dns from 'dns';
+import dotenv from 'dotenv';
 
-// Ensure reliable SRV DNS resolution on Windows & restricted networks
-try {
-  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1']);
-} catch (e) {
-  // Ignored if custom DNS is not permitted
-}
+// Load environment variables
+dotenv.config();
 
 // Global cached connection for Vercel Serverless environment
 let cached = global.mongoose;
@@ -15,13 +11,25 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
-// Prevent unhandled error crashes
+// Prevent unhandled error crashes & handle automatic reconnection
 mongoose.connection.on('error', (err) => {
-  console.warn('⚠️ MongoDB connection event error:', err.message);
+  console.warn('⚠️ MongoDB connection event notice:', err.message);
+  if (cached) {
+    cached.conn = null;
+    cached.promise = null;
+  }
 });
 
-// Enable buffer commands so Mongoose queues operations during initial connection rather than throwing
-mongoose.set('bufferCommands', true);
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ MongoDB connection disconnected. Resetting cache for auto-reconnect.');
+  if (cached) {
+    cached.conn = null;
+    cached.promise = null;
+  }
+});
+
+// Non-blocking bufferCommands
+mongoose.set('bufferCommands', false);
 
 export const connectDB = async () => {
   if (cached.conn && mongoose.connection.readyState === 1) {
@@ -35,18 +43,22 @@ export const connectDB = async () => {
 
   const connectionString = mongoUri || 'mongodb://127.0.0.1:27017/local2brand';
 
-  if (!cached.promise) {
+  if (!cached.promise || mongoose.connection.readyState === 0) {
     const opts = {
-      bufferCommands: true,
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000,
+      bufferCommands: false,
+      maxPoolSize: 15,
+      minPoolSize: 2,
+      serverSelectionTimeoutMS: 8000,
       socketTimeoutMS: 45000,
+      heartbeatFrequencyMS: 10000,
     };
 
     cached.promise = mongoose.connect(connectionString, opts).then((mongooseInstance) => {
       console.log(`✅ MongoDB Connected Successfully: ${mongooseInstance.connection.host}`);
+      cached.conn = mongooseInstance;
       return mongooseInstance;
     }).catch((err) => {
+      cached.conn = null;
       cached.promise = null;
       console.error(`❌ MongoDB Connection Error: ${err.message}`);
       throw err;
@@ -57,9 +69,11 @@ export const connectDB = async () => {
     cached.conn = await cached.promise;
     return cached.conn;
   } catch (error) {
+    cached.conn = null;
     cached.promise = null;
     console.warn(`⚠️ MongoDB connection attempt failed: ${error.message}`);
     return null;
   }
 };
+
 

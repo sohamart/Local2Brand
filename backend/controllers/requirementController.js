@@ -26,56 +26,22 @@ export const generateRequirementId = () => {
 // Helper to fetch and merge all requirements from MongoDB and Local dataStore
 export const fetchAllMergedRequirements = async () => {
   await ensureDb().catch(() => {});
-  let dbReqs = [];
   if (isDbConnected()) {
     try {
-      dbReqs = await Requirement.find().sort({ createdAt: -1 }).lean();
+      const dbReqs = await Requirement.find()
+        .select('-fullFormData -answers -images -uploadedImages -logoFile -photosFiles -aiExecutiveSummary')
+        .sort({ createdAt: -1 })
+        .lean();
+      if (dbReqs && dbReqs.length > 0) {
+        return dbReqs;
+      }
     } catch (err) {
       console.warn('MongoDB Requirement.find notice:', err.message);
     }
   }
 
   const localReqs = dataStore.read('requirements') || [];
-
-  const map = new Map();
-  // 1. Seed with local records
-  for (const r of localReqs) {
-    if (!r) continue;
-    const key = (r.requirementId || r._id?.toString() || '').trim().toLowerCase();
-    if (key) map.set(key, r);
-  }
-
-  // 2. Overlay / Merge with DB records
-  for (const r of dbReqs) {
-    if (!r) continue;
-    const key = (r.requirementId || r._id?.toString() || '').trim().toLowerCase();
-    if (key) {
-      const existing = map.get(key);
-      map.set(key, { ...existing, ...r });
-    }
-  }
-
-  // 3. Background auto-sync any local dataStore requirements into MongoDB if missing
-  if (isDbConnected() && localReqs.length > 0) {
-    setImmediate(async () => {
-      try {
-        for (const lr of localReqs) {
-          if (!lr || !lr.requirementId) continue;
-          const exists = await Requirement.findOne({ requirementId: lr.requirementId });
-          if (!exists) {
-            const { _id, __v, ...cleanPayload } = lr;
-            await Requirement.create(cleanPayload).catch(() => {});
-          }
-        }
-      } catch (syncErr) {
-        console.warn('Background requirement sync notice:', syncErr.message);
-      }
-    });
-  }
-
-  const allMerged = Array.from(map.values());
-  allMerged.sort((a, b) => new Date(b.createdAt || b.submittedAt || 0) - new Date(a.createdAt || a.submittedAt || 0));
-  return allMerged;
+  return localReqs;
 };
 
 // @desc    Create or Autosave Draft Requirement
@@ -364,12 +330,19 @@ export const submitRequirement = async (req, res) => {
           }).catch((err) => console.warn('User inbox dispatch error:', err.message));
         }
       } catch (bgErr) {
-        console.warn('Background requirement alert error:', bgErr.message);
+        console.warn('Background dispatch error:', bgErr.message);
       }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Requirement blueprint submitted successfully!',
+      requirementId: doc.requirementId || reqId,
+      requirement: doc
     });
   } catch (error) {
     console.error('Error submitting requirement:', error);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -378,40 +351,75 @@ export const submitRequirement = async (req, res) => {
 // @access  Authenticated / Optional
 export const getMyRequirements = async (req, res) => {
   try {
+    await ensureDb().catch(() => {});
     const userId = req.user?._id ? String(req.user._id) : (req.user?.id ? String(req.user.id) : null);
     const userEmail = (req.user?.email || req.query.email || '').toLowerCase().trim();
     const userPhone = (req.user?.phone || req.query.phone || '').trim();
     const cleanPhone = userPhone.replace(/\D/g, '');
 
-    const allReqs = await fetchAllMergedRequirements();
+    let requirements = [];
 
-    let requirements = allReqs.filter((r) => {
-      if (!r) return false;
+    if (isDbConnected()) {
+      const orConditions = [];
 
-      // 1. User ID matching
-      if (userId) {
-        const rUserId = String(r.user?._id || r.user || r.userId || '');
-        if (rUserId && rUserId === userId) return true;
+      if (userId && mongoose.Types.ObjectId.isValid(userId)) {
+        orConditions.push({ user: new mongoose.Types.ObjectId(userId) });
+        orConditions.push({ userId: userId });
+      } else if (userId) {
+        orConditions.push({ userId: userId });
       }
 
-      // 2. Email matching (case-insensitive across clientInfo, root email, and form answers)
       if (userEmail) {
-        const rEmail = (r.clientInfo?.email || r.email || r.fullFormData?.emailAddress || r.answers?.emailAddress || '').toLowerCase().trim();
-        if (rEmail && (rEmail === userEmail || rEmail.includes(userEmail) || userEmail.includes(rEmail))) return true;
+        const safeEmail = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const emailRegex = new RegExp(`^${safeEmail}$`, 'i');
+        orConditions.push({ 'clientInfo.email': emailRegex });
+        orConditions.push({ email: emailRegex });
+        orConditions.push({ 'fullFormData.emailAddress': emailRegex });
+        orConditions.push({ 'answers.emailAddress': emailRegex });
       }
 
-      // 3. Phone matching (compare clean digits)
       if (cleanPhone && cleanPhone.length >= 7) {
-        const rPhone = (r.clientInfo?.mobile || r.clientInfo?.phone || r.fullFormData?.mobileNumber || r.answers?.mobileNumber || '').replace(/\D/g, '');
-        if (rPhone && (rPhone.includes(cleanPhone.slice(-10)) || cleanPhone.includes(rPhone.slice(-10)))) return true;
+        const last10 = cleanPhone.slice(-10);
+        orConditions.push({ 'clientInfo.mobile': new RegExp(last10) });
+        orConditions.push({ 'fullFormData.mobileNumber': new RegExp(last10) });
       }
 
-      return false;
-    });
+      if (orConditions.length > 0) {
+        requirements = await Requirement.find({ $or: orConditions })
+          .select('-fullFormData -answers -images -uploadedImages -logoFile -photosFiles -aiExecutiveSummary')
+          .sort({ createdAt: -1 })
+          .lean();
+      }
 
-    // If logged-in user has admin privileges and no personal orders, provide recent system orders
-    if (requirements.length === 0 && req.user?.role === 'admin') {
-      requirements = allReqs.slice(0, 25);
+      // If admin user has no personal orders, provide recent system orders for convenience
+      if (requirements.length === 0 && req.user?.role === 'admin') {
+        requirements = await Requirement.find()
+          .select('-fullFormData -answers -images -uploadedImages -logoFile -photosFiles -aiExecutiveSummary')
+          .sort({ createdAt: -1 })
+          .limit(25)
+          .lean();
+      }
+    }
+
+    // If still empty and local dataStore has items, search local store
+    if (requirements.length === 0) {
+      const localReqs = dataStore.read('requirements') || [];
+      requirements = localReqs.filter((r) => {
+        if (!r) return false;
+        if (userId && (r.user === userId || r.userId === userId)) return true;
+        if (userEmail) {
+          const rEmail = (r.clientInfo?.email || r.email || r.fullFormData?.emailAddress || r.answers?.emailAddress || '').toLowerCase().trim();
+          if (rEmail === userEmail) return true;
+        }
+        if (cleanPhone && cleanPhone.length >= 7) {
+          const rPhone = (r.clientInfo?.mobile || r.clientInfo?.phone || r.fullFormData?.mobileNumber || '').replace(/\D/g, '');
+          if (rPhone && rPhone.includes(cleanPhone.slice(-10))) return true;
+        }
+        return false;
+      });
+      if (requirements.length === 0 && req.user?.role === 'admin') {
+        requirements = localReqs.slice(0, 25);
+      }
     }
 
     return res.status(200).json({
@@ -436,55 +444,63 @@ export const getRequirementById = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Order ID is required.' });
     }
 
-    const allReqs = await fetchAllMergedRequirements();
-    let doc = allReqs.find(
-      (r) =>
-        r.requirementId?.toLowerCase() === cleanId.toLowerCase() ||
-        r.requirementId === cleanId ||
-        r._id?.toString() === cleanId
-    );
+    await ensureDb().catch(() => {});
+    let doc = null;
 
-    // 3. Fallback to QueryLead in MongoDB or dataStore if still not found
-    if (!doc) {
-      await ensureDb().catch(() => {});
-      if (isDbConnected()) {
-        try {
-          const { QueryLead } = await import('../models/QueryLead.js');
-          const escaped = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const lead = await QueryLead.findOne({
-            $or: [
-              { leadId: cleanId },
-              { leadId: { $regex: new RegExp(`^${escaped}$`, 'i') } },
-              ...(mongoose.Types.ObjectId.isValid(cleanId) ? [{ _id: cleanId }] : [])
-            ]
-          });
-          if (lead) {
-            doc = {
-              requirementId: lead.leadId || `ORD-${lead._id.toString().slice(-6).toUpperCase()}`,
-              websiteTypeName: lead.websiteType || 'Custom Project',
-              websiteType: lead.websiteType || 'Custom Project',
-              clientInfo: {
-                businessName: lead.businessName || lead.name,
-                ownerName: lead.name,
-                mobile: lead.phone,
-                email: lead.email,
-              },
-              status: lead.status === 'in_progress' ? 'In Development' : lead.status === 'contacted' ? 'Under Review' : lead.status === 'completed' ? 'Completed' : 'Submitted',
-              budget: lead.budget || 'Standard Commercial',
-              timeline: lead.timeline || 'Express 48-72 Hours',
-              additionalNotes: lead.requirements || '',
-              createdAt: lead.createdAt
-            };
-          }
-        } catch (leadErr) {
-          console.warn('QueryLead fallback notice:', leadErr.message);
+    if (isDbConnected()) {
+      try {
+        const orConditions = [{ requirementId: cleanId }, { requirementId: new RegExp(`^${cleanId}$`, 'i') }];
+        if (mongoose.Types.ObjectId.isValid(cleanId)) {
+          orConditions.push({ _id: cleanId });
         }
-      }
+        doc = await Requirement.findOne({ $or: orConditions }).lean();
+      } catch (err) {}
+    }
+
+    if (!doc) {
+      const localReqs = dataStore.read('requirements') || [];
+      doc = localReqs.find(
+        (r) =>
+          r.requirementId?.toLowerCase() === cleanId.toLowerCase() ||
+          r.requirementId === cleanId ||
+          r._id?.toString() === cleanId
+      );
+    }
+
+    // Fallback to QueryLead in MongoDB or dataStore if still not found
+    if (!doc && isDbConnected()) {
+      try {
+        const { QueryLead } = await import('../models/QueryLead.js');
+        const orLead = [{ leadId: cleanId }];
+        if (mongoose.Types.ObjectId.isValid(cleanId)) {
+          orLead.push({ _id: cleanId });
+        }
+        const q = await QueryLead.findOne({ $or: orLead }).lean();
+        if (q) {
+          doc = {
+            requirementId: q.leadId || `ORD-${q._id?.toString().slice(-6).toUpperCase()}`,
+            websiteTypeName: q.websiteType || 'Custom Project',
+            websiteType: q.websiteType || 'Custom Project',
+            clientInfo: {
+              businessName: q.businessName || q.name,
+              ownerName: q.name,
+              mobile: q.phone,
+              email: q.email,
+            },
+            status: q.status === 'in_progress' ? 'In Development' : q.status === 'contacted' ? 'Under Review' : q.status === 'completed' ? 'Completed' : 'Submitted',
+            budget: q.budget || 'Standard Commercial',
+            timeline: q.timeline || 'Express 48-72 Hours',
+            additionalNotes: q.requirements || q.message || '',
+            createdAt: q.createdAt
+          };
+        }
+      } catch (e) {}
     }
 
     // 4. Fallback to dataStore queries if still not found
     if (!doc) {
       const allQueries = dataStore.read('queries') || [];
+
       const q = allQueries.find(
         (item) =>
           item.id === cleanId ||
@@ -528,7 +544,46 @@ export const getRequirementById = async (req, res) => {
 // @access  Admin
 export const getAllRequirements = async (req, res) => {
   try {
+    await ensureDb().catch(() => {});
     const { status, search, limit = 200 } = req.query;
+
+    if (isDbConnected()) {
+      try {
+        const query = {};
+        if (status && status !== 'all') {
+          query.status = { $regex: new RegExp(`^${String(status).trim()}$`, 'i') };
+        }
+        if (search && String(search).trim()) {
+          const s = String(search).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(s, 'i');
+          query.$or = [
+            { requirementId: regex },
+            { 'clientInfo.businessName': regex },
+            { 'clientInfo.ownerName': regex },
+            { 'clientInfo.contactPerson': regex },
+            { 'clientInfo.email': regex },
+            { 'clientInfo.mobile': regex },
+            { email: regex },
+            { websiteTypeName: regex },
+            { websiteType: regex },
+          ];
+        }
+
+        const requirements = await Requirement.find(query)
+          .select('-fullFormData -answers -images -uploadedImages -logoFile -photosFiles -aiExecutiveSummary')
+          .sort({ createdAt: -1 })
+          .limit(Math.min(Number(limit) || 200, 500))
+          .lean();
+
+        return res.status(200).json({
+          success: true,
+          count: requirements.length,
+          requirements
+        });
+      } catch (dbErr) {
+        console.warn('MongoDB getAllRequirements direct query notice:', dbErr.message);
+      }
+    }
 
     let requirements = await fetchAllMergedRequirements();
 
@@ -567,7 +622,7 @@ export const getAllRequirements = async (req, res) => {
       requirements = requirements.slice(0, Number(limit));
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       count: requirements.length,
       requirements

@@ -425,10 +425,10 @@ export default function AdminRequirements() {
 
   useEffect(() => {
     fetchRequirements(false);
-    // Real-time live auto-poll every 3s
+    // Real-time live auto-poll every 15s
     const pollInterval = setInterval(() => {
       fetchRequirements(true);
-    }, 3000);
+    }, 15000);
     return () => clearInterval(pollInterval);
   }, [statusFilter, search]);
 

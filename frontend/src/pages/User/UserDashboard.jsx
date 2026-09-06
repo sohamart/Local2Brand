@@ -123,7 +123,10 @@ export default function UserDashboard() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [editingReview, setEditingReview] = useState(null);
   const [viewingReqSpec, setViewingReqSpec] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [callbacksLoading, setCallbacksLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Track Order state
@@ -219,15 +222,19 @@ export default function UserDashboard() {
       setAvatarUrl(user.avatar || '');
       fetchUserData(false);
 
-      // Real-time silent live background auto-poll every 5s
+      // Gentle silent live background auto-poll every 30s
       const pollTimer = setInterval(() => {
         fetchUserData(true);
-      }, 5000);
+      }, 30000);
       return () => clearInterval(pollTimer);
     } else if (!authLoading) {
       setLoading(false);
+      setOrdersLoading(false);
+      setReviewsLoading(false);
+      setCallbacksLoading(false);
     }
   }, [user, authLoading]);
+
 
   // Handle URL track or tab query parameter
   useEffect(() => {
@@ -243,7 +250,12 @@ export default function UserDashboard() {
   }, [searchParams]);
 
   const fetchUserData = async (silent = false) => {
-    if (!silent) setLoading(true);
+    if (!silent) {
+
+      setOrdersLoading(true);
+      setReviewsLoading(true);
+      setCallbacksLoading(true);
+    }
     setIsRefreshing(true);
     try {
       const emailParam = user?.email ? `?email=${encodeURIComponent(user.email)}` : '';
@@ -322,7 +334,9 @@ export default function UserDashboard() {
     } catch (err) {
       console.error('Error fetching user data from DB:', err);
     } finally {
-      if (!silent) setLoading(false);
+      setOrdersLoading(false);
+      setReviewsLoading(false);
+      setCallbacksLoading(false);
       setIsRefreshing(false);
     }
   };
@@ -446,11 +460,11 @@ export default function UserDashboard() {
     }
   };
 
-  if (authLoading || (loading && requirements.length === 0)) {
+  if (authLoading) {
     return (
       <div className="min-h-screen pt-36 pb-20 flex items-center justify-center">
         <DashboardLoader
-          title="Fetching your orders & specifications from database..."
+          title="Verifying your client account..."
           role="client"
         />
       </div>
@@ -458,6 +472,7 @@ export default function UserDashboard() {
   }
 
   if (!user) {
+
     return (
       <div className="min-h-screen pt-44 pb-20 max-w-md mx-auto px-4 text-center space-y-5">
         <div className="w-16 h-16 rounded-3xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 border border-purple-200 dark:border-purple-800 flex items-center justify-center mx-auto shadow-md">
@@ -988,8 +1003,22 @@ export default function UserDashboard() {
               );
             })()}
 
-            {/* Empty State */}
-            {requirements.length === 0 && inquiries.length === 0 ? (
+            {/* Loading / Empty State */}
+            {ordersLoading && requirements.length === 0 && inquiries.length === 0 ? (
+              <div className="glass-panel p-8 sm:p-14 rounded-3xl text-center space-y-4 border border-purple-200/50 dark:border-purple-900/50 bg-white/70 dark:bg-slate-900/70">
+                <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 flex items-center justify-center mx-auto text-purple-600 shadow-sm">
+                  <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                    Fetching your orders from database...
+                  </h3>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                    Loading your website specifications, chosen features, and live milestones.
+                  </p>
+                </div>
+              </div>
+            ) : requirements.length === 0 && inquiries.length === 0 ? (
               <div className="glass-panel p-8 sm:p-14 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
                 <div className="w-16 h-16 rounded-2xl bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-800 flex items-center justify-center mx-auto text-purple-600 shadow-sm">
                   <Layers className="w-8 h-8 animate-pulse" />
@@ -1008,6 +1037,7 @@ export default function UserDashboard() {
                 </button>
               </div>
             ) : (
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* 1. Full Requirements Specifications */}
                 {(submissionFilter === 'all' || submissionFilter === 'requirements') &&
@@ -1534,7 +1564,18 @@ export default function UserDashboard() {
               </button>
             </div>
 
-            {userReviews.length === 0 ? (
+            {reviewsLoading && userReviews.length === 0 ? (
+              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center space-y-4 border border-amber-200/50 dark:border-amber-900/50 bg-white/70 dark:bg-slate-900/70">
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800 flex items-center justify-center mx-auto text-amber-500 shadow-sm">
+                  <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                    Loading your reviews...
+                  </h3>
+                </div>
+              </div>
+            ) : userReviews.length === 0 ? (
               <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
                 <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-700 flex items-center justify-center mx-auto text-amber-500 shadow-sm">
                   <Star className="w-7 h-7 fill-amber-400" />
@@ -1591,7 +1632,7 @@ export default function UserDashboard() {
                         {rev.projectTitle || rev.businessName || 'Website Delivery'}
                       </h4>
                       <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
-                        "{rev.reviewText}"
+                        "{rev.comment || rev.reviewText}"
                       </p>
                     </div>
 
@@ -1647,7 +1688,18 @@ export default function UserDashboard() {
               </button>
             </div>
 
-            {callbacks.length === 0 ? (
+            {callbacksLoading && callbacks.length === 0 ? (
+              <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center space-y-4 border border-emerald-200/50 dark:border-emerald-900/50 bg-white/70 dark:bg-slate-900/70">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center mx-auto text-emerald-500 shadow-sm">
+                  <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                    Loading your callback requests...
+                  </h3>
+                </div>
+              </div>
+            ) : callbacks.length === 0 ? (
               <div className="glass-panel p-8 sm:p-12 rounded-3xl text-center space-y-4 border border-dashed border-slate-300 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60">
                 <PhoneCall className="w-12 h-12 text-emerald-500 mx-auto animate-pulse" />
                 <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No callback requests pending</h3>
@@ -1663,6 +1715,7 @@ export default function UserDashboard() {
                 </button>
               </div>
             ) : (
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {callbacks.map((cb) => (
                   <div

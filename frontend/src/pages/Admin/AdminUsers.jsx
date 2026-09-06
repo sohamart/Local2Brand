@@ -43,10 +43,10 @@ export default function AdminUsers() {
 
   useEffect(() => {
     fetchUsers(false);
-    // Real-time live auto-refresh every 4s
+    // Real-time live auto-refresh every 15s
     const pollInterval = setInterval(() => {
       fetchUsers(true);
-    }, 4000);
+    }, 15000);
     return () => clearInterval(pollInterval);
   }, []);
 

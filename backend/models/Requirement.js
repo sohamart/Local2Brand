@@ -143,4 +143,11 @@ const RequirementSchema = new mongoose.Schema({
   }
 }, { timestamps: true, strict: false });
 
-export default mongoose.models.Requirement || mongoose.model('Requirement', RequirementSchema);
+RequirementSchema.index({ user: 1, createdAt: -1 });
+RequirementSchema.index({ 'clientInfo.email': 1, createdAt: -1 });
+RequirementSchema.index({ 'clientInfo.mobile': 1 });
+RequirementSchema.index({ status: 1, createdAt: -1 });
+
+export const Requirement = mongoose.models.Requirement || mongoose.model('Requirement', RequirementSchema);
+export default Requirement;
+

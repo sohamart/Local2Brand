@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
-import { dataStore } from '../config/dataAdapter.js';
+import { dataStore, isDbConnected, ensureDb } from '../config/dataAdapter.js';
 import { connectDB } from '../config/db.js';
 import mongoose from 'mongoose';
+import User from '../models/User.js';
 
-const getJwtSecret = () => process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026';
+const getJwtSecret = () => process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026_ultra_safe';
 
 const extractToken = (req) => {
   let token = null;
@@ -44,11 +45,16 @@ export const protect = async (req, res, next) => {
   try {
     decoded = jwt.verify(token, getJwtSecret());
   } catch (error) {
-    return res.status(401).json({
-      success: false,
-      isAuthError: true,
-      message: 'Invalid or expired session token. Please log in again.',
-    });
+    // Also try legacy fallback secret for backward session compatibility
+    try {
+      decoded = jwt.verify(token, 'local2brand_super_secure_jwt_secret_key_2026');
+    } catch (e2) {
+      return res.status(401).json({
+        success: false,
+        isAuthError: true,
+        message: 'Invalid or expired session token. Please log in again.',
+      });
+    }
   }
 
   if (!decoded || !decoded.id) {
@@ -60,21 +66,29 @@ export const protect = async (req, res, next) => {
   }
 
   try {
-    if (mongoose.connection.readyState !== 1) {
-      await connectDB();
+    await ensureDb().catch(() => {});
+    let user = null;
+
+    if (isDbConnected()) {
+      try {
+        if (mongoose.Types.ObjectId.isValid(decoded.id)) {
+          user = await User.findById(decoded.id).select('_id name email role phone company status isEmailVerified avatar createdAt').lean();
+        }
+        if (!user && decoded.role === 'admin') {
+          const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
+          user = await User.findOne({ email: adminEmail }).select('_id name email role phone company status isEmailVerified avatar createdAt').lean() ||
+                 await User.findOne({ role: 'admin' }).select('_id name email role phone company status isEmailVerified avatar createdAt').lean();
+        }
+      } catch (err) {
+        console.warn('Protect DB lookup error:', err.message);
+      }
     }
 
-    let user = await dataStore.findUserById(decoded.id);
-
-    // If cold start query returned null, retry once with explicit connectDB
     if (!user) {
-      await connectDB();
       user = await dataStore.findUserById(decoded.id);
     }
-
-    // If user not found by ID but token has admin role, fallback to master admin
     if (!user && decoded.role === 'admin') {
-      const adminEmail = (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim();
+      const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
       user = (await dataStore.findUserByEmail(adminEmail)) || (await dataStore.findUserByEmail('admin@local2brand.com'));
     }
 
@@ -113,14 +127,24 @@ export const optionalAuth = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, getJwtSecret());
+    let decoded;
+    try {
+      decoded = jwt.verify(token, getJwtSecret());
+    } catch (e) {
+      decoded = jwt.verify(token, 'local2brand_super_secure_jwt_secret_key_2026');
+    }
 
     if (decoded && decoded.id) {
-      if (mongoose.connection.readyState !== 1) {
-        await connectDB();
+      await ensureDb().catch(() => {});
+      let user = null;
+      if (isDbConnected() && mongoose.Types.ObjectId.isValid(decoded.id)) {
+        try {
+          user = await User.findById(decoded.id).select('-password').lean();
+        } catch (e) {}
       }
-
-      const user = await dataStore.findUserById(decoded.id);
+      if (!user) {
+        user = await dataStore.findUserById(decoded.id);
+      }
       if (user && user.status !== 'suspended') {
         req.user = user;
       }

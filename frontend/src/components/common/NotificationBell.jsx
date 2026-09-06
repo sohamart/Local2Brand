@@ -111,12 +111,18 @@ export default function NotificationBell({ className = '' }) {
     return () => clearInterval(interval);
   }, [fetchUnreadCount, fetchRecentNotifications, user]);
 
-  // When popover opens, revalidate
+  // When popover opens, revalidate & auto mark all as read seamlessly
   useEffect(() => {
     if (isOpen) {
       fetchRecentNotifications(notifications.length === 0);
+      if (unreadCount > 0) {
+        const timer = setTimeout(() => {
+          handleMarkAllRead();
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [isOpen, fetchRecentNotifications, notifications.length]);
+  }, [isOpen, fetchRecentNotifications, notifications.length, unreadCount]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -144,7 +150,11 @@ export default function NotificationBell({ className = '' }) {
         try { localStorage.setItem('l2b_cached_inbox', JSON.stringify(updated)); } catch (e) {}
         return updated;
       });
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      setUnreadCount((prev) => {
+        const next = Math.max(0, prev - 1);
+        try { localStorage.setItem('l2b_cached_unread', String(next)); } catch (e) {}
+        return next;
+      });
     } catch (err) {
       console.warn('Error marking read:', err.message);
     }
@@ -160,7 +170,11 @@ export default function NotificationBell({ className = '' }) {
         try { localStorage.setItem('l2b_cached_inbox', JSON.stringify(updated)); } catch (e) {}
         return updated;
       });
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      setUnreadCount((prev) => {
+        const next = Math.max(0, prev - 1);
+        try { localStorage.setItem('l2b_cached_unread', String(next)); } catch (e) {}
+        return next;
+      });
     } catch (err) {
       console.warn('Error deleting notification:', err.message);
     }
@@ -176,6 +190,7 @@ export default function NotificationBell({ className = '' }) {
         return updated;
       });
       setUnreadCount(0);
+      try { localStorage.setItem('l2b_cached_unread', '0'); } catch (e) {}
     } catch (err) {
       console.warn('Error marking all read:', err.message);
     }

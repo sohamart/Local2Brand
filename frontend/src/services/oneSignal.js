@@ -287,8 +287,9 @@ class OneSignalService {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async (OneSignal) => {
       try {
-        if (OneSignal.login) {
-          await OneSignal.login(externalId);
+        if (!OneSignal || !OneSignal.User) return;
+        if (typeof OneSignal.login === 'function') {
+          await OneSignal.login(externalId).catch(() => {});
         }
 
         const tags = {
@@ -298,7 +299,7 @@ class OneSignalService {
 
         if (user.email) {
           tags.email = user.email.toLowerCase().trim();
-          if (OneSignal.User?.addEmail) {
+          if (typeof OneSignal.User?.addEmail === 'function') {
             OneSignal.User.addEmail(user.email).catch(() => {});
           }
         }
@@ -308,15 +309,15 @@ class OneSignalService {
         }
 
         // Add tags using v16 bulk method
-        if (OneSignal.User?.addTags) {
-          await OneSignal.User.addTags(tags);
-        } else if (OneSignal.User?.addTag) {
+        if (typeof OneSignal.User?.addTags === 'function') {
+          await OneSignal.User.addTags(tags).catch(() => {});
+        } else if (typeof OneSignal.User?.addTag === 'function') {
           for (const [k, v] of Object.entries(tags)) {
             OneSignal.User.addTag(k, v);
           }
         }
       } catch (err) {
-        console.warn('OneSignal user sync notice:', err.message);
+        // Silently handled on dev/restricted origins
       }
     });
   }
@@ -330,14 +331,15 @@ class OneSignalService {
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async (OneSignal) => {
       try {
-        if (OneSignal.User?.removeTags) {
+        if (!OneSignal || !OneSignal.User) return;
+        if (typeof OneSignal.User?.removeTags === 'function') {
           await OneSignal.User.removeTags(['role', 'userId', 'email', 'name']).catch(() => {});
         }
-        if (OneSignal.logout) {
+        if (typeof OneSignal.logout === 'function') {
           await OneSignal.logout().catch(() => {});
         }
       } catch (e) {
-        console.warn('OneSignal clearUser notice:', e);
+        // Silently handled on dev/restricted origins
       }
     });
   }

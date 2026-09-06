@@ -849,7 +849,7 @@ export const dataStore = {
           { topic: { $regex: s, $options: 'i' } }
         ];
       }
-      return await CallbackRequest.find(query).sort({ createdAt: -1 });
+      return await CallbackRequest.find(query).sort({ createdAt: -1 }).lean();
     }
     let cbs = readLocalStore('callbacks') || [];
     if (filter.status && filter.status !== 'all') {
@@ -1121,6 +1121,48 @@ export const dataStore = {
       writeLocalStore('chat_sessions', sessions);
     }
     return true;
+  },
+
+  async getAllLeads(filters = {}) {
+    if (isDbConnected()) {
+      try {
+        const { QueryLead } = await import('../models/QueryLead.js');
+        const query = {};
+        if (filters.status && filters.status !== 'all') {
+          query.status = filters.status;
+        }
+        const dbLeads = await QueryLead.find(query).sort({ createdAt: -1 }).lean();
+        if (dbLeads && dbLeads.length > 0) return dbLeads;
+      } catch (e) {}
+    }
+    const all = readLocalStore('queries') || [];
+    if (filters.status && filters.status !== 'all') {
+      return all.filter((l) => l && l.status === filters.status);
+    }
+    return all;
+  },
+
+  async getAllCallbacks() {
+    if (isDbConnected()) {
+      try {
+        const { CallbackRequest } = await import('../models/CallbackRequest.js');
+        const dbCallbacks = await CallbackRequest.find().sort({ createdAt: -1 }).lean();
+        if (dbCallbacks && dbCallbacks.length > 0) return dbCallbacks;
+      } catch (e) {}
+    }
+    return readLocalStore('callbacks') || [];
+  },
+
+  async getNotifications(limit = 20) {
+    if (isDbConnected()) {
+      try {
+        const { Notification } = await import('../models/Notification.js');
+        const dbNotifs = await Notification.find().sort({ createdAt: -1 }).limit(Number(limit)).lean();
+        if (dbNotifs && dbNotifs.length > 0) return dbNotifs;
+      } catch (e) {}
+    }
+    const notifs = readLocalStore('notifications') || [];
+    return notifs.slice(0, Number(limit));
   },
 
   async getServices() {

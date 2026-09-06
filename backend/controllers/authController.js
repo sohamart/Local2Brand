@@ -1,9 +1,13 @@
 import bcrypt from 'bcryptjs';
-import { dataStore } from '../config/dataAdapter.js';
+import { dataStore, isDbConnected, ensureDb } from '../config/dataAdapter.js';
 import { generateToken, sendTokenResponse, getCookieOptions } from '../utils/token.js';
 import { sendWelcomeEmail, sendVerificationOtpEmail, sendAdminNewUserAlertEmail } from '../utils/email.js';
 import { fetchAllMergedRequirements } from './requirementController.js';
 import mongoose from 'mongoose';
+import User from '../models/User.js';
+import Requirement from '../models/Requirement.js';
+import QueryLead from '../models/QueryLead.js';
+import CallbackRequest from '../models/CallbackRequest.js';
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -330,12 +334,30 @@ export const updateProfile = async (req, res) => {
 // @access  Private/Admin
 export const getAllUsers = async (req, res) => {
   try {
-    const rawUsers = await dataStore.getAllUsers();
-    
-    // Fetch requirements, leads, and callbacks to aggregate live stats per user
-    const requirements = await fetchAllMergedRequirements();
-    const leads = (await dataStore.getAllLeads?.()) || [];
-    const callbacks = (await dataStore.getAllCallbacks?.()) || [];
+    await ensureDb().catch(() => {});
+
+    let rawUsers = [];
+    let requirements = [];
+    let leads = [];
+    let callbacks = [];
+
+    if (isDbConnected()) {
+      try {
+        [rawUsers, requirements, leads, callbacks] = await Promise.all([
+          User.find().select('-password').sort({ createdAt: -1 }).lean(),
+          Requirement.find().select('user clientInfo email status createdAt').lean(),
+          QueryLead.find().select('email phone user userId createdAt').lean(),
+          CallbackRequest.find().select('email phone user createdAt').lean(),
+        ]);
+      } catch (dbErr) {
+        console.warn('MongoDB getAllUsers parallel query notice:', dbErr.message);
+      }
+    }
+
+    if (!rawUsers || rawUsers.length === 0) rawUsers = await dataStore.getAllUsers();
+    if (!requirements || requirements.length === 0) requirements = await fetchAllMergedRequirements();
+    if (!leads || leads.length === 0) leads = (await dataStore.getAllLeads?.()) || [];
+    if (!callbacks || callbacks.length === 0) callbacks = (await dataStore.getAllCallbacks?.()) || [];
 
     const enrichedUsers = rawUsers.map((u) => {
       const userEmail = (u.email || '').toLowerCase().trim();
@@ -344,9 +366,9 @@ export const getAllUsers = async (req, res) => {
       
       const userOrders = requirements.filter((r) => {
         if (!r) return false;
-        const clientEmail = (r.clientInfo?.email || r.email || r.fullFormData?.emailAddress || r.answers?.emailAddress || '').toLowerCase().trim();
+        const clientEmail = (r.clientInfo?.email || r.email || '').toLowerCase().trim();
         const rUser = String(r.user?._id || r.user || r.userId || '');
-        const clientPhone = (r.clientInfo?.mobile || r.clientInfo?.phone || r.phone || r.fullFormData?.mobileNumber || r.answers?.mobileNumber || '').replace(/\D/g, '');
+        const clientPhone = (r.clientInfo?.mobile || r.clientInfo?.phone || r.phone || '').replace(/\D/g, '');
         
         const matchUser = userId && rUser && (rUser === userId || rUser === String(u._id) || rUser === String(u.id));
         const matchEmail = userEmail && clientEmail && (clientEmail === userEmail || clientEmail.includes(userEmail) || userEmail.includes(clientEmail));
