@@ -37,7 +37,7 @@ export default function About() {
       bio: 'Full-Stack Engineer & Product Designer leading high-performance digital systems.',
       instagram: 'https://instagram.com/sohamart',
       linkedin: '',
-      email: 'sohamduttabwn@gmail.com',
+      email: 'local2brand.contact@gmail.com',
     },
   ];
 

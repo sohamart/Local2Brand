@@ -63,7 +63,7 @@ export default function AdminSettings() {
     brandName: settings.brandName || 'LOCAL2BRAND',
     domain: settings.domain || 'local2brand.com',
     tagline: settings.tagline || 'Build Local. Think Global.',
-    supportEmail: settings.supportEmail || 'hello@local2brand.com',
+    supportEmail: settings.supportEmail || 'local2brand.contact@gmail.com',
     turnaroundTime: settings.turnaroundTime || '48 Hours',
     startingPriceUsd: settings.startingPriceUsd || '$399',
     startingPriceInr: settings.startingPriceInr || '₹9,999',
@@ -117,12 +117,12 @@ export default function AdminSettings() {
             bio: 'Full-Stack Engineer & Designer leading high-performance digital products.',
             instagram: 'https://instagram.com/sohamart',
             linkedin: '',
-            email: 'sohamduttabwn@gmail.com',
+            email: 'local2brand.contact@gmail.com',
             phone: '+91 98765 43210',
           },
         ],
         contactPhone: '+91 98765 43210',
-        contactEmail: 'local2brand@zohomail.in',
+        contactEmail: 'local2brand.contact@gmail.com',
         officeLocation: 'Kolkata & Bangalore, India',
         workingHours: 'Monday - Saturday: 10:00 AM - 8:00 PM IST',
         whatsappSupport: '+91 98765 43210',
@@ -146,7 +146,7 @@ export default function AdminSettings() {
           bio: 'Full-Stack Engineer & Designer leading high-performance digital products.',
           instagram: 'https://instagram.com/sohamart',
           linkedin: '',
-          email: 'sohamduttabwn@gmail.com',
+          email: 'local2brand.contact@gmail.com',
           phone: '+91 98765 43210',
         },
       ];
@@ -1609,7 +1609,7 @@ export default function AdminSettings() {
                           type="email"
                           value={founder.email || ''}
                           onChange={(e) => handleFounderFieldChange(idx, 'email', e.target.value)}
-                          placeholder="sohamduttabwn@gmail.com"
+                          placeholder="local2brand.contact@gmail.com"
                           className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
                         />
                       </div>
@@ -1693,7 +1693,7 @@ export default function AdminSettings() {
                     type="email"
                     value={formData.aiSettings?.adminShowableDetails?.contactEmail || ''}
                     onChange={(e) => handleAiAdminDetailsChange('contactEmail', e.target.value)}
-                    placeholder="local2brand@zohomail.in"
+                    placeholder="local2brand.contact@gmail.com"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                   />
                 </div>

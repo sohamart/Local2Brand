@@ -1322,7 +1322,7 @@ export default function AdminBroadcast() {
               <div className="w-full rounded-2xl bg-slate-100 dark:bg-[#070a12] border border-slate-300 dark:border-slate-800 shadow-2xl overflow-hidden">
                 <div className="p-3.5 bg-white dark:bg-[#0b0f19] border-b border-slate-200 dark:border-slate-800 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-purple-600 dark:text-purple-400 font-bold">From: LOCAL2BRAND &lt;hello@local2brand.com&gt;</span>
+                    <span className="font-mono text-purple-600 dark:text-purple-400 font-bold">From: LOCAL2BRAND &lt;local2brand.contact@gmail.com&gt;</span>
                     <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-300 font-mono font-bold">TLS SSL</span>
                   </div>
                   <div className="text-slate-700 dark:text-slate-300 font-semibold truncate">
@@ -1392,7 +1392,7 @@ export default function AdminBroadcast() {
                     <div className="p-4 bg-slate-50 dark:bg-[#0b0f19] border-t border-slate-200 dark:border-slate-800 text-center space-y-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                       <p>You received this official dispatch as a registered client on LOCAL2BRAND.</p>
                       <p className="text-slate-600 dark:text-slate-400 font-medium">
-                        ✉️ local2brand@zohomail.in • sohamduttabwn@gmail.com
+                        ✉️ local2brand.contact@gmail.com
                       </p>
                       <p className="text-slate-400 dark:text-slate-500 font-semibold pt-0.5">
                         © {new Date().getFullYear()} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved.

@@ -146,10 +146,10 @@ export default function Contact() {
                   <div className="min-w-0">
                     <span className="text-[11px] text-slate-400 font-bold block">Support & Inquiries Email</span>
                     <a
-                      href={`mailto:${settings.aiSettings?.adminShowableDetails?.contactEmail || settings.supportEmail || 'local2brand@zohomail.in'}`}
+                      href={`mailto:${settings.aiSettings?.adminShowableDetails?.contactEmail || settings.supportEmail || 'local2brand.contact@gmail.com'}`}
                       className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white hover:text-purple-600 truncate block transition-colors"
                     >
-                      {settings.aiSettings?.adminShowableDetails?.contactEmail || settings.supportEmail || 'local2brand@zohomail.in'}
+                      {settings.aiSettings?.adminShowableDetails?.contactEmail || settings.supportEmail || 'local2brand.contact@gmail.com'}
                     </a>
                   </div>
                 </div>

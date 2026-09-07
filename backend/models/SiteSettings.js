@@ -19,7 +19,7 @@ const siteSettingsSchema = new mongoose.Schema(
     },
     supportEmail: {
       type: String,
-      default: 'local2brand@zohomail.in',
+      default: 'local2brand.contact@gmail.com',
       trim: true,
     },
     displayPhone: {
@@ -214,13 +214,13 @@ const siteSettingsSchema = new mongoose.Schema(
               bio: 'Full-Stack Engineer & Designer leading fast-track digital products.',
               instagram: 'https://instagram.com/sohamart',
               linkedin: '',
-              email: 'sohamduttabwn@gmail.com',
+              email: 'local2brand.contact@gmail.com',
               phone: '+91 98765 43210',
             }
           ],
         },
         contactPhone: { type: String, default: '+91 98765 43210' },
-        contactEmail: { type: String, default: 'local2brand@zohomail.in' },
+        contactEmail: { type: String, default: 'local2brand.contact@gmail.com' },
         officeLocation: { type: String, default: 'Kolkata & Bangalore, India' },
         workingHours: { type: String, default: 'Monday - Saturday: 10:00 AM - 8:00 PM IST' },
         whatsappSupport: { type: String, default: '+91 98765 43210' },

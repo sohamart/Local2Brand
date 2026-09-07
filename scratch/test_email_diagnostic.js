@@ -8,7 +8,7 @@ console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? '***' + process.env.EMAIL_PA
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER || 'local2brand@zohomail.in',
+    user: process.env.EMAIL_USER || 'local2brand.contact@gmail.com',
     pass: (process.env.EMAIL_PASS || '').replace(/\s+/g, '')
   }
 });

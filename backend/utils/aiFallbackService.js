@@ -63,7 +63,7 @@ CURRENT CONVERSATION PARTNER:
   const foundersList = Array.isArray(adminDetails.founders) ? adminDetails.founders : [];
   const founderCount = adminDetails.founderCount || foundersList.length || 1;
   const showFounders = adminDetails.showFoundersToAi ?? true;
-  const officialSupportEmail = adminDetails.contactEmail || settings.supportEmail || 'local2brand@zohomail.in';
+  const officialSupportEmail = adminDetails.contactEmail || settings.supportEmail || 'local2brand.contact@gmail.com';
 
   if (showFounders && foundersList.length > 0) {
     const formattedFounders = foundersList
@@ -93,8 +93,7 @@ OFFICIAL COMPANY, FOUNDERS & CONTACT DETAILS:
 - Brand Name: ${brandName} (${domain})
 - Tagline: ${tagline}
 ${foundersBlock}
-- Official Verified Support Email: ${officialSupportEmail}
-- Direct Founder Email: sohamduttabwn@gmail.com
+- Official Verified Contact & Support Email: ${officialSupportEmail}
 - Official Public Phone: ${adminDetails.contactPhone || settings.displayPhone || '+91 98765 43210'}
 - Official Public WhatsApp: ${adminDetails.whatsappSupport || '+91 98765 43210'}
 - Official Instagram: ${adminDetails.instagramHandle || settings.socialLinks?.instagramHandle || '@local2brand'} (${adminDetails.instagram || settings.socialLinks?.instagram || 'https://instagram.com/local2brand'})
@@ -132,9 +131,9 @@ CORE OFFERINGS & PACKAGES:
    - Promo Code "INDIA2025": Gives an instant 20% DISCOUNT + Free SSL certificate + Free custom domain setup.
    - Live Announcement: "${announcementText}"
 4. Direct Actions You Can Perform:
-   - "Instant Callback": If the user provides a phone number or asks for a call, our backend auto-registers an instant callback request and alerts the founders (sohamduttabwn@gmail.com & local2brand@zohomail.in).
+   - "Instant Callback": If the user provides a phone number or asks for a call, our backend auto-registers an instant callback request and alerts the founders (local2brand.contact@gmail.com).
    - "Step-by-Step Project Order Intake": When a client wants to build a website or place an order, systematically guide them step-by-step through requirements gathering, summarize their details, and confirm the order with their exact specifications!
-   - Official Verified Email: ${officialSupportEmail} (DO NOT use fake or obsolete emails like hello@local2brand.com)${servicesBlock}${demosBlock}
+   - Official Verified Email: ${officialSupportEmail}${servicesBlock}${demosBlock}
 ========================================
 
 ========================================
@@ -167,8 +166,8 @@ ${customInstructions ? `========================================\nADMIN CUSTOM I
 
 CRITICAL OPERATIONAL & COMMUNICATION RULES:
 1. Step-by-Step Clarity: Do NOT overwhelm the user with a massive form in one go unless they provide everything at once. Ask sequentially and build the order profile step by step.
-2. Founders & Boss Identity: When anyone asks "who is your boss?", "who is the owner?", "founder ke?", "founder details ki?", "co-founder ke?", or requests Instagram/emails, introduce our founder(s) and co-founders proudly with their exact names, roles, and verified email (${officialSupportEmail} / sohamduttabwn@gmail.com).
-3. Email Integrity: NEVER output or hallucinate non-existent emails (such as hello@local2brand.com). ONLY use "${officialSupportEmail}" or "sohamduttabwn@gmail.com".
+2. Founders & Boss Identity: When anyone asks "who is your boss?", "who is the owner?", "founder ke?", "founder details ki?", "co-founder ke?", or requests Instagram/emails, introduce our founder(s) and co-founders proudly with their exact names, roles, and verified email (${officialSupportEmail}).
+3. Email Integrity: ALWAYS use "${officialSupportEmail}" as the single official contact & support email.
 4. Complete, Crisp & Structured (পরিপূর্ণ, স্পষ্ট ও পরিপাটি): Always provide complete responses. Never stop midway. Use 2-4 clean bullet points and bold key details.
 5. User Awareness: If the user is logged in, you MUST know and acknowledge their details (name, email, role) when asked.
 6. Multilingual Fluency: If the user communicates in Bengali (বাংলা / বাংলিশ), reply in sweet, clean, and concise Bengali. If in English, reply in crisp, professional English.
@@ -511,12 +510,12 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
   const userName = contextOptions.currentUser?.name ? ` ${contextOptions.currentUser.name}` : '';
 
   const adminDetails = contextOptions.settings?.aiSettings?.adminShowableDetails || {};
-  const supportEmail = adminDetails.contactEmail || contextOptions.settings?.supportEmail || 'local2brand@zohomail.in';
+  const supportEmail = adminDetails.contactEmail || contextOptions.settings?.supportEmail || 'local2brand.contact@gmail.com';
   const phone = adminDetails.contactPhone || contextOptions.settings?.displayPhone || '+91 98765 43210';
   const whatsapp = adminDetails.whatsappSupport || '+91 98765 43210';
   const founders = Array.isArray(adminDetails.founders) && adminDetails.founders.length > 0
     ? adminDetails.founders
-    : [{ name: 'Soham Dutta', role: 'Founder & Lead Architect', email: 'sohamduttabwn@gmail.com', instagram: 'https://instagram.com/sohamart' }];
+    : [{ name: 'Soham Dutta', role: 'Founder & Lead Architect', email: 'local2brand.contact@gmail.com', instagram: 'https://instagram.com/sohamart' }];
 
   const formattedFoundersBn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder' : 'Co-Founder')}) • ✉️ Email: \`${f.email || supportEmail}\`${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}`).join('\n');
   const formattedFoundersEn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder' : 'Co-Founder')}) • ✉️ Email: \`${f.email || supportEmail}\`${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}`).join('\n');
@@ -535,7 +534,7 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
 
     if (/email|mail|contact|phone|number|jogajog|thikana|address/i.test(lowerMsg)) {
       return {
-        text: `নমস্কার${userName}! 🚀 **${brandName}**-এর ভেরিফাইড যোগাযোগের মাধ্যম:\n\n- ✉️ **অফিশিয়াল সাপোর্ট ইমেইল**: \`${supportEmail}\`\n- ✉️ **ডিরেক্ট ফাউন্ডার ইমেইল**: \`sohamduttabwn@gmail.com\`\n- 📞 **কলিং ও WhatsApp**: \`${phone}\`\n- 📍 **অফিস / হাব**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n- ⏰ **কাজের সময়**: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}`,
+        text: `নমস্কার${userName}! 🚀 **${brandName}**-এর ভেরিফাইড যোগাযোগের মাধ্যম:\n\n- ✉️ **অফিশিয়াল যোগাযোগ ইমেইল**: \`${supportEmail}\`\n- 📞 **কলিং ও WhatsApp**: \`${phone}\`\n- 📍 **অফিস / হাব**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n- ⏰ **কাজের সময়**: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}`,
         provider: 'L2B Smart Consultant',
         model: 'bengali-expert-v2'
       };
@@ -567,7 +566,7 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
 
   if (/email|mail|contact|phone|number|reach|address|location/i.test(lowerMsg)) {
     return {
-      text: `Hello${userName}! 🚀 Here are the official verified contact details for **${brandName}**:\n\n- ✉️ **Support Email**: \`${supportEmail}\`\n- ✉️ **Direct Founder Email**: \`sohamduttabwn@gmail.com\`\n- 📞 **Calling & WhatsApp**: \`${phone}\`\n- 📍 **HQ Hub**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n- ⏰ **Operating Hours**: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}`,
+      text: `Hello${userName}! 🚀 Here are the official verified contact details for **${brandName}**:\n\n- ✉️ **Contact & Support Email**: \`${supportEmail}\`\n- 📞 **Calling & WhatsApp**: \`${phone}\`\n- 📍 **HQ Hub**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n- ⏰ **Operating Hours**: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}`,
       provider: 'L2B Smart Consultant',
       model: 'enterprise-v2'
     };

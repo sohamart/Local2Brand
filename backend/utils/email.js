@@ -140,7 +140,7 @@ export const sendViaBrevoApi = async ({ to, subject, html, text }) => {
   }
 
   const senderName = process.env.BRAND_NAME || 'LOCAL2BRAND';
-  const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
+  const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
 
   const rawList = Array.isArray(to) ? to : (typeof to === 'string' ? to.split(',') : [to]);
   const recipients = rawList
@@ -186,8 +186,8 @@ export const sendViaBrevoApi = async ({ to, subject, html, text }) => {
 };
 
 export const sendEmail = async ({ to, subject, html, text, priority = 'high', isImportant = true }) => {
-  const fromEmail = process.env.EMAIL_FROM || `"LOCAL2BRAND" <${process.env.EMAIL_USER || 'local2brand@zohomail.in'}>`;
-  const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
+  const fromEmail = process.env.EMAIL_FROM || `"LOCAL2BRAND" <${process.env.EMAIL_USER || 'local2brand.contact@gmail.com'}>`;
+  const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
 
   // Clean HTML to Plaintext converter
   const cleanPlainText = text || (html
@@ -269,7 +269,7 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'high', is
     const fallbackTransporter = createFallbackTransporter();
     if (fallbackTransporter) {
       try {
-        const fallbackFrom = `"LOCAL2BRAND" <${process.env.FALLBACK_EMAIL_USER || 'local2brand@zohomail.in'}>`;
+        const fallbackFrom = `"LOCAL2BRAND" <${process.env.FALLBACK_EMAIL_USER || 'local2brand.contact@gmail.com'}>`;
         const fbInfo = await fallbackTransporter.sendMail({
           from: fallbackFrom,
           replyTo: `"LOCAL2BRAND Support" <${supportEmail}>`,
@@ -419,9 +419,7 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
           ${footerNote || 'This is an official automated dispatch from LOCAL2BRAND Platform &amp; AI Dispatch System.'}
         </p>
         <div style="font-size: 11px; color: #4b5563; margin-bottom: 8px;">
-          <span>✉️ Support: <a href="mailto:local2brand@zohomail.in" style="color: #7c3aed; text-decoration: none; font-weight: 600;">local2brand@zohomail.in</a></span>
-          <span style="margin: 0 4px; color: #94a3b8;">•</span>
-          <span>Founder Desk: <a href="mailto:sohamduttabwn@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">sohamduttabwn@gmail.com</a></span>
+          <span>✉️ Contact &amp; Support: <a href="mailto:local2brand.contact@gmail.com" style="color: #7c3aed; text-decoration: none; font-weight: 600;">local2brand.contact@gmail.com</a></span>
         </div>
         <p class="text-muted" style="margin: 0; font-size: 11px; color: #94a3b8; font-weight: 600;">
           &copy; ${currentYear} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved.
@@ -577,9 +575,9 @@ export const sendRequirementConfirmationEmail = async (reqDoc) => {
 // 3. Admin Notification on New Requirement Submission
 export const sendAdminRequirementAlert = async (reqDoc) => {
   const clientUrl = getClientUrl();
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
-  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'local2brand.contact@gmail.com';
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com'])).filter(Boolean).join(', ');
 
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
@@ -803,9 +801,9 @@ export const sendLeadConfirmationEmail = async (lead) => {
 // 6. Admin Notification on New Lead or Contact Form Message
 export const sendAdminNewLeadAlert = async (lead) => {
   const clientUrl = getClientUrl();
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
-  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'local2brand.contact@gmail.com';
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com'])).filter(Boolean).join(', ');
 
   const isContactForm = lead.industry === 'Direct Contact Form' || lead.websiteType?.includes('Contact Form') || lead.budget === 'Custom Quotation';
   const subject = isContactForm
@@ -1054,9 +1052,9 @@ export const sendCallbackConfirmationEmail = async (callback) => {
 // 8. Admin & Brand Instant Alert on Callback Request
 export const sendAdminCallbackAlert = async (callback) => {
   const clientUrl = getClientUrl();
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
-  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'local2brand.contact@gmail.com';
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com'])).filter(Boolean).join(', ');
 
   const subject = `🚨 [IMPORTANT CALLBACK REQUEST] ${callback.name} — ${callback.phone}`;
 
@@ -1118,9 +1116,9 @@ export const sendAdminCallbackAlert = async (callback) => {
 // 8.1 Admin Real-Time Alert on New User Registration
 export const sendAdminNewUserAlertEmail = async ({ user }) => {
   const clientUrl = getClientUrl();
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'sohamduttabwn@gmail.com';
-  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'sohamduttabwn@gmail.com', 'local2brand@zohomail.in'])).filter(Boolean).join(', ');
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'local2brand.contact@gmail.com';
+  const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com'])).filter(Boolean).join(', ');
 
   const subject = `👤 [NEW USER REGISTRATION] ${user.name} (${user.email}) — LOCAL2BRAND`;
 
@@ -1668,7 +1666,7 @@ export const sendRequirementRejectedEmail = async (reqDoc, reason = '') => {
 
 // 15. Admin Alert on Requirement Deletion
 export const sendAdminRequirementDeletionAlert = async (reqDoc, reason = '') => {
-  const recipients = ['sohamduttabwn@gmail.com', 'local2brand@zohomail.in'];
+  const recipients = ['local2brand.contact@gmail.com'];
   const reqId = reqDoc.requirementId || (reqDoc._id ? reqDoc._id.toString() : 'REQ-ID');
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Client';
   const clientEmail = reqDoc.clientInfo?.email || 'No email';
@@ -1760,7 +1758,7 @@ export const sendCallbackDeletionEmail = async (callback) => {
 
 // 17. Admin Alert on Callback Deletion
 export const sendAdminCallbackDeletionAlert = async (callback) => {
-  const recipients = ['sohamduttabwn@gmail.com', 'local2brand@zohomail.in'];
+  const recipients = ['local2brand.contact@gmail.com'];
   const subject = `🗑️ [CALLBACK DELETED] ${callback.name} — ${callback.phone}`;
 
   const contentHtml = `
@@ -1800,7 +1798,7 @@ export const sendAdminCallbackDeletionAlert = async (callback) => {
 
 // 18. Service Offering Deletion Notice (to Admin)
 export const sendServiceDeletionAlert = async (service) => {
-  const recipients = ['sohamduttabwn@gmail.com', 'local2brand@zohomail.in'];
+  const recipients = ['local2brand.contact@gmail.com'];
   const subject = `🗑️ [SERVICE DELETED] ${service.title || 'Service Offering'}`;
 
   const contentHtml = `
@@ -1858,7 +1856,7 @@ export const sendQueryDeletionEmail = async (queryDoc) => {
 };
 
 export const sendAdminQueryDeletionAlert = async (queryDoc) => {
-  const recipients = ['sohamduttabwn@gmail.com', 'local2brand@zohomail.in'];
+  const recipients = ['local2brand.contact@gmail.com'];
   const subject = `🗑️ [INQUIRY DELETED] ${queryDoc.name || 'Lead'} — ${queryDoc.email || queryDoc.phone}`;
 
   const contentHtml = `
