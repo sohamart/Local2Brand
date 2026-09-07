@@ -8,7 +8,7 @@ export function getSanitizedWhatsAppNumber() {
   if (envNumber) {
     return String(envNumber).replace(/[^0-9]/g, '');
   }
-  const configNumber = siteConfig.whatsappNumber || siteConfig.phone || '919064971842';
+  const configNumber = siteConfig.whatsappNumber || siteConfig.phone || '918710043923';
   return String(configNumber).replace(/[^0-9]/g, '');
 }
 

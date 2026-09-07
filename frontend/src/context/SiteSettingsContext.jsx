@@ -33,7 +33,7 @@ export function SiteSettingsProvider({ children }) {
       domain: staticFallback.domain || 'local2brand.com',
       tagline: staticFallback.tagline || 'Build Local. Think Global.',
       supportEmail: staticFallback.email || 'local2brand.contact@gmail.com',
-      displayPhone: '+91 98765 43210',
+      displayPhone: staticFallback.phone || '+91 87100 43923',
       turnaroundTime: staticFallback.turnaroundTime || '48 Hours',
       startingPriceUsd: staticFallback.startingPrice || '$399',
       startingPriceInr: staticFallback.startingPriceInr || '₹9,999',
@@ -47,6 +47,7 @@ export function SiteSettingsProvider({ children }) {
         linkedin: 'https://linkedin.com/company/local2brand',
         github: 'https://github.com/local2brand',
         twitter: 'https://twitter.com/local2brand',
+        whatsapp: 'https://wa.me/918710043923',
       },
       heroConfig: {
         badge: '🇮🇳 India’s #1 Fast-Track Web Experience Engine',

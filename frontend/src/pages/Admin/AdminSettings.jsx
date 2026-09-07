@@ -118,14 +118,14 @@ export default function AdminSettings() {
             instagram: 'https://instagram.com/sohamart',
             linkedin: '',
             email: 'local2brand.contact@gmail.com',
-            phone: '+91 98765 43210',
+            phone: '+91 87100 43923',
           },
         ],
-        contactPhone: '+91 98765 43210',
+        contactPhone: '+91 87100 43923',
         contactEmail: 'local2brand.contact@gmail.com',
         officeLocation: 'Kolkata & Bangalore, India',
         workingHours: 'Monday - Saturday: 10:00 AM - 8:00 PM IST',
-        whatsappSupport: '+91 98765 43210',
+        whatsappSupport: '+91 87100 43923',
         instagram: 'https://instagram.com/local2brand',
         instagramHandle: '@local2brand',
       },
@@ -147,7 +147,7 @@ export default function AdminSettings() {
           instagram: 'https://instagram.com/sohamart',
           linkedin: '',
           email: 'local2brand.contact@gmail.com',
-          phone: '+91 98765 43210',
+          phone: '+91 87100 43923',
         },
       ];
 
@@ -1623,7 +1623,7 @@ export default function AdminSettings() {
                           type="text"
                           value={founder.phone || ''}
                           onChange={(e) => handleFounderFieldChange(idx, 'phone', e.target.value)}
-                          placeholder="+91 98765 43210"
+                          placeholder="+91 87100 43923"
                           className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
                         />
                       </div>
@@ -1665,7 +1665,7 @@ export default function AdminSettings() {
                     type="text"
                     value={formData.aiSettings?.adminShowableDetails?.contactPhone || ''}
                     onChange={(e) => handleAiAdminDetailsChange('contactPhone', e.target.value)}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 87100 43923"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                   />
                 </div>
@@ -1679,7 +1679,7 @@ export default function AdminSettings() {
                     type="text"
                     value={formData.aiSettings?.adminShowableDetails?.whatsappSupport || ''}
                     onChange={(e) => handleAiAdminDetailsChange('whatsappSupport', e.target.value)}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 87100 43923"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                   />
                 </div>

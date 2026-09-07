@@ -90,8 +90,27 @@ export default function Footer() {
             <div className="pt-2 text-xs text-slate-600 dark:text-slate-300 space-y-1.5">
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                <span>{settings.supportEmail}</span>
+                <a href={`mailto:${settings.supportEmail}`} className="hover:text-purple-600 transition-colors">
+                  {settings.supportEmail}
+                </a>
               </div>
+              {settings.displayPhone && (
+                <div className="flex items-center gap-2">
+                  <PhoneCall className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <a href={`tel:${settings.displayPhone}`} className="hover:text-emerald-600 transition-colors">
+                    {settings.displayPhone}
+                  </a>
+                  <span className="text-slate-400">•</span>
+                  <a
+                    href={`https://wa.me/918710043923?text=${encodeURIComponent('Hi LOCAL2BRAND! I would like to discuss a website project.')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
+                  >
+                    WhatsApp Chat 💬
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 

@@ -94,8 +94,8 @@ OFFICIAL COMPANY, FOUNDERS & CONTACT DETAILS:
 - Tagline: ${tagline}
 ${foundersBlock}
 - Official Verified Contact & Support Email: ${officialSupportEmail}
-- Official Public Phone: ${adminDetails.contactPhone || settings.displayPhone || '+91 98765 43210'}
-- Official Public WhatsApp: ${adminDetails.whatsappSupport || '+91 98765 43210'}
+- Official Public Phone: ${adminDetails.contactPhone || settings.displayPhone || '+91 87100 43923'}
+- Official Public WhatsApp: ${adminDetails.whatsappSupport || '+91 87100 43923'}
 - Official Instagram: ${adminDetails.instagramHandle || settings.socialLinks?.instagramHandle || '@local2brand'} (${adminDetails.instagram || settings.socialLinks?.instagram || 'https://instagram.com/local2brand'})
 - Official LinkedIn: ${settings.socialLinks?.linkedin || 'https://linkedin.com/company/local2brand'}
 - Office / HQ: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}
@@ -511,11 +511,11 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
 
   const adminDetails = contextOptions.settings?.aiSettings?.adminShowableDetails || {};
   const supportEmail = adminDetails.contactEmail || contextOptions.settings?.supportEmail || 'local2brand.contact@gmail.com';
-  const phone = adminDetails.contactPhone || contextOptions.settings?.displayPhone || '+91 98765 43210';
-  const whatsapp = adminDetails.whatsappSupport || '+91 98765 43210';
+  const phone = adminDetails.contactPhone || contextOptions.settings?.displayPhone || '+91 87100 43923';
+  const whatsapp = adminDetails.whatsappSupport || '+91 87100 43923';
   const founders = Array.isArray(adminDetails.founders) && adminDetails.founders.length > 0
     ? adminDetails.founders
-    : [{ name: 'Soham Dutta', role: 'Founder & Lead Architect', email: 'local2brand.contact@gmail.com', instagram: 'https://instagram.com/sohamart' }];
+    : [{ name: 'Soham Dutta', role: 'Founder & Lead Architect', email: 'local2brand.contact@gmail.com', phone: '+91 87100 43923', instagram: 'https://instagram.com/sohamart' }];
 
   const formattedFoundersBn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder' : 'Co-Founder')}) • ✉️ Email: \`${f.email || supportEmail}\`${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}`).join('\n');
   const formattedFoundersEn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder' : 'Co-Founder')}) • ✉️ Email: \`${f.email || supportEmail}\`${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}`).join('\n');
