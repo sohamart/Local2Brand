@@ -292,11 +292,7 @@ export default function AssistantChatbot() {
   const userKey = getUserChatKey(user);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [hasPrompted, setHasPrompted] = useState(false);
-  const [isBubbleDismissed, setIsBubbleDismissed] = useState(false);
-  const [isBubbleClosing, setIsBubbleClosing] = useState(false);
   const [isLuckyWheelOpen, setIsLuckyWheelOpen] = useState(false);
-  const [copiedCoupon, setCopiedCoupon] = useState(false);
 
   const [sessionId, setSessionId] = useState(() => getStoredSessionId(userKey));
   const [messages, setMessages] = useState(() => getStoredMessages(settings?.brandName, userKey));
@@ -345,19 +341,6 @@ export default function AssistantChatbot() {
       return null;
     }
   });
-
-  // Check if bubble was dismissed in this session or recently
-  useEffect(() => {
-    try {
-      const isDismissedSession = sessionStorage.getItem('l2b_bubble_dismissed') === 'true';
-      const dismissedAt = parseInt(localStorage.getItem('l2b_bubble_dismissed_at') || '0', 10);
-      const twelveHours = 12 * 60 * 60 * 1000;
-      if (isDismissedSession || (Date.now() - dismissedAt < twelveHours)) {
-        setIsBubbleDismissed(true);
-        setHasPrompted(false);
-      }
-    } catch (e) {}
-  }, []);
 
   // Close handler that permanently remembers dismissal so it never auto-pops up on refresh
   const handleCloseLuckyWheel = () => {
@@ -421,10 +404,6 @@ export default function AssistantChatbot() {
 
       setSavedVoucher(prize);
       setIsOpen(true);
-      setIsBubbleDismissed(true);
-      try {
-        sessionStorage.setItem('l2b_bubble_dismissed', 'true');
-      } catch (err) {}
 
       const prizeBotMsg = {
         role: 'assistant',
@@ -452,59 +431,7 @@ export default function AssistantChatbot() {
     return () => window.removeEventListener('l2b_open_chatbot_prize', handlePrizeAwarded);
   }, [userKey]);
 
-  // Emerge the dynamic liquid announcement bubble from chatbot after 2.5s ONLY IF announcementBar is explicitly enabled
-  useEffect(() => {
-    if (isBubbleDismissed || !settings?.announcementBar?.enabled) {
-      setHasPrompted(false);
-      return;
-    }
-    const timer = setTimeout(() => {
-      if (settings?.announcementBar?.enabled) {
-        setHasPrompted(true);
-      }
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, [isBubbleDismissed, settings?.announcementBar?.enabled]);
 
-
-  const handleDismissBubble = (e) => {
-    if (e) e.stopPropagation();
-    setIsBubbleClosing(true);
-    try {
-      sessionStorage.setItem('l2b_bubble_dismissed', 'true');
-      localStorage.setItem('l2b_bubble_dismissed_at', Date.now().toString());
-    } catch (err) {}
-    setTimeout(() => {
-      setIsBubbleDismissed(true);
-      setIsBubbleClosing(false);
-      setHasPrompted(false);
-    }, 320);
-  };
-
-
-  const handleClaimPromoCoupon = (e) => {
-    if (e) e.stopPropagation();
-    const code = settings?.announcementBar?.promoCode || 'INDIA2025';
-    const discount = settings?.announcementBar?.discountPercent || 20;
-
-    try {
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(code);
-      }
-    } catch (err) {}
-
-    setCopiedCoupon(true);
-    toast.success(`🎉 Coupon "${code}" applied for ${discount}% OFF!`, { icon: '🎁' });
-    setTimeout(() => setCopiedCoupon(false), 2500);
-
-    openOrderModal({
-      promoCode: code,
-      discountPercent: discount,
-      autoApplyOffer: true,
-      websiteType: `Launch Promo (${discount}% OFF - Code: ${code})`,
-      initialRequirements: `I want to build a website and claim the special launch offer with coupon code "${code}" (${discount}% OFF discount applied).`,
-    });
-  };
 
 
   // Sync / verify chat history with backend database on mount
@@ -840,122 +767,11 @@ export default function AssistantChatbot() {
 
   return (
     <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-[99999]">
-      {/* Floating Launcher Button & Liquid Aurora Announcement Bubble */}
+      {/* Floating Launcher Button */}
       <div className="relative flex items-end justify-end">
-
-        {/* Proactive Liquid Aurora Announcement Card (Emerges smoothly from Chatbot ONLY IF enabled in site settings) */}
-        {!isOpen && hasPrompted && !isBubbleDismissed && Boolean(settings?.announcementBar?.enabled) && (
-          <div
-            className={`absolute bottom-16 sm:bottom-20 right-0 sm:right-2 w-[calc(100vw-2rem)] sm:w-[380px] max-w-[400px] z-[99999] transition-all origin-bottom-right ${
-              isBubbleClosing ? 'animate-bubble-collapse' : 'animate-bubble-bloom'
-            }`}
-          >
-            <div className="p-4 rounded-3xl bg-white/98 dark:bg-[#0a101f]/98 backdrop-blur-2xl border-2 border-purple-500/50 dark:border-cyan-400/70 shadow-[0_12px_40px_rgba(124,58,237,0.25)] dark:shadow-[0_0_40px_rgba(6,182,212,0.35)] relative overflow-hidden group">
-              {/* Ambient Fluid Glow */}
-              <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-bl from-pink-500/20 via-purple-500/15 to-transparent rounded-full blur-2xl pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-cyan-500/25 via-blue-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
-
-
-              {/* Header Row: Badge & Dismiss */}
-              <div className="flex items-center justify-between gap-2 mb-2 relative z-10">
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-purple-600 via-pink-600 to-indigo-600 text-white shadow-xs">
-                    <Flame className="w-3 h-3 text-amber-300 animate-bounce" />
-                    <span>{settings?.announcementBar?.badge || 'FLASH LAUNCH OFFER'}</span>
-                  </span>
-                  <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-200/80 dark:border-amber-500/40">
-                    <AshokaChakra size={9} />
-                    <span>IN</span>
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleDismissBubble}
-                  className="p-1 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                  title="Minimize announcement"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Headline Body */}
-              <div
-                onClick={() => setIsOpen(true)}
-                className="cursor-pointer mb-3 relative z-10"
-              >
-                <p className="text-xs sm:text-[13px] font-extrabold text-slate-900 dark:text-white leading-snug">
-                  {settings?.announcementBar?.text || '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025'}
-                </p>
-                <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold flex items-center gap-1 mt-1">
-                  <span>Click to chat with L2B AI Assistant</span>
-                  <ArrowRight className="w-2.5 h-2.5 group-hover:translate-x-0.5 transition-transform" />
-                </span>
-              </div>
-
-              {/* Action Buttons Row */}
-              <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800 relative z-10">
-                {/* 1. Spin & Win Wheel Trigger (only when games enabled) */}
-                {settings?.luckyWheel?.enabled !== false && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsLuckyWheelOpen(true);
-                    }}
-                    className="flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black text-white bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 hover:opacity-95 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-transform active:scale-95 animate-pulse"
-                  >
-                    <RotateCw className="w-3 h-3 text-white" />
-                    <span>Spin &amp; Win 🎡</span>
-                  </button>
-                )}
-
-                {/* 2. Direct Claim 20% Coupon */}
-                <button
-                  type="button"
-                  onClick={handleClaimPromoCoupon}
-                  className="flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/70 hover:bg-purple-100 dark:hover:bg-purple-900/80 border border-purple-200 dark:border-purple-800/80 flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
-                >
-                  {copiedCoupon ? (
-                    <>
-                      <Check className="w-3 h-3 text-emerald-500" />
-                      <span>Copied! ✅</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                      <span>{settings?.announcementBar?.promoCode || 'INDIA2025'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Liquid Specular Rim Light */}
-              <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400" />
-            </div>
-          </div>
-        )}
-
-        {/* Floating Play & Win Pill if user hasn't played current round */}
-        {!isOpen && !savedVoucher && settings?.luckyWheel?.enabled !== false && (
-          <button
-            type="button"
-            onClick={() => setIsLuckyWheelOpen(true)}
-            className="mr-2 sm:mr-3 px-3 sm:px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white font-extrabold text-[11px] sm:text-xs shadow-lg shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer animate-pulse z-10"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-amber-200" />
-            <span>🎡 Play &amp; Win Launch Reward!</span>
-          </button>
-        )}
-
         {/* L2B AI Modern Frosted Glass Launcher with Adaptive Laser Border */}
         <button
-
-          onClick={() => {
-            setIsOpen(!isOpen);
-            if (!isOpen) {
-              setHasPrompted(false);
-            }
-          }}
+          onClick={() => setIsOpen(!isOpen)}
           className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2.5px] overflow-hidden flex items-center justify-center transition-all duration-300 transform active:scale-95 cursor-pointer relative group ${
             isOpen
               ? 'bg-slate-900 text-white shadow-xl'
