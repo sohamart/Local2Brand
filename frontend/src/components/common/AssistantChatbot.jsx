@@ -371,7 +371,10 @@ export default function AssistantChatbot() {
 
   // Auto Popup Game Modal on load/refresh only if user has NEVER dismissed it and hasn't played current round
   useEffect(() => {
-    if (settings?.luckyWheel?.enabled === false) return;
+    if (settings?.luckyWheel?.enabled === false) {
+      setIsLuckyWheelOpen(false);
+      return;
+    }
     try {
       const currentCampaign = settings?.luckyWheel?.campaignVersion || 1;
       const spunCampaign = parseInt(localStorage.getItem('l2b_wheel_spun_version') || '0', 10);
@@ -382,17 +385,19 @@ export default function AssistantChatbot() {
       // If user closed it once or already played, do not auto-popup on refresh/load
       if (!isDismissed && spunCampaign < currentCampaign) {
         const timer = setTimeout(() => {
-          setIsLuckyWheelOpen(true);
+          if (settings?.luckyWheel?.enabled !== false) {
+            setIsLuckyWheelOpen(true);
+          }
         }, 2800);
         return () => clearTimeout(timer);
       }
     } catch (e) {}
   }, [settings?.luckyWheel?.campaignVersion, settings?.luckyWheel?.enabled]);
 
-
   // Listen for Admin "Start New Round" live trigger
   useEffect(() => {
     const handleNewRound = () => {
+      if (settings?.luckyWheel?.enabled === false) return;
       try {
         localStorage.removeItem('l2b_wheel_spun_version');
         localStorage.removeItem('l2b_wheel_spun');
@@ -406,7 +411,7 @@ export default function AssistantChatbot() {
 
     window.addEventListener('l2b_new_round_started', handleNewRound);
     return () => window.removeEventListener('l2b_new_round_started', handleNewRound);
-  }, []);
+  }, [settings?.luckyWheel?.enabled]);
 
   // Listen for Lucky Wheel spin win event or direct chatbot open triggers
   useEffect(() => {
@@ -884,18 +889,20 @@ export default function AssistantChatbot() {
 
               {/* Action Buttons Row */}
               <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800 relative z-10">
-                {/* 1. Spin & Win Wheel Trigger */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsLuckyWheelOpen(true);
-                  }}
-                  className="flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black text-white bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 hover:opacity-95 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-transform active:scale-95 animate-pulse"
-                >
-                  <RotateCw className="w-3 h-3 text-white" />
-                  <span>Spin &amp; Win 🎡</span>
-                </button>
+                {/* 1. Spin & Win Wheel Trigger (only when games enabled) */}
+                {settings?.luckyWheel?.enabled !== false && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsLuckyWheelOpen(true);
+                    }}
+                    className="flex-1 py-2 px-2.5 rounded-xl text-[11px] font-black text-white bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 hover:opacity-95 shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-transform active:scale-95 animate-pulse"
+                  >
+                    <RotateCw className="w-3 h-3 text-white" />
+                    <span>Spin &amp; Win 🎡</span>
+                  </button>
+                )}
 
                 {/* 2. Direct Claim 20% Coupon */}
                 <button
@@ -1309,7 +1316,7 @@ export default function AssistantChatbot() {
                 <span>Quick:</span>
               </span>
 
-              {QUICK_CHIPS.map((chip, idx) => (
+              {QUICK_CHIPS.filter(chip => !chip.isGame || settings?.luckyWheel?.enabled !== false).map((chip, idx) => (
                 <button
                   key={idx}
                   type="button"

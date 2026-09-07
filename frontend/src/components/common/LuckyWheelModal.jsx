@@ -580,7 +580,7 @@ export default function LuckyWheelModal({ isOpen, onClose }) {
     });
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || settings?.luckyWheel?.enabled === false) return null;
 
   return (
     <div

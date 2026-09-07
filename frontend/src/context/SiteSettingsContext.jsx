@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
 import { siteConfig as staticFallback } from '../config/siteConfig';
 
@@ -80,8 +80,8 @@ export function SiteSettingsProvider({ children }) {
             badgeType: 'emerald',
             link: '/contact',
             isActive: true,
-          }
-        ]
+          },
+        ],
       },
       luckyWheel: {
         enabled: true,
@@ -95,8 +95,6 @@ export function SiteSettingsProvider({ children }) {
         lastResetDate: new Date().toISOString(),
       },
       bannerImage: '',
-
-
       navLinks: staticFallback.navLinks || [
         { label: 'Home', href: '/' },
         { label: 'Templates', href: '/demos' },
@@ -111,54 +109,167 @@ export function SiteSettingsProvider({ children }) {
   });
 
   const [loading, setLoading] = useState(true);
+  const broadcastChannelRef = useRef(null);
 
-  const fetchSettings = async () => {
-    try {
-      const res = await api.get('/settings');
-      if (res.success && res.settings) {
-        setSettings((prev) => {
-          const merged = {
-            ...prev,
-            ...res.settings,
-            importantUpdates: {
-              ...prev.importantUpdates,
-              ...(res.settings.importantUpdates || {}),
-              enabled: res.settings.importantUpdates?.enabled !== false,
-            },
-            navLinks: prev.navLinks,
-          };
-          try {
-            localStorage.setItem('l2b_cached_settings', JSON.stringify(merged));
-          } catch (e) {}
-          return merged;
-        });
-      }
-    } catch (err) {
-      console.warn('Using default site settings (backend offline or loading)');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Helper to merge settings cleanly and update caches & sub-events
+  const applySettings = useCallback((incomingSettings, broadcastCrossTab = true) => {
+    if (!incomingSettings || typeof incomingSettings !== 'object') return;
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-
-
-  const updateLocalSettingsState = (newSettings) => {
-    if (!newSettings) return;
     setSettings((prev) => {
       const merged = {
         ...prev,
-        ...newSettings,
+        ...incomingSettings,
+        importantUpdates: incomingSettings.importantUpdates
+          ? {
+              ...prev.importantUpdates,
+              ...incomingSettings.importantUpdates,
+              enabled: incomingSettings.importantUpdates.enabled !== false,
+            }
+          : prev.importantUpdates,
+        luckyWheel: incomingSettings.luckyWheel
+          ? {
+              ...prev.luckyWheel,
+              ...incomingSettings.luckyWheel,
+              enabled: incomingSettings.luckyWheel.enabled !== false,
+            }
+          : prev.luckyWheel,
         navLinks: prev.navLinks,
       };
+
       try {
         localStorage.setItem('l2b_cached_settings', JSON.stringify(merged));
       } catch (e) {}
+
+      // If country themes changed, synchronize dynamic themes cache & events
+      if (incomingSettings.countryThemes) {
+        try {
+          localStorage.setItem('l2b_country_themes_cache', JSON.stringify(incomingSettings.countryThemes));
+          window.dispatchEvent(new CustomEvent('l2b_country_themes_updated', { detail: incomingSettings.countryThemes }));
+        } catch (e) {}
+      }
+
+      // Broadcast across tabs if requested
+      if (broadcastCrossTab && broadcastChannelRef.current) {
+        try {
+          broadcastChannelRef.current.postMessage({
+            type: 'L2B_SETTINGS_UPDATE',
+            settings: merged,
+            timestamp: Date.now(),
+          });
+        } catch (e) {}
+      }
+
       return merged;
     });
+  }, []);
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      const res = await api.get('/settings');
+      if (res.success && res.settings) {
+        applySettings(res.settings, true);
+      }
+    } catch (err) {
+      console.warn('Using cached site settings (backend offline or loading)');
+    } finally {
+      setLoading(false);
+    }
+  }, [applySettings]);
+
+  // Initial Fetch & Real-Time Server-Sent Events (SSE) stream setup
+  useEffect(() => {
+    fetchSettings();
+
+    // 1. Setup Cross-Tab BroadcastChannel
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        const bc = new BroadcastChannel('l2b_site_settings_channel');
+        broadcastChannelRef.current = bc;
+        bc.onmessage = (e) => {
+          if (e.data?.type === 'L2B_SETTINGS_UPDATE' && e.data?.settings) {
+            applySettings(e.data.settings, false);
+          }
+        };
+      } catch (e) {}
+    }
+
+    // 2. Setup Native Server-Sent Events (SSE) for Real-Time Server Updates
+    let eventSource = null;
+    let reconnectTimeout = null;
+
+    const connectSSE = () => {
+      try {
+        const sseUrl = `${api.baseUrl}/settings/events`;
+        eventSource = new EventSource(sseUrl, { withCredentials: true });
+
+        eventSource.addEventListener('settings_updated', (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data) {
+              applySettings(data, true);
+            }
+          } catch (err) {
+            console.warn('SSE payload parse error:', err);
+          }
+        });
+
+        eventSource.addEventListener('connected', () => {
+          // SSE connection active
+        });
+
+        eventSource.onerror = () => {
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+          // Attempt gentle reconnect after 5s
+          clearTimeout(reconnectTimeout);
+          reconnectTimeout = setTimeout(connectSSE, 5000);
+        };
+      } catch (err) {
+        // SSE not supported or network error
+      }
+    };
+
+    connectSSE();
+
+    // 3. Fallback Cross-Tab Storage Event Listener
+    const handleStorage = (e) => {
+      if (e.key === 'l2b_cached_settings' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          applySettings(parsed, false);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // 4. Foreground Tab Focus Sync
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchSettings();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (eventSource) {
+        eventSource.close();
+      }
+      clearTimeout(reconnectTimeout);
+      if (broadcastChannelRef.current) {
+        try {
+          broadcastChannelRef.current.close();
+        } catch (e) {}
+      }
+      window.removeEventListener('storage', handleStorage);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [applySettings, fetchSettings]);
+
+  const updateLocalSettingsState = (newSettings) => {
+    if (!newSettings) return;
+    applySettings(newSettings, true);
   };
 
   return (
@@ -174,7 +285,6 @@ export function SiteSettingsProvider({ children }) {
     </SiteSettingsContext.Provider>
   );
 }
-
 
 export function useSiteSettings() {
   const context = useContext(SiteSettingsContext);
