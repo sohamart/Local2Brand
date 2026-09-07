@@ -6,15 +6,14 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('l2b_theme');
-      if (savedTheme === 'light' || savedTheme === 'dark') {
-        return savedTheme;
-      }
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
+      try {
+        const savedTheme = localStorage.getItem('l2b_theme');
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+          return savedTheme;
+        }
+      } catch (e) {}
     }
-    return 'dark'; // High-end dark default matching index.html
+    return 'dark'; // Always default to Dark Mode on first visit
   });
 
   useEffect(() => {
@@ -24,13 +23,17 @@ export function ThemeProvider({ children }) {
       root.classList.remove('light');
       root.setAttribute('data-theme', 'dark');
       root.style.colorScheme = 'dark';
+      root.style.backgroundColor = '#07090e';
     } else {
       root.classList.add('light');
       root.classList.remove('dark');
       root.setAttribute('data-theme', 'light');
       root.style.colorScheme = 'light';
+      root.style.backgroundColor = '#ffffff';
     }
-    localStorage.setItem('l2b_theme', theme);
+    try {
+      localStorage.setItem('l2b_theme', theme);
+    } catch (e) {}
   }, [theme]);
 
   // Authentic Expanding Circular UI Reveal (New Theme expands outward from button)

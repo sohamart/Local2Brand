@@ -16,17 +16,18 @@ function Root() {
       window.history.scrollRestoration = 'manual';
     }
 
-    // 144Hz Ultra High-Refresh Rate ProMotion Glide Engine
+    // 144Hz Ultra High-Refresh Rate ProMotion Glide Engine with Smooth Touch & Inertia
     const lenis = new Lenis({
-
-      duration: 0.85, // Snappy, punchy 144Hz response without lag
+      duration: 0.9, // Snappy, punchy 144Hz response without lag
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // High-refresh exponential deceleration
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
       wheelMultiplier: 1.0,
-      touchMultiplier: 1.2,
-      syncTouch: false,
+      touchMultiplier: 1.5,
+      syncTouch: true,
+      syncTouchLerp: 0.09,
+      touchInertiaExponent: 1.7,
       infinite: false,
     });
 

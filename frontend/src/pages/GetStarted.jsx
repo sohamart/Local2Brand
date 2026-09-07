@@ -988,6 +988,20 @@ export default function GetStarted() {
     };
   }, []);
 
+  // Smooth scroll to top of form when step advances or reverses via Lenis
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (window.lenis) {
+        window.lenis.scrollTo(0, {
+          duration: 0.8,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }, [currentStep]);
+
   // Form State - Starts with detected country & clean blank fields
   const [formData, setFormData] = useState(() => ({
     // Step 1: Client Details

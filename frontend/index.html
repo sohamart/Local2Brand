@@ -7,8 +7,7 @@
     (function () {
       try {
         var savedTheme = localStorage.getItem('l2b_theme');
-        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        var theme = savedTheme ? savedTheme : (prefersDark ? 'dark' : 'dark');
+        var theme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'dark';
         var root = document.documentElement;
         if (theme === 'dark') {
           root.classList.add('dark');
