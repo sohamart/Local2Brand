@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -31,6 +31,8 @@ import ThemeToggle from '../../components/common/ThemeToggle';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import DashboardLoader from '../../components/common/DashboardLoader';
 import MarqueeTicker from '../../components/common/MarqueeTicker';
+import NotificationBell from '../../components/common/NotificationBell';
+import notificationApi from '../../services/notificationApi';
 
 
 const NAV_ITEMS = [
@@ -57,6 +59,53 @@ export default function AdminLayout() {
   const { settings } = useSiteSettings();
   const navigate = useNavigate();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(() => {
+    try {
+      return Number(localStorage.getItem('l2b_cached_unread')) || 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const res = await notificationApi.getUnreadCount();
+      if (res?.success && typeof res.unreadCount === 'number') {
+        setUnreadCount(res.unreadCount);
+        try {
+          localStorage.setItem('l2b_cached_unread', String(res.unreadCount));
+        } catch (e) {}
+      }
+    } catch (err) {}
+  }, []);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 10000);
+
+    const handleCountUpdate = (e) => {
+      if (typeof e.detail === 'number') {
+        setUnreadCount(e.detail);
+      } else {
+        fetchUnreadCount();
+      }
+    };
+
+    window.addEventListener('l2b_inbox_count_updated', handleCountUpdate);
+    const handleStorage = (e) => {
+      if (e.key === 'l2b_cached_unread') {
+        setUnreadCount(Number(e.newValue) || 0);
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('l2b_inbox_count_updated', handleCountUpdate);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [fetchUnreadCount]);
+
 
   if (loading) {
     return (
@@ -151,6 +200,7 @@ export default function AdminLayout() {
           </div>
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
+            const isInbox = item.href === '/admin/inbox';
             return (
               <NavLink
                 key={item.href}
@@ -158,15 +208,22 @@ export default function AdminLayout() {
                 end={item.exact}
                 onClick={() => setMobileSidebarOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
+                  `flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all ${
                     isActive
                       ? 'bg-purple-600 text-white shadow-md font-bold'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-950 dark:hover:text-white'
                   }`
                 }
               >
-                <Icon className="w-4 h-4 shrink-0" />
-                <span>{item.label}</span>
+                <div className="flex items-center gap-3 min-w-0">
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </div>
+                {isInbox && unreadCount > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-black bg-rose-500 text-white shadow-xs animate-pulse tracking-tight shrink-0">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </NavLink>
             );
           })}
@@ -243,6 +300,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-3">
+            <NotificationBell />
             <ThemeToggle showLabel={false} />
             <Link
               to="/dashboard"

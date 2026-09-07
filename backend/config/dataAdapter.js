@@ -42,6 +42,7 @@ const DEFAULT_SETTINGS = {
   isMaintenanceMode: false,
   isComingSoonMode: false,
   maintenanceMessage: 'We are currently upgrading our platform. We will be back online shortly!',
+  targetLaunchDate: '',
   socialLinks: {
     instagram: 'https://instagram.com/local2brand',
     instagramHandle: '@local2brand',

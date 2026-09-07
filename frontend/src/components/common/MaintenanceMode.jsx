@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Clock,
   Sparkles,
@@ -13,6 +13,7 @@ import {
   Wrench
 } from 'lucide-react';
 import { siteConfig } from '../../config/siteConfig';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 import AshokaChakra from './AshokaChakra';
 import ThemeToggle from './ThemeToggle';
 import LiquidBackground from './LiquidBackground';
@@ -26,11 +27,17 @@ const InstagramIcon = ({ className = "w-4 h-4" }) => (
 );
 
 export default function MaintenanceMode({ onBypassSuccess }) {
-  // Determine mode: Coming Soon vs Maintenance
-  const isComingSoon = siteConfig.isComingSoonMode && !siteConfig.isMaintenanceMode;
+  const { settings } = useSiteSettings();
 
-  // Target Grand Launch Date from .env or fallback
-  const [targetDate] = useState(() => {
+  // Determine mode: Coming Soon vs Maintenance
+  const isComingSoon = Boolean(settings.isComingSoonMode && !settings.isMaintenanceMode);
+
+  // Target Grand Launch Date from dynamic site settings, .env, or fallback
+  const targetDate = useMemo(() => {
+    if (settings.targetLaunchDate) {
+      const parsed = new Date(settings.targetLaunchDate).getTime();
+      if (!isNaN(parsed) && parsed > 0) return parsed;
+    }
     if (import.meta.env.VITE_LAUNCH_TARGET_DATE) {
       const parsed = new Date(import.meta.env.VITE_LAUNCH_TARGET_DATE).getTime();
       if (!isNaN(parsed)) return parsed;
@@ -39,7 +46,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
     d.setDate(d.getDate() + (isComingSoon ? 5 : 1));
     d.setHours(18, 0, 0, 0);
     return d.getTime();
-  });
+  }, [settings.targetLaunchDate, isComingSoon]);
 
   const [timeLeft, setTimeLeft] = useState({
     days: 3,
@@ -241,7 +248,7 @@ export default function MaintenanceMode({ onBypassSuccess }) {
                 We Are Under <span className="l2b-gradient-text">Scheduled</span> Upgrade.
               </h1>
               <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
-                Our engineering team is deploying performance enhancements and edge optimizations. We will be back online in just a moment.
+                {settings.maintenanceMessage || 'Our engineering team is deploying performance enhancements and edge optimizations. We will be back online in just a moment.'}
               </p>
             </>
           )}

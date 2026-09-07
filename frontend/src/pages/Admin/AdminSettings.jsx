@@ -70,14 +70,15 @@ export default function AdminSettings() {
     isMaintenanceMode: settings.isMaintenanceMode || false,
     isComingSoonMode: settings.isComingSoonMode || false,
     maintenanceMessage: settings.maintenanceMessage || 'We are currently upgrading our platform. We will be back online shortly!',
-    announcementBar: settings.announcementBar || {
-      enabled: true,
-      text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
-      link: '/pricing',
-      badge: 'FLASH OFFER',
-      promoCode: 'INDIA2025',
-      discountPercent: 20,
-      btnText: 'Claim Offer'
+    targetLaunchDate: settings.targetLaunchDate || '',
+    announcementBar: {
+      enabled: settings.announcementBar?.enabled ?? false,
+      text: settings.announcementBar?.text || '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
+      link: settings.announcementBar?.link || '/pricing',
+      badge: settings.announcementBar?.badge || 'FLASH OFFER',
+      promoCode: settings.announcementBar?.promoCode || 'INDIA2025',
+      discountPercent: settings.announcementBar?.discountPercent || 20,
+      btnText: settings.announcementBar?.btnText || 'Claim Offer'
     },
     luckyWheel: settings.luckyWheel || {
       enabled: true,
@@ -525,6 +526,114 @@ export default function AdminSettings() {
                   value={formData.turnaroundTime}
                   onChange={(e) => handleChange('turnaroundTime', e.target.value)}
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 2.9: Flash Launch Offer & Chatbot Card Manager */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
+                <Flame className="w-4 h-4 text-amber-500" />
+                <span>🔥 Flash Launch Offer &amp; Floating Promo Bubble</span>
+              </h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Enable Flash Offer</span>
+                <input
+                  type="checkbox"
+                  checked={formData.announcementBar?.enabled ?? false}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        enabled: e.target.checked
+                      }
+                    }))
+                  }
+                  className="w-5 h-5 accent-purple-600 cursor-pointer"
+                />
+              </label>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Controls the floating flash offer card that emerges from the AI chatbot launcher, and top announcement banner across pages. When turned off, it is completely hidden.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Badge Text</label>
+                <input
+                  type="text"
+                  value={formData.announcementBar?.badge || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        badge: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. FLASH OFFER"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Promo Coupon Code</label>
+                <input
+                  type="text"
+                  value={formData.announcementBar?.promoCode || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        promoCode: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. INDIA2025"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs font-bold uppercase"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Discount %</label>
+                <input
+                  type="number"
+                  value={formData.announcementBar?.discountPercent ?? 20}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        discountPercent: Number(e.target.value) || 0
+                      }
+                    }))
+                  }
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-xs"
+                />
+              </div>
+
+              <div className="sm:col-span-3">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Flash Headline Offer Text</label>
+                <input
+                  type="text"
+                  value={formData.announcementBar?.text || ''}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      announcementBar: {
+                        ...(prev.announcementBar || {}),
+                        text: e.target.value
+                      }
+                    }))
+                  }
+                  placeholder="e.g. 🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-xs"
                 />
               </div>
             </div>
@@ -1154,46 +1263,122 @@ export default function AdminSettings() {
 
           {/* Section 4: Maintenance & Coming Soon Gates */}
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              <span>Maintenance & Platform Modes</span>
-            </h2>
-
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-purple-600" />
+                <span>Maintenance &amp; Coming Soon Platform Modes</span>
+              </h2>
+              <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-full ${
+                formData.isMaintenanceMode
+                  ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300'
+                  : formData.isComingSoonMode
+                  ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300'
+                  : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
+              }`}>
+                {formData.isMaintenanceMode ? '🛠️ Maintenance Active' : formData.isComingSoonMode ? '🚀 Coming Soon Active' : '✅ Public Live Site'}
+              </span>
+            </div>
 
             <div className="space-y-4 text-xs">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
-                <div>
-                  <span className="font-bold text-slate-900 dark:text-white block">Maintenance Mode Gate</span>
-                  <span className="text-[11px] text-slate-500">Lock public site behind dynamic maintenance screen with countdown bypass.</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block">Maintenance Mode Gate</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Lock public site behind dynamic maintenance screen with password bypass.</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.isMaintenanceMode}
+                    onChange={(e) => handleChange('isMaintenanceMode', e.target.checked)}
+                    className="w-5 h-5 accent-purple-600 cursor-pointer shrink-0 ml-3"
+                  />
                 </div>
-                <input
-                  type="checkbox"
-                  checked={formData.isMaintenanceMode}
-                  onChange={(e) => handleChange('isMaintenanceMode', e.target.checked)}
-                  className="w-5 h-5 accent-purple-600 cursor-pointer"
-                />
+
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white block">Coming Soon Mode</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">Display pre-launch grand countdown screen with Instagram contact capture.</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.isComingSoonMode}
+                    onChange={(e) => handleChange('isComingSoonMode', e.target.checked)}
+                    className="w-5 h-5 accent-purple-600 cursor-pointer shrink-0 ml-3"
+                  />
+                </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800">
-                <div>
-                  <span className="font-bold text-slate-900 dark:text-white block">Coming Soon Mode</span>
-                  <span className="text-[11px] text-slate-500">Display pre-launch countdown screen.</span>
+              {/* Target Countdown Date & Time Selector */}
+              <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/60 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <label className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Countdown Target Date &amp; Time (Coming Soon / Maintenance End)</span>
+                  </label>
+                  {formData.targetLaunchDate && (
+                    <span className="text-[11px] font-bold text-purple-700 dark:text-purple-300">
+                      🎯 Set to: {new Date(formData.targetLaunchDate).toLocaleString()}
+                    </span>
+                  )}
                 </div>
-                <input
-                  type="checkbox"
-                  checked={formData.isComingSoonMode}
-                  onChange={(e) => handleChange('isComingSoonMode', e.target.checked)}
-                  className="w-5 h-5 accent-purple-600 cursor-pointer"
-                />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <input
+                      type="datetime-local"
+                      value={formData.targetLaunchDate ? formData.targetLaunchDate.substring(0, 16) : ''}
+                      onChange={(e) => handleChange('targetLaunchDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                      className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold text-xs text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Quick Preset Buttons */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[
+                      { label: '+24 Hours', days: 1 },
+                      { label: '+3 Days', days: 3 },
+                      { label: '+7 Days', days: 7 },
+                      { label: '+14 Days', days: 14 },
+                      { label: '+30 Days', days: 30 },
+                    ].map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        onClick={() => {
+                          const target = new Date();
+                          target.setDate(target.getDate() + preset.days);
+                          target.setHours(18, 0, 0, 0);
+                          handleChange('targetLaunchDate', target.toISOString());
+                        }}
+                        className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-slate-200 dark:border-slate-700 text-purple-700 dark:text-purple-300 font-bold text-[11px] transition-all cursor-pointer shadow-2xs"
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                    {formData.targetLaunchDate && (
+                      <button
+                        type="button"
+                        onClick={() => handleChange('targetLaunchDate', '')}
+                        className="px-2.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-300 font-bold text-[11px] border border-rose-200 dark:border-rose-800 cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  The countdown cards on the Coming Soon and Maintenance screens will calculate and tick down to this exact target timestamp.
+                </p>
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Maintenance Message</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Maintenance Notice Message</label>
                 <textarea
                   rows={2}
                   value={formData.maintenanceMessage}
                   onChange={(e) => handleChange('maintenanceMessage', e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 resize-none font-medium"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 resize-none font-medium text-xs"
                 />
               </div>
             </div>

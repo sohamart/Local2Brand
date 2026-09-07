@@ -1,5 +1,5 @@
 import express from 'express';
-import { getSettings, updateSettings, streamSettingsEvents } from '../controllers/settingsController.js';
+import { getSettings, updateSettings, streamSettingsEvents, getSettingsVersion } from '../controllers/settingsController.js';
 import { protect, adminOnly } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -8,8 +8,12 @@ const router = express.Router();
 router.get('/events', streamSettingsEvents);
 router.get('/stream', streamSettingsEvents);
 
+// Public: Fast settings version check for mobile & cross-device auto sync
+router.get('/version', getSettingsVersion);
+
 // Public: Get site settings
 router.get('/', getSettings);
+
 
 // Admin: Update site settings
 router.put('/', protect, adminOnly, updateSettings);

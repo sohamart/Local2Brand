@@ -29,7 +29,24 @@ import NotificationDetailModal from '../../components/common/NotificationDetailM
 export default function AdminInbox() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCountState] = useState(() => {
+    try {
+      return Number(localStorage.getItem('l2b_cached_unread')) || 0;
+    } catch (e) {
+      return 0;
+    }
+  });
+
+  const setUnreadCount = useCallback((updater) => {
+    setUnreadCountState((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      try {
+        localStorage.setItem('l2b_cached_unread', String(next));
+        window.dispatchEvent(new CustomEvent('l2b_inbox_count_updated', { detail: next }));
+      } catch (e) {}
+      return next;
+    });
+  }, []);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,7 +94,7 @@ export default function AdminInbox() {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedCategory, unreadOnly, searchTerm]);
+  }, [page, selectedCategory, unreadOnly, searchTerm, setUnreadCount]);
 
 
   useEffect(() => {
@@ -115,10 +132,14 @@ export default function AdminInbox() {
   const handleDelete = async (id, e) => {
     if (e) e.stopPropagation();
     if (!window.confirm('Are you sure you want to delete this inbox item?')) return;
+    const itemToDelete = notifications.find((n) => n._id === id);
     try {
       await notificationApi.deleteNotification(id);
       setNotifications((prev) => prev.filter((n) => n._id !== id));
       setTotalCount((prev) => Math.max(0, prev - 1));
+      if (itemToDelete && !itemToDelete.isRead) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
       toast.success('Notification deleted');
     } catch (err) {
       toast.error('Failed to delete notification');

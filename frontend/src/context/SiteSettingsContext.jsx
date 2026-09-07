@@ -40,6 +40,7 @@ export function SiteSettingsProvider({ children }) {
       isMaintenanceMode: false,
       isComingSoonMode: false,
       maintenanceMessage: 'We are currently upgrading our platform. We will be back online shortly!',
+      targetLaunchDate: '',
       socialLinks: {
         instagram: 'https://instagram.com/local2brand',
         instagramHandle: '@local2brand',
@@ -83,6 +84,15 @@ export function SiteSettingsProvider({ children }) {
           },
         ],
       },
+      announcementBar: {
+        enabled: false,
+        text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
+        link: '/pricing',
+        badge: 'FLASH OFFER',
+        promoCode: 'INDIA2025',
+        discountPercent: 20,
+        btnText: 'Claim Offer',
+      },
       luckyWheel: {
         enabled: true,
         activeGame: 'wheel',
@@ -110,15 +120,27 @@ export function SiteSettingsProvider({ children }) {
 
   const [loading, setLoading] = useState(true);
   const broadcastChannelRef = useRef(null);
+  const currentVersionRef = useRef(settings?.updatedAt || '');
 
   // Helper to merge settings cleanly and update caches & sub-events
   const applySettings = useCallback((incomingSettings, broadcastCrossTab = true) => {
     if (!incomingSettings || typeof incomingSettings !== 'object') return;
 
+    if (incomingSettings.updatedAt) {
+      currentVersionRef.current = new Date(incomingSettings.updatedAt).getTime().toString();
+    }
+
     setSettings((prev) => {
       const merged = {
         ...prev,
         ...incomingSettings,
+        announcementBar: incomingSettings.announcementBar
+          ? {
+              ...prev.announcementBar,
+              ...incomingSettings.announcementBar,
+              enabled: Boolean(incomingSettings.announcementBar.enabled),
+            }
+          : prev.announcementBar,
         importantUpdates: incomingSettings.importantUpdates
           ? {
               ...prev.importantUpdates,
@@ -176,7 +198,23 @@ export function SiteSettingsProvider({ children }) {
     }
   }, [applySettings]);
 
-  // Initial Fetch & Real-Time Server-Sent Events (SSE) stream setup
+  // Fast delta version checking for cross-device mobile & serverless auto-sync
+  const checkSettingsVersion = useCallback(async () => {
+    try {
+      const res = await api.get('/settings/version');
+      if (res?.success && res.version) {
+        const lastVersion = currentVersionRef.current;
+        if (!lastVersion) {
+          currentVersionRef.current = res.version;
+        } else if (res.version !== lastVersion) {
+          currentVersionRef.current = res.version;
+          fetchSettings();
+        }
+      }
+    } catch (e) {}
+  }, [fetchSettings]);
+
+  // Initial Fetch & Real-Time Setup
   useEffect(() => {
     fetchSettings();
 
@@ -193,7 +231,14 @@ export function SiteSettingsProvider({ children }) {
       } catch (e) {}
     }
 
-    // 2. Setup Native Server-Sent Events (SSE) for Real-Time Server Updates
+    // 2. High-speed 2.5-second polling loop for cross-device / mobile sync on serverless
+    const versionInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        checkSettingsVersion();
+      }
+    }, 2500);
+
+    // 3. Setup Native Server-Sent Events (SSE) for Instant Long-Running Connection
     let eventSource = null;
     let reconnectTimeout = null;
 
@@ -213,27 +258,20 @@ export function SiteSettingsProvider({ children }) {
           }
         });
 
-        eventSource.addEventListener('connected', () => {
-          // SSE connection active
-        });
-
         eventSource.onerror = () => {
           if (eventSource) {
             eventSource.close();
             eventSource = null;
           }
-          // Attempt gentle reconnect after 5s
           clearTimeout(reconnectTimeout);
-          reconnectTimeout = setTimeout(connectSSE, 5000);
+          reconnectTimeout = setTimeout(connectSSE, 6000);
         };
-      } catch (err) {
-        // SSE not supported or network error
-      }
+      } catch (err) {}
     };
 
     connectSSE();
 
-    // 3. Fallback Cross-Tab Storage Event Listener
+    // 4. Fallback Cross-Tab Storage Event Listener
     const handleStorage = (e) => {
       if (e.key === 'l2b_cached_settings' && e.newValue) {
         try {
@@ -244,15 +282,24 @@ export function SiteSettingsProvider({ children }) {
     };
     window.addEventListener('storage', handleStorage);
 
-    // 4. Foreground Tab Focus Sync
+    // 5. Foreground Tab Focus & Touch Wakeup Sync
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
+        checkSettingsVersion();
         fetchSettings();
       }
     };
+
+    const handleFocus = () => {
+      checkSettingsVersion();
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('touchstart', handleFocus, { passive: true });
 
     return () => {
+      clearInterval(versionInterval);
       if (eventSource) {
         eventSource.close();
       }
@@ -264,8 +311,10 @@ export function SiteSettingsProvider({ children }) {
       }
       window.removeEventListener('storage', handleStorage);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('touchstart', handleFocus);
     };
-  }, [applySettings, fetchSettings]);
+  }, [applySettings, fetchSettings, checkSettingsVersion]);
 
   const updateLocalSettingsState = (newSettings) => {
     if (!newSettings) return;

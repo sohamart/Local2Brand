@@ -51,6 +51,10 @@ const siteSettingsSchema = new mongoose.Schema(
       type: String,
       default: 'We are currently upgrading our platform to serve you better. We will be back online shortly!',
     },
+    targetLaunchDate: {
+      type: String,
+      default: '',
+    },
     socialLinks: {
       instagram: { type: String, default: 'https://instagram.com/local2brand' },
       instagramHandle: { type: String, default: '@local2brand' },

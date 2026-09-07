@@ -452,14 +452,19 @@ export default function AssistantChatbot() {
     return () => window.removeEventListener('l2b_open_chatbot_prize', handlePrizeAwarded);
   }, [userKey]);
 
-  // Emerge the dynamic liquid announcement bubble from chatbot after 2.5s if not dismissed
+  // Emerge the dynamic liquid announcement bubble from chatbot after 2.5s ONLY IF announcementBar is explicitly enabled
   useEffect(() => {
-    if (isBubbleDismissed) return;
+    if (isBubbleDismissed || !settings?.announcementBar?.enabled) {
+      setHasPrompted(false);
+      return;
+    }
     const timer = setTimeout(() => {
-      setHasPrompted(true);
+      if (settings?.announcementBar?.enabled) {
+        setHasPrompted(true);
+      }
     }, 2500);
     return () => clearTimeout(timer);
-  }, [isBubbleDismissed]);
+  }, [isBubbleDismissed, settings?.announcementBar?.enabled]);
 
 
   const handleDismissBubble = (e) => {
@@ -838,8 +843,8 @@ export default function AssistantChatbot() {
       {/* Floating Launcher Button & Liquid Aurora Announcement Bubble */}
       <div className="relative flex items-end justify-end">
 
-        {/* Proactive Liquid Aurora Announcement Card (Emerges smoothly from Chatbot) */}
-        {!isOpen && hasPrompted && !isBubbleDismissed && (
+        {/* Proactive Liquid Aurora Announcement Card (Emerges smoothly from Chatbot ONLY IF enabled in site settings) */}
+        {!isOpen && hasPrompted && !isBubbleDismissed && Boolean(settings?.announcementBar?.enabled) && (
           <div
             className={`absolute bottom-16 sm:bottom-20 right-0 sm:right-2 w-[calc(100vw-2rem)] sm:w-[380px] max-w-[400px] z-[99999] transition-all origin-bottom-right ${
               isBubbleClosing ? 'animate-bubble-collapse' : 'animate-bubble-bloom'

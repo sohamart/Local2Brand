@@ -18,6 +18,27 @@ export const getSettings = async (req, res) => {
 };
 
 /**
+ * Fast lightweight endpoint to check settings revision/timestamp for instant mobile sync
+ */
+export const getSettingsVersion = async (req, res) => {
+  try {
+    const settings = await dataStore.getSettings();
+    const version = settings?.updatedAt
+      ? new Date(settings.updatedAt).getTime().toString()
+      : (settings?._id?.toString() || '1');
+
+    return res.status(200).json({
+      success: true,
+      version,
+      updatedAt: settings?.updatedAt || new Date().toISOString(),
+    });
+  } catch (error) {
+    return res.status(200).json({ success: true, version: '1' });
+  }
+};
+
+
+/**
  * Real-Time Server-Sent Events (SSE) Stream for Live Settings Synchronization
  */
 export const streamSettingsEvents = async (req, res) => {
