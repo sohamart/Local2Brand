@@ -149,18 +149,21 @@ export default function AdminSettings() {
     },
     appConfig: settings.appConfig || {
       enabled: true,
+      appMode: 'pwa',
       isComingSoon: false,
       showComingSoonPopup: false,
-      comingSoonTitle: 'LOCAL2BRAND Mobile is Coming Soon! 🚀',
-      comingSoonMessage: 'Our mobile engineers are fine-tuning the native Android & iOS experience. Pre-register your interest for priority early beta access.',
-      appName: 'LOCAL2BRAND Studio',
-      appSubtitle: 'Official Companion & Client Portal App',
-      appDescription: 'Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates straight to your mobile device.',
-      version: 'v2.4.0',
-      fileSize: '18.4 MB',
-      minAndroid: 'Android 8.0+ (Oreo or newer)',
-      minIos: 'iOS 15.0+ (iPhone / iPad)',
-      packageName: 'com.local2brand.app',
+      comingSoonTitle: 'LOCAL2BRAND Web & Mobile App is Coming Soon! 🚀',
+      comingSoonMessage: 'Our engineering team is fine-tuning the platform. Pre-register your interest for priority early beta access.',
+      appName: 'LOCAL2BRAND Web App',
+      appSubtitle: 'Official Inbuilt Web App & Client Portal',
+      appDescription: 'Install our fast inbuilt web app directly to your device home screen. Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates with 0 MB storage overhead.',
+      version: 'v2.4.0 (PWA)',
+      fileSize: '0 MB (Web App)',
+      minAndroid: 'All Android devices (Chrome / Firefox / Edge / Samsung Browser)',
+      minIos: 'iOS 14.0+ (Safari / Chrome)',
+      packageName: 'com.local2brand.webapp',
+      androidStatus: 'coming_soon',
+      iosStatus: 'coming_soon',
       apkDownloadUrl: '',
       playStoreUrl: '',
       appStoreUrl: '',
@@ -169,41 +172,41 @@ export default function AdminSettings() {
       screenshots: [
         {
           url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
-          title: 'Live Sprint Tracker',
-          caption: 'Real-time project milestone progress and milestone tracking'
+          title: 'Client Web Portal & Sprint Tracker',
+          caption: 'Real-time project milestone progress, 48-hour delivery countdown & live builds'
         },
         {
           url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
-          title: 'Demo Explorer',
-          caption: 'Browse 50+ lightning-fast web templates and live preview'
+          title: 'Interactive Demo Explorer',
+          caption: 'Browse 50+ high-converting commercial web templates with live preview'
         },
         {
           url: 'https://images.unsplash.com/photo-1555774698-0b77e0d5fac6?auto=format&fit=crop&w=800&q=80',
-          title: 'Direct Chat & Support',
-          caption: '24/7 direct communication with dedicated design architect'
+          title: 'Lead Architect Direct Chat',
+          caption: 'Direct WhatsApp communication and live consultation with lead full-stack engineer'
         },
         {
           url: 'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?auto=format&fit=crop&w=800&q=80',
-          title: 'Instant Push Alerts',
-          caption: 'Get notified when your design mockup or sprint is approved'
+          title: 'Instant Push Alerts & Orders',
+          caption: 'Instant updates on design mockups, sprint approvals, invoices & GST receipts'
         }
       ],
       features: [
+        'Instant 1-tap browser install directly to home screen (0 MB storage)',
         'Live sprint & build milestone tracking in real-time',
         'Direct founder & project manager consultation channel',
         'Interactive 50+ live demo template preview dock',
         'Instant push alerts on order delivery & revisions',
-        'One-tap invoice downloads and GST tax receipts',
-        'Lightweight APK under 20MB with zero background drain'
+        'One-tap invoice downloads and GST tax receipts'
       ],
       changelog: [
         {
           version: 'v2.4.0',
-          date: 'September 2025',
+          date: 'September 2026',
           notes: [
+            'Added Inbuilt Web App 1-tap home screen install support',
             'Added live order tracking integration with push updates',
-            'Enhanced 60FPS fluid demo template previewer',
-            'Added Indus Appstore India direct install support'
+            'Enhanced 60FPS fluid demo template previewer'
           ]
         }
       ]
@@ -338,18 +341,21 @@ export default function AdminSettings() {
         },
         appConfig: {
           enabled: settings.appConfig?.enabled ?? true,
+          appMode: settings.appConfig?.appMode || 'pwa',
           isComingSoon: settings.appConfig?.isComingSoon ?? false,
           showComingSoonPopup: settings.appConfig?.showComingSoonPopup ?? false,
-          comingSoonTitle: settings.appConfig?.comingSoonTitle || 'LOCAL2BRAND Mobile is Coming Soon! 🚀',
-          comingSoonMessage: settings.appConfig?.comingSoonMessage || 'Our mobile engineers are fine-tuning the native Android & iOS experience. Pre-register your interest for priority early beta access.',
-          appName: settings.appConfig?.appName || 'LOCAL2BRAND Studio',
-          appSubtitle: settings.appConfig?.appSubtitle || 'Official Companion & Client Portal App',
-          appDescription: settings.appConfig?.appDescription || 'Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates straight to your mobile device.',
-          version: settings.appConfig?.version || 'v2.4.0',
-          fileSize: settings.appConfig?.fileSize || '18.4 MB',
-          minAndroid: settings.appConfig?.minAndroid || 'Android 8.0+ (Oreo or newer)',
-          minIos: settings.appConfig?.minIos || 'iOS 15.0+ (iPhone / iPad)',
-          packageName: settings.appConfig?.packageName || 'com.local2brand.app',
+          comingSoonTitle: settings.appConfig?.comingSoonTitle || 'LOCAL2BRAND Web & Mobile App is Coming Soon! 🚀',
+          comingSoonMessage: settings.appConfig?.comingSoonMessage || 'Our engineering team is fine-tuning the platform. Pre-register your interest for priority early beta access.',
+          appName: settings.appConfig?.appName || 'LOCAL2BRAND Web App',
+          appSubtitle: settings.appConfig?.appSubtitle || 'Official Inbuilt Web App & Client Portal',
+          appDescription: settings.appConfig?.appDescription || 'Install our fast inbuilt web app directly to your device home screen. Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates with 0 MB storage overhead.',
+          version: settings.appConfig?.version || 'v2.4.0 (PWA)',
+          fileSize: settings.appConfig?.fileSize || '0 MB (Web App)',
+          minAndroid: settings.appConfig?.minAndroid || 'All Android devices (Chrome / Firefox / Edge / Samsung Browser)',
+          minIos: settings.appConfig?.minIos || 'iOS 14.0+ (Safari / Chrome)',
+          packageName: settings.appConfig?.packageName || 'com.local2brand.webapp',
+          androidStatus: settings.appConfig?.androidStatus || 'coming_soon',
+          iosStatus: settings.appConfig?.iosStatus || 'coming_soon',
           apkDownloadUrl: settings.appConfig?.apkDownloadUrl || '',
           playStoreUrl: settings.appConfig?.playStoreUrl || '',
           appStoreUrl: settings.appConfig?.appStoreUrl || '',
@@ -2440,7 +2446,7 @@ export default function AdminSettings() {
             </div>
           </div>
 
-          {/* Section 8: Mobile App & Android APK Distribution Hub */}
+          {/* Section 8: Inbuilt Web App & Mobile App Distribution Hub */}
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             
             {/* Header & Mode Toggles */}
@@ -2448,29 +2454,47 @@ export default function AdminSettings() {
               <div>
                 <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
                   <Smartphone className="w-4 h-4 text-purple-600" />
-                  <span>📱 Mobile App &amp; APK Distribution Center</span>
+                  <span>📱 Inbuilt Web App &amp; Mobile App Distribution Hub</span>
                 </h2>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                  Manage Android APK binary releases, direct downloads, Indus Appstore 🇮🇳 / Play Store / Apple links, screenshots, and pre-launch coming soon waitlist modal.
+                  Configure the 1-Tap Inbuilt Web App (PWA install), native Android APK releases, screenshots, and Coming Soon platform statuses.
                 </p>
               </div>
 
-              {/* Mutually Exclusive Mode Selector */}
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
+              {/* 3-Way Mode Selector: Web App (Active) / Native APK / Coming Soon */}
+              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
                 <button
                   type="button"
                   onClick={() => {
+                    handleAppConfigChange('appMode', 'pwa');
                     handleAppConfigChange('isComingSoon', false);
                     handleAppConfigChange('enabled', true);
                   }}
                   className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
-                    !formData.appConfig?.isComingSoon && formData.appConfig?.enabled !== false
+                    (formData.appConfig?.appMode === 'pwa' || !formData.appConfig?.appMode) && !formData.appConfig?.isComingSoon
+                      ? 'bg-purple-600 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>⚡ Inbuilt Web App (PWA)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleAppConfigChange('appMode', 'apk');
+                    handleAppConfigChange('isComingSoon', false);
+                    handleAppConfigChange('enabled', true);
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                    formData.appConfig?.appMode === 'apk' && !formData.appConfig?.isComingSoon
                       ? 'bg-emerald-600 text-white shadow-sm'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <span className={`w-2 h-2 rounded-full ${!formData.appConfig?.isComingSoon ? 'bg-emerald-300 animate-pulse' : 'bg-slate-400'}`} />
-                  <span>🟢 Live App Page (Active)</span>
+                  <span className={`w-2 h-2 rounded-full ${formData.appConfig?.appMode === 'apk' && !formData.appConfig?.isComingSoon ? 'bg-emerald-300 animate-pulse' : 'bg-slate-400'}`} />
+                  <span>🤖 Native Android APK</span>
                 </button>
 
                 <button
@@ -2495,23 +2519,27 @@ export default function AdminSettings() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-amber-500/10 border border-purple-200/70 dark:border-purple-800/60">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-                  📱
+                  ⚡
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>Public Showcase URL:</span>
+                    <span>Public App Showcase URL:</span>
                     <a
                       href="/app"
                       target="_blank"
                       rel="noreferrer"
                       className="text-purple-600 dark:text-purple-400 underline font-mono flex items-center gap-1 hover:text-purple-700"
                     >
-                      <span>/app (and /apk, /download)</span>
+                      <span>/app (and /download, /apk)</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Accessible directly via Navbar &quot;More ▾&quot; dropdown and mobile navigation menu.
+                    {formData.appConfig?.appMode === 'pwa' || !formData.appConfig?.appMode
+                      ? '⚡ Inbuilt Web App install is ACTIVE on the download page. Native Android & iOS versions are marked as Coming Soon.'
+                      : formData.appConfig?.isComingSoon
+                      ? '🚧 Pre-launch Waitlist Mode is ACTIVE.'
+                      : '🤖 Direct APK Download Mode is ACTIVE.'}
                   </span>
                 </div>
               </div>
@@ -2520,20 +2548,41 @@ export default function AdminSettings() {
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
                   formData.appConfig?.isComingSoon
                     ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                    : formData.appConfig?.appMode === 'pwa' || !formData.appConfig?.appMode
+                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border border-purple-300 dark:border-purple-700'
                     : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
                 }`}>
-                  {formData.appConfig?.isComingSoon ? '🚧 Pre-Launch State' : '🟢 Live APK Active'}
+                  {formData.appConfig?.isComingSoon
+                    ? '🚧 Pre-Launch State'
+                    : formData.appConfig?.appMode === 'pwa' || !formData.appConfig?.appMode
+                    ? '⚡ Live Web App Active (1-Tap Install)'
+                    : '🟢 Live APK Active'}
                 </span>
               </div>
             </div>
 
-            {/* SUBSECTION 1: APP IDENTITY & TECH METADATA */}
+            {/* SUBSECTION 1: INBUILT WEB APP SPECIFICATIONS & NATIVE STATUSES */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                <FileCode className="w-4 h-4 text-purple-600" />
-                <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  1. App Identity &amp; Package Specifications
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    1. Inbuilt Web App (PWA) &amp; Platform Statuses
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
+                  Instant Browser Install
                 </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 text-xs text-purple-900 dark:text-purple-200 space-y-1">
+                <div className="font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                  <span>Inbuilt Web App Features &amp; User Experience</span>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                  When <strong>Inbuilt Web App</strong> is selected, visitors will see the dedicated <strong>Install Web App</strong> button (with 1-tap home-screen prompt &amp; platform guides). Native Android and iOS versions will clearly state <strong>&quot;Coming Soon&quot;</strong> and no confusing extra download buttons will be shown.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
@@ -2545,7 +2594,7 @@ export default function AdminSettings() {
                     type="text"
                     value={formData.appConfig?.appName || ''}
                     onChange={(e) => handleAppConfigChange('appName', e.target.value)}
-                    placeholder="e.g. LOCAL2BRAND Studio"
+                    placeholder="e.g. LOCAL2BRAND Web App"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                   />
                 </div>
@@ -2558,7 +2607,7 @@ export default function AdminSettings() {
                     type="text"
                     value={formData.appConfig?.appSubtitle || ''}
                     onChange={(e) => handleAppConfigChange('appSubtitle', e.target.value)}
-                    placeholder="e.g. Official Companion & Client Portal App"
+                    placeholder="e.g. Official Inbuilt Web App & Client Portal"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                   />
                 </div>
@@ -2571,59 +2620,48 @@ export default function AdminSettings() {
                     type="text"
                     value={formData.appConfig?.version || ''}
                     onChange={(e) => handleAppConfigChange('version', e.target.value)}
-                    placeholder="e.g. v2.4.0"
+                    placeholder="e.g. v2.4.0 (PWA)"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono font-bold"
                   />
                 </div>
 
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Package ID / Bundle Name
+                    Android Native Version Status
                   </label>
-                  <input
-                    type="text"
-                    value={formData.appConfig?.packageName || ''}
-                    onChange={(e) => handleAppConfigChange('packageName', e.target.value)}
-                    placeholder="e.g. com.local2brand.app"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono"
-                  />
+                  <select
+                    value={formData.appConfig?.androidStatus || 'coming_soon'}
+                    onChange={(e) => handleAppConfigChange('androidStatus', e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold text-xs"
+                  >
+                    <option value="coming_soon">🚧 Coming Soon / In Build (Recommended)</option>
+                    <option value="active">🟢 Active Release</option>
+                  </select>
                 </div>
 
                 <div>
                   <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    APK File Size
+                    iOS (Apple App Store) Status
+                  </label>
+                  <select
+                    value={formData.appConfig?.iosStatus || 'coming_soon'}
+                    onChange={(e) => handleAppConfigChange('iosStatus', e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold text-xs"
+                  >
+                    <option value="coming_soon">🚧 Coming Soon / In Review (Recommended)</option>
+                    <option value="active">🟢 Active Release</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    App Storage Footprint
                   </label>
                   <input
                     type="text"
-                    value={formData.appConfig?.fileSize || ''}
+                    value={formData.appConfig?.fileSize || '0 MB (Instant Web App)'}
                     onChange={(e) => handleAppConfigChange('fileSize', e.target.value)}
-                    placeholder="e.g. 18.4 MB"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Min Android OS Compatibility
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.appConfig?.minAndroid || ''}
-                    onChange={(e) => handleAppConfigChange('minAndroid', e.target.value)}
-                    placeholder="Android 8.0+ (Oreo or newer)"
-                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Min iOS Version Compatibility
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.appConfig?.minIos || ''}
-                    onChange={(e) => handleAppConfigChange('minIos', e.target.value)}
-                    placeholder="iOS 15.0+ (iPhone / iPad)"
+                    placeholder="0 MB (Instant Web App)"
                     className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                   />
                 </div>
@@ -2637,7 +2675,7 @@ export default function AdminSettings() {
                   rows={3}
                   value={formData.appConfig?.appDescription || ''}
                   onChange={(e) => handleAppConfigChange('appDescription', e.target.value)}
-                  placeholder="Describe your mobile app features, live milestone tracking, real-time push alerts, and direct founder chat..."
+                  placeholder="Describe your web app features, live milestone tracking, 1-tap home screen install, and real-time push alerts..."
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
                 />
               </div>

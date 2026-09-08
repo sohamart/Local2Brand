@@ -26,6 +26,22 @@
     })();
   </script>
 
+  <!-- PWA Service Worker Registration for Instant Installation -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').then(
+          function (registration) {
+            console.log('L2B PWA ServiceWorker registered with scope: ', registration.scope);
+          },
+          function (err) {
+            console.log('L2B PWA ServiceWorker registration failed: ', err);
+          }
+        );
+      });
+    }
+  </script>
+
   <!-- Character Encoding & Viewport -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
@@ -54,6 +70,11 @@
   <!-- Favicons & App Icons -->
   <link rel="icon" type="image/jpeg" href="/favicon.jpg" />
   <link rel="apple-touch-icon" sizes="180x180" href="/favicon.jpg" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="LOCAL2BRAND" />
   <meta name="theme-color" content="#7c3aed" />
   <meta name="msapplication-TileColor" content="#7c3aed" />
 

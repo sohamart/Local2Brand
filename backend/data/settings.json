@@ -34,7 +34,7 @@
       "btnText": "Claim Offer"
     },
     "bannerImage": "",
-    "updatedAt": "2026-09-07T14:51:37.429Z",
+    "updatedAt": "2026-09-08T07:50:17.496Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
     "updatedBy": "6a9551f5ef178dc4ce9260cf",
@@ -295,7 +295,8 @@
     },
     "appConfig": {
       "enabled": true,
-      "isComingSoon": true,
+      "appMode": "pwa",
+      "isComingSoon": false,
       "showComingSoonPopup": true,
       "comingSoonTitle": "LOCAL2BRAND Mobile is Coming Soon! 🚀",
       "comingSoonMessage": "Our mobile engineers are fine-tuning the native Android & iOS experience. Pre-register your interest for priority early beta access.",
@@ -307,6 +308,8 @@
       "minAndroid": "Android 8.0+ (Oreo or newer)",
       "minIos": "iOS 15.0+ (iPhone / iPad)",
       "packageName": "com.local2brand.app",
+      "androidStatus": "coming_soon",
+      "iosStatus": "coming_soon",
       "apkDownloadUrl": "",
       "playStoreUrl": "",
       "appStoreUrl": "",

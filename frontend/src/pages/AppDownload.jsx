@@ -31,7 +31,9 @@ import {
   Activity,
   Award,
   ChevronLeft,
-  SmartphoneNfc
+  SmartphoneNfc,
+  PlusCircle,
+  Monitor
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useSiteSettings } from '../context/SiteSettingsContext';
@@ -75,19 +77,22 @@ export default function AppDownload() {
   const appConfig = useMemo(() => {
     const defaultConf = {
       enabled: true,
+      appMode: 'pwa', // 'pwa' (Inbuilt Web App) | 'apk' | 'coming_soon'
       isComingSoon: false,
       showComingSoonPopup: false,
-      comingSoonTitle: 'LOCAL2BRAND Mobile App — Launching Soon 🚀',
-      comingSoonMessage: 'We are polishing our next-generation native Android & iOS application. Pre-register your spot for priority early beta access!',
-      appName: 'LOCAL2BRAND Studio',
-      appSubtitle: 'Official Companion & Client Portal App',
-      appDescription: 'Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates straight to your mobile device.',
-      version: 'v2.4.0',
-      fileSize: '18.4 MB',
-      minAndroid: 'Android 8.0 & above',
-      minIos: 'iOS 15.0 & above',
-      packageName: 'com.local2brand.app',
-      apkDownloadUrl: 'https://local2brand.com/downloads/local2brand-v2.4.0.apk',
+      comingSoonTitle: 'LOCAL2BRAND Web & Mobile App — Launching Soon 🚀',
+      comingSoonMessage: 'We are polishing our next-generation digital companion. Pre-register your spot for priority early beta access!',
+      appName: 'LOCAL2BRAND Web App',
+      appSubtitle: 'Official Inbuilt Web App & Client Portal',
+      appDescription: 'Install our fast inbuilt web app directly to your device home screen. Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates with 0 MB storage overhead.',
+      version: 'v2.4.0 (PWA)',
+      fileSize: '0 MB (Web App)',
+      minAndroid: 'All Android devices (Chrome / Firefox / Edge / Samsung Browser)',
+      minIos: 'iOS 14.0+ (Safari / Chrome)',
+      packageName: 'com.local2brand.webapp',
+      androidStatus: 'coming_soon',
+      iosStatus: 'coming_soon',
+      apkDownloadUrl: '',
       playStoreUrl: '',
       appStoreUrl: '',
       indusStoreUrl: '',
@@ -102,6 +107,13 @@ export default function AppDownload() {
     };
   }, [settings?.appConfig]);
 
+  // Is PWA Web App Mode Active
+  const isPwaMode = useMemo(() => {
+    if (appConfig.isComingSoon) return false;
+    if (appConfig.appMode === 'apk' && appConfig.apkDownloadUrl) return false;
+    return true;
+  }, [appConfig]);
+
   // State
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -109,7 +121,12 @@ export default function AppDownload() {
   const [activeScreenIndex, setActiveScreenIndex] = useState(0);
   const [waitlistModalOpen, setWaitlistModalOpen] = useState(false);
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(false);
+  const [activeTabPlatform, setActiveTabPlatform] = useState('android');
+
   const [waitlistForm, setWaitlistForm] = useState({
     name: user?.name || '',
     phoneOrEmail: user?.email || user?.phone || '',
@@ -117,6 +134,44 @@ export default function AppDownload() {
   });
   const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
   const [waitlistSuccess, setWaitlistSuccess] = useState(false);
+
+  // Capture PWA Install Prompt
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setIsAlreadyInstalled(true);
+      setDeferredPrompt(null);
+      toast.success('🎉 LOCAL2BRAND Web App is installed on your device!');
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      setIsAlreadyInstalled(true);
+    }
+
+    // Detect user OS platform for the install modal default tab
+    if (typeof navigator !== 'undefined') {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+        setActiveTabPlatform('ios');
+      } else if (/android/i.test(ua)) {
+        setActiveTabPlatform('android');
+      } else {
+        setActiveTabPlatform('desktop');
+      }
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
 
   // Auto trigger Coming Soon modal if showComingSoonPopup is true
   useEffect(() => {
@@ -131,40 +186,40 @@ export default function AppDownload() {
     }
   }, [appConfig.showComingSoonPopup]);
 
-  // Normalized screenshots list
+  // Normalized screenshots list showcasing the Web App
   const screenshots = useMemo(() => {
     if (Array.isArray(appConfig.screenshots) && appConfig.screenshots.length > 0) {
       return appConfig.screenshots.map((s, idx) => ({
         url: typeof s === 'string' ? s : (s.url || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80'),
-        title: typeof s === 'object' && s.title ? s.title : `App Module #${idx + 1}`,
+        title: typeof s === 'object' && s.title ? s.title : `Web App View #${idx + 1}`,
         caption: typeof s === 'object' && s.caption ? s.caption : 'Interactive live workspace preview & client hub'
       }));
     }
     return [
       {
         url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-        title: 'Live Sprint Radar',
-        caption: 'Track real-time engineering milestones, 48-hour delivery progress, and staging builds.'
+        title: 'Live Sprint Radar & Staging',
+        caption: 'Track real-time engineering milestones, 48-hour delivery progress, and staging builds directly on your mobile device.'
       },
       {
         url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80',
-        title: 'Proposal & Scope Builder',
-        caption: 'Craft high-conversion requirement specifications and estimate project budgets in minutes.'
+        title: 'Interactive 50+ Template Explorer',
+        caption: 'Experience instant responsive previews for restaurants, cafes, salons, e-commerce, and real estate.'
       },
       {
-        url: 'https://images.unsplash.com/photo-1522542550221-31fd19575a2d?w=800&auto=format&fit=crop&q=80',
-        title: 'Interactive Template Studio',
-        caption: 'Experience live working previews for restaurants, cafes, salons, and e-commerce.'
+        url: 'https://images.unsplash.com/photo-1555774698-0b77e0d5fac6?w=800&auto=format&fit=crop&q=80',
+        title: 'Direct Architect Consultation Desk',
+        caption: '15-minute consultation calls, direct WhatsApp dispatch sync, and priority full-stack engineering support.'
       },
       {
-        url: 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=800&auto=format&fit=crop&q=80',
-        title: 'Founder Consultation Desk',
-        caption: '15-minute consultation calls, direct WhatsApp dispatch sync, and priority tech support.'
+        url: 'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=800&auto=format&fit=crop&q=80',
+        title: 'Instant Push Alerts & Orders',
+        caption: 'Instant updates on design mockups, sprint approvals, GST invoices, and WhatsApp lead forwarding.'
       }
     ];
   }, [appConfig.screenshots]);
 
-  // Normalized features list (handles both string and object shapes)
+  // Normalized features list
   const features = useMemo(() => {
     if (Array.isArray(appConfig.features) && appConfig.features.length > 0) {
       const defaultIcons = ['Zap', 'Compass', 'ShieldCheck', 'Layers', 'MessageSquare', 'Flame'];
@@ -186,8 +241,8 @@ export default function AppDownload() {
     return [
       {
         icon: 'Zap',
-        title: 'Sub-Second Engine',
-        description: 'Lightning fast load times with pre-cached assets and instant database synchronization.'
+        title: 'Instant 1-Tap Home Screen Install',
+        description: 'Install directly from your browser to your home screen with zero APK downloads and 0 MB storage overhead.'
       },
       {
         icon: 'Compass',
@@ -196,13 +251,13 @@ export default function AppDownload() {
       },
       {
         icon: 'ShieldCheck',
-        title: 'Enterprise Security',
-        description: 'End-to-end encrypted sessions, biometric sign-in, and 100% Google Play Protect compliance.'
+        title: 'Enterprise Security & SSL',
+        description: '100% Google Safe Browsing compliant with end-to-end encrypted sessions and zero intrusive permissions.'
       },
       {
         icon: 'Layers',
-        title: 'Template Studio',
-        description: 'Test full interactive demo templates directly within the native phone viewport.'
+        title: '50+ Niche Template Studio',
+        description: 'Test interactive live working demo templates directly inside the native mobile viewport.'
       },
       {
         icon: 'MessageSquare',
@@ -211,8 +266,8 @@ export default function AppDownload() {
       },
       {
         icon: 'Flame',
-        title: 'VIP Flash Rewards',
-        description: 'Exclusive in-app spin rewards, 20% launch vouchers, and free custom domain privileges.'
+        title: 'Automatic Instant Updates',
+        description: 'Always runs the latest release automatically with sub-second speeds and zero manual update hassles.'
       }
     ];
   }, [appConfig.features]);
@@ -221,20 +276,20 @@ export default function AppDownload() {
   const changelog = useMemo(() => {
     if (Array.isArray(appConfig.changelog) && appConfig.changelog.length > 0) {
       return appConfig.changelog.map((log) => ({
-        version: log.version || appConfig.version || 'v2.4.0',
+        version: log.version || appConfig.version || 'v2.4.0 (PWA)',
         date: log.date || 'September 2026',
         items: Array.isArray(log.notes) ? log.notes : (Array.isArray(log.items) ? log.items : [log.notes || 'Performance enhancements & stability optimizations'])
       }));
     }
     return [
       {
-        version: appConfig.version || 'v2.4.0',
+        version: appConfig.version || 'v2.4.0 (PWA)',
         date: 'September 2026',
         items: [
-          'Full Indus Appstore 🇮🇳 (Made in India) deep integration.',
-          '48-Hour sprint radar with live push notification badges.',
-          'Liquid glass UI aesthetics optimized for 120Hz AMOLED displays.',
-          'Direct founder consultation booking & WhatsApp push sync.'
+          'Inbuilt 1-Tap Web App Home Screen Install engine.',
+          'Sub-second 60FPS fluid client portal & milestone tracking.',
+          'Instant WhatsApp dispatch sync & push alert badges.',
+          'Direct founder & lead architect consultation channel.'
         ]
       }
     ];
@@ -249,7 +304,55 @@ export default function AppDownload() {
     return () => clearInterval(interval);
   }, [screenshots.length]);
 
-  // Direct APK download handler
+  // Web App 1-Tap Immediate Install Handler
+  const handleInstallWebApp = async () => {
+    setDownloading(true);
+    setDownloadProgress(25);
+    toast.info(`⚡ Starting installation for ${appConfig.appName || 'LOCAL2BRAND Web App'}...`, {
+      autoClose: 2000,
+    });
+
+    const progressInterval = setInterval(() => {
+      setDownloadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 100;
+        }
+        return prev + Math.floor(Math.random() * 25) + 20;
+      });
+    }, 120);
+
+    setTimeout(async () => {
+      clearInterval(progressInterval);
+      setDownloadProgress(100);
+      setDownloading(false);
+
+      if (deferredPrompt) {
+        try {
+          await deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            toast.success('🎉 LOCAL2BRAND Web App successfully installed to your home screen!');
+            setIsAlreadyInstalled(true);
+          }
+          setDeferredPrompt(null);
+        } catch (err) {
+          setInstallModalOpen(true);
+        }
+      } else {
+        // If already standalone or iOS/Desktop where prompt is indirect
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+          toast.success('🎉 LOCAL2BRAND Web App is already active on your device!');
+          setIsAlreadyInstalled(true);
+        } else {
+          setInstallModalOpen(true);
+          toast.success('📲 Follow the quick steps to complete adding to your home screen!');
+        }
+      }
+    }, 800);
+  };
+
+  // Direct APK download handler (for APK mode)
   const handleDirectApkDownload = () => {
     if (appConfig.isComingSoon || !appConfig.apkDownloadUrl) {
       setWaitlistModalOpen(true);
@@ -331,12 +434,12 @@ export default function AppDownload() {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  // QR Code generator (uses uploaded custom QR if available, otherwise generates high-res vector QR)
+  // QR Code generator
   const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://local2brand.com';
-  const qrTargetUrl = appConfig.apkDownloadUrl || `${currentOrigin}/app`;
+  const qrTargetUrl = `${currentOrigin}/app`;
   const qrCodeImageUrl = appConfig.qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrTargetUrl)}&color=6b21a8&bgcolor=ffffff&qzone=1`;
 
-  // If Coming Soon mode is ON, render ONLY the dedicated, locked Coming Soon VIP popup (no details, non-dismissible)
+  // If Coming Soon mode is ON, render dedicated locked Coming Soon VIP popup
   if (appConfig.isComingSoon) {
     return (
       <>
@@ -365,7 +468,7 @@ export default function AppDownload() {
           {/* Dynamic Ambient Hero Glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] sm:w-[850px] h-[500px] bg-gradient-to-r from-purple-500/25 via-pink-500/25 to-blue-500/25 dark:from-purple-500/35 dark:via-pink-500/30 dark:to-blue-500/35 rounded-full blur-[110px] pointer-events-none -z-10 animate-pulse-glow" />
 
-          {/* Locked Coming Soon Card - Non-Dismissible (No Cross Button / No Backdrop Dismiss) */}
+          {/* Locked Coming Soon Card */}
           <div className="relative max-w-lg w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-3xl p-6 sm:p-8 border-2 border-purple-500/40 dark:border-purple-500/30 shadow-[0_20px_60px_rgba(0,0,0,0.35)] space-y-5 animate-in fade-in zoom-in-95 duration-300">
             
             {/* Top Heritage Badge */}
@@ -391,7 +494,7 @@ export default function AppDownload() {
                 {appConfig.comingSoonTitle || 'LOCAL2BRAND Mobile App — Launching Soon 🚀'}
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-md mx-auto">
-                {appConfig.comingSoonMessage || 'We are polishing our next-generation native Android & iOS application. Pre-register your spot for priority early beta access!'}
+                {appConfig.comingSoonMessage || 'We are polishing our next-generation digital application. Pre-register your spot for priority early beta access!'}
               </p>
             </div>
 
@@ -458,7 +561,7 @@ export default function AppDownload() {
                           : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      <span>🤖 Android APK</span>
+                      <span>🤖 Android</span>
                     </button>
                     <button
                       type="button"
@@ -477,29 +580,24 @@ export default function AppDownload() {
                 <button
                   type="submit"
                   disabled={waitlistSubmitting}
-                  className="w-full py-3.5 rounded-xl font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer mt-3 active:scale-98"
+                  className="w-full py-3.5 rounded-xl font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer mt-4"
                 >
                   {waitlistSubmitting ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Securing VIP Access...</span>
+                      <span>Reserving VIP Access...</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      <span>Pre-Register For VIP Beta Access &rarr;</span>
+                      <span>Reserve My Priority Beta Spot &rarr;</span>
                     </>
                   )}
                 </button>
 
-                <div className="pt-2 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                  <Link to="/" className="hover:text-purple-600 dark:hover:text-purple-400 font-semibold flex items-center gap-1">
-                    <span>← Return to Home</span>
-                  </Link>
-                  <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                    <Lock className="w-3 h-3" />
-                    <span>Zero Spam • Instant Dispatch</span>
-                  </span>
+                <div className="flex items-center justify-center gap-1 text-[10px] text-slate-400 pt-1">
+                  <Lock className="w-3 h-3" />
+                  <span>Zero Spam • Instant Release Dispatch</span>
                 </div>
               </form>
             )}
@@ -514,18 +612,15 @@ export default function AppDownload() {
   return (
     <>
       <SEO
-        title={`Download ${appConfig.appName || 'LOCAL2BRAND'} Mobile App (${appConfig.version || 'v2.4.0'})`}
-        description={appConfig.appDescription || 'Download official APK & client companion.'}
+        title={`Install ${appConfig.appName || 'LOCAL2BRAND Web App'} (${appConfig.version || 'v2.4.0 PWA'})`}
+        description={appConfig.appDescription || 'Install official Inbuilt Web App with 1-tap home screen access and zero storage overhead.'}
       />
 
-      {/* Main Container - Standard Website Page Layout (Matching Home, Pricing, Services) */}
+      {/* Main Container */}
       <div className="page-header-offset pb-24 relative overflow-hidden">
         
-        {/* ========================================================================= */}
-        {/* 1. SEAMLESS BACKGROUND VIDEO / GRADIENT LAYER                             */}
-        {/* ========================================================================= */}
+        {/* Seamless Motion Video Layer */}
         <div className="absolute top-0 inset-x-0 h-[600px] sm:h-[750px] overflow-hidden pointer-events-none -z-20">
-          {/* Real Motion Video Layer with Radial Blend */}
           <video
             autoPlay
             loop
@@ -537,18 +632,15 @@ export default function AppDownload() {
             <source src="https://assets.mixkit.co/videos/preview/mixkit-circuit-board-digital-animation-4458-large.mp4" type="video/mp4" />
           </video>
           
-          {/* Subtle Cyber Grid Overlay */}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
         </div>
 
-        {/* Dynamic Ambient Hero Glow that matches website brand style */}
+        {/* Ambient Hero Glow */}
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[700px] sm:w-[1000px] h-[550px] bg-gradient-to-r from-blue-500/25 via-purple-500/30 to-pink-500/25 dark:from-blue-500/35 dark:via-purple-500/40 dark:to-pink-500/35 rounded-full blur-[110px] pointer-events-none -z-10 animate-pulse-glow" />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
-          {/* ========================================================================= */}
-          {/* TOP UNIQUE INDIAN FLAG LUXURY BADGE (Matches Home.jsx)                    */}
-          {/* ========================================================================= */}
+          {/* Top Heritage Badge */}
           <div className="flex justify-center mb-6">
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full badge-tricolor-india text-xs font-semibold text-slate-800 dark:text-slate-200 animate-float relative overflow-hidden shadow-xs">
               <span className="flex items-center gap-1.5 font-black text-amber-900 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/40 shadow-xs">
@@ -557,14 +649,12 @@ export default function AppDownload() {
               </span>
               <span className="text-slate-300 dark:text-slate-600">|</span>
               <span className="text-slate-700 dark:text-slate-300 font-medium">
-                Official Android APK &amp; Mobile Client Hub
+                Official Inbuilt Web App &amp; Client Hub
               </span>
             </div>
           </div>
 
-          {/* ========================================================================= */}
-          {/* HERO SECTION: HEADLINE + ACTION BUTTONS + PHONE PREVIEW DOCK              */}
-          {/* ========================================================================= */}
+          {/* HERO SECTION */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
             
             {/* Left Column: Heading, Badges, CTAs */}
@@ -574,91 +664,72 @@ export default function AppDownload() {
                 
                 {/* Version Pill */}
                 <div className="flex items-center justify-center lg:justify-start gap-2">
-                  {appConfig.isComingSoon ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 text-xs font-extrabold shadow-2xs">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                      <span>Pre-Launch VIP Beta Mode</span>
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs font-extrabold shadow-2xs">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                      <span>Release {appConfig.version || 'v2.4.0'} • Verified APK</span>
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs font-extrabold shadow-2xs">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <span>Inbuilt Web App • {appConfig.version || 'v2.4.0 (PWA)'}</span>
+                  </span>
                   <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                    Updated September 2026
+                    Instant 1-Tap Install
                   </span>
                 </div>
 
                 {/* Main Headline */}
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.08]">
-                  {appConfig.isComingSoon ? (
-                    <>
-                      {appConfig.comingSoonTitle || 'LOCAL2BRAND Mobile App'}{' '}
-                      <span className="l2b-gradient-text block sm:inline">Launching Soon!</span>
-                    </>
-                  ) : (
-                    <>
-                      {appConfig.appName || 'LOCAL2BRAND Studio'}{' '}
-                      <span className="l2b-gradient-text block sm:inline">In Your Pocket.</span>
-                    </>
-                  )}
+                  {appConfig.appName || 'LOCAL2BRAND Web App'}{' '}
+                  <span className="l2b-gradient-text block sm:inline">On Your Screen.</span>
                 </h1>
 
                 {/* Subtitle */}
                 <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
-                  {appConfig.isComingSoon
-                    ? (appConfig.comingSoonMessage || 'We are polishing our next-generation native Android & iOS application. Pre-register your spot for priority early beta access!')
-                    : (appConfig.appDescription || 'Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates straight to your mobile device.')}
+                  {appConfig.appDescription || 'Install our fast inbuilt web app directly to your home screen. Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates with 0 MB storage overhead.'}
                 </p>
               </div>
 
               {/* Minimal Trust Capsules */}
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 text-xs font-semibold">
                 <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shadow-glass-sm">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span>Verified Clean SHA-256</span>
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <span>Sub-Second 60 FPS</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shadow-glass-sm">
                   <HardDrive className="w-4 h-4 text-purple-500" />
-                  <span>{appConfig.fileSize || '18.4 MB'} Compact</span>
+                  <span>0 MB Storage Space</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shadow-glass-sm">
-                  <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-                  <span>4.9 / 5.0 Rating</span>
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <span>100% Safe SSL Verified</span>
                 </div>
               </div>
 
-              {/* Action Buttons Matrix */}
+              {/* Action Buttons Matrix: ONLY the Web App Install Button + QR Scanner */}
               <div className="pt-2 space-y-4">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3.5">
                   
-                  {/* Primary Download Button */}
+                  {/* Primary Install Web App Button */}
                   <button
                     type="button"
-                    onClick={handleDirectApkDownload}
+                    onClick={isPwaMode ? handleInstallWebApp : handleDirectApkDownload}
                     disabled={downloading}
                     className="relative group py-4 px-8 rounded-2xl font-black text-sm sm:text-base text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-3 cursor-pointer active:scale-98 overflow-hidden w-full sm:w-auto"
                   >
                     {downloading ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Downloading ({downloadProgress}%)...</span>
-                      </>
-                    ) : appConfig.isComingSoon ? (
-                      <>
-                        <Bell className="w-5 h-5 animate-bounce" />
                         <div className="text-left leading-tight">
-                          <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">Priority Early Access</span>
-                          <span className="block">Join VIP Beta Waitlist &rarr;</span>
+                          <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">Installing PWA</span>
+                          <span className="block">Installing ({downloadProgress}%)...</span>
                         </div>
                       </>
                     ) : (
                       <>
-                        <Download className="w-5 h-5 transition-transform group-hover:-translate-y-0.5" />
+                        <Sparkles className="w-5 h-5 text-amber-300 animate-spin-slow" />
                         <div className="text-left leading-tight">
-                          <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">Fast Direct Download</span>
-                          <span className="block">Download Android APK</span>
+                          <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">
+                            {isAlreadyInstalled ? 'Installed on Device' : '1-Tap Direct Install'}
+                          </span>
+                          <span className="block">
+                            {isAlreadyInstalled ? 'Open / Reinstall Web App' : '⚡ Install Web App Now'}
+                          </span>
                         </div>
                       </>
                     )}
@@ -667,11 +738,11 @@ export default function AppDownload() {
                     <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
                   </button>
 
-                  {/* QR Code Quick Card - Entire Card Opens QR Scanner Modal */}
+                  {/* QR Code Quick Card */}
                   <div 
                     onClick={() => setQrModalOpen(true)}
                     className="group flex items-center justify-between sm:justify-start gap-3 p-2.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-glass hover:border-purple-500/80 dark:hover:border-purple-500 text-xs cursor-pointer transition-all hover:scale-102"
-                    title="Click to Open Large QR Code Scanner"
+                    title="Click to Open QR Code Scanner"
                   >
                     <div className="relative w-11 h-11 rounded-xl bg-white p-0.5 border border-slate-200/60 shrink-0 overflow-hidden flex items-center justify-center">
                       <img 
@@ -685,10 +756,10 @@ export default function AppDownload() {
                     </div>
                     <div className="text-left text-[11px] leading-tight pr-2">
                       <strong className="block text-slate-900 dark:text-white font-bold group-hover:text-purple-600 transition-colors">
-                        Scan to Download
+                        Scan with Phone
                       </strong>
                       <span className="text-slate-500 dark:text-slate-400">
-                        Click to view QR Code
+                        Instant install on mobile
                       </span>
                     </div>
                     <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 group-hover:bg-purple-600 group-hover:text-white transition-colors shrink-0">
@@ -698,81 +769,48 @@ export default function AppDownload() {
 
                 </div>
 
-                {/* Alternate App Store Badges Row */}
+                {/* Native Android & iOS Versions: EXPLICITLY MARKED AS COMING SOON */}
                 <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-2.5 sm:gap-3">
                   
-                  {/* Indus Appstore (Made in India 🇮🇳) */}
-                  {appConfig.indusStoreUrl ? (
-                    <a
-                      href={appConfig.indusStoreUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-500/60 dark:border-amber-500/50 shadow-glass hover:shadow-glass-highlight hover:border-amber-500 hover:scale-102 active:scale-98 transition-all flex items-center gap-3 cursor-pointer"
-                    >
-                      <IndusIcon className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform" />
-                      <div className="text-left leading-tight">
-                        <span className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Available on</span>
-                        <span className="block font-black text-xs text-slate-900 dark:text-white">Indus Appstore 🇮🇳</span>
-                      </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-amber-500/70 group-hover:text-amber-500 shrink-0 ml-1 transition-colors" />
-                    </a>
-                  ) : (
-                    <div className="px-3.5 py-2.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-slate-400 text-xs font-semibold flex items-center gap-2 shadow-glass-sm">
-                      <IndusIcon className="w-4 h-4 opacity-75 shrink-0" />
-                      <span>Indus Appstore (Coming Soon)</span>
+                  {/* Android Native Version Status */}
+                  <div className="px-3.5 py-2.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-xs font-semibold flex items-center gap-2.5 shadow-glass-sm">
+                    <PlayStoreIcon className="w-4 h-4 opacity-75 shrink-0" />
+                    <div className="text-left leading-tight">
+                      <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Android Native (.apk)</span>
+                      <span className="block font-bold text-amber-600 dark:text-amber-400">
+                        {appConfig.androidStatus === 'active' ? 'Live Release' : '🚧 Coming Soon / In Build'}
+                      </span>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Google Play Store */}
-                  {appConfig.playStoreUrl ? (
-                    <a
-                      href={appConfig.playStoreUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-500/60 dark:border-emerald-500/50 shadow-glass hover:shadow-glass-highlight hover:border-emerald-500 hover:scale-102 active:scale-98 transition-all flex items-center gap-3 cursor-pointer"
-                    >
-                      <PlayStoreIcon className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform" />
-                      <div className="text-left leading-tight">
-                        <span className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Get it on</span>
-                        <span className="block font-black text-xs text-slate-900 dark:text-white">Google Play</span>
-                      </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-emerald-500/70 group-hover:text-emerald-500 shrink-0 ml-1 transition-colors" />
-                    </a>
-                  ) : (
-                    <div className="px-3.5 py-2.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-slate-400 text-xs font-semibold flex items-center gap-2 shadow-glass-sm">
-                      <PlayStoreIcon className="w-4 h-4 opacity-75 shrink-0" />
-                      <span>Google Play (In Review)</span>
+                  {/* iOS Native App Store Status */}
+                  <div className="px-3.5 py-2.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-xs font-semibold flex items-center gap-2.5 shadow-glass-sm">
+                    <AppleIcon className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />
+                    <div className="text-left leading-tight">
+                      <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">iOS App Store</span>
+                      <span className="block font-bold text-indigo-600 dark:text-indigo-400">
+                        {appConfig.iosStatus === 'active' ? 'Live Release' : '🚧 Coming Soon / In Review'}
+                      </span>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Apple App Store */}
-                  {appConfig.appStoreUrl ? (
-                    <a
-                      href={appConfig.appStoreUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="group px-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-purple-500/60 dark:border-purple-500/50 shadow-glass hover:shadow-glass-highlight hover:border-purple-500 hover:scale-102 active:scale-98 transition-all flex items-center gap-3 cursor-pointer"
-                    >
-                      <AppleIcon className="w-5 h-5 text-slate-900 dark:text-white shrink-0 group-hover:scale-110 transition-transform" />
-                      <div className="text-left leading-tight">
-                        <span className="block text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Download on</span>
-                        <span className="block font-black text-xs text-slate-900 dark:text-white">App Store</span>
-                      </div>
-                      <ExternalLink className="w-3.5 h-3.5 text-purple-500/70 group-hover:text-purple-500 shrink-0 ml-1 transition-colors" />
-                    </a>
-                  ) : (
-                    <div className="px-3.5 py-2.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-slate-500 dark:text-slate-400 text-xs font-semibold flex items-center gap-2 shadow-glass-sm">
-                      <AppleIcon className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />
-                      <span>iOS Companion (In Build)</span>
+                  {/* Indus Appstore India Status */}
+                  <div className="px-3.5 py-2.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-white/10 text-xs font-semibold flex items-center gap-2.5 shadow-glass-sm">
+                    <IndusIcon className="w-4 h-4 opacity-75 shrink-0" />
+                    <div className="text-left leading-tight">
+                      <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Indus Appstore 🇮🇳</span>
+                      <span className="block font-bold text-slate-500 dark:text-slate-400">
+                        🚧 Coming Soon
+                      </span>
                     </div>
-                  )}
+                  </div>
 
                 </div>
               </div>
 
             </div>
 
-            {/* Right Column: Clean, Interactive Smartphone Chassis with Pro Studio Frame */}
+            {/* Right Column: Web App Viewport & Phone Mockup */}
             <div className="lg:col-span-5 flex justify-center items-center pt-6 lg:pt-0 relative">
               
               {/* Outer Ambient Glow Mesh */}
@@ -781,18 +819,18 @@ export default function AppDownload() {
               {/* Floating Accents */}
               <div className="hidden sm:flex absolute -top-4 -left-6 z-30 items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-glass animate-float">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">120Hz Native Speed</span>
+                <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">1-Tap Inbuilt PWA</span>
               </div>
 
               <div className="hidden sm:flex absolute -bottom-4 -right-4 z-30 items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 shadow-glass animate-float" style={{ animationDelay: '1.5s' }}>
                 <ShieldCheck className="w-4 h-4 text-purple-500" />
-                <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">100% Protect Safe</span>
+                <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">0 MB Storage Used</span>
               </div>
 
               {/* Smartphone Chassis */}
               <div className="relative w-[280px] sm:w-[300px] max-w-full rounded-[48px] p-3.5 bg-slate-950 dark:bg-black border-[5px] border-slate-700 dark:border-slate-800 shadow-[0_25px_70px_rgba(0,0,0,0.45)]">
                 
-                {/* Volume Rocker & Power Buttons Simulation */}
+                {/* Volume Rocker Simulation */}
                 <div className="absolute -left-[9px] top-28 w-[4px] h-12 bg-slate-600 rounded-l-md" />
                 <div className="absolute -left-[9px] top-44 w-[4px] h-12 bg-slate-600 rounded-l-md" />
                 <div className="absolute -right-[9px] top-32 w-[4px] h-16 bg-slate-600 rounded-r-md" />
@@ -806,7 +844,7 @@ export default function AppDownload() {
                 {/* Inner Phone Screen Display */}
                 <div className="relative rounded-[36px] overflow-hidden bg-slate-900 aspect-[9/19] flex flex-col justify-between border border-white/10 shadow-inner">
                   
-                  {/* Active Screenshot Display */}
+                  {/* Active Web App Screenshot Display */}
                   {screenshots[activeScreenIndex] && (
                     <img
                       src={screenshots[activeScreenIndex].url}
@@ -818,7 +856,7 @@ export default function AppDownload() {
                     />
                   )}
 
-                  {/* Specular Diagonal Screen Glare */}
+                  {/* Specular Diagonal Glare */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none z-10" />
 
                   {/* In-Mockup Overlay Header */}
@@ -834,7 +872,7 @@ export default function AppDownload() {
                   <div className="absolute bottom-0 inset-x-0 p-3.5 bg-gradient-to-t from-black/95 via-black/75 to-transparent text-white z-20">
                     <div className="p-2.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-center space-y-0.5">
                       <span className="text-[10px] font-black text-purple-300 block uppercase tracking-wider truncate">
-                        {screenshots[activeScreenIndex]?.title || 'Native Client Experience'}
+                        {screenshots[activeScreenIndex]?.title || 'Inbuilt Web App Experience'}
                       </span>
                       <p className="text-[9px] text-white/90 line-clamp-1 leading-tight">
                         {screenshots[activeScreenIndex]?.caption || 'Supercharged for fast client responses.'}
@@ -864,17 +902,15 @@ export default function AppDownload() {
 
           </div>
 
-          {/* ========================================================================= */}
-          {/* SECTION 2: INTERACTIVE SCREENSHOT GALLERY                                 */}
-          {/* ========================================================================= */}
+          {/* SECTION 2: INTERACTIVE SCREENSHOT GALLERY */}
           <div className="mt-20 sm:mt-28">
             <SectionHeading
-              badge="Visual Interface"
+              badge="Web App Interface"
               title="Built For Speed, Precision &amp; Power"
-              subtitle="Inspect our responsive native views tailored specifically for ambitious business owners."
+              subtitle="Inspect our responsive live views tailored specifically for ambitious business owners."
             />
 
-            {/* Grid of Clean Screenshot Cards */}
+            {/* Grid of Web App Screenshot Cards */}
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
               {screenshots.map((screen, idx) => (
                 <div
@@ -913,14 +949,12 @@ export default function AppDownload() {
             </div>
           </div>
 
-          {/* ========================================================================= */}
-          {/* SECTION 3: 6-FEATURE BENTO MATRIX                                         */}
-          {/* ========================================================================= */}
+          {/* SECTION 3: 6-FEATURE BENTO MATRIX */}
           <div className="mt-20 sm:mt-28">
             <SectionHeading
               badge="Architecture"
-              title="Next-Generation Digital Agency Companion"
-              subtitle="Explore what makes the LOCAL2BRAND application a complete powerhouse."
+              title="Next-Generation Inbuilt Web App"
+              subtitle="Explore what makes the LOCAL2BRAND platform ultra-fast and easy to use."
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mt-10">
@@ -950,9 +984,7 @@ export default function AppDownload() {
             </div>
           </div>
 
-          {/* ========================================================================= */}
-          {/* SECTION 4: 3-STEP VISUAL INSTALLATION GUIDE FOR ANDROID                   */}
-          {/* ========================================================================= */}
+          {/* SECTION 4: 3-STEP VISUAL INSTALLATION GUIDE FOR INBUILT WEB APP */}
           <div className="mt-20 sm:mt-28">
             <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 sm:p-10 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-glass relative overflow-hidden">
               
@@ -962,10 +994,10 @@ export default function AppDownload() {
                   <span>3 Simple Steps</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                  How To Install The Android APK
+                  How To Install The Web App
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-medium">
-                  Follow these quick instructions to install the verified package directly on any Android phone or tablet.
+                  Add to your phone or desktop home screen in seconds with 0 MB storage used.
                 </p>
               </div>
 
@@ -977,10 +1009,10 @@ export default function AppDownload() {
                     1
                   </div>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Download APK Package
+                    Tap &quot;Install Web App&quot;
                   </h4>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Click the <strong>Download Android APK</strong> button above or scan the QR code to save the package file.
+                    Click the <strong>Install Web App Now</strong> button above or scan the QR code with your mobile camera.
                   </p>
                 </div>
 
@@ -990,10 +1022,10 @@ export default function AppDownload() {
                     2
                   </div>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Allow Installation
+                    Add To Home Screen
                   </h4>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Tap the downloaded file. If prompted by your browser, tap <strong>Settings</strong> and toggle on <em>Allow from this source</em>.
+                    Confirm prompt or tap <strong>Add to Home screen</strong> from your browser menu or share sheet.
                   </p>
                 </div>
 
@@ -1003,10 +1035,10 @@ export default function AppDownload() {
                     3
                   </div>
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Launch &amp; Track
+                    Launch &amp; Track Instantly
                   </h4>
                   <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Tap <strong>Install</strong>. Once done, open the app to manage your orders, preview templates, and speak with our lead architect!
+                    Open the app from your home screen anytime. Track milestones, test templates, and message our lead architect!
                   </p>
                 </div>
 
@@ -1016,24 +1048,22 @@ export default function AppDownload() {
               <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 font-medium">
                   <Lock className="w-4 h-4 text-emerald-500 shrink-0" />
-                  <span>100% Safe • No invasive tracking or background battery drain</span>
+                  <span>100% Safe • Zero APK permissions • Instant auto-updates</span>
                 </div>
                 <button
                   type="button"
-                  onClick={handleDirectApkDownload}
-                  className="px-5 py-2.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors flex items-center gap-2 cursor-pointer shadow-sm w-full sm:w-auto justify-center"
+                  onClick={handleInstallWebApp}
+                  className="px-6 py-2.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors flex items-center gap-2 cursor-pointer shadow-sm w-full sm:w-auto justify-center"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Download APK Now</span>
+                  <Sparkles className="w-4 h-4" />
+                  <span>Install Web App Now</span>
                 </button>
               </div>
 
             </div>
           </div>
 
-          {/* ========================================================================= */}
-          {/* SECTION 5: TECHNICAL SPECS & CHANGELOG                                   */}
-          {/* ========================================================================= */}
+          {/* SECTION 5: TECHNICAL SPECS & CHANGELOG */}
           <div className="mt-20 grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             
             {/* Tech Specs */}
@@ -1045,28 +1075,28 @@ export default function AppDownload() {
 
               <div className="space-y-2 text-xs divide-y divide-slate-100 dark:divide-slate-800">
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-slate-500 dark:text-slate-400">Package Name</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-white">{appConfig.packageName || 'com.local2brand.app'}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Application Type</span>
+                  <span className="font-mono font-bold text-purple-600 dark:text-purple-400">Inbuilt Web App (PWA)</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
                   <span className="text-slate-500 dark:text-slate-400">Release Version</span>
-                  <span className="font-bold text-purple-600 dark:text-purple-400">{appConfig.version || 'v2.4.0'}</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{appConfig.version || 'v2.4.0 (PWA)'}</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-slate-500 dark:text-slate-400">Download File Size</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{appConfig.fileSize || '18.4 MB'}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Storage Footprint</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">0 MB (Zero Download)</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-slate-500 dark:text-slate-400">Minimum Android OS</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{appConfig.minAndroid || 'Android 8.0 (Oreo) & above'}</span>
+                  <span className="text-slate-500 dark:text-slate-400">Android Compatibility</span>
+                  <span className="font-bold text-slate-900 dark:text-white">All Android Phones (Chrome, Edge, Samsung)</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-slate-500 dark:text-slate-400">Minimum iOS</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{appConfig.minIos || 'iOS 15.0 & above'}</span>
+                  <span className="text-slate-500 dark:text-slate-400">iOS Compatibility</span>
+                  <span className="font-bold text-slate-900 dark:text-white">iOS 14.0+ (Safari / Chrome)</span>
                 </div>
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-slate-500 dark:text-slate-400">Security Checksum</span>
-                  <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold truncate max-w-[200px]">SHA256: 4f8b9e...3a1c</span>
+                  <span className="text-slate-500 dark:text-slate-400">Security &amp; Encryption</span>
+                  <span className="font-mono text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">HTTPS / TLS 1.3 256-Bit</span>
                 </div>
               </div>
             </div>
@@ -1104,9 +1134,7 @@ export default function AppDownload() {
 
       </div>
 
-      {/* ========================================================================= */}
-      {/* MODAL 1: SCREENSHOT LIGHTBOX                                              */}
-      {/* ========================================================================= */}
+      {/* MODAL 1: SCREENSHOT LIGHTBOX */}
       {selectedScreenshot && (
         <div 
           onClick={() => setSelectedScreenshot(null)}
@@ -1140,9 +1168,7 @@ export default function AppDownload() {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL 2: QR CODE LARGE VIEW & MOBILE SCAN DOCK                           */}
-      {/* ========================================================================= */}
+      {/* MODAL 2: QR CODE LARGE VIEW & MOBILE SCAN DOCK */}
       {qrModalOpen && (
         <div 
           onClick={() => setQrModalOpen(false)}
@@ -1168,7 +1194,7 @@ export default function AppDownload() {
                 Scan with Phone Camera
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Point your smartphone camera or Google Lens at the code below to download {appConfig.appName || 'LOCAL2BRAND'}.
+                Point your phone camera to instantly open and install {appConfig.appName || 'LOCAL2BRAND Web App'}.
               </p>
             </div>
 
@@ -1180,7 +1206,7 @@ export default function AppDownload() {
                 className="w-56 h-56 object-contain" 
               />
               <span className="text-[10px] text-slate-400 font-mono mt-1">
-                Version {appConfig.version || 'v2.4.0'} • Instant Mobile Direct Install
+                Version {appConfig.version || 'v2.4.0'} • Instant 1-Tap Home Screen Install
               </span>
             </div>
 
@@ -1215,17 +1241,160 @@ export default function AppDownload() {
                 )}
               </button>
             </div>
-
-            <p className="text-[10px] text-slate-400 pt-1">
-              Compatible with all Android &amp; iOS phone camera barcode scanners.
-            </p>
           </div>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL 3: VIP BETA WAITLIST & PRE-LAUNCH NOTIFICATION                      */}
-      {/* ========================================================================= */}
+      {/* MODAL 3: INTERACTIVE PLATFORM INSTALLATION GUIDE */}
+      {installModalOpen && (
+        <div 
+          onClick={() => setInstallModalOpen(false)}
+          className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 max-h-[92vh] overflow-y-auto"
+          >
+            <button
+              type="button"
+              onClick={() => setInstallModalOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="space-y-1 text-center sm:text-left">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 inline-block">
+                ⚡ 1-Tap Home Screen Install
+              </span>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                How to Add Web App to Home Screen
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Select your device below to view step-by-step install instructions:
+              </p>
+            </div>
+
+            {/* Platform Selector Tabs */}
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => setActiveTabPlatform('android')}
+                className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  activeTabPlatform === 'android'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Android</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTabPlatform('ios')}
+                className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  activeTabPlatform === 'ios'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <AppleIcon className="w-3.5 h-3.5" />
+                <span>iPhone / iPad</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTabPlatform('desktop')}
+                className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  activeTabPlatform === 'desktop'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Monitor className="w-3.5 h-3.5" />
+                <span>Desktop</span>
+              </button>
+            </div>
+
+            {/* Step-by-Step Instructions based on selected platform */}
+            <div className="space-y-3 pt-1 text-xs">
+              {activeTabPlatform === 'android' && (
+                <div className="space-y-2.5">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-purple-600 text-white font-bold text-xs flex items-center justify-center shrink-0">1</div>
+                    <p className="text-slate-700 dark:text-slate-300">
+                      Tap the <strong>three vertical dots (⋮)</strong> in the top-right corner of Chrome / your Android browser.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-purple-600 text-white font-bold text-xs flex items-center justify-center shrink-0">2</div>
+                    <p className="text-slate-700 dark:text-slate-300">
+                      Tap <strong>&quot;Install App&quot;</strong> or <strong>&quot;Add to Home screen&quot;</strong>.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0">3</div>
+                    <p className="text-slate-700 dark:text-slate-300">
+                      Tap <strong>&quot;Install&quot;</strong>. The app icon will immediately appear on your phone home screen!
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeTabPlatform === 'ios' && (
+                <div className="space-y-2.5">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-purple-600 text-white font-bold text-xs flex items-center justify-center shrink-0">1</div>
+                    <p className="text-slate-700 dark:text-slate-300">
+                      In Safari, tap the <strong>Share button (⎋ / square with arrow)</strong> at the bottom of the screen.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-purple-600 text-white font-bold text-xs flex items-center justify-center shrink-0">2</div>
+                    <p className="text-slate-700 dark:text-slate-300">
+                      Scroll down and tap <strong>&quot;Add to Home Screen&quot; (⊕)</strong>.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0">3</div>
+                    <p className="text-slate-700 dark:text-slate-300">
+                      Tap <strong>&quot;Add&quot;</strong> in the top right. You can now launch LOCAL2BRAND directly from your iPhone home screen!
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeTabPlatform === 'desktop' && (
+                <div className="space-y-2.5">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-purple-600 text-white font-bold text-xs flex items-center justify-center shrink-0">1</div>
+                    <p className="text-slate-700 dark:text-slate-300">
+                      In Chrome / Edge, look at the right side of the address / URL bar for the <strong>&quot;Install App&quot; icon (⊕)</strong>.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center shrink-0">2</div>
+                    <p className="text-slate-700 dark:text-slate-300">
+                      Click <strong>&quot;Install&quot;</strong>. The app will launch in its own dedicated, distraction-free native desktop window!
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setInstallModalOpen(false)}
+              className="w-full py-3 rounded-xl font-bold text-xs text-white l2b-gradient-bg shadow-md cursor-pointer mt-2"
+            >
+              Got It!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: VIP BETA WAITLIST MODAL */}
       {waitlistModalOpen && (
         <div 
           onClick={() => {
@@ -1329,7 +1498,7 @@ export default function AppDownload() {
                             : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                         }`}
                       >
-                        <span>🤖 Android APK</span>
+                        <span>🤖 Android</span>
                       </button>
                       <button
                         type="button"

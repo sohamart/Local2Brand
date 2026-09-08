@@ -1,0 +1,23 @@
+{
+  "short_name": "LOCAL2BRAND",
+  "name": "LOCAL2BRAND — Web App",
+  "icons": [
+    {
+      "src": "/favicon.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/favicon.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#07090e",
+  "theme_color": "#7c3aed",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "description": "LOCAL2BRAND Web App — Transform your local business into a global brand with sub-second speeds and 48-hour delivery."
+}
