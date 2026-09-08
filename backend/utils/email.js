@@ -1890,5 +1890,317 @@ export const sendAdminQueryDeletionAlert = async (queryDoc) => {
   return await sendEmail({ to: recipients, subject, html, text: `Lead for ${queryDoc.name} deleted.` });
 };
 
+// 20. VIP WhatsApp Priority Direct Developer Support Activated Notice (to Client)
+export const sendVipWhatsappActivatedEmail = async ({ user }) => {
+  if (!user || !user.email) return { success: false, error: 'No user email' };
+
+  const clientUrl = getClientUrl();
+  const clientName = user.name || 'Valued Client';
+  const whatsappNumber = process.env.WHATSAPP_SUPPORT || '+918710043923';
+  const cleanWaNumber = whatsappNumber.replace(/\D/g, '');
+  const directWaLink = `https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(`Hello Local2Brand Founder Team! 👋 I am contacting you via my VIP WhatsApp Priority line (Account: ${user.email}).`)}`;
+
+  const subject = `🎉 Exclusive Feature Unlocked: Direct 1-on-1 WhatsApp Chat — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Hello ${clientName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Exciting news! You have <strong style="color: #10b981;">unlocked an exclusive feature: Direct 1-on-1 WhatsApp Chat</strong> with our senior engineers and lead founders.
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Your client account has been granted direct priority VIP hotline access. You can now chat directly with our technical architecture team for instant project consultations, rapid revision requests, and prioritized sprint execution.
+      </p>
+
+      <div class="bg-box border-theme" style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.06) 0%, rgba(16, 185, 129, 0.06) 100%); border: 1.5px solid #10b981; border-radius: 14px; padding: 16px 18px; margin: 18px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
+          <tr>
+            <td style="padding: 6px 0; color: #059669; font-weight: 800; font-size: 14px;" colspan="2">
+              💎 Exclusive VIP Feature Unlocked
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600; width: 35%;">Client Account:</td>
+            <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${user.email}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Response SLA:</td>
+            <td style="padding: 6px 0; color: #059669; font-weight: 800;">⚡ Under 15 Minutes Priority</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Dedicated Channel:</td>
+            <td style="padding: 6px 0; color: #7c3aed; font-weight: 700;">Direct WhatsApp Architect Hotline</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="${directWaLink}" target="_blank" style="display: inline-block; background-color: #25D366; color: #ffffff; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 14px; text-decoration: none; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);">
+          💬 Open VIP WhatsApp Support
+        </a>
+      </div>
+
+      <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">
+        You can also access your dedicated VIP WhatsApp button anytime directly from your Client Dashboard.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `You have unlocked an exclusive feature: Direct WhatsApp Chat.`,
+    headerBadge: '💎 EXCLUSIVE VIP FEATURE UNLOCKED',
+    title: `Direct WhatsApp Chat Unlocked!`,
+    subtitle: `${clientName} &bull; Direct Architect Access`,
+    contentHtml,
+    ctaText: 'Open Client Console',
+    ctaUrl: `${clientUrl}/dashboard`,
+  });
+
+  return await sendEmail({ to: user.email, subject, html, text: `Hello ${clientName}, you have unlocked an exclusive feature: Direct 1-on-1 WhatsApp Chat for your account (${user.email}). Reach us on WhatsApp: ${directWaLink}` });
+};
+
+// 21. Admin Alert on New Review Submission
+export const sendAdminNewReviewEmail = async ({ review, user }) => {
+  const recipients = ['local2brand.contact@gmail.com'];
+  const reviewerName = review.userName || user?.name || 'Client';
+  const reviewerEmail = review.userEmail || user?.email || 'N/A';
+  const rating = review.rating || 5;
+  const stars = '⭐'.repeat(rating);
+  const subject = `⭐ [NEW REVIEW ${rating}/5] ${reviewerName} (${review.businessName || 'LOCAL2BRAND'})`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        A new client review was submitted on LOCAL2BRAND.
+      </p>
+      <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 16px 18px; margin: 16px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600; width: 32%;">Rating:</td>
+            <td style="padding: 6px 0; font-size: 16px; font-weight: 800; color: #f59e0b;">${stars} (${rating} / 5)</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Client:</td>
+            <td style="padding: 6px 0; font-weight: 800; color: #0f172a;">${reviewerName} (${reviewerEmail})</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Role / Brand:</td>
+            <td style="padding: 6px 0; font-weight: 700; color: #4338ca;">${review.userRole || 'Business Owner'} &bull; ${review.businessName || 'LOCAL2BRAND'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0 4px 0; color: #64748b; font-weight: 600; vertical-align: top;">Feedback:</td>
+            <td style="padding: 10px 0 4px 0; color: #1e293b; font-style: italic; line-height: 1.5;">"${review.comment}"</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `New ${rating}-star review from ${reviewerName}.`,
+    headerBadge: '⭐ NEW CLIENT REVIEW',
+    title: `New Review Submitted`,
+    subtitle: `${reviewerName} &bull; ${stars}`,
+    contentHtml,
+    ctaText: 'Moderate Reviews in Admin',
+    ctaUrl: `${getClientUrl()}/admin/reviews`,
+  });
+
+  return await sendEmail({ to: recipients, subject, html, text: `New ${rating}-star review from ${reviewerName} (${reviewerEmail}): "${review.comment}"` });
+};
+
+// 22. Client Confirmation on Review Submission
+export const sendReviewSubmittedClientEmail = async ({ review, user }) => {
+  const targetEmail = review.userEmail || user?.email;
+  if (!targetEmail) return { success: false, error: 'No recipient email' };
+
+  const clientName = review.userName || user?.name || 'Valued Client';
+  const rating = review.rating || 5;
+  const stars = '⭐'.repeat(rating);
+  const subject = `⭐ Thank You for Your Feedback! — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Hi ${clientName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Thank you for sharing your review with us! We truly appreciate your trust and partnership.
+      </p>
+
+      <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 16px 18px; margin: 16px 0;">
+        <div style="font-size: 16px; margin-bottom: 8px;">${stars}</div>
+        <div style="font-size: 13px; color: #334155; font-style: italic; line-height: 1.6;">
+          "${review.comment}"
+        </div>
+      </div>
+
+      <p class="text-body" style="margin: 14px 0 0 0; color: #334155; font-size: 13px; line-height: 1.6;">
+        Your feedback inspires our engineering team to continually build world-class digital experiences for high-growth businesses.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Thank you for reviewing LOCAL2BRAND!`,
+    headerBadge: '⭐ FEEDBACK RECEIVED',
+    title: `Thank You for Your Review!`,
+    subtitle: `${clientName} &bull; ${stars}`,
+    contentHtml,
+    ctaText: 'View Showcase',
+    ctaUrl: `${getClientUrl()}/portfolio`,
+  });
+
+  return await sendEmail({ to: targetEmail, subject, html, text: `Hi ${clientName}, thank you for your review on LOCAL2BRAND!` });
+};
+
+// 23. Client Notice When Review is Approved & Published Live
+export const sendReviewApprovedClientEmail = async ({ review }) => {
+  if (!review.userEmail) return { success: false, error: 'No recipient email' };
+
+  const clientName = review.userName || 'Valued Client';
+  const rating = review.rating || 5;
+  const stars = '⭐'.repeat(rating);
+  const subject = `⭐ Your Review is Now Live on LOCAL2BRAND Showcase!`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Hi ${clientName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Great news! Your review for <strong>${review.businessName || 'LOCAL2BRAND'}</strong> has been verified and published live on our official website showcase.
+      </p>
+
+      <div class="bg-box border-theme" style="background-color: #f8fafc; border: 1.5px solid #10b981; border-radius: 14px; padding: 16px 18px; margin: 16px 0;">
+        <div style="font-size: 16px; margin-bottom: 8px;">${stars}</div>
+        <div style="font-size: 13px; color: #334155; font-style: italic; line-height: 1.6;">
+          "${review.comment}"
+        </div>
+      </div>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Your review is now published live on LOCAL2BRAND.`,
+    headerBadge: '⭐ REVIEW PUBLISHED',
+    title: `Your Review is Live!`,
+    subtitle: `${clientName} &bull; ${review.businessName || 'Client Showcase'}`,
+    contentHtml,
+    ctaText: 'View Live Showcase',
+    ctaUrl: `${getClientUrl()}/portfolio`,
+  });
+
+  return await sendEmail({ to: review.userEmail, subject, html, text: `Hi ${clientName}, your review is now live on LOCAL2BRAND!` });
+};
+
+// 24. OTP Verification Code for Changing Registered Account Email
+export const sendEmailChangeOtpEmail = async ({ to, userName, otp }) => {
+  if (!to) return { success: false, error: 'No recipient email' };
+
+  const clientName = userName || 'Valued Client';
+  const subject = `🔒 Verify Your New Email Address: ${otp} — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Hello ${clientName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        You recently requested to update your LOCAL2BRAND registered account email address to <strong>${to}</strong>.
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        Please enter the 6-digit security verification code below in your Client Console to confirm and complete this change:
+      </p>
+
+      <div style="text-align: center; margin: 24px 0; padding: 18px; background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%); border: 2px dashed #7c3aed; border-radius: 16px;">
+        <span style="font-size: 32px; font-family: monospace; font-weight: 900; letter-spacing: 8px; color: #7c3aed;">
+          ${otp}
+        </span>
+        <p style="margin: 8px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600;">
+          ⏳ This verification code expires in 10 minutes.
+        </p>
+      </div>
+
+      <p class="text-body" style="margin: 14px 0 0 0; color: #64748b; font-size: 12px; line-height: 1.6;">
+        ⚠️ If you did not initiate this change, please ignore this email or contact our support team immediately.
+      </p>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Your 6-digit email change verification code is ${otp}.`,
+    headerBadge: '🔒 SECURITY VERIFICATION',
+    title: `Verify New Email Address`,
+    subtitle: `${clientName} &bull; Account Security Update`,
+    contentHtml,
+    ctaText: 'Open Client Console',
+    ctaUrl: `${getClientUrl()}/dashboard?tab=profile`,
+  });
+
+  return await sendEmail({ to, subject, html, text: `Hello ${clientName}, your 6-digit email change verification code is: ${otp}` });
+};
+
+// 25. Admin Alert When User Changes Email Address
+export const sendAdminUserEmailChangedEmail = async ({ user, oldEmail, newEmail }) => {
+  const recipients = ['local2brand.contact@gmail.com'];
+  const userName = user?.name || 'Client';
+  const userId = user?._id || user?.id || 'N/A';
+  const changeDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+  const subject = `🔔 Security Alert: Client Email Changed (${userName}) — LOCAL2BRAND`;
+
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 800;">
+        Admin Security Notice: Registered Email Address Updated
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #334155; line-height: 1.6;">
+        A client has successfully verified and updated their registered account email address via 6-digit OTP verification.
+      </p>
+
+      <div class="bg-box border-theme" style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 14px; padding: 16px 18px; margin: 16px 0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; font-size: 13px;">
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600; width: 35%;">Client Name:</td>
+            <td style="padding: 6px 0; color: #0f172a; font-weight: 800;">${userName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Previous Email:</td>
+            <td style="padding: 6px 0; color: #e11d48; font-family: monospace; font-weight: 700;">${oldEmail}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">New Verified Email:</td>
+            <td style="padding: 6px 0; color: #059669; font-family: monospace; font-weight: 800;">${newEmail}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Account ID:</td>
+            <td style="padding: 6px 0; color: #475569; font-family: monospace;">${userId}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Timestamp:</td>
+            <td style="padding: 6px 0; color: #0f172a;">${changeDate} IST</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Client ${userName} changed registered email from ${oldEmail} to ${newEmail}.`,
+    headerBadge: '🔒 SECURITY AUDIT',
+    title: `Client Email Address Changed`,
+    subtitle: `${userName} &bull; ${newEmail}`,
+    contentHtml,
+    ctaText: 'View in User Directory',
+    ctaUrl: `${getClientUrl()}/admin/users`,
+  });
+
+  return await sendEmail({ to: recipients, subject, html, text: `Client ${userName} (${userId}) updated email from ${oldEmail} to ${newEmail} on ${changeDate}.` });
+};
+
+
 
 

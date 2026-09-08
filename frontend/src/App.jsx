@@ -11,6 +11,7 @@ import CustomCursor from './components/common/CustomCursor';
 import CallbackModal from './components/common/CallbackModal';
 import AuthModal from './components/common/AuthModal';
 import LogoutOverlay from './components/common/LogoutOverlay';
+import LoginOverlay from './components/common/LoginOverlay';
 import AssistantChatbot from './components/common/AssistantChatbot';
 import FloatingMobileInbox from './components/common/FloatingMobileInbox';
 import NotificationPrompt from './components/common/NotificationPrompt';
@@ -18,7 +19,7 @@ import Preloader from './components/common/Preloader';
 import MaintenanceMode from './components/common/MaintenanceMode';
 import { OrderModalProvider } from './context/OrderModalContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { SiteSettingsProvider, useSiteSettings } from './context/SiteSettingsContext';
 import PageTransition, { usePageTransition } from './components/common/PageTransition';
 import ErrorBoundary from './components/common/ErrorBoundary';
@@ -143,6 +144,7 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute, 
 function MainAppContent() {
   const location = useLocation();
   const { settings } = useSiteSettings();
+  const { isLoggingIn, loggedInUser } = useAuth();
 
   const isLivePreview =
     location.pathname.startsWith('/preview') ||
@@ -284,6 +286,7 @@ function MainAppContent() {
       <CallbackModal />
       <AuthModal />
       <LogoutOverlay />
+      <LoginOverlay isOpen={isLoggingIn} user={loggedInUser} />
 
       {/* Global Minimal Waterdrop Toastify Suite */}
       <ToastContainer

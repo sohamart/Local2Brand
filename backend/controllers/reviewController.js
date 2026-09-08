@@ -243,7 +243,7 @@ export const createReview = async (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
-    // In-App Inbox Alert + Push Notification to Admins
+    // In-App Inbox Alert + Push Notification to Admins & Users + Dual Email Dispatch
     try {
       const notifMod = await import('../services/notificationDispatcher.js');
       const dispatcher = notifMod.notificationDispatcher || notifMod.default;
@@ -275,6 +275,21 @@ export const createReview = async (req, res) => {
       }
     } catch (notifErr) {
       console.warn('Review notification notice:', notifErr.message);
+    }
+
+    // Dual Rich HTML Email Dispatch (To Admin + Confirmation to Client)
+    try {
+      const { sendAdminNewReviewEmail, sendReviewSubmittedClientEmail } = await import('../utils/email.js');
+      sendAdminNewReviewEmail({ review: reviewData, user: req.user }).catch((err) =>
+        console.warn('Admin review email notice:', err.message)
+      );
+      if (email) {
+        sendReviewSubmittedClientEmail({ review: reviewData, user: req.user }).catch((err) =>
+          console.warn('Client review confirmation email notice:', err.message)
+        );
+      }
+    } catch (emailErr) {
+      console.warn('Review email import notice:', emailErr.message);
     }
 
     if (mongoose.connection.readyState === 1) {
@@ -521,20 +536,19 @@ export const adminUpdateStatus = async (req, res) => {
     const { id } = req.params;
     const { status, isFeatured } = req.body;
 
+    let updatedReview = null;
+
     if (mongoose.connection.readyState === 1) {
       const updates = {};
       if (status) updates.status = status;
       if (isFeatured !== undefined) updates.isFeatured = isFeatured;
 
-      let review = null;
       if (mongoose.Types.ObjectId.isValid(id)) {
-        review = await Review.findByIdAndUpdate(id, { $set: updates }, { new: true });
+        updatedReview = await Review.findByIdAndUpdate(id, { $set: updates }, { new: true });
       }
-      if (!review) {
+      if (!updatedReview) {
         return res.status(404).json({ success: false, message: 'Review not found' });
       }
-
-      return res.status(200).json({ success: true, message: 'Review status updated', review });
     } else {
       const reviews = readLocalStore('reviews') || [];
       const idx = reviews.findIndex((r) => String(r._id) === String(id));
@@ -549,10 +563,46 @@ export const adminUpdateStatus = async (req, res) => {
         updatedAt: new Date().toISOString(),
       };
       writeLocalStore('reviews', reviews);
-
-      return res.status(200).json({ success: true, message: 'Review status updated', review: reviews[idx] });
+      updatedReview = reviews[idx];
     }
+
+    // If review was approved, dispatch In-App Inbox Alert + Rich Email to Client
+    if (status === 'approved' && updatedReview) {
+      const clientEmail = updatedReview.userEmail;
+      const clientUserId = updatedReview.user;
+
+      try {
+        const notifMod = await import('../services/notificationDispatcher.js');
+        const dispatcher = notifMod.notificationDispatcher || notifMod.default;
+        if (dispatcher && (clientUserId || clientEmail)) {
+          dispatcher.dispatchToUser({
+            userId: clientUserId,
+            email: clientEmail,
+            title: '⭐ Your Review is Now Live on LOCAL2BRAND!',
+            message: `Thank you for your rating! Your review for ${updatedReview.businessName || 'LOCAL2BRAND'} has been verified and published to our official showcase.`,
+            type: 'system',
+            category: 'Reviews',
+            link: '/portfolio',
+            priority: 'normal',
+          }).catch((err) => console.warn('Review approval inbox notice:', err.message));
+        }
+      } catch (e) {
+        console.warn('Review approval notification dispatcher error:', e.message);
+      }
+
+      try {
+        const { sendReviewApprovedClientEmail } = await import('../utils/email.js');
+        sendReviewApprovedClientEmail({ review: updatedReview }).catch((err) =>
+          console.warn('Review approval email dispatch notice:', err.message)
+        );
+      } catch (e) {
+        console.warn('Review approval email import error:', e.message);
+      }
+    }
+
+    return res.status(200).json({ success: true, message: 'Review status updated successfully', review: updatedReview });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+

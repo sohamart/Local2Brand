@@ -12,8 +12,11 @@ import {
   sendVerificationOtp,
   verifyEmailOtp,
   adminToggleVerifyUser,
+  adminToggleVipWhatsapp,
   adminResendUserOtp,
   sendRewardEmail,
+  requestEmailChangeOtp,
+  verifyEmailChangeOtp,
 } from '../controllers/authController.js';
 import { protect, adminOnly } from '../middleware/auth.js';
 
@@ -33,6 +36,8 @@ router.put('/update-profile', protect, updateProfile);
 router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
 router.post('/claim-reward-email', protect, sendRewardEmail);
+router.post('/request-email-change', protect, requestEmailChangeOtp);
+router.post('/verify-email-change', protect, verifyEmailChangeOtp);
 
 
 
@@ -40,8 +45,8 @@ router.post('/claim-reward-email', protect, sendRewardEmail);
 router.get('/users', protect, adminOnly, getAllUsers);
 router.put('/users/:id', protect, adminOnly, updateUserRole);
 router.put('/users/:id/toggle-verify', protect, adminOnly, adminToggleVerifyUser);
+router.put('/users/:id/toggle-vip-whatsapp', protect, adminOnly, adminToggleVipWhatsapp);
 router.post('/users/:id/resend-otp', protect, adminOnly, adminResendUserOtp);
 router.delete('/users/:id', protect, adminOnly, deleteUser);
 
 export default router;
-

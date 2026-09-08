@@ -8,7 +8,12 @@
     "phone": "+91 98765 43210",
     "company": "LOCAL2BRAND HQ",
     "status": "active",
-    "createdAt": "2026-08-31T06:57:02.503Z"
+    "createdAt": "2026-08-31T06:57:02.503Z",
+    "isEmailVerified": true,
+    "updatedAt": "2026-09-08T13:59:11.557Z",
+    "pendingNewEmail": "soham@gmail.com",
+    "emailChangeOtp": "932103",
+    "emailChangeOtpExpires": "2026-09-08T14:09:11.502Z"
   },
   {
     "_id": "admin_master_002",

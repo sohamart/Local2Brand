@@ -27,6 +27,8 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
 
   // Component-based Auth Modal State
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -102,33 +104,46 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
-    // Clear previous user's cached draft and data
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.removeItem('l2b_get_started_draft');
-        localStorage.removeItem('l2b_user_profile');
-        localStorage.removeItem('l2b_user_orders');
-        localStorage.removeItem('l2b_won_voucher');
-      } catch (e) {}
-    }
-
-    const res = await api.post('/auth/login', { email, password });
-    if (res.success && res.user) {
-      if (res.token) {
-        api.setToken(res.token);
-        setToken(res.token);
-      }
-      setUser(res.user);
-      localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
-      oneSignalService.syncUser(res.user);
+    setIsLoggingIn(true);
+    try {
+      // Clear previous user's cached draft and data
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('l2b_auth_login', { detail: res.user }));
+        try {
+          localStorage.removeItem('l2b_get_started_draft');
+          localStorage.removeItem('l2b_user_profile');
+          localStorage.removeItem('l2b_user_orders');
+          localStorage.removeItem('l2b_won_voucher');
+        } catch (e) {}
       }
-      toast.success(`Welcome back, ${res.user.name || 'User'}! 👋`);
-      return res.user;
+
+      const res = await api.post('/auth/login', { email, password });
+      if (res.success && res.user) {
+        setLoggedInUser(res.user);
+        if (res.token) {
+          api.setToken(res.token);
+          setToken(res.token);
+        }
+        setUser(res.user);
+        localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+        oneSignalService.syncUser(res.user);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('l2b_auth_login', { detail: res.user }));
+        }
+
+        // Brief cinematic delay for animated transition
+        await new Promise((resolve) => setTimeout(resolve, 600));
+
+        toast.success(`Welcome back, ${res.user.name || 'User'}! 👋`);
+        return res.user;
+      }
+      toast.error(res.message || 'Login failed');
+      throw new Error(res.message || 'Login failed');
+    } finally {
+      setTimeout(() => {
+        setIsLoggingIn(false);
+        setLoggedInUser(null);
+      }, 400);
     }
-    toast.error(res.message || 'Login failed');
-    throw new Error(res.message || 'Login failed');
   };
 
   const register = async (userData) => {
@@ -294,6 +309,8 @@ export function AuthProvider({ children }) {
         token,
         loading,
         isLoggingOut,
+        isLoggingIn,
+        loggedInUser,
         isAdmin,
         isAuthModalOpen,
         openAuthModal,

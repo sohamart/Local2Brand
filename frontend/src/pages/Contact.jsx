@@ -159,40 +159,40 @@ export default function Contact() {
                   </div>
                 </div>
 
-                {/* 2. Direct Calling Phone */}
-                {(settings.displayPhone || settings.supportPhone || settings.aiSettings?.adminShowableDetails?.contactPhone) && (
-                  <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 flex items-center justify-center shrink-0">
-                      <PhoneCall className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] text-slate-400 font-bold block">Direct Calling Line</span>
-                      <a
-                        href={`tel:${settings.displayPhone || settings.supportPhone || settings.aiSettings?.adminShowableDetails?.contactPhone || '+918710043923'}`}
-                        className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white hover:text-emerald-600 transition-colors"
-                      >
-                        {settings.displayPhone || settings.supportPhone || settings.aiSettings?.adminShowableDetails?.contactPhone || '+91 87100 43923'}
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. Direct WhatsApp Channel */}
+                {/* 2. Instant Voice Callback */}
                 <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 flex items-center justify-center shrink-0">
-                    <MessageSquare className="w-5 h-5 text-emerald-600" />
+                    <PhoneCall className="w-5 h-5" />
                   </div>
-                  <div className="min-w-0">
-                    <span className="text-[11px] text-slate-400 font-bold block">WhatsApp Business Desk</span>
-                    <a
-                      href={`https://wa.me/${(settings.whatsappNumber || settings.displayPhone || settings.aiSettings?.adminShowableDetails?.whatsappSupport || '918710043923').replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${settings.brandName || 'LOCAL2BRAND'}! I want to discuss a new website project.`)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline transition-colors flex items-center gap-1.5"
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-slate-400 font-bold block">Instant Voice Callback</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Active</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openCallbackModal()}
+                      className="mt-0.5 text-xs font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      <span>{settings.whatsappNumber || settings.displayPhone || settings.aiSettings?.adminShowableDetails?.whatsappSupport || '+91 87100 43923'}</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">Chat 💬</span>
-                    </a>
+                      <span>Request Immediate Callback (Within 15 Mins)</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. Direct VIP WhatsApp Support */}
+                <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 flex items-center justify-center shrink-0">
+                    <MessageSquare className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-slate-400 font-bold block">VIP WhatsApp Hotline</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">Client Console Only</span>
+                    </div>
+                    <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mt-0.5">
+                      Direct 1-on-1 WhatsApp chat is unlocked in your Client Console upon project verification.
+                    </span>
                   </div>
                 </div>
 
@@ -466,13 +466,14 @@ export default function Contact() {
                     <ExternalLink className="w-3 h-3" />
                   </a>
 
-                  <a
-                    href={`tel:${settings.displayPhone || settings.supportPhone || '+918710043923'}`}
-                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors border border-slate-200 dark:border-slate-700 shrink-0"
-                    title="Call Studio"
+                  <button
+                    type="button"
+                    onClick={() => openCallbackModal()}
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors border border-slate-200 dark:border-slate-700 shrink-0 cursor-pointer"
+                    title="Request Instant Callback"
                   >
                     <PhoneCall className="w-4 h-4" />
-                  </a>
+                  </button>
                 </div>
               </div>
 

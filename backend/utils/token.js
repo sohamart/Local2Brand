@@ -43,6 +43,7 @@ export const sendTokenResponse = (user, statusCode, res, message = 'Success') =>
       phone: user.phone || '',
       company: user.company || '',
       status: user.status || 'active',
+      vipWhatsappEnabled: Boolean(user.vipWhatsappEnabled),
       isEmailVerified: Boolean(user.isEmailVerified),
     },
   });

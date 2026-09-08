@@ -409,12 +409,17 @@ export const dataStore = {
     if (!email) return null;
     const cleanEmail = String(email).toLowerCase().trim();
 
-    await ensureDb();
+    await ensureDb().catch(() => {});
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
+        // 1. Direct index lookup (instant sub-millisecond)
+        let dbUser = await User.findOne({ email: cleanEmail }).select('+password +emailOtp +emailOtpExpires');
+        if (dbUser) return dbUser;
+
+        // 2. Escaped case-insensitive fallback if exact match wasn't found
         const escaped = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const dbUser = await User.findOne({ email: { $regex: new RegExp(`^${escaped}$`, 'i') } }).select('+password +emailOtp +emailOtpExpires');
+        dbUser = await User.findOne({ email: { $regex: new RegExp(`^${escaped}$`, 'i') } }).select('+password +emailOtp +emailOtpExpires');
         if (dbUser) return dbUser;
       } catch (err) {
         console.warn('MongoDB findUserByEmail notice:', err.message);
@@ -433,16 +438,16 @@ export const dataStore = {
     // Use last 10 digits for Indian & standard phone matching
     const standard10 = cleanDigits.slice(-10);
 
-    await ensureDb();
+    await ensureDb().catch(() => {});
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
-        const dbUser = await User.findOne({
-          $or: [
-            { phone: rawPhone },
-            { phone: { $regex: standard10, $options: 'i' } }
-          ]
-        }).select('+password +emailOtp +emailOtpExpires');
+        // 1. Exact match index lookup
+        let dbUser = await User.findOne({ phone: rawPhone }).select('+password +emailOtp +emailOtpExpires');
+        if (dbUser) return dbUser;
+
+        // 2. Regex match on last 10 digits
+        dbUser = await User.findOne({ phone: { $regex: standard10, $options: 'i' } }).select('+password +emailOtp +emailOtpExpires');
         if (dbUser) return dbUser;
       } catch (err) {
         console.warn('MongoDB findUserByPhone notice:', err.message);
@@ -474,7 +479,7 @@ export const dataStore = {
   async findUserById(id) {
     if (!id) return null;
     const cleanId = String(id).trim();
-    await ensureDb();
+    await ensureDb().catch(() => {});
     if (isDbConnected()) {
       try {
         const { User } = await import('../models/User.js');
@@ -482,21 +487,25 @@ export const dataStore = {
           const user = await User.findById(cleanId).select('-password');
           if (user) return user;
         }
-        const queryOr = [
-          { email: cleanId.toLowerCase() },
-          { email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim() },
-        ];
-        if (mongoose.Types.ObjectId.isValid(cleanId)) {
-          queryOr.unshift({ _id: cleanId });
+        if (cleanId.includes('@')) {
+          const userByEmail = await User.findOne({ email: cleanId.toLowerCase() }).select('-password');
+          if (userByEmail) return userByEmail;
         }
-        const userByQuery = await User.findOne({ $or: queryOr }).select('-password');
-        if (userByQuery) return userByQuery;
+        if (cleanId === 'admin_master_001' || cleanId === 'admin_default_id_001' || cleanId.toLowerCase().includes('admin')) {
+          const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
+          const userAdmin = await User.findOne({ email: adminEmail }).select('-password') || await User.findOne({ role: 'admin' }).select('-password');
+          if (userAdmin) return userAdmin;
+        }
       } catch (err) {
         console.warn('MongoDB findUserById fallback notice:', err.message);
       }
     }
     const users = readLocalStore('users') || [];
-    const user = users.find((u) => u && (String(u._id || u.id) === cleanId || (cleanId === 'admin_default_id_001' && u.role === 'admin')));
+    const user = users.find((u) => u && (
+      String(u._id || u.id) === cleanId ||
+      (cleanId.includes('@') && u.email && u.email.toLowerCase() === cleanId.toLowerCase()) ||
+      ((cleanId === 'admin_default_id_001' || cleanId === 'admin_master_001') && u.role === 'admin')
+    ));
     if (!user) return null;
     const { password, passwordHash, ...rest } = user;
     return rest;
@@ -576,6 +585,7 @@ export const dataStore = {
   },
 
   async updateUser(id, updates) {
+    if (!id) return null;
     const cleanId = String(id || '').trim();
     let mongoUpdated = null;
     await ensureDb().catch(() => {});
@@ -584,8 +594,9 @@ export const dataStore = {
         const { User } = await import('../models/User.js');
         if (mongoose.Types.ObjectId.isValid(cleanId)) {
           mongoUpdated = await User.findByIdAndUpdate(cleanId, { $set: updates }, { new: true }).lean();
-        }
-        if (!mongoUpdated && (cleanId === 'admin_master_001' || cleanId === 'admin_default_id_001' || cleanId.toLowerCase().includes('admin'))) {
+        } else if (cleanId.includes('@')) {
+          mongoUpdated = await User.findOneAndUpdate({ email: cleanId.toLowerCase() }, { $set: updates }, { new: true }).lean();
+        } else if (cleanId === 'admin_master_001' || cleanId === 'admin_default_id_001' || cleanId.toLowerCase().includes('admin')) {
           const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
           mongoUpdated = await User.findOneAndUpdate(
             { email: adminEmail },
@@ -602,30 +613,30 @@ export const dataStore = {
       }
     }
 
+    // ALWAYS sync local store file
+    const users = readLocalStore('users') || [];
+    const index = users.findIndex((u) => u && (
+      String(u._id || u.id) === cleanId ||
+      (cleanId.includes('@') && u.email && u.email.toLowerCase() === cleanId.toLowerCase()) ||
+      (mongoUpdated?.email && u.email && u.email.toLowerCase() === mongoUpdated.email.toLowerCase()) ||
+      ((cleanId === 'admin_master_001' || cleanId === 'admin_default_id_001') && u.role === 'admin')
+    ));
+
+    if (index !== -1) {
+      users[index] = { ...users[index], ...updates, updatedAt: new Date().toISOString() };
+      writeLocalStore('users', users);
+    }
+
     if (mongoUpdated) {
       const { passwordHash: _, password: __, ...safeUser } = mongoUpdated;
       return safeUser;
     }
 
-    const users = readLocalStore('users') || [];
-    const index = users.findIndex((u) => u && (String(u._id || u.id) === cleanId || (u.role === 'admin' && (cleanId === 'admin_master_001' || cleanId === 'admin_default_id_001'))));
-    if (index === -1) {
-      const adminUser = {
-        _id: cleanId || 'admin_master_001',
-        id: cleanId || 'admin_master_001',
-        name: updates.name || 'LOCAL2BRAND Master Admin',
-        email: (process.env.ADMIN_EMAIL || 'admin@local2brand.com').toLowerCase().trim(),
-        role: 'admin',
-        avatar: updates.avatar || '',
-        phone: updates.phone || '',
-        company: updates.company || '',
-        status: 'active',
-      };
-      users.push(adminUser);
-      return adminUser;
+    if (index !== -1) {
+      return users[index];
     }
-    users[index] = { ...users[index], ...updates, updatedAt: new Date().toISOString() };
-    return users[index];
+
+    return null;
   },
 
   async deleteUser(id) {

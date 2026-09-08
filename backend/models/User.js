@@ -50,6 +50,10 @@ const userSchema = new mongoose.Schema(
       enum: ['active', 'suspended'],
       default: 'active',
     },
+    vipWhatsappEnabled: {
+      type: Boolean,
+      default: false,
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,
@@ -60,6 +64,20 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
     emailOtpExpires: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+    pendingNewEmail: {
+      type: String,
+      default: '',
+    },
+    emailChangeOtp: {
+      type: String,
+      default: '',
+      select: false,
+    },
+    emailChangeOtpExpires: {
       type: Date,
       default: null,
       select: false,
