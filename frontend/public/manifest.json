@@ -1,16 +1,32 @@
 {
+  "id": "/",
   "short_name": "LOCAL2BRAND",
   "name": "LOCAL2BRAND — Web App",
+  "description": "LOCAL2BRAND Web App — Transform your local business into a global brand with sub-second speeds and 48-hour delivery.",
   "icons": [
     {
       "src": "/favicon.jpg",
       "type": "image/jpeg",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any"
     },
     {
       "src": "/favicon.jpg",
       "type": "image/jpeg",
-      "sizes": "512x512"
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512",
+      "purpose": "maskable"
     }
   ],
   "start_url": "/",
@@ -18,6 +34,5 @@
   "theme_color": "#7c3aed",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "scope": "/",
-  "description": "LOCAL2BRAND Web App — Transform your local business into a global brand with sub-second speeds and 48-hour delivery."
+  "scope": "/"
 }

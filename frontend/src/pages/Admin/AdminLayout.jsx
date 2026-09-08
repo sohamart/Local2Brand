@@ -283,35 +283,37 @@ export default function AdminLayout() {
 
         
         {/* Admin Topbar */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+        <header className="h-14 sm:h-16 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between sticky top-0 z-40">
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={() => setMobileSidebarOpen(true)}
-              className="p-2 rounded-xl text-slate-700 dark:text-slate-300 lg:hidden border border-slate-200 dark:border-slate-700"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-700 dark:text-slate-300 lg:hidden border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+              aria-label="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <span className="hidden sm:inline">LOCAL2BRAND</span>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 hidden sm:inline" />
-              <span className="text-purple-600 dark:text-purple-400 font-extrabold">Administration</span>
+            <div className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 truncate">
+              <span className="hidden md:inline">LOCAL2BRAND</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 hidden md:inline shrink-0" />
+              <span className="text-purple-600 dark:text-purple-400 font-extrabold truncate">Administration</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <NotificationBell />
             <ThemeToggle showLabel={false} />
             <Link
               to="/dashboard"
-              className="text-xs font-bold px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 transition-colors"
+              title="Switch to User Portal"
+              className="hidden sm:inline-flex text-xs font-bold px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
             >
               User Portal
             </Link>
 
             {/* Admin Top Avatar */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-              <div className="w-8 h-8 rounded-xl overflow-hidden shadow-xs border border-purple-500/40 bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs relative">
+            <div className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-slate-200 dark:border-slate-800">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl overflow-hidden shadow-xs border border-purple-500/40 bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs relative shrink-0">
                 {user?.avatar ? (
                   <img
                     key={user.avatar}
@@ -323,12 +325,12 @@ export default function AdminLayout() {
                     }}
                   />
                 ) : null}
-                <span className="absolute inset-0 flex items-center justify-center -z-10 font-bold">
+                <span className="absolute inset-0 flex items-center justify-center -z-10 font-bold text-xs">
                   {user?.name ? user.name[0].toUpperCase() : 'A'}
                 </span>
               </div>
-              <div className="hidden sm:block text-left">
-                <span className="text-xs font-black text-slate-900 dark:text-white block leading-none">{user.name}</span>
+              <div className="hidden md:block text-left">
+                <span className="text-xs font-black text-slate-900 dark:text-white block leading-none">{user?.name}</span>
                 <span className="text-[10px] text-purple-600 dark:text-purple-400 font-extrabold uppercase">Master Admin</span>
               </div>
             </div>
@@ -336,7 +338,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Important Updates & Live Sliding Marquee Ticker */}
-        <MarqueeTicker className="w-full max-w-full shrink-0 sticky top-16 z-30 shadow-2xs" />
+        <MarqueeTicker className="w-full max-w-full shrink-0 sticky top-14 sm:top-16 z-30 shadow-2xs" />
 
 
         {/* Viewport Render Outlet */}

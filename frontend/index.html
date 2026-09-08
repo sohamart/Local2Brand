@@ -26,8 +26,16 @@
     })();
   </script>
 
-  <!-- PWA Service Worker Registration for Instant Installation -->
+  <!-- PWA Service Worker & Global Install Prompt Capturer -->
   <script>
+    window.__deferredInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      window.__deferredInstallPrompt = e;
+      window.dispatchEvent(new CustomEvent('pwa-install-ready'));
+      console.log('L2B PWA: beforeinstallprompt captured successfully!');
+    });
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('/sw.js').then(
