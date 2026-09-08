@@ -167,8 +167,9 @@ export const uploadImage = async (req, res) => {
         const buffer = file.buffer;
         const mimetype = file.mimetype || 'image/jpeg';
         const isVideo = mimetype.startsWith('video/') || file.originalname?.match(/\.(mp4|webm|ogg|mov|mkv|avi)$/i);
-        const resourceType = isVideo ? 'video' : 'auto';
-        const targetFolder = isVideo ? 'local2brand_videos' : 'local2brand_assets';
+        const isRaw = Boolean(file.originalname?.match(/\.(apk|aab|ipa|zip|pdf)$/i) || mimetype === 'application/vnd.android.package-archive');
+        const resourceType = isVideo ? 'video' : isRaw ? 'raw' : 'auto';
+        const targetFolder = isVideo ? 'local2brand_videos' : isRaw ? 'local2brand_packages' : 'local2brand_assets';
 
         if (filePath) {
           tempFilesToDelete.add(filePath);

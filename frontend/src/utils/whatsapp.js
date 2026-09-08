@@ -4,6 +4,24 @@ import { siteConfig } from '../config/siteConfig';
  * Returns a strictly numeric phone number string for WhatsApp URLs
  */
 export function getSanitizedWhatsAppNumber() {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('l2b_cached_settings');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const dynamicNum =
+          parsed.whatsappNumber ||
+          parsed.displayPhone ||
+          parsed.supportPhone ||
+          parsed.aiSettings?.adminShowableDetails?.whatsappSupport ||
+          parsed.aiSettings?.adminShowableDetails?.contactPhone;
+        if (dynamicNum) {
+          const cleaned = String(dynamicNum).replace(/[^0-9]/g, '');
+          if (cleaned) return cleaned;
+        }
+      }
+    } catch (e) {}
+  }
   const envNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
   if (envNumber) {
     return String(envNumber).replace(/[^0-9]/g, '');

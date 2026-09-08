@@ -29,7 +29,18 @@ import {
   Bell,
   ArrowRight,
   Flame,
-  Zap
+  Zap,
+  Smartphone,
+  Download,
+  ExternalLink,
+  QrCode,
+  Eye,
+  FileCode,
+  Share2,
+  Search,
+  Filter,
+  Send,
+  Copy
 } from 'lucide-react';
 
 
@@ -64,6 +75,12 @@ export default function AdminSettings() {
     domain: settings.domain || 'local2brand.com',
     tagline: settings.tagline || 'Build Local. Think Global.',
     supportEmail: settings.supportEmail || 'local2brand.contact@gmail.com',
+    displayPhone: settings.displayPhone || settings.aiSettings?.adminShowableDetails?.contactPhone || '+91 87100 43923',
+    whatsappNumber: settings.whatsappNumber || settings.aiSettings?.adminShowableDetails?.whatsappSupport || '+91 87100 43923',
+    officeLocation: settings.officeLocation || settings.aiSettings?.adminShowableDetails?.officeLocation || 'Kolkata & Bangalore, India',
+    workingHours: settings.workingHours || settings.aiSettings?.adminShowableDetails?.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST',
+    googleMapEmbedUrl: settings.googleMapEmbedUrl || '',
+    showMapOnContactPage: settings.showMapOnContactPage ?? true,
     turnaroundTime: settings.turnaroundTime || '48 Hours',
     startingPriceUsd: settings.startingPriceUsd || '$399',
     startingPriceInr: settings.startingPriceInr || '₹9,999',
@@ -130,12 +147,121 @@ export default function AdminSettings() {
         instagramHandle: '@local2brand',
       },
     },
+    appConfig: settings.appConfig || {
+      enabled: true,
+      isComingSoon: false,
+      showComingSoonPopup: false,
+      comingSoonTitle: 'LOCAL2BRAND Mobile is Coming Soon! 🚀',
+      comingSoonMessage: 'Our mobile engineers are fine-tuning the native Android & iOS experience. Pre-register your interest for priority early beta access.',
+      appName: 'LOCAL2BRAND Studio',
+      appSubtitle: 'Official Companion & Client Portal App',
+      appDescription: 'Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates straight to your mobile device.',
+      version: 'v2.4.0',
+      fileSize: '18.4 MB',
+      minAndroid: 'Android 8.0+ (Oreo or newer)',
+      minIos: 'iOS 15.0+ (iPhone / iPad)',
+      packageName: 'com.local2brand.app',
+      apkDownloadUrl: '',
+      playStoreUrl: '',
+      appStoreUrl: '',
+      indusStoreUrl: '',
+      qrCodeUrl: '',
+      screenshots: [
+        {
+          url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
+          title: 'Live Sprint Tracker',
+          caption: 'Real-time project milestone progress and milestone tracking'
+        },
+        {
+          url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
+          title: 'Demo Explorer',
+          caption: 'Browse 50+ lightning-fast web templates and live preview'
+        },
+        {
+          url: 'https://images.unsplash.com/photo-1555774698-0b77e0d5fac6?auto=format&fit=crop&w=800&q=80',
+          title: 'Direct Chat & Support',
+          caption: '24/7 direct communication with dedicated design architect'
+        },
+        {
+          url: 'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?auto=format&fit=crop&w=800&q=80',
+          title: 'Instant Push Alerts',
+          caption: 'Get notified when your design mockup or sprint is approved'
+        }
+      ],
+      features: [
+        'Live sprint & build milestone tracking in real-time',
+        'Direct founder & project manager consultation channel',
+        'Interactive 50+ live demo template preview dock',
+        'Instant push alerts on order delivery & revisions',
+        'One-tap invoice downloads and GST tax receipts',
+        'Lightweight APK under 20MB with zero background drain'
+      ],
+      changelog: [
+        {
+          version: 'v2.4.0',
+          date: 'September 2025',
+          notes: [
+            'Added live order tracking integration with push updates',
+            'Enhanced 60FPS fluid demo template previewer',
+            'Added Indus Appstore India direct install support'
+          ]
+        }
+      ]
+    }
   });
 
   const [loading, setLoading] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingApk, setUploadingApk] = useState(false);
+  const [uploadingQr, setUploadingQr] = useState(false);
+  const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
+  const [newScreenshotUrl, setNewScreenshotUrl] = useState('');
+  const [newScreenshotTitle, setNewScreenshotTitle] = useState('');
+  const [newScreenshotCaption, setNewScreenshotCaption] = useState('');
+  const [newFeatureText, setNewFeatureText] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Live App Waitlist & Pre-Order Analytics State
+  const [appWaitlistLeads, setAppWaitlistLeads] = useState([]);
+  const [loadingWaitlist, setLoadingWaitlist] = useState(false);
+  const [waitlistSearch, setWaitlistSearch] = useState('');
+  const [waitlistPlatformFilter, setWaitlistPlatformFilter] = useState('all');
+
+  const fetchAppWaitlistLeads = async () => {
+    try {
+      setLoadingWaitlist(true);
+      const res = await api.get('/queries?status=all');
+      if (res?.success && Array.isArray(res.leads)) {
+        const filtered = res.leads.filter((l) => {
+          const s = (l.service || '').toLowerCase();
+          const ind = (l.industry || '').toLowerCase();
+          const req = (l.requirements || '').toLowerCase();
+          const bud = (l.budget || '').toLowerCase();
+          return (
+            s.includes('mobile app') ||
+            s.includes('beta') ||
+            s.includes('android') ||
+            s.includes('ios') ||
+            s.includes('apk') ||
+            ind.includes('mobile app') ||
+            ind.includes('waitlist') ||
+            req.includes('early access') ||
+            bud.includes('pre-launch')
+          );
+        });
+        setAppWaitlistLeads(filtered);
+      }
+    } catch (err) {
+      console.warn('Failed to load app waitlist applicants:', err);
+    } finally {
+      setLoadingWaitlist(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAppWaitlistLeads();
+  }, []);
 
   useEffect(() => {
     if (settings) {
@@ -156,6 +282,38 @@ export default function AdminSettings() {
         settings.aiSettings.adminShowableDetails.founders.length > 0
           ? settings.aiSettings.adminShowableDetails.founders
           : defaultFounders;
+
+      const defaultScreenshots = [
+        {
+          url: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
+          title: 'Live Sprint Tracker',
+          caption: 'Real-time project milestone progress and milestone tracking'
+        },
+        {
+          url: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
+          title: 'Demo Explorer',
+          caption: 'Browse 50+ lightning-fast web templates and live preview'
+        },
+        {
+          url: 'https://images.unsplash.com/photo-1555774698-0b77e0d5fac6?auto=format&fit=crop&w=800&q=80',
+          title: 'Direct Chat & Support',
+          caption: '24/7 direct communication with dedicated design architect'
+        },
+        {
+          url: 'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?auto=format&fit=crop&w=800&q=80',
+          title: 'Instant Push Alerts',
+          caption: 'Get notified when your design mockup or sprint is approved'
+        }
+      ];
+
+      const defaultFeatures = [
+        'Live sprint & build milestone tracking in real-time',
+        'Direct founder & project manager consultation channel',
+        'Interactive 50+ live demo template preview dock',
+        'Instant push alerts on order delivery & revisions',
+        'One-tap invoice downloads and GST tax receipts',
+        'Lightweight APK under 20MB with zero background drain'
+      ];
 
       setFormData((prev) => ({
         ...prev,
@@ -178,12 +336,86 @@ export default function AdminSettings() {
             instagramHandle: settings.aiSettings?.adminShowableDetails?.instagramHandle || settings.socialLinks?.instagramHandle || '',
           },
         },
+        appConfig: {
+          enabled: settings.appConfig?.enabled ?? true,
+          isComingSoon: settings.appConfig?.isComingSoon ?? false,
+          showComingSoonPopup: settings.appConfig?.showComingSoonPopup ?? false,
+          comingSoonTitle: settings.appConfig?.comingSoonTitle || 'LOCAL2BRAND Mobile is Coming Soon! 🚀',
+          comingSoonMessage: settings.appConfig?.comingSoonMessage || 'Our mobile engineers are fine-tuning the native Android & iOS experience. Pre-register your interest for priority early beta access.',
+          appName: settings.appConfig?.appName || 'LOCAL2BRAND Studio',
+          appSubtitle: settings.appConfig?.appSubtitle || 'Official Companion & Client Portal App',
+          appDescription: settings.appConfig?.appDescription || 'Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates straight to your mobile device.',
+          version: settings.appConfig?.version || 'v2.4.0',
+          fileSize: settings.appConfig?.fileSize || '18.4 MB',
+          minAndroid: settings.appConfig?.minAndroid || 'Android 8.0+ (Oreo or newer)',
+          minIos: settings.appConfig?.minIos || 'iOS 15.0+ (iPhone / iPad)',
+          packageName: settings.appConfig?.packageName || 'com.local2brand.app',
+          apkDownloadUrl: settings.appConfig?.apkDownloadUrl || '',
+          playStoreUrl: settings.appConfig?.playStoreUrl || '',
+          appStoreUrl: settings.appConfig?.appStoreUrl || '',
+          indusStoreUrl: settings.appConfig?.indusStoreUrl || '',
+          qrCodeUrl: settings.appConfig?.qrCodeUrl || '',
+          screenshots: Array.isArray(settings.appConfig?.screenshots) && settings.appConfig.screenshots.length > 0
+            ? settings.appConfig.screenshots
+            : (prev.appConfig?.screenshots || defaultScreenshots),
+          features: Array.isArray(settings.appConfig?.features) && settings.appConfig.features.length > 0
+            ? settings.appConfig.features
+            : (prev.appConfig?.features || defaultFeatures),
+          changelog: Array.isArray(settings.appConfig?.changelog) && settings.appConfig.changelog.length > 0
+            ? settings.appConfig.changelog
+            : (prev.appConfig?.changelog || [])
+        }
       }));
     }
   }, [settings]);
 
   const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+      if (field === 'supportEmail') {
+        updated.aiSettings = {
+          ...(prev.aiSettings || {}),
+          adminShowableDetails: {
+            ...(prev.aiSettings?.adminShowableDetails || {}),
+            contactEmail: value,
+          },
+        };
+      } else if (field === 'displayPhone') {
+        updated.aiSettings = {
+          ...(prev.aiSettings || {}),
+          adminShowableDetails: {
+            ...(prev.aiSettings?.adminShowableDetails || {}),
+            contactPhone: value,
+          },
+        };
+      } else if (field === 'whatsappNumber' || field === 'whatsappSupport') {
+        updated.whatsappNumber = value;
+        updated.aiSettings = {
+          ...(prev.aiSettings || {}),
+          adminShowableDetails: {
+            ...(prev.aiSettings?.adminShowableDetails || {}),
+            whatsappSupport: value,
+          },
+        };
+      } else if (field === 'officeLocation') {
+        updated.aiSettings = {
+          ...(prev.aiSettings || {}),
+          adminShowableDetails: {
+            ...(prev.aiSettings?.adminShowableDetails || {}),
+            officeLocation: value,
+          },
+        };
+      } else if (field === 'workingHours') {
+        updated.aiSettings = {
+          ...(prev.aiSettings || {}),
+          adminShowableDetails: {
+            ...(prev.aiSettings?.adminShowableDetails || {}),
+            workingHours: value,
+          },
+        };
+      }
+      return updated;
+    });
   };
 
   const handleNestedChange = (parent, field, value) => {
@@ -197,16 +429,24 @@ export default function AdminSettings() {
   };
 
   const handleAiAdminDetailsChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      aiSettings: {
-        ...(prev.aiSettings || {}),
-        adminShowableDetails: {
-          ...(prev.aiSettings?.adminShowableDetails || {}),
-          [field]: value,
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        aiSettings: {
+          ...(prev.aiSettings || {}),
+          adminShowableDetails: {
+            ...(prev.aiSettings?.adminShowableDetails || {}),
+            [field]: value,
+          },
         },
-      },
-    }));
+      };
+      if (field === 'contactEmail') updated.supportEmail = value;
+      if (field === 'contactPhone') updated.displayPhone = value;
+      if (field === 'whatsappSupport') updated.whatsappNumber = value;
+      if (field === 'officeLocation') updated.officeLocation = value;
+      if (field === 'workingHours') updated.workingHours = value;
+      return updated;
+    });
   };
 
   const handleAddFounder = () => {
@@ -325,6 +565,243 @@ export default function AdminSettings() {
     } finally {
       setUploadingBanner(false);
     }
+  };
+
+  const handleAppConfigChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      appConfig: {
+        ...(prev.appConfig || {}),
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleApkFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error('APK file size must be under 200MB');
+      return;
+    }
+
+    setUploadingApk(true);
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+    const toastId = toast.loading(`Uploading Android APK binary (${file.name}, ${sizeMb} MB)... ⏳`);
+
+    try {
+      const data = new FormData();
+      data.append('file', file);
+
+      const res = await api.post('/upload', data);
+      if (res && res.success && res.url) {
+        handleAppConfigChange('apkDownloadUrl', res.url);
+        handleAppConfigChange('fileSize', `${sizeMb} MB`);
+        toast.update(toastId, {
+          render: `APK binary uploaded successfully! (${sizeMb} MB) 📱`,
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000,
+        });
+      } else {
+        throw new Error(res?.message || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('APK upload error:', err);
+      toast.update(toastId, {
+        render: err.response?.data?.message || err.message || 'APK upload failed. You can also paste direct URL.',
+        type: 'error',
+        isLoading: false,
+        autoClose: 4000,
+      });
+    } finally {
+      setUploadingApk(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleQrUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('QR Code image size must be under 10MB');
+      return;
+    }
+
+    setUploadingQr(true);
+    const toastId = toast.loading(`Uploading custom QR Code image (${file.name})... ⏳`);
+
+    try {
+      const data = new FormData();
+      data.append('file', file);
+
+      const res = await api.post('/upload', data);
+      if (res && res.success && res.url) {
+        handleAppConfigChange('qrCodeUrl', res.url);
+        toast.update(toastId, {
+          render: 'Custom QR Code uploaded & linked successfully! 📷',
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000,
+        });
+      } else {
+        throw new Error(res?.message || 'Upload failed');
+      }
+    } catch (err) {
+      console.error('QR upload error:', err);
+      toast.update(toastId, {
+        render: err.response?.data?.message || err.message || 'QR Code upload failed.',
+        type: 'error',
+        isLoading: false,
+        autoClose: 4000,
+      });
+    } finally {
+      setUploadingQr(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleScreenshotUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Screenshot size must be under 10MB');
+      return;
+    }
+
+    setUploadingScreenshot(true);
+    const toastId = toast.loading(`Uploading screenshot (${file.name})... ⏳`);
+
+    try {
+      const data = new FormData();
+      data.append('file', file);
+
+      const res = await api.post('/upload', data);
+      if (res && res.success && res.url) {
+        const newScreenshot = {
+          url: res.url,
+          title: newScreenshotTitle.trim() || `App Preview ${(formData.appConfig?.screenshots?.length || 0) + 1}`,
+          caption: newScreenshotCaption.trim() || 'Interactive mobile interface showcase'
+        };
+        setFormData((prev) => ({
+          ...prev,
+          appConfig: {
+            ...(prev.appConfig || {}),
+            screenshots: [...(prev.appConfig?.screenshots || []), newScreenshot]
+          }
+        }));
+        setNewScreenshotTitle('');
+        setNewScreenshotCaption('');
+        setNewScreenshotUrl('');
+        toast.update(toastId, {
+          render: 'Screenshot uploaded & added to showcase! 🖼️',
+          type: 'success',
+          isLoading: false,
+          autoClose: 2500,
+        });
+      } else {
+        throw new Error(res?.message || 'Upload failed');
+      }
+    } catch (err) {
+      toast.update(toastId, {
+        render: err.response?.data?.message || err.message || 'Screenshot upload failed',
+        type: 'error',
+        isLoading: false,
+        autoClose: 3500,
+      });
+    } finally {
+      setUploadingScreenshot(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleAddScreenshotByUrl = () => {
+    if (!newScreenshotUrl.trim()) {
+      toast.warning('Please enter an image URL');
+      return;
+    }
+    const newScreenshot = {
+      url: newScreenshotUrl.trim(),
+      title: newScreenshotTitle.trim() || `App Preview ${(formData.appConfig?.screenshots?.length || 0) + 1}`,
+      caption: newScreenshotCaption.trim() || 'Interactive mobile interface showcase'
+    };
+    setFormData((prev) => ({
+      ...prev,
+      appConfig: {
+        ...(prev.appConfig || {}),
+        screenshots: [...(prev.appConfig?.screenshots || []), newScreenshot]
+      }
+    }));
+    setNewScreenshotUrl('');
+    setNewScreenshotTitle('');
+    setNewScreenshotCaption('');
+    toast.success('Screenshot added to gallery! 📸');
+  };
+
+  const handleRemoveScreenshot = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      appConfig: {
+        ...(prev.appConfig || {}),
+        screenshots: (prev.appConfig?.screenshots || []).filter((_, i) => i !== index)
+      }
+    }));
+    toast.info('Screenshot removed');
+  };
+
+  const handleUpdateScreenshot = (index, field, value) => {
+    setFormData((prev) => {
+      const current = [...(prev.appConfig?.screenshots || [])];
+      if (current[index]) {
+        current[index] = { ...current[index], [field]: value };
+      }
+      return {
+        ...prev,
+        appConfig: {
+          ...(prev.appConfig || {}),
+          screenshots: current
+        }
+      };
+    });
+  };
+
+  const handleAddFeature = () => {
+    if (!newFeatureText.trim()) return;
+    setFormData((prev) => ({
+      ...prev,
+      appConfig: {
+        ...(prev.appConfig || {}),
+        features: [...(prev.appConfig?.features || []), newFeatureText.trim()]
+      }
+    }));
+    setNewFeatureText('');
+  };
+
+  const handleRemoveFeature = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      appConfig: {
+        ...(prev.appConfig || {}),
+        features: (prev.appConfig?.features || []).filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const handleUpdateFeature = (index, value) => {
+    setFormData((prev) => {
+      const current = [...(prev.appConfig?.features || [])];
+      current[index] = value;
+      return {
+        ...prev,
+        appConfig: {
+          ...(prev.appConfig || {}),
+          features: current
+        }
+      };
+    });
   };
 
   const [savedRecently, setSavedRecently] = useState(false);
@@ -448,7 +925,7 @@ export default function AdminSettings() {
               <span>Brand Identity & Contact</span>
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
               <div>
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Brand Name</label>
                 <input
@@ -480,14 +957,187 @@ export default function AdminSettings() {
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Support Email</label>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                  <Mail className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Support Email</span>
+                </label>
                 <input
                   type="email"
                   value={formData.supportEmail}
                   onChange={(e) => handleChange('supportEmail', e.target.value)}
+                  placeholder="local2brand.contact@gmail.com"
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                 />
               </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Public Calling Phone</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.displayPhone || ''}
+                  onChange={(e) => handleChange('displayPhone', e.target.value)}
+                  placeholder="+91 87100 43923"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>WhatsApp Business Number</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.whatsappNumber || ''}
+                  onChange={(e) => handleChange('whatsappNumber', e.target.value)}
+                  placeholder="+91 87100 43923"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Operating Hubs / Address</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.officeLocation || ''}
+                  onChange={(e) => handleChange('officeLocation', e.target.value)}
+                  placeholder="Kolkata & Bangalore, India"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+
+                <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Support Working Hours</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.workingHours || ''}
+                  onChange={(e) => handleChange('workingHours', e.target.value)}
+                  placeholder="Monday - Saturday: 10:00 AM - 8:00 PM IST"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                />
+              </div>
+            </div>
+
+            {/* Google Maps Live Embed & Location Section */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold text-xs">
+                    🗺️
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>Interactive Google Map Location (Contact Page)</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Embed live Google Map iframe or location search query on the public Contact page.
+                    </p>
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={formData.showMapOnContactPage ?? true}
+                    onChange={(e) => handleChange('showMapOnContactPage', e.target.checked)}
+                    className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {formData.showMapOnContactPage ? '🟢 Map Visible' : '⚪ Map Hidden'}
+                  </span>
+                </label>
+              </div>
+
+              {formData.showMapOnContactPage && (
+                <div className="space-y-3 pt-1 text-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-slate-700 dark:text-slate-300">
+                        Google Map Embed URL (Auto-syncs with Address):
+                      </label>
+                      <div className="flex items-center gap-1 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => handleChange('googleMapEmbedUrl', '')}
+                          className="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 font-bold cursor-pointer flex items-center gap-1"
+                          title="Reset to automatically follow Address field above"
+                        >
+                          <span>🔄 Live Auto-Address Mode</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleChange('officeLocation', 'Kolkata, West Bengal, India');
+                            handleChange('googleMapEmbedUrl', '');
+                          }}
+                          className="px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 hover:bg-purple-100 font-bold cursor-pointer"
+                        >
+                          Kolkata
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleChange('officeLocation', 'Bangalore, Karnataka, India');
+                            handleChange('googleMapEmbedUrl', '');
+                          }}
+                          className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 hover:bg-blue-100 font-bold cursor-pointer"
+                        >
+                          Bangalore
+                        </button>
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      value={formData.googleMapEmbedUrl || ''}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        if (val.includes('<iframe') && val.includes('src="')) {
+                          const match = val.match(/src="([^"]+)"/);
+                          if (match && match[1]) val = match[1];
+                        }
+                        handleChange('googleMapEmbedUrl', val);
+                      }}
+                      placeholder={`Leave blank to auto-track Address (${formData.officeLocation || 'Kolkata & Bangalore, India'}), or paste custom embed link`}
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono text-[11px]"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
+                      <span>⚡ <strong>Live Dynamic Mode:</strong> Whenever you change the <em>Operating Hubs / Address</em> above, this map updates its pinned location automatically in real-time.</span>
+                    </p>
+                  </div>
+
+                  {/* Live Map Preview Container */}
+                  <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-950 h-56 shadow-inner">
+                    <iframe
+                      title="Google Map Location Preview"
+                      src={
+                        formData.googleMapEmbedUrl && formData.googleMapEmbedUrl.trim().length > 0
+                          ? formData.googleMapEmbedUrl
+                          : `https://maps.google.com/maps?q=${encodeURIComponent(formData.officeLocation || 'Kolkata & Bangalore, India')}&t=&z=14&ie=UTF8&iwloc=&output=embed`
+                      }
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      className="w-full h-full"
+                    />
+                    <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>Live Location: {formData.officeLocation || 'Kolkata, India'}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1790,6 +2440,961 @@ export default function AdminSettings() {
             </div>
           </div>
 
+          {/* Section 8: Mobile App & Android APK Distribution Hub */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            
+            {/* Header & Mode Toggles */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-4">
+              <div>
+                <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-purple-600" />
+                  <span>📱 Mobile App &amp; APK Distribution Center</span>
+                </h2>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Manage Android APK binary releases, direct downloads, Indus Appstore 🇮🇳 / Play Store / Apple links, screenshots, and pre-launch coming soon waitlist modal.
+                </p>
+              </div>
+
+              {/* Mutually Exclusive Mode Selector */}
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleAppConfigChange('isComingSoon', false);
+                    handleAppConfigChange('enabled', true);
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                    !formData.appConfig?.isComingSoon && formData.appConfig?.enabled !== false
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${!formData.appConfig?.isComingSoon ? 'bg-emerald-300 animate-pulse' : 'bg-slate-400'}`} />
+                  <span>🟢 Live App Page (Active)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleAppConfigChange('isComingSoon', true);
+                    handleAppConfigChange('enabled', true);
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                    formData.appConfig?.isComingSoon
+                      ? 'bg-amber-600 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${formData.appConfig?.isComingSoon ? 'bg-amber-300 animate-pulse' : 'bg-slate-400'}`} />
+                  <span>🚧 Coming Soon Mode</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Preview Badge & Direct Link */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-amber-500/10 border border-purple-200/70 dark:border-purple-800/60">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                  📱
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>Public Showcase URL:</span>
+                    <a
+                      href="/app"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-purple-600 dark:text-purple-400 underline font-mono flex items-center gap-1 hover:text-purple-700"
+                    >
+                      <span>/app (and /apk, /download)</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Accessible directly via Navbar &quot;More ▾&quot; dropdown and mobile navigation menu.
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                  formData.appConfig?.isComingSoon
+                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                }`}>
+                  {formData.appConfig?.isComingSoon ? '🚧 Pre-Launch State' : '🟢 Live APK Active'}
+                </span>
+              </div>
+            </div>
+
+            {/* SUBSECTION 1: APP IDENTITY & TECH METADATA */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                <FileCode className="w-4 h-4 text-purple-600" />
+                <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  1. App Identity &amp; Package Specifications
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Application Display Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.appName || ''}
+                    onChange={(e) => handleAppConfigChange('appName', e.target.value)}
+                    placeholder="e.g. LOCAL2BRAND Studio"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    App Subtitle / Badge
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.appSubtitle || ''}
+                    onChange={(e) => handleAppConfigChange('appSubtitle', e.target.value)}
+                    placeholder="e.g. Official Companion & Client Portal App"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Release Version
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.version || ''}
+                    onChange={(e) => handleAppConfigChange('version', e.target.value)}
+                    placeholder="e.g. v2.4.0"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Package ID / Bundle Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.packageName || ''}
+                    onChange={(e) => handleAppConfigChange('packageName', e.target.value)}
+                    placeholder="e.g. com.local2brand.app"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    APK File Size
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.fileSize || ''}
+                    onChange={(e) => handleAppConfigChange('fileSize', e.target.value)}
+                    placeholder="e.g. 18.4 MB"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Min Android OS Compatibility
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.minAndroid || ''}
+                    onChange={(e) => handleAppConfigChange('minAndroid', e.target.value)}
+                    placeholder="Android 8.0+ (Oreo or newer)"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Min iOS Version Compatibility
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.minIos || ''}
+                    onChange={(e) => handleAppConfigChange('minIos', e.target.value)}
+                    placeholder="iOS 15.0+ (iPhone / iPad)"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs">
+                  Full Application Description &amp; Overview
+                </label>
+                <textarea
+                  rows={3}
+                  value={formData.appConfig?.appDescription || ''}
+                  onChange={(e) => handleAppConfigChange('appDescription', e.target.value)}
+                  placeholder="Describe your mobile app features, live milestone tracking, real-time push alerts, and direct founder chat..."
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
+                />
+              </div>
+            </div>
+
+            {/* SUBSECTION 2: DIRECT APK BINARY & DOWNLOAD FILE */}
+            <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                <Download className="w-4 h-4 text-emerald-600" />
+                <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  2. Direct Android APK File Upload &amp; Download Source
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>Direct Binary Upload (.apk, .aab, .zip)</span>
+                      {formData.appConfig?.apkDownloadUrl && (
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-bold">
+                          ✓ File Attached
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Upload your compiled Android APK binary directly to server storage for one-tap client download.
+                    </p>
+                  </div>
+
+                  <label className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                    uploadingApk
+                      ? 'bg-purple-600 text-white cursor-wait'
+                      : 'bg-purple-600 hover:bg-purple-700 text-white cursor-pointer shadow-md'
+                  }`}>
+                    {uploadingApk ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    <span>{uploadingApk ? 'Uploading APK binary...' : 'Upload APK File'}</span>
+                    <input
+                      type="file"
+                      accept=".apk,.aab,.zip,application/vnd.android.package-archive"
+                      onChange={handleApkFileUpload}
+                      disabled={uploadingApk}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs">
+                    Direct APK Download Link (Self-Hosted URL or Cloud CDN)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.apkDownloadUrl || ''}
+                    onChange={(e) => handleAppConfigChange('apkDownloadUrl', e.target.value)}
+                    placeholder="https://local2brand.com/uploads/local2brand-v2.4.0.apk"
+                    className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:outline-purple-500"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    If empty, the download button will show &quot;Coming Soon&quot; or launch the beta waitlist modal.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* SUBSECTION 3: APP STORE LINKS & INDIA INTEGRATIONS */}
+            <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-indigo-600" />
+                  <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    3. App Store Integrations (Indus Appstore 🇮🇳, Google Play, Apple App Store)
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
+                  Smart Auto-Fallback
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200 space-y-1">
+                <div className="font-bold flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span>Smart Store Link Behavior</span>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                  If you leave any store link blank, the button on the live download page will automatically show <strong>&quot;Coming Soon / In Review&quot;</strong> without breaking or throwing 404 errors!
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                    <span>🇮🇳 Indus Appstore India Link</span>
+                    <span className="text-[9px] text-amber-600 font-bold">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.indusStoreUrl || ''}
+                    onChange={(e) => handleAppConfigChange('indusStoreUrl', e.target.value)}
+                    placeholder="https://indusappstore.com/app/com.local2brand.app"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                    <span>Google Play Store URL</span>
+                    <span className="text-[9px] text-purple-600 font-bold">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.playStoreUrl || ''}
+                    onChange={(e) => handleAppConfigChange('playStoreUrl', e.target.value)}
+                    placeholder="https://play.google.com/store/apps/details?id=com.local2brand.app"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                    <span>Apple App Store (iOS) URL</span>
+                    <span className="text-[9px] text-slate-500 font-bold">(Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.appStoreUrl || ''}
+                    onChange={(e) => handleAppConfigChange('appStoreUrl', e.target.value)}
+                    placeholder="https://apps.apple.com/app/local2brand/id123456789"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SUBSECTION 4: SMART QR CODE GENERATION & CUSTOM UPLOADER */}
+            <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <QrCode className="w-4 h-4 text-purple-600" />
+                  <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    4. Smart Mobile QR Code Scanner &amp; Image Uploader
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-800">
+                  Auto-Vector Sync &amp; Custom Upload
+                </span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  
+                  {/* QR Preview Box */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-24 h-24 p-2 rounded-2xl bg-white border-2 border-purple-500/30 shadow-md shrink-0 flex items-center justify-center relative group">
+                      <img
+                        src={
+                          formData.appConfig?.qrCodeUrl ||
+                          `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(
+                            formData.appConfig?.apkDownloadUrl || 'https://local2brand.com/app'
+                          )}&color=6b21a8&bgcolor=ffffff&qzone=1`
+                        }
+                        alt="Mobile QR Code Preview"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">
+                          {formData.appConfig?.qrCodeUrl ? 'Custom QR Code Active' : 'Dynamic Auto-Generated QR'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-black bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                          {formData.appConfig?.qrCodeUrl ? 'Custom Image' : 'Live Dynamic'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm">
+                        Scans on the live <strong>/app</strong> page will directly download the APK binary or open the mobile client portal.
+                      </p>
+                      
+                      {formData.appConfig?.qrCodeUrl && (
+                        <button
+                          type="button"
+                          onClick={() => handleAppConfigChange('qrCodeUrl', '')}
+                          className="text-[11px] text-rose-600 font-bold hover:underline flex items-center gap-1 cursor-pointer pt-0.5"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Reset to Dynamic Auto-Generated QR</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Upload Custom QR Image File Button */}
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-start sm:justify-end">
+                    <label className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shrink-0 ${
+                      uploadingQr
+                        ? 'bg-purple-600 text-white cursor-wait'
+                        : 'bg-purple-600 hover:bg-purple-700 text-white shadow-md'
+                    }`}>
+                      {uploadingQr ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                      <span>{uploadingQr ? 'Uploading QR...' : 'Upload Custom QR Image'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleQrUpload}
+                        disabled={uploadingQr}
+                        className="hidden"
+                      />
+                    </label>
+
+                    <a
+                      href={
+                        formData.appConfig?.qrCodeUrl ||
+                        `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
+                          formData.appConfig?.apkDownloadUrl || 'https://local2brand.com/app'
+                        )}&color=6b21a8&bgcolor=ffffff&qzone=1`
+                      }
+                      download="local2brand_app_qrcode.png"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                      title="Download PNG for Print & Social Media"
+                    >
+                      <Download className="w-3.5 h-3.5 text-purple-600" />
+                      <span>Download PNG</span>
+                    </a>
+                  </div>
+
+                </div>
+
+                {/* Custom Image URL fallback input */}
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-xs">
+                    Custom QR Code Image URL (Optional):
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.qrCodeUrl || ''}
+                    onChange={(e) => handleAppConfigChange('qrCodeUrl', e.target.value)}
+                    placeholder="https://example.com/custom_qr.png (Leave blank to use live auto-generator)"
+                    className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:outline-purple-500"
+                  />
+                </div>
+
+              </div>
+            </div>
+
+            {/* SUBSECTION 5: PRE-LAUNCH COMING SOON MESSAGING */}
+            <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                <Flame className="w-4 h-4 text-amber-500" />
+                <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  5. Pre-Launch &amp; Beta Waitlist Modal Customization
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Waitlist Modal Headline
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.comingSoonTitle || ''}
+                    onChange={(e) => handleAppConfigChange('comingSoonTitle', e.target.value)}
+                    placeholder="LOCAL2BRAND Mobile is Coming Soon! 🚀"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Waitlist Modal Subtitle / Invitation Message
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appConfig?.comingSoonMessage || ''}
+                    onChange={(e) => handleAppConfigChange('comingSoonMessage', e.target.value)}
+                    placeholder="Our mobile engineers are fine-tuning the native Android experience. Pre-register for priority early access."
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* SUBSECTION 6: INTERACTIVE SCREENSHOT GALLERY MANAGER */}
+            <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4 text-purple-600" />
+                  <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    6. Interactive Screenshot Gallery ({formData.appConfig?.screenshots?.length || 0})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all ${
+                    uploadingScreenshot
+                      ? 'bg-purple-600 text-white cursor-wait'
+                      : 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 hover:bg-purple-200 border border-purple-200 dark:border-purple-800 cursor-pointer'
+                  }`}>
+                    {uploadingScreenshot ? (
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Upload className="w-3.5 h-3.5" />
+                    )}
+                    <span>{uploadingScreenshot ? 'Uploading...' : 'Upload Image File'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleScreenshotUpload}
+                      disabled={uploadingScreenshot}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Add screenshot by custom URL input row */}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
+                  Add Screenshot by Image URL / Web Link:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+                  <input
+                    type="text"
+                    value={newScreenshotUrl}
+                    onChange={(e) => setNewScreenshotUrl(e.target.value)}
+                    placeholder="https://example.com/screenshot.jpg"
+                    className="sm:col-span-2 p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                  />
+                  <input
+                    type="text"
+                    value={newScreenshotTitle}
+                    onChange={(e) => setNewScreenshotTitle(e.target.value)}
+                    placeholder="Title (e.g. Sprint Tracker)"
+                    className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddScreenshotByUrl}
+                    className="px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add to Showcase</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Grid of Current Screenshots */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {(formData.appConfig?.screenshots || []).map((sc, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 shadow-sm space-y-2 relative group"
+                  >
+                    <div className="h-36 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 relative border border-slate-200 dark:border-slate-700">
+                      <img
+                        src={sc.url}
+                        alt={sc.title || `Screenshot ${idx + 1}`}
+                        className="w-full h-full object-cover object-top transition-transform group-hover:scale-105"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=400&q=80';
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveScreenshot(idx)}
+                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-600 text-white shadow-md hover:bg-red-700 cursor-pointer"
+                        title="Delete Screenshot"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-black/70 text-white text-[9px] font-mono font-bold">
+                        #{idx + 1}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs">
+                      <input
+                        type="text"
+                        value={sc.title || ''}
+                        onChange={(e) => handleUpdateScreenshot(idx, 'title', e.target.value)}
+                        placeholder="Slide Title"
+                        className="w-full p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-[11px]"
+                      />
+                      <input
+                        type="text"
+                        value={sc.caption || ''}
+                        onChange={(e) => handleUpdateScreenshot(idx, 'caption', e.target.value)}
+                        placeholder="Short caption"
+                        className="w-full p-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[10px] text-slate-500"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SUBSECTION 7: BENTO GRID FEATURES */}
+            <div className="space-y-4 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-purple-600" />
+                  <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    7. Feature Bento Highlights ({formData.appConfig?.features?.length || 0})
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-2 text-xs">
+                <input
+                  type="text"
+                  value={newFeatureText}
+                  onChange={(e) => setNewFeatureText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddFeature();
+                    }
+                  }}
+                  placeholder="e.g. Instant push alerts on order delivery & revisions..."
+                  className="flex-1 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddFeature}
+                  className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1 cursor-pointer shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Feature</span>
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {(formData.appConfig?.features || []).map((feat, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+                  >
+                    <span className="w-5 h-5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold flex items-center justify-center text-[10px] shrink-0">
+                      {idx + 1}
+                    </span>
+                    <input
+                      type="text"
+                      value={feat}
+                      onChange={(e) => handleUpdateFeature(idx, e.target.value)}
+                      className="flex-1 bg-transparent border-0 focus:outline-none font-semibold text-slate-800 dark:text-slate-200 text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFeature(idx)}
+                      className="p-1 text-red-500 hover:text-red-700 cursor-pointer"
+                      title="Delete Feature"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SUBSECTION 8: LIVE EARLY BETA WAITLIST, PRE-ORDERS & ANALYTICS INTELLIGENCE */}
+            <div className="space-y-5 pt-4 border-t-2 border-purple-500/20">
+              
+              {/* Header & Controls */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-pink-600 text-white flex items-center justify-center shadow-md shrink-0">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>8. Live Early Beta Waitlist &amp; Pre-Orders Intelligence</span>
+                      <span className="px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-black text-[10px]">
+                        {appWaitlistLeads.length} Registrations
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Track interested users who registered for early access or pre-ordered the mobile app release.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={fetchAppWaitlistLeads}
+                    disabled={loadingWaitlist}
+                    className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                    title="Refresh Applicants"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${loadingWaitlist ? 'animate-spin' : ''}`} />
+                    <span>Refresh</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (appWaitlistLeads.length === 0) {
+                        toast.info('No pre-order applicants to export.');
+                        return;
+                      }
+                      const csvHeader = 'Name,Email,Phone,Platform,Date,Status,Notes\n';
+                      const csvRows = appWaitlistLeads.map((l) => {
+                        const plat = (l.service || '').includes('iOS') ? 'iOS' : 'Android';
+                        const dt = l.createdAt ? new Date(l.createdAt).toLocaleDateString() : 'N/A';
+                        return `"${l.name || 'Anonymous'}","${l.email || ''}","${l.phone || ''}","${plat}","${dt}","${l.status || 'pending'}","${(l.requirements || '').replace(/"/g, '""')}"`;
+                      }).join('\n');
+
+                      const blob = new Blob([csvHeader + csvRows], { type: 'text/csv;charset=utf-8;' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `local2brand_app_preorders_${new Date().toISOString().slice(0, 10)}.csv`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      toast.success('📊 Pre-Orders CSV Exported Successfully!');
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Export CSV</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Real-time Analytics KPI Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 border border-purple-200/80 dark:border-purple-800/60 space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase text-purple-600 dark:text-purple-400 block tracking-wider">
+                    Total Pre-Orders
+                  </span>
+                  <div className="text-2xl font-black text-slate-900 dark:text-white">
+                    {appWaitlistLeads.length}
+                  </div>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                    Total VIP Early Access Leads
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-200/80 dark:border-emerald-800/60 space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase text-emerald-600 dark:text-emerald-400 block tracking-wider">
+                    🤖 Android Demand
+                  </span>
+                  <div className="text-2xl font-black text-slate-900 dark:text-white">
+                    {appWaitlistLeads.filter(l => (l.service || '').includes('Android') || !(l.service || '').includes('iOS')).length}
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 ml-1.5">
+                      ({appWaitlistLeads.length ? Math.round((appWaitlistLeads.filter(l => (l.service || '').includes('Android') || !(l.service || '').includes('iOS')).length / appWaitlistLeads.length) * 100) : 0}%)
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                    APK &amp; Play Store Signups
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-sky-500/10 to-blue-500/10 border border-sky-200/80 dark:border-sky-800/60 space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase text-sky-600 dark:text-sky-400 block tracking-wider">
+                    🍏 iOS TestFlight
+                  </span>
+                  <div className="text-2xl font-black text-slate-900 dark:text-white">
+                    {appWaitlistLeads.filter(l => (l.service || '').includes('iOS')).length}
+                    <span className="text-xs font-semibold text-sky-600 dark:text-sky-400 ml-1.5">
+                      ({appWaitlistLeads.length ? Math.round((appWaitlistLeads.filter(l => (l.service || '').includes('iOS')).length / appWaitlistLeads.length) * 100) : 0}%)
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                    Apple App Store Waitlist
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-200/80 dark:border-amber-800/60 space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase text-amber-600 dark:text-amber-400 block tracking-wider">
+                    ⚡ WhatsApp Reachable
+                  </span>
+                  <div className="text-2xl font-black text-slate-900 dark:text-white">
+                    {appWaitlistLeads.filter(l => l.phone && l.phone.length > 5).length}
+                  </div>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                    Instant 1-Click WhatsApp Invite
+                  </span>
+                </div>
+              </div>
+
+              {/* Search & Filter Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="relative flex-1">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={waitlistSearch}
+                    onChange={(e) => setWaitlistSearch(e.target.value)}
+                    placeholder="Search applicant name, phone number, or email..."
+                    className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
+                  />
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {['all', 'Android', 'iOS'].map((plat) => (
+                    <button
+                      key={plat}
+                      type="button"
+                      onClick={() => setWaitlistPlatformFilter(plat)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        waitlistPlatformFilter === plat
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                      }`}
+                    >
+                      {plat === 'all' ? 'All Platforms' : plat === 'Android' ? '🤖 Android' : '🍏 iOS'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Applicants Data Table */}
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden bg-white dark:bg-slate-900">
+                {loadingWaitlist ? (
+                  <div className="p-8 text-center text-xs text-slate-500 space-y-2">
+                    <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p>Loading early access pre-order intelligence...</p>
+                  </div>
+                ) : appWaitlistLeads.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-slate-500 space-y-1">
+                    <Users className="w-6 h-6 text-slate-400 mx-auto" />
+                    <p className="font-bold text-slate-700 dark:text-slate-300">No Pre-Order Applicants Yet</p>
+                    <p className="text-[11px]">When visitors register for early beta on the /app page, they will instantly appear here.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto max-h-96">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] tracking-wider">
+                          <th className="p-3">Applicant</th>
+                          <th className="p-3">Contact (Email / Phone)</th>
+                          <th className="p-3">Platform</th>
+                          <th className="p-3">Registered On</th>
+                          <th className="p-3 text-right">Instant Dispatch</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {appWaitlistLeads
+                          .filter((l) => {
+                            if (waitlistPlatformFilter !== 'all') {
+                              if (waitlistPlatformFilter === 'iOS' && !(l.service || '').includes('iOS')) return false;
+                              if (waitlistPlatformFilter === 'Android' && (l.service || '').includes('iOS')) return false;
+                            }
+                            if (!waitlistSearch.trim()) return true;
+                            const q = waitlistSearch.toLowerCase();
+                            return (
+                              (l.name || '').toLowerCase().includes(q) ||
+                              (l.email || '').toLowerCase().includes(q) ||
+                              (l.phone || '').toLowerCase().includes(q)
+                            );
+                          })
+                          .map((lead, idx) => {
+                            const isIos = (lead.service || '').includes('iOS');
+                            const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
+                            const wpMessage = encodeURIComponent(
+                              `Hello ${lead.name || 'Friend'}, your early beta access invitation to LOCAL2BRAND Mobile (${formData.appConfig?.version || 'v2.4.0'}) is now ready! 🚀\n\nDownload official release here: ${typeof window !== 'undefined' ? window.location.origin : 'https://local2brand.com'}/app`
+                            );
+                            const wpUrl = cleanPhone ? `https://wa.me/${cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone}?text=${wpMessage}` : null;
+
+                            return (
+                              <tr key={lead._id || idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                                <td className="p-3">
+                                  <div className="font-bold text-slate-900 dark:text-white">
+                                    {lead.name || 'Mobile App User'}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 font-mono">
+                                    ID: {(lead._id || '').slice(-6)}
+                                  </div>
+                                </td>
+
+                                <td className="p-3">
+                                  <div className="space-y-0.5">
+                                    {lead.phone && (
+                                      <div className="flex items-center gap-1.5 font-mono text-slate-800 dark:text-slate-200">
+                                        <Phone className="w-3 h-3 text-purple-600" />
+                                        <span>{lead.phone}</span>
+                                      </div>
+                                    )}
+                                    {lead.email && !lead.email.includes('beta-app@local2brand.com') && (
+                                      <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                                        <Mail className="w-3 h-3 text-slate-400" />
+                                        <span>{lead.email}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+
+                                <td className="p-3">
+                                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
+                                    isIos
+                                      ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300'
+                                      : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                  }`}>
+                                    {isIos ? '🍏 iOS Beta' : '🤖 Android APK'}
+                                  </span>
+                                </td>
+
+                                <td className="p-3 text-[11px] text-slate-500">
+                                  {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  }) : 'Recently'}
+                                </td>
+
+                                <td className="p-3 text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    {wpUrl && (
+                                      <a
+                                        href={wpUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-2xs transition-transform active:scale-95"
+                                        title="Send WhatsApp Invitation"
+                                      >
+                                        <Send className="w-3 h-3" />
+                                        <span>Invite on WA</span>
+                                      </a>
+                                    )}
+
+                                    {lead.phone && (
+                                      <a
+                                        href={`tel:${lead.phone}`}
+                                        className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 transition-colors"
+                                        title="Call Phone"
+                                      >
+                                        <Phone className="w-3 h-3" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+          </div>
 
           {/* Bottom Primary Save Button */}
           <div className="pt-2">

@@ -13,6 +13,10 @@ export function SiteSettingsProvider({ children }) {
           const parsed = JSON.parse(cached);
           return {
             ...parsed,
+            appConfig: {
+              ...(staticFallback.appConfig || {}),
+              ...(parsed.appConfig || {}),
+            },
             navLinks: staticFallback.navLinks || [
               { label: 'Home', href: '/' },
               { label: 'Templates', href: '/demos' },
@@ -106,6 +110,29 @@ export function SiteSettingsProvider({ children }) {
         lastResetDate: new Date().toISOString(),
       },
       bannerImage: '',
+      appConfig: staticFallback.appConfig || {
+        enabled: true,
+        isComingSoon: false,
+        showComingSoonPopup: false,
+        comingSoonTitle: 'LOCAL2BRAND Mobile App — Launching Soon',
+        comingSoonMessage: 'We are polishing our next-gen mobile application for Android & iOS. Register for early beta access!',
+        appName: 'LOCAL2BRAND Mobile',
+        appSubtitle: 'Build Local. Think Global. Supercharge Your Business On The Go.',
+        appDescription: 'Manage client orders, track engineering sprints in real-time, preview live demo templates, and receive instant WhatsApp push dispatches directly from your mobile device.',
+        version: 'v2.4.0',
+        fileSize: '24.8 MB',
+        minAndroid: 'Android 8.0 & above',
+        minIos: 'iOS 15.0 & above',
+        packageName: 'com.local2brand.app',
+        apkDownloadUrl: 'https://local2brand.com/downloads/local2brand-v2.4.0.apk',
+        playStoreUrl: '',
+        appStoreUrl: '',
+        indusStoreUrl: '',
+        qrCodeUrl: '',
+        screenshots: [],
+        features: [],
+        changelog: []
+      },
       navLinks: staticFallback.navLinks || [
         { label: 'Home', href: '/' },
         { label: 'Templates', href: '/demos' },
@@ -156,6 +183,24 @@ export function SiteSettingsProvider({ children }) {
               enabled: incomingSettings.luckyWheel.enabled !== false,
             }
           : prev.luckyWheel,
+        appConfig: incomingSettings.appConfig
+          ? {
+              ...(prev.appConfig || {}),
+              ...incomingSettings.appConfig,
+              enabled: incomingSettings.appConfig.enabled !== false,
+              isComingSoon: Boolean(incomingSettings.appConfig.isComingSoon),
+              showComingSoonPopup: Boolean(incomingSettings.appConfig.showComingSoonPopup),
+              screenshots: Array.isArray(incomingSettings.appConfig.screenshots)
+                ? incomingSettings.appConfig.screenshots
+                : prev.appConfig?.screenshots || [],
+              features: Array.isArray(incomingSettings.appConfig.features)
+                ? incomingSettings.appConfig.features
+                : prev.appConfig?.features || [],
+              changelog: Array.isArray(incomingSettings.appConfig.changelog)
+                ? incomingSettings.appConfig.changelog
+                : prev.appConfig?.changelog || [],
+            }
+          : prev.appConfig,
         navLinks: prev.navLinks,
       };
 

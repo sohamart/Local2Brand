@@ -27,6 +27,30 @@ const siteSettingsSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    whatsappNumber: {
+      type: String,
+      default: '+91 87100 43923',
+      trim: true,
+    },
+    officeLocation: {
+      type: String,
+      default: 'Kolkata, West Bengal, India',
+      trim: true,
+    },
+    workingHours: {
+      type: String,
+      default: 'Monday - Saturday: 10:00 AM - 8:00 PM IST',
+      trim: true,
+    },
+    googleMapEmbedUrl: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    showMapOnContactPage: {
+      type: Boolean,
+      default: true,
+    },
     turnaroundTime: {
       type: String,
       default: '48 Hours',
@@ -257,6 +281,32 @@ const siteSettingsSchema = new mongoose.Schema(
     countryThemes: {
       type: Object,
       default: {}
+    },
+    appConfig: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {
+        enabled: true,
+        isComingSoon: false,
+        showComingSoonPopup: false,
+        comingSoonTitle: 'LOCAL2BRAND Mobile App — Launching Soon',
+        comingSoonMessage: 'We are putting the final touches on our ultra-fast mobile application. Join the early access list to get exclusive perks!',
+        appName: 'LOCAL2BRAND',
+        appSubtitle: 'Build Local. Think Global. Supercharge Your Business.',
+        appDescription: 'Manage client orders, track engineering sprints in real-time, test live demo templates, and receive instant WhatsApp push notifications directly from your mobile device.',
+        version: 'v2.4.0',
+        fileSize: '24.8 MB',
+        minAndroid: 'Android 8.0 & above',
+        minIos: 'iOS 15.0 & above',
+        packageName: 'com.local2brand.app',
+        apkDownloadUrl: '',
+        playStoreUrl: '',
+        appStoreUrl: '',
+        indusStoreUrl: '',
+        qrCodeUrl: '',
+        screenshots: [],
+        features: [],
+        changelog: [],
+      },
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,

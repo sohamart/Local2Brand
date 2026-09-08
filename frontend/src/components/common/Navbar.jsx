@@ -17,7 +17,8 @@ import {
   Headphones,
   Zap,
   Info,
-  Layers
+  Layers,
+  Smartphone
 } from 'lucide-react';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAuth } from '../../context/AuthContext';
@@ -26,7 +27,6 @@ import AshokaChakra from './AshokaChakra';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
 import MarqueeTicker from './MarqueeTicker';
-
 
 
 // Primary Direct Links in Navbar Dock (Visible on Desktop)
@@ -40,6 +40,15 @@ const PRIMARY_NAV_LINKS = [
 
 // Secondary "More ▾" Links with rich icons & descriptions
 const MORE_NAV_LINKS = [
+  {
+    label: 'Download Mobile App',
+    href: '/app',
+    desc: 'Official Android APK & iOS Companion',
+    icon: Smartphone,
+    badge: 'APK / App',
+    badgeColor: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 border-amber-200 dark:border-amber-800',
+    iconBg: 'bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400'
+  },
   {
     label: 'Track Order',
     href: '/track-order',

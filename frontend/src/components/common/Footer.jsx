@@ -102,7 +102,7 @@ export default function Footer() {
                   </a>
                   <span className="text-slate-400">•</span>
                   <a
-                    href={`https://wa.me/918710043923?text=${encodeURIComponent('Hi LOCAL2BRAND! I would like to discuss a website project.')}`}
+                    href={`https://wa.me/${(settings.whatsappNumber || settings.displayPhone || '918710043923').replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${settings.brandName || 'LOCAL2BRAND'}! I would like to discuss a website project.`)}`}
                     target="_blank"
                     rel="noreferrer"
                     className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
@@ -132,6 +132,7 @@ export default function Footer() {
               Client Portal
             </h4>
             <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <li><Link to="/app" className="font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1"><span>📱 Download Mobile App (APK)</span></Link></li>
               <li><Link to="/track-order" className="font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1"><span>⚡ Track Live Order</span></Link></li>
               <li><Link to="/login" className="hover:text-purple-600">Sign In</Link></li>
               <li><Link to="/register" className="hover:text-purple-600">Register Account</Link></li>

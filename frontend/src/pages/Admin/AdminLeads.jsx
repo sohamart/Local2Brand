@@ -27,12 +27,43 @@ export default function AdminLeads() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedLead, setSelectedLead] = useState(null);
   const [adminNoteText, setAdminNoteText] = useState('');
   const [leadDrivePdfLink, setLeadDrivePdfLink] = useState('');
   const [leadStatus, setLeadStatus] = useState('pending');
   const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Computed Category Counts
+  const appLeadsCount = leads.filter((l) => {
+    const s = (l.service || '').toLowerCase();
+    const ind = (l.industry || '').toLowerCase();
+    const req = (l.requirements || '').toLowerCase();
+    return s.includes('mobile app') || s.includes('beta') || ind.includes('mobile app') || req.includes('early access');
+  }).length;
+
+  const callbackCount = leads.filter((l) => {
+    const s = (l.service || '').toLowerCase();
+    const ind = (l.industry || '').toLowerCase();
+    return s.includes('callback') || ind.includes('callback');
+  }).length;
+
+  const webLeadsCount = Math.max(0, leads.length - appLeadsCount - callbackCount);
+
+  // Filtered Leads for active category
+  const displayLeads = leads.filter((l) => {
+    const s = (l.service || '').toLowerCase();
+    const ind = (l.industry || '').toLowerCase();
+    const req = (l.requirements || '').toLowerCase();
+    const isApp = s.includes('mobile app') || s.includes('beta') || ind.includes('mobile app') || req.includes('early access');
+    const isCallback = s.includes('callback') || ind.includes('callback');
+
+    if (categoryFilter === 'app') return isApp;
+    if (categoryFilter === 'callbacks') return isCallback;
+    if (categoryFilter === 'web') return !isApp && !isCallback;
+    return true;
+  });
 
   useEffect(() => {
     fetchLeads(false);
@@ -182,6 +213,77 @@ export default function AdminLeads() {
           </div>
         </div>
 
+        {/* Category Quick Filter Pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('all')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              categoryFilter === 'all'
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            <span>📋 All Inquiries</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              categoryFilter === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+            }`}>
+              {leads.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('app')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              categoryFilter === 'app'
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-sm'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            <span>📱 App Beta &amp; Pre-Orders</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              categoryFilter === 'app' ? 'bg-white/20 text-white' : 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300'
+            }`}>
+              {appLeadsCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('web')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              categoryFilter === 'web'
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            <span>🌐 Website Proposals</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              categoryFilter === 'web' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+            }`}>
+              {webLeadsCount}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCategoryFilter('callbacks')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              categoryFilter === 'callbacks'
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50'
+            }`}
+          >
+            <span>📞 Direct Callbacks</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+              categoryFilter === 'callbacks' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+            }`}>
+              {callbackCount}
+            </span>
+          </button>
+        </div>
+
         {/* Filter & Search Bar */}
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <form onSubmit={handleSearchSubmit} className="relative flex-1 w-full">
@@ -219,7 +321,7 @@ export default function AdminLeads() {
               <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 font-bold uppercase tracking-wider">
                 <tr>
                   <th className="p-4">Client</th>
-                  <th className="p-4">Type / Industry</th>
+                  <th className="p-4">Type / Service</th>
                   <th className="p-4">Budget / Time</th>
                   <th className="p-4">Status</th>
                   <th className="p-4">Date</th>
@@ -227,7 +329,7 @@ export default function AdminLeads() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
-                {loading && leads.length === 0 ? (
+                {loading && displayLeads.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="py-12 text-center text-slate-400">
                       <DashboardLoader
@@ -237,7 +339,7 @@ export default function AdminLeads() {
                       />
                     </td>
                   </tr>
-                ) : leads.length === 0 ? (
+                ) : displayLeads.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-8 text-center text-slate-400">
                       <div className="w-10 h-10 mx-auto rounded-2xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center mb-2">
@@ -247,45 +349,62 @@ export default function AdminLeads() {
                     </td>
                   </tr>
                 ) : (
-                  leads.map((lead) => (
-                    <tr key={lead._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4">
-                        <div className="font-extrabold text-slate-900 dark:text-white text-sm">{lead.name}</div>
-                        <div className="text-slate-400 flex items-center gap-2 mt-0.5">
-                          <a href={`tel:${lead.phone}`} className="text-emerald-600 font-mono hover:underline">{lead.phone}</a>
-                          <span>•</span>
-                          <span className="truncate max-w-[150px]">{lead.email}</span>
-                        </div>
-                        {lead.businessName && (
-                          <span className="inline-block text-[10px] font-semibold text-purple-600 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full mt-1">
-                            {lead.businessName}
-                          </span>
-                        )}
-                      </td>
+                  displayLeads.map((lead) => {
+                    const isAppBeta = (lead.service || '').toLowerCase().includes('mobile app') || (lead.industry || '').toLowerCase().includes('mobile app') || (lead.requirements || '').toLowerCase().includes('early access');
+                    return (
+                      <tr key={lead._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="p-4">
+                          <div className="font-extrabold text-slate-900 dark:text-white text-sm">{lead.name}</div>
+                          <div className="text-slate-400 flex items-center gap-2 mt-0.5">
+                            <a href={`tel:${lead.phone}`} className="text-emerald-600 font-mono hover:underline">{lead.phone}</a>
+                            {lead.email && !lead.email.includes('beta-app@local2brand.com') && (
+                              <>
+                                <span>•</span>
+                                <span className="truncate max-w-[150px]">{lead.email}</span>
+                              </>
+                            )}
+                          </div>
+                          {lead.businessName && (
+                            <span className="inline-block text-[10px] font-semibold text-purple-600 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full mt-1">
+                              {lead.businessName}
+                            </span>
+                          )}
+                        </td>
 
-                      <td className="p-4">
-                        <div className="font-bold text-slate-900 dark:text-white">{lead.websiteType}</div>
-                        <div className="text-slate-400">{lead.industry}</div>
-                      </td>
+                        <td className="p-4">
+                          {isAppBeta ? (
+                            <div>
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-950 dark:to-pink-950 text-purple-800 dark:text-purple-300 font-extrabold text-[10px]">
+                                📱 App Beta Waitlist
+                              </span>
+                              <div className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">{lead.service}</div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="font-bold text-slate-900 dark:text-white">{lead.websiteType || lead.service}</div>
+                              <div className="text-slate-400">{lead.industry}</div>
+                            </div>
+                          )}
+                        </td>
 
-                      <td className="p-4">
-                        <div className="font-semibold text-emerald-600 dark:text-emerald-400">{lead.budget}</div>
-                        <div className="text-slate-400">{lead.timeline}</div>
-                      </td>
+                        <td className="p-4">
+                          <div className="font-semibold text-emerald-600 dark:text-emerald-400">{lead.budget}</div>
+                          <div className="text-slate-400">{lead.timeline}</div>
+                        </td>
 
-                      <td className="p-4">
-                        <select
-                          value={lead.status}
-                          onChange={(e) => handleStatusChange(lead._id, e.target.value)}
-                          className="p-1.5 rounded-lg border text-[11px] font-bold focus:outline-none bg-slate-50 dark:bg-slate-800 cursor-pointer"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="completed">Completed</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </td>
+                        <td className="p-4">
+                          <select
+                            value={lead.status}
+                            onChange={(e) => handleStatusChange(lead._id, e.target.value)}
+                            className="p-1.5 rounded-lg border text-[11px] font-bold focus:outline-none bg-slate-50 dark:bg-slate-800 cursor-pointer"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </td>
                       <td className="p-4 text-slate-400 whitespace-nowrap">
                         {new Date(lead.createdAt).toLocaleDateString()}
                       </td>
@@ -307,8 +426,8 @@ export default function AdminLeads() {
                         </button>
                       </td>
                     </tr>
-                  ))
-                )}
+                  );
+                }))}
               </tbody>
             </table>
           </div>
@@ -316,7 +435,7 @@ export default function AdminLeads() {
 
         {/* Mobile View: Dedicated Responsive Cards (Touch Optimized) */}
         <div className="block md:hidden space-y-3.5">
-          {loading && leads.length === 0 ? (
+          {loading && displayLeads.length === 0 ? (
             <div className="py-12 flex items-center justify-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
               <DashboardLoader
                 title="Loading Project Inquiries..."
@@ -324,13 +443,14 @@ export default function AdminLeads() {
                 role="admin"
               />
             </div>
-          ) : leads.length === 0 ? (
+          ) : displayLeads.length === 0 ? (
             <div className="p-8 text-center text-xs text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
               No inquiries found matching criteria.
             </div>
           ) : (
-            leads.map((lead) => {
+            displayLeads.map((lead) => {
               const waNumber = (lead.phone || '').replace(/[^0-9]/g, '');
+              const isAppBeta = (lead.service || '').toLowerCase().includes('mobile app') || (lead.industry || '').toLowerCase().includes('mobile app') || (lead.requirements || '').toLowerCase().includes('early access');
               return (
                 <div
                   key={lead._id}
@@ -341,11 +461,15 @@ export default function AdminLeads() {
                       <div className="font-black text-slate-900 dark:text-white text-sm">
                         {lead.name}
                       </div>
-                      {lead.businessName && (
+                      {isAppBeta ? (
+                        <span className="inline-block text-[10px] font-extrabold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950 px-2 py-0.5 rounded-full">
+                          📱 Mobile App Pre-Order
+                        </span>
+                      ) : lead.businessName ? (
                         <span className="inline-block text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full">
                           {lead.businessName}
                         </span>
-                      )}
+                      ) : null}
                     </div>
 
                     <select
@@ -363,13 +487,13 @@ export default function AdminLeads() {
 
                   <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800">
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Type</span>
+                      <span className="text-slate-400 block text-[10px]">Type / Service</span>
                       <strong className="text-slate-800 dark:text-slate-200 truncate block">
-                        {lead.websiteType}
+                        {lead.websiteType || lead.service}
                       </strong>
                     </div>
                     <div>
-                      <span className="text-slate-400 block text-[10px]">Budget</span>
+                      <span className="text-slate-400 block text-[10px]">Budget / Stage</span>
                       <strong className="text-emerald-600 dark:text-emerald-400">
                         {lead.budget}
                       </strong>

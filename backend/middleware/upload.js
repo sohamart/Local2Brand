@@ -14,18 +14,21 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter (images and video media)
+// File filter (images, video media, APK and application packages)
 const fileFilter = (req, file, cb) => {
   if (
     !file.mimetype ||
     file.mimetype.startsWith('image/') ||
     file.mimetype.startsWith('video/') ||
     file.mimetype === 'application/octet-stream' ||
-    file.originalname?.match(/\.(mp4|webm|ogg|mov|mkv|avi|jpg|jpeg|png|webp|gif|svg)$/i)
+    file.mimetype === 'application/vnd.android.package-archive' ||
+    file.mimetype === 'application/zip' ||
+    file.mimetype === 'application/x-zip-compressed' ||
+    file.originalname?.match(/\.(mp4|webm|ogg|mov|mkv|avi|jpg|jpeg|png|webp|gif|svg|apk|aab|ipa|zip|pdf)$/i)
   ) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file format. Only video and image formats are supported.'), false);
+    cb(new Error('Invalid file format. Supported: Videos, Images, APK, ZIP, PDF.'), false);
   }
 };
 

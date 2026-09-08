@@ -38,6 +38,7 @@ import Contact from './pages/Contact';
 import LiveDemoViewer from './pages/LiveDemoViewer';
 import GetStarted from './pages/GetStarted';
 import TrackOrder from './pages/TrackOrder';
+import AppDownload from './pages/AppDownload';
 import NotFound from './pages/NotFound';
 
 // Auth Pages
@@ -87,6 +88,10 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }
         <Route path="/details/:slug" element={<LiveDemoViewer />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/app" element={<AppDownload />} />
+        <Route path="/download-app" element={<AppDownload />} />
+        <Route path="/apk" element={<AppDownload />} />
+        <Route path="/download" element={<AppDownload />} />
 
         {/* Dedicated Standalone Interactive Form & Tracking Routes */}
         <Route path="/get-started" element={<GetStarted />} />

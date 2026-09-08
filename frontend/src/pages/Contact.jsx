@@ -11,7 +11,10 @@ import {
   User,
   Building,
   MapPin,
-  MessageSquare
+  MessageSquare,
+  ExternalLink,
+  Navigation,
+  Compass
 } from 'lucide-react';
 import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
@@ -139,60 +142,82 @@ export default function Contact() {
 
               {/* Direct Channels Card */}
               <div className="glass-panel p-6 rounded-card border border-white dark:border-slate-800 space-y-3.5">
+                
+                {/* 1. Official Email */}
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-600 flex items-center justify-center shrink-0">
                     <Mail className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-[11px] text-slate-400 font-bold block">Support & Inquiries Email</span>
+                    <span className="text-[11px] text-slate-400 font-bold block">Support &amp; Inquiries Email</span>
                     <a
-                      href={`mailto:${settings.aiSettings?.adminShowableDetails?.contactEmail || settings.supportEmail || 'local2brand.contact@gmail.com'}`}
+                      href={`mailto:${settings.supportEmail || settings.aiSettings?.adminShowableDetails?.contactEmail || 'local2brand.contact@gmail.com'}`}
                       className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white hover:text-purple-600 truncate block transition-colors"
                     >
-                      {settings.aiSettings?.adminShowableDetails?.contactEmail || settings.supportEmail || 'local2brand.contact@gmail.com'}
+                      {settings.supportEmail || settings.aiSettings?.adminShowableDetails?.contactEmail || 'local2brand.contact@gmail.com'}
                     </a>
                   </div>
                 </div>
 
-                {(settings.aiSettings?.adminShowableDetails?.contactPhone || settings.displayPhone) && (
+                {/* 2. Direct Calling Phone */}
+                {(settings.displayPhone || settings.supportPhone || settings.aiSettings?.adminShowableDetails?.contactPhone) && (
                   <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
                     <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 flex items-center justify-center shrink-0">
                       <PhoneCall className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="text-[11px] text-slate-400 font-bold block">Direct Founder Calling</span>
+                      <span className="text-[11px] text-slate-400 font-bold block">Direct Calling Line</span>
                       <a
-                        href={`tel:${settings.aiSettings?.adminShowableDetails?.contactPhone || settings.displayPhone}`}
+                        href={`tel:${settings.displayPhone || settings.supportPhone || settings.aiSettings?.adminShowableDetails?.contactPhone || '+918710043923'}`}
                         className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white hover:text-emerald-600 transition-colors"
                       >
-                        {settings.aiSettings?.adminShowableDetails?.contactPhone || settings.displayPhone}
+                        {settings.displayPhone || settings.supportPhone || settings.aiSettings?.adminShowableDetails?.contactPhone || '+91 87100 43923'}
                       </a>
                     </div>
                   </div>
                 )}
 
-                {settings.aiSettings?.adminShowableDetails?.officeLocation && (
-                  <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
-                    <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-600 flex items-center justify-center shrink-0">
-                      <MapPin className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="text-[11px] text-slate-400 font-bold block">Operating Hubs / Address</span>
-                      <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-                        {settings.aiSettings.adminShowableDetails.officeLocation}
-                      </span>
-                    </div>
+                {/* 3. Direct WhatsApp Channel */}
+                <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 flex items-center justify-center shrink-0">
+                    <MessageSquare className="w-5 h-5 text-emerald-600" />
                   </div>
-                )}
+                  <div className="min-w-0">
+                    <span className="text-[11px] text-slate-400 font-bold block">WhatsApp Business Desk</span>
+                    <a
+                      href={`https://wa.me/${(settings.whatsappNumber || settings.displayPhone || settings.aiSettings?.adminShowableDetails?.whatsappSupport || '918710043923').replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${settings.brandName || 'LOCAL2BRAND'}! I want to discuss a new website project.`)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400 hover:underline transition-colors flex items-center gap-1.5"
+                    >
+                      <span>{settings.whatsappNumber || settings.displayPhone || settings.aiSettings?.adminShowableDetails?.whatsappSupport || '+91 87100 43923'}</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">Chat 💬</span>
+                    </a>
+                  </div>
+                </div>
 
+                {/* 4. Operating Hubs / Address */}
+                <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/70 text-amber-600 flex items-center justify-center shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-slate-400 font-bold block">Operating Hubs / Address</span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                      {settings.officeLocation || settings.aiSettings?.adminShowableDetails?.officeLocation || 'Kolkata & Bangalore Hubs, India'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 5. Support & Consultation Hours */}
                 <div className="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800">
                   <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/70 text-blue-600 flex items-center justify-center shrink-0">
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
-                    <span className="text-[11px] text-slate-400 font-bold block">Support & Consultation Hours</span>
+                    <span className="text-[11px] text-slate-400 font-bold block">Support &amp; Consultation Hours</span>
                     <span className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
-                      {settings.aiSettings?.adminShowableDetails?.workingHours || 'Monday – Saturday: 10:00 AM to 8:00 PM IST'}
+                      {settings.workingHours || settings.aiSettings?.adminShowableDetails?.workingHours || 'Monday – Saturday: 10:00 AM to 8:00 PM IST'}
                     </span>
                   </div>
                 </div>
@@ -344,6 +369,123 @@ export default function Contact() {
 
           </div>
         </div>
+
+        {/* ========================================================================= */}
+        {/* INTERACTIVE GOOGLE MAP LOCATION & DIRECTIONS SECTION                      */}
+        {/* ========================================================================= */}
+        {settings.showMapOnContactPage !== false && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-24">
+            
+            {/* Section Header */}
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 text-xs font-bold uppercase tracking-wider mb-2">
+                <Navigation className="w-3.5 h-3.5" />
+                <span>Physical Studio &amp; Tech Hubs</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                Visit Our Innovation Hubs
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-xl mx-auto">
+                Collaborate in person with our product designers and full-stack architects across our key Indian hubs.
+              </p>
+            </div>
+
+            {/* Map Frame Card with Floating Location Overlays */}
+            <div className="relative rounded-3xl overflow-hidden border border-slate-200/80 dark:border-white/10 shadow-glass-lg bg-slate-950">
+              
+              {/* Interactive Google Map Iframe (Auto-tracks live officeLocation from site settings) */}
+              <div className="w-full h-[400px] sm:h-[460px] relative">
+                <iframe
+                  title="LOCAL2BRAND Google Map Location"
+                  src={(() => {
+                    if (
+                      settings?.googleMapEmbedUrl &&
+                      settings.googleMapEmbedUrl.trim().length > 0 &&
+                      !settings.googleMapEmbedUrl.includes('pb=!1m18!1m12!1m3!1d117925')
+                    ) {
+                      return settings.googleMapEmbedUrl;
+                    }
+                    const rawLoc =
+                      settings?.officeLocation ||
+                      settings?.aiSettings?.adminShowableDetails?.officeLocation ||
+                      'Kolkata, West Bengal, India';
+                    const cleanLoc = rawLoc.includes('&')
+                      ? `${rawLoc.split('&')[0].trim()}, India`
+                      : rawLoc;
+                    return `https://maps.google.com/maps?q=${encodeURIComponent(
+                      cleanLoc
+                    )}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+                  })()}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="w-full h-full grayscale-0 hover:grayscale-0 transition-all duration-500"
+                />
+              </div>
+
+              {/* Floating Luxury Glass Hub Info Overlay */}
+              <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 max-w-xs sm:max-w-sm w-[calc(100%-2rem)] sm:w-auto p-4 sm:p-5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-white/15 shadow-glass space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight">
+                      {settings.brandName || 'LOCAL2BRAND'} Headquarters
+                    </h4>
+                    <span className="text-[11px] text-purple-600 dark:text-purple-400 font-bold">
+                      Main Engineering &amp; Client Studio
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800 pt-2.5">
+                  <p className="flex items-start gap-1.5">
+                    <span className="font-bold text-slate-900 dark:text-white shrink-0">📍 Hubs:</span>
+                    <span>{settings.officeLocation || settings.aiSettings?.adminShowableDetails?.officeLocation || 'Kolkata & Bangalore Hubs, India'}</span>
+                  </p>
+                  <p className="flex items-center gap-1.5">
+                    <span className="font-bold text-slate-900 dark:text-white shrink-0">🕒 Hours:</span>
+                    <span className="text-[11px]">{settings.workingHours || settings.aiSettings?.adminShowableDetails?.workingHours || 'Mon - Sat: 10:00 AM - 8:00 PM IST'}</span>
+                  </p>
+                </div>
+
+                <div className="pt-1 flex items-center gap-2">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      settings.officeLocation || 'Kolkata, West Bengal, India'
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 py-2 px-3 rounded-xl font-bold text-[11px] text-white l2b-gradient-bg shadow-sm hover:opacity-95 transition-opacity flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <span>Get Directions</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+
+                  <a
+                    href={`tel:${settings.displayPhone || settings.supportPhone || '+918710043923'}`}
+                    className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors border border-slate-200 dark:border-slate-700 shrink-0"
+                    title="Call Studio"
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Bottom Right Made in India Tag */}
+              <div className="hidden sm:flex absolute bottom-4 right-4 z-20 items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md text-white border border-white/10 text-[11px] font-bold shadow-sm">
+                <AshokaChakra size={12} />
+                <span>Pan-India On-Site &amp; Remote Client Consultations</span>
+              </div>
+
+            </div>
+
+          </div>
+        )}
 
       </div>
     </>
