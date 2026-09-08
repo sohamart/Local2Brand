@@ -531,6 +531,7 @@ function AdminFormBuilderContent() {
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         {[
           { id: 'questions', label: `12-Step Questions (${activeForm.questions?.length || 0})` },
+          { id: 'pricing', label: 'Pricing & Disclaimers' },
           { id: 'steps', label: `Onboarding Steps (${activeForm.steps?.length || 0})` },
           { id: 'categories', label: `Website Categories (${activeForm.categories?.length || 0})` },
           { id: 'preview', label: 'Live Device Preview' }
@@ -895,6 +896,118 @@ function AdminFormBuilderContent() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: PRICING & DISCLAIMERS CONFIGURATION */}
+      {activeTab === 'pricing' && (
+        <div className="space-y-5">
+          <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <Tag className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  Client-Side Pricing &amp; Consultation Policy Disclaimers
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Configure how approximate pricing, variable estimates, and phone/email consultation disclaimers appear to clients during order review.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Pricing Mode Badge Label
+                </label>
+                <input
+                  type="text"
+                  value={activeForm.pricingBadge || 'Approximate & Indicative Base Price'}
+                  onChange={(e) => setActiveForm({ ...activeForm, pricingBadge: e.target.value })}
+                  placeholder="e.g. Approximate & Indicative Base Price"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-purple-600 dark:text-purple-400"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Pricing Variation Notice Heading
+                </label>
+                <input
+                  type="text"
+                  value={activeForm.pricingNoticeTitle || 'Approximate Estimated Price Notice'}
+                  onChange={(e) => setActiveForm({ ...activeForm, pricingNoticeTitle: e.target.value })}
+                  placeholder="e.g. Approximate Estimated Price Notice"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Pricing Variation Disclaimer Text
+                </label>
+                <textarea
+                  rows={3}
+                  value={activeForm.pricingDisclaimer || 'The amount shown above is an approximate guideline price based on your selected parameters. Actual project pricing may vary depending on custom design specifics, extra API integrations, custom database architecture, and specific third-party licenses.'}
+                  onChange={(e) => setActiveForm({ ...activeForm, pricingDisclaimer: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200"
+                />
+              </div>
+
+              <div className="space-y-1.5 md:col-span-2">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Follow-up Phone Call &amp; Email Notice
+                </label>
+                <textarea
+                  rows={2}
+                  value={activeForm.consultationNotice || 'Our solutions team will personally reach out via Phone Call and Email to discuss all details and confirm your final bespoke quotation before commencing work.'}
+                  onChange={(e) => setActiveForm({ ...activeForm, consultationNotice: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200"
+                />
+              </div>
+            </div>
+
+            {/* Live Preview Card of Disclaimer */}
+            <div className="pt-3">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                Live Client Preview of Disclaimer Box
+              </span>
+              <div className="p-4 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
+                <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-black text-xs text-amber-800 dark:text-amber-300">
+                      {activeForm.pricingNoticeTitle || 'Approximate Estimated Price Notice'}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-500/30">
+                      Price May Vary
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                    {activeForm.pricingDisclaimer || 'The amount shown above is an approximate guideline price based on your selected parameters. Actual project pricing may vary depending on custom design specifics, extra API integrations, custom database architecture, and specific third-party licenses.'}
+                  </p>
+                  <p className="text-[11px] text-purple-700 dark:text-purple-300 font-bold flex items-center gap-1">
+                    <span>📞</span>
+                    <span>{activeForm.consultationNotice || 'Our solutions team will personally reach out via Phone Call and Email to discuss all details and confirm your final quotation before commencing work.'}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={handleSaveForm}
+                disabled={saving}
+                className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-95"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>{saving ? 'Saving...' : 'Save Pricing Policy'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

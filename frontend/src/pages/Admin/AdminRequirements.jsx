@@ -448,6 +448,46 @@ export default function AdminRequirements() {
     setTimeout(() => setCopiedId(false), 2000);
   };
 
+  const handleDownloadFile = async (url, filename = 'asset') => {
+    if (!url) return;
+    try {
+      toast.info('Downloading file...');
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      const extension = url.split('.').pop()?.split(/[?#]/)[0] || 'jpg';
+      const cleanName = filename.includes('.') ? filename : `${filename}.${extension}`;
+      link.download = cleanName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+      toast.success(`Downloaded ${cleanName}!`);
+    } catch (err) {
+      console.warn('Direct blob download notice, opening link directly:', err);
+      const link = document.createElement('a');
+      link.href = url;
+      link.target = '_blank';
+      link.download = filename || 'download';
+      link.click();
+    }
+  };
+
+  const handleDownloadAllPhotos = (photos = [], orderId = 'order') => {
+    if (!photos || photos.length === 0) {
+      toast.warn('No photos uploaded to download');
+      return;
+    }
+    toast.info(`Downloading ${photos.length} uploaded files...`);
+    photos.forEach((p, i) => {
+      setTimeout(() => {
+        handleDownloadFile(p.url, `${orderId}_${p.type || 'file'}_${i + 1}_${(p.name || 'asset').replace(/[^a-zA-Z0-9._-]/g, '_')}`);
+      }, i * 350);
+    });
+  };
+
   const handleSaveStatus = async () => {
     if (!selectedReq) return;
     setUpdating(true);
@@ -1201,22 +1241,48 @@ export default function AdminRequirements() {
                       </span>
                     </div>
                     {getAllRequirementPhotos(selectedReq).length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {getAllRequirementPhotos(selectedReq).map((item, i) => (
-                          <div
-                            key={i}
-                            className="group relative aspect-video rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 block shadow-xs cursor-pointer"
-                            onClick={() => setPreviewImage(item.url)}
+                      <div className="space-y-3">
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadAllPhotos(getAllRequirementPhotos(selectedReq), selectedReq.requirementId || 'order')}
+                            className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-all active:scale-95"
                           >
-                            <img src={item.url} alt={item.name || `Upload ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                            <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-white text-[9px] font-bold">
-                              {item.type === 'logo' ? 'Brand Logo' : 'Photo'}
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Download All {getAllRequirementPhotos(selectedReq).length} Files</span>
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {getAllRequirementPhotos(selectedReq).map((item, i) => (
+                            <div
+                              key={i}
+                              className="group relative aspect-video rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 block shadow-xs"
+                            >
+                              <img src={item.url} alt={item.name || `Upload ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform cursor-pointer" onClick={() => setPreviewImage(item.url)} />
+                              <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-slate-950/75 backdrop-blur-xs text-white text-[9px] font-bold">
+                                {item.type === 'logo' ? 'Brand Logo' : 'Photo'}
+                              </div>
+                              <div className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 text-white transition-opacity">
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewImage(item.url)}
+                                  className="p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white cursor-pointer"
+                                  title="Zoom"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadFile(item.url, `${selectedReq.requirementId || 'order'}_${item.type || 'file'}_${i + 1}_${item.name || 'image'}`)}
+                                  className="p-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white cursor-pointer shadow-md"
+                                  title="Download"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </button>
+                              </div>
                             </div>
-                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                              <Eye className="w-4 h-4" />
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <div className="text-slate-500 italic p-3 text-center bg-white/40 dark:bg-slate-900/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
@@ -1407,54 +1473,90 @@ export default function AdminRequirements() {
               {activeInspectTab === 'media' && (
                 <div className="space-y-4">
                   {getAllRequirementPhotos(selectedReq).length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      {getAllRequirementPhotos(selectedReq).map((item, i) => (
-                        <div key={i} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5 shadow-sm">
-                          <div
-                            className="relative aspect-video rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer group"
-                            onClick={() => setPreviewImage(item.url)}
-                          >
-                            <img src={item.url} alt={item.name || `Media ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-xs text-white text-[10px] font-black uppercase tracking-wider">
-                              {item.type === 'logo' ? '🏷️ Brand Logo' : '📷 Gallery Photo'}
-                            </div>
-                            <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                              <Eye className="w-5 h-5" />
-                            </div>
+                    <div className="space-y-4">
+                      {/* Top Batch Download Action Bar */}
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-transparent border border-purple-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                            <ImageIcon className="w-5 h-5" />
                           </div>
-
-                          <div className="flex items-center justify-between text-xs pt-1">
-                            <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[180px]" title={item.name}>
-                              {item.name || `File ${i + 1}`}
-                            </span>
-                            {item.size && (
-                              <span className="text-[10px] text-slate-400 font-mono shrink-0">
-                                {item.size}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-700">
-                            <button
-                              type="button"
-                              onClick={() => setPreviewImage(item.url)}
-                              className="flex-1 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-purple-100 dark:hover:bg-purple-900/60 cursor-pointer"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>Zoom Preview</span>
-                            </button>
-                            <a
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1 hover:bg-slate-300 dark:hover:bg-slate-600"
-                              title="Open original in new tab"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
+                          <div>
+                            <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
+                              Client Uploaded Media &amp; Brand Assets
+                            </h4>
+                            <p className="text-[11px] text-slate-500">
+                              {getAllRequirementPhotos(selectedReq).length} high-resolution files ready for website design &amp; deployment
+                            </p>
                           </div>
                         </div>
-                      ))}
+
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadAllPhotos(getAllRequirementPhotos(selectedReq), selectedReq.requirementId || 'order')}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-purple-600/20 cursor-pointer active:scale-95 transition-all self-start sm:self-center"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>Download All Assets ({getAllRequirementPhotos(selectedReq).length})</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {getAllRequirementPhotos(selectedReq).map((item, i) => (
+                          <div key={i} className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2.5 shadow-sm">
+                            <div
+                              className="relative aspect-video rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-pointer group"
+                              onClick={() => setPreviewImage(item.url)}
+                            >
+                              <img src={item.url} alt={item.name || `Media ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                              <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-xs text-white text-[10px] font-black uppercase tracking-wider">
+                                {item.type === 'logo' ? '🏷️ Brand Logo' : '📷 Gallery Photo'}
+                              </div>
+                              <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                                <Eye className="w-5 h-5" />
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between text-xs pt-1">
+                              <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[180px]" title={item.name}>
+                                {item.name || `File ${i + 1}`}
+                              </span>
+                              {item.size && (
+                                <span className="text-[10px] text-slate-400 font-mono shrink-0">
+                                  {item.size}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-1 border-t border-slate-200 dark:border-slate-700">
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadFile(item.url, `${selectedReq.requirementId || 'order'}_${item.type || 'file'}_${i + 1}_${item.name || 'image'}`)}
+                                className="flex-1 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                <span>Download</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewImage(item.url)}
+                                className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1 hover:bg-slate-300 dark:hover:bg-slate-600 cursor-pointer"
+                                title="Zoom Preview"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                              <a
+                                href={item.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-1 hover:bg-slate-300 dark:hover:bg-slate-600"
+                                title="Open original in new tab"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     <div className="p-12 text-center text-slate-500 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
@@ -1703,21 +1805,29 @@ export default function AdminRequirements() {
               alt="Full Preview"
               className="max-w-full max-h-[82vh] object-contain rounded-2xl shadow-2xl border border-white/20 bg-slate-900"
             />
-            <div className="mt-3 flex items-center gap-3">
+            <div className="mt-3 flex items-center flex-wrap justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleDownloadFile(previewImage, `${selectedReq?.requirementId || 'order'}_photo`)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-95"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download High-Res Original</span>
+              </button>
               <a
                 href={previewImage}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md hover:bg-purple-500 transition-colors"
+                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-200 hover:text-white font-bold text-xs flex items-center gap-1.5 shadow-md border border-slate-700 hover:bg-slate-700 transition-colors"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>Open Original in New Tab</span>
+                <span>Open in New Tab</span>
               </a>
               <button
                 onClick={() => setPreviewImage(null)}
                 className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs cursor-pointer transition-colors"
               >
-                Close Preview
+                Close
               </button>
             </div>
           </div>

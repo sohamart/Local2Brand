@@ -1919,13 +1919,21 @@ export default function SmartRequirementModal() {
                   </div>
 
                   {/* Transparent Pricing & User Portal Live Tracking Banner */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-emerald-500/10 border border-purple-200 dark:border-purple-800 text-xs space-y-1.5 shadow-xs">
-                    <div className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <span className="text-sm">📊</span>
-                      <span>Total Price Breakdown & Live Order Tracking in User Portal</span>
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-amber-500/10 border border-purple-200 dark:border-purple-800 text-xs space-y-2 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span className="text-sm">📊</span>
+                        <span>Approximate Base Price &amp; Live Tracking</span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-500/30">
+                        Approximate Quote
+                      </span>
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                      Once submitted, your complete project details, total price breakdown, payment milestones, and real-time development status can be tracked anytime inside your <strong>User Dashboard (/dashboard)</strong>.
+                      The pricing shown is an <strong>indicative baseline approximation</strong>. Total costs may vary depending on custom design specifics, extra integrations, and custom database requirements.
+                    </p>
+                    <p className="text-[11px] text-purple-700 dark:text-purple-300 font-bold">
+                      📞 Our solution director will review your blueprint and contact you via phone call &amp; email to confirm the exact final cost and launch timeline before any payment.
                     </p>
                   </div>
 

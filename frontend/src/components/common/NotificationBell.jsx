@@ -269,8 +269,10 @@ export default function NotificationBell({ className = '' }) {
 
   const popoverInnerContent = (
     <div 
-      className="relative flex flex-col h-full max-h-[440px] overflow-hidden min-h-0 bg-white/95 dark:bg-[#0c101d]/95 backdrop-blur-3xl"
+      data-lenis-prevent="true"
       onWheel={(e) => e.stopPropagation()}
+      className="relative flex flex-col h-full max-h-[520px] overflow-hidden min-h-0 bg-white/95 dark:bg-[#0c101d]/95 backdrop-blur-3xl overscroll-contain"
+      style={{ overscrollBehavior: 'contain' }}
     >
       {/* Top Ambient Glow Laser Bar */}
       <div className="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-purple-500 via-pink-500 via-indigo-500 to-cyan-400 z-20 shadow-[0_0_12px_rgba(168,85,247,0.8)]" />
@@ -330,8 +332,10 @@ export default function NotificationBell({ className = '' }) {
 
       {/* Notification Items List */}
       <div 
-        className="overflow-y-auto flex-1 min-h-0 max-h-[260px] p-2 space-y-1.5 overscroll-contain custom-scrollbar relative z-10"
+        data-lenis-prevent="true"
         onWheel={(e) => e.stopPropagation()}
+        className="overflow-y-auto flex-1 min-h-0 max-h-[340px] sm:max-h-[360px] p-2 space-y-1.5 overscroll-contain custom-scrollbar relative z-10 touch-pan-y"
+        style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
       >
         {loadingList && sortedNotifications.length === 0 ? (
           <div className="py-8 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2.5">
@@ -501,8 +505,8 @@ export default function NotificationBell({ className = '' }) {
         {/* Desktop Popover Card with Outer Glow Border */}
         {isOpen && (
           <div 
-            className="hidden sm:block absolute right-0 top-full mt-2.5 w-[360px] sm:w-[390px] max-h-[450px] rounded-3xl bg-white/95 dark:bg-[#0c101d]/95 backdrop-blur-3xl border border-purple-500/35 dark:border-purple-500/40 shadow-[0_20px_60px_-15px_rgba(147,51,234,0.35),0_0_25px_1px_rgba(99,102,241,0.2)] dark:shadow-[0_25px_70px_-15px_rgba(147,51,234,0.45),0_0_35px_1px_rgba(168,85,247,0.25)] ring-1 ring-purple-400/20 z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-            onWheel={(e) => e.stopPropagation()}
+            data-lenis-prevent="true"
+            className="hidden sm:block absolute right-0 top-full mt-2.5 w-[360px] sm:w-[390px] max-h-[520px] rounded-3xl bg-white/95 dark:bg-[#0c101d]/95 backdrop-blur-3xl border border-purple-500/35 dark:border-purple-500/40 shadow-[0_20px_60px_-15px_rgba(147,51,234,0.35),0_0_25px_1px_rgba(99,102,241,0.2)] dark:shadow-[0_25px_70px_-15px_rgba(147,51,234,0.45),0_0_35px_1px_rgba(168,85,247,0.25)] ring-1 ring-purple-400/20 z-50 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
           >
             {popoverInnerContent}
           </div>
@@ -511,14 +515,17 @@ export default function NotificationBell({ className = '' }) {
 
       {/* Mobile Popover Modal */}
       {isOpen && typeof document !== 'undefined' && createPortal(
-        <div className="sm:hidden fixed inset-0 z-[999999999] flex flex-col justify-start p-3 pt-14 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-150">
+        <div 
+          data-lenis-prevent="true"
+          className="sm:hidden fixed inset-0 z-[999999999] flex flex-col justify-start p-3 pt-14 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-150"
+        >
           <div 
             className="fixed inset-0"
             onClick={() => setIsOpen(false)}
           />
           <div 
-            className="relative w-full max-h-[72dvh] rounded-3xl bg-white dark:bg-[#0c101d] border border-purple-500/40 shadow-[0_20px_60px_-15px_rgba(147,51,234,0.45),0_0_30px_1px_rgba(168,85,247,0.25)] ring-1 ring-purple-400/20 z-10 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
-            onWheel={(e) => e.stopPropagation()}
+            data-lenis-prevent="true"
+            className="relative w-full max-h-[75dvh] rounded-3xl bg-white dark:bg-[#0c101d] border border-purple-500/40 shadow-[0_20px_60px_-15px_rgba(147,51,234,0.45),0_0_30px_1px_rgba(168,85,247,0.25)] ring-1 ring-purple-400/20 z-10 flex flex-col overflow-hidden animate-in zoom-in-95 duration-200"
           >
             {popoverInnerContent}
           </div>

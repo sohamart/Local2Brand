@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Mail, ExternalLink, Clock, Shield, Tag, CheckCircle2, User, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function NotificationDetailModal({ notification, onClose, onMarkRead, onDelete }) {
+  useEffect(() => {
+    if (notification) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [notification]);
+
   if (!notification) return null;
 
   const formatDate = (dateString) => {
@@ -32,9 +41,15 @@ export default function NotificationDetailModal({ notification, onClose, onMarkR
   };
 
   const modalContent = (
-    <div className="fixed inset-0 z-[999999999] flex items-center justify-center p-2.5 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+    <div 
+      data-lenis-prevent="true"
+      className="fixed inset-0 z-[999999999] flex items-center justify-center p-2.5 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto"
+    >
       <div 
-        className="relative w-full max-w-2xl max-h-[86dvh] sm:max-h-[90vh] my-auto flex flex-col bg-white dark:bg-[#0e131f] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        data-lenis-prevent="true"
+        onWheel={(e) => e.stopPropagation()}
+        style={{ overscrollBehavior: 'contain' }}
+        className="relative w-full max-w-2xl max-h-[86dvh] sm:max-h-[90vh] my-auto flex flex-col bg-white dark:bg-[#0e131f] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -90,21 +105,26 @@ export default function NotificationDetailModal({ notification, onClose, onMarkR
         </div>
 
         {/* Modal Body / Email Content */}
-        <div className="p-3 sm:p-6 overflow-y-auto flex-1 space-y-3 sm:space-y-4 min-h-0">
+        <div 
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          style={{ overscrollBehavior: 'contain' }}
+          className="p-3 sm:p-6 overflow-y-auto flex-1 space-y-3 sm:space-y-4 min-h-0 overscroll-contain custom-scrollbar"
+        >
           {/* Main Message Text */}
-          <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/40 p-3 sm:p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800">
+          <div className="text-xs sm:text-sm text-slate-800 dark:text-slate-100 leading-relaxed bg-slate-50 dark:bg-slate-900/80 p-3 sm:p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
             {notification.message}
           </div>
 
           {/* Render Full Rich HTML Email Replica if present */}
           {notification.emailHtml ? (
             <div className="space-y-2 pt-1">
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 <Mail className="w-3.5 h-3.5" />
                 <span>Full Email Replica / Message Details</span>
               </div>
               <div 
-                className="bg-white text-slate-900 p-3 sm:p-5 rounded-2xl border border-slate-200 shadow-xs overflow-x-auto email-content-preview text-xs sm:text-sm"
+                className="bg-slate-50 dark:bg-[#111625] text-slate-900 dark:text-slate-100 p-3 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-x-auto email-content-preview text-xs sm:text-sm"
                 dangerouslySetInnerHTML={{ __html: notification.emailHtml }}
               />
             </div>

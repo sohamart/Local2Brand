@@ -59,13 +59,8 @@ class NotificationDispatcher {
 
       // 3. Dispatch OneSignal Push Notification if enabled
       if (sendPush && oneSignalBackend.isConfigured()) {
-        const isCustomBroadcast = type === 'broadcast';
-
-        // Generic safe push payload for privacy (no phone numbers or sensitive order details over push)
-        const pushTitle = isCustomBroadcast ? title : '🔔 1 New Message in Inbox';
-        const pushMessage = isCustomBroadcast
-          ? message
-          : 'You have a new update in your LOCAL2BRAND inbox. Tap to view.';
+        const pushTitle = title || '🔔 New Notification from LOCAL2BRAND';
+        const pushMessage = message || 'You have a new update in your LOCAL2BRAND inbox. Tap to view.';
         const pushUrl = link || (recipientRole === 'admin' ? '/admin/inbox' : '/dashboard');
 
         if (recipientRole === 'admin') {
@@ -75,8 +70,26 @@ class NotificationDispatcher {
             url: pushUrl,
             data: { notificationId: notificationRecord._id.toString(), type },
           });
+        } else if (finalRecipient || finalEmail) {
+          pushResult = await oneSignalBackend.sendPushNotification({
+            userIds: finalRecipient ? [finalRecipient.toString()] : [],
+            emails: finalEmail ? [finalEmail] : [],
+            title: pushTitle,
+            message: pushMessage,
+            url: pushUrl,
+            data: { notificationId: notificationRecord._id.toString(), type },
+          });
+          // If specific player wasn't subscribed, ensure active subscribers receive the alert
+          if (!pushResult || !pushResult.success) {
+            pushResult = await oneSignalBackend.broadcastPushNotification({
+              title: pushTitle,
+              message: pushMessage,
+              url: pushUrl,
+              data: { notificationId: notificationRecord._id.toString(), type },
+            });
+          }
         } else {
-          // Broadcast generic inbox ping to all subscribed client devices reliably
+          // Broadcast to all subscribed devices
           pushResult = await oneSignalBackend.broadcastPushNotification({
             title: pushTitle,
             message: pushMessage,

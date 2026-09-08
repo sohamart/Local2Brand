@@ -248,14 +248,6 @@ export const submitRequirement = async (req, res) => {
 
     const savedReqId = doc.requirementId || targetId;
 
-    // Return confirmed MongoDB saved document
-    res.status(200).json({
-      success: true,
-      message: 'Your website requirements have been submitted successfully.',
-      requirementId: savedReqId,
-      requirement: doc
-    });
-
     // Background asynchronous dispatch for admin notifications & emails (Non-blocking)
     setImmediate(async () => {
       try {
@@ -336,8 +328,8 @@ export const submitRequirement = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Requirement blueprint submitted successfully!',
-      requirementId: doc.requirementId || reqId,
+      message: 'Your website requirements have been submitted successfully.',
+      requirementId: savedReqId,
       requirement: doc
     });
   } catch (error) {

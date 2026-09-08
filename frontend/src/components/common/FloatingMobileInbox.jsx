@@ -111,6 +111,7 @@ export default function FloatingMobileInbox() {
   // When mobile inbox opens, revalidate & auto mark all as read seamlessly
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = 'hidden';
       fetchRecentNotifications(notifications.length === 0);
       if (unreadCount > 0) {
         const timer = setTimeout(() => {
@@ -118,7 +119,12 @@ export default function FloatingMobileInbox() {
         }, 1200);
         return () => clearTimeout(timer);
       }
+    } else {
+      document.body.style.overflow = '';
     }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen, fetchRecentNotifications, notifications.length, unreadCount]);
 
   const handleMarkRead = async (id, e) => {
@@ -232,14 +238,11 @@ export default function FloatingMobileInbox() {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     }
     return () => {
       document.body.style.overflow = '';
-      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -286,7 +289,10 @@ export default function FloatingMobileInbox() {
 
       {/* Full-Screen Mobile Bottom Sheet / Modal for Inbox via Portal with luxury glow */}
       {isOpen && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[999999999] flex flex-col justify-end sm:justify-center p-0 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200">
+        <div 
+          data-lenis-prevent="true"
+          className="fixed inset-0 z-[999999999] flex flex-col justify-end sm:justify-center p-0 sm:p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
+        >
           {/* Backdrop Click Dismiss */}
           <div
             className="fixed inset-0"
@@ -295,8 +301,10 @@ export default function FloatingMobileInbox() {
 
           {/* Modal Container */}
           <div 
-            className="relative w-full max-h-[74dvh] rounded-t-3xl sm:rounded-3xl bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-3xl border-t sm:border border-purple-500/40 shadow-[0_20px_60px_-15px_rgba(147,51,234,0.45),0_0_35px_1px_rgba(168,85,247,0.25)] z-10 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-250"
+            data-lenis-prevent="true"
             onWheel={(e) => e.stopPropagation()}
+            className="relative w-full max-h-[82dvh] rounded-t-3xl sm:rounded-3xl bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-3xl border-t sm:border border-purple-500/40 shadow-[0_20px_60px_-15px_rgba(147,51,234,0.45),0_0_35px_1px_rgba(168,85,247,0.25)] z-10 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-250 overscroll-contain"
+            style={{ overscrollBehavior: 'contain' }}
           >
             {/* Top Ambient Glow Bar */}
             <div className="absolute top-0 inset-x-0 h-[2.5px] bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 z-20" />
@@ -356,8 +364,10 @@ export default function FloatingMobileInbox() {
 
             {/* Notification Items List */}
             <div 
-              className="overflow-y-auto flex-1 min-h-0 max-h-[42dvh] p-2 space-y-1.5 overscroll-contain custom-scrollbar relative z-10"
+              data-lenis-prevent="true"
               onWheel={(e) => e.stopPropagation()}
+              className="overflow-y-auto flex-1 min-h-0 max-h-[52dvh] p-2 space-y-1.5 overscroll-contain custom-scrollbar relative z-10 touch-pan-y"
+              style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
             >
               {loadingList && sortedNotifications.length === 0 ? (
                 <div className="py-10 flex flex-col items-center justify-center text-slate-400 text-xs space-y-2.5">

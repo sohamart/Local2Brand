@@ -5278,6 +5278,28 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     </div>
                   )}
                 </div>
+
+                {/* Approximate Pricing & Bespoke Consultation Notice */}
+                <div className="mt-5 p-4 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 flex items-start gap-3 text-xs text-amber-900 dark:text-amber-200">
+                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-black text-xs text-amber-800 dark:text-amber-300">
+                        Approximate Estimated Price Notice
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] font-black uppercase tracking-wider border border-amber-500/30">
+                        Price May Vary
+                      </span>
+                    </div>
+                    <p className="text-[11.5px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                      The amount shown above is an <strong>approximate guideline price</strong> based on your selected parameters. Actual project pricing may vary depending on custom design specifics, extra API integrations, custom database architecture, and specific third-party licenses.
+                    </p>
+                    <p className="text-[11.5px] text-purple-700 dark:text-purple-300 font-bold flex items-center gap-1">
+                      <span>📞</span>
+                      <span>Our solutions team will personally reach out via <strong>Phone Call</strong> and <strong>Email</strong> to discuss all details and confirm your final quotation before commencing work.</span>
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Complete Requirement Summary with Edit Buttons */}

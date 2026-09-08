@@ -1,5 +1,6 @@
 import React from 'react';
 import Hero from '../components/home/Hero';
+import LiveViewsCounter from '../components/home/LiveViewsCounter';
 import TrustMetrics from '../components/home/TrustMetrics';
 import ServicesOverview from '../components/home/ServicesOverview';
 import FeaturedWork from '../components/home/FeaturedWork';
@@ -25,7 +26,10 @@ export default function Home() {
         {/* 1. Hero Section */}
         <Hero />
 
-        {/* 2. Trust / Metrics Section */}
+        {/* 2. Live Animated Real-Time Website Views Counter */}
+        <LiveViewsCounter />
+
+        {/* 3. Trust / Metrics Section */}
         <TrustMetrics />
 
         {/* 3. Services Section */}

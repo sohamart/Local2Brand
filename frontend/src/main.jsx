@@ -16,34 +16,31 @@ function Root() {
       window.history.scrollRestoration = 'manual';
     }
 
-    // 144Hz Ultra High-Refresh Rate ProMotion Glide Engine with Smooth Touch & Inertia
+    // Ultra Silky 120Hz/144Hz ProMotion Smooth Scroll Engine with Precision Inertia
     const lenis = new Lenis({
-      duration: 0.9, // Snappy, punchy 144Hz response without lag
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // High-refresh exponential deceleration
+      duration: 1.25, // Silky luxury feel with gradual momentum decay
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential deceleration curve
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 1.0,
+      wheelMultiplier: 0.95, // Buttery smooth wheel steps
       touchMultiplier: 1.5,
-      syncTouch: true,
-      syncTouchLerp: 0.09,
-      touchInertiaExponent: 1.7,
       infinite: false,
     });
 
     lenis.on('scroll', ScrollTrigger.update);
 
-    let rafId;
-    function raf(time) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
+    // Sync Lenis directly with GSAP Ticker for stutter-free 120/144 FPS rendering
+    const tickerUpdate = (time) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(tickerUpdate);
+    gsap.ticker.lagSmoothing(0);
 
     window.lenis = lenis;
 
     return () => {
-      cancelAnimationFrame(rafId);
+      gsap.ticker.remove(tickerUpdate);
       lenis.destroy();
       delete window.lenis;
     };
