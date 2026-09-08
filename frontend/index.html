@@ -32,6 +32,10 @@
     window.addEventListener('beforeinstallprompt', function (e) {
       e.preventDefault();
       window.__deferredInstallPrompt = e;
+      try {
+        localStorage.removeItem('l2b_app_installed');
+        sessionStorage.removeItem('l2b_is_app');
+      } catch (err) {}
       window.dispatchEvent(new CustomEvent('pwa-install-ready'));
       console.log('L2B PWA: beforeinstallprompt captured successfully!');
     });

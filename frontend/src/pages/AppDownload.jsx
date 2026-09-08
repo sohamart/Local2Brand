@@ -178,53 +178,61 @@ export default function AppDownload() {
 
       const isAndroidBridge = !!(window.Android || window.AndroidBridge || window.Local2BrandAndroid);
       const isReferrerAndroid = !!(document.referrer && (document.referrer.includes('android-app://') || (configuredPackage && document.referrer.includes(configuredPackage))));
-      const isSessionAndroid = sessionStorage.getItem('l2b_is_android_app') === 'true';
-      const isStoredAndroid = localStorage.getItem('l2b_android_app_installed') === 'true';
 
-      if (isParamAndroid || isUaAndroidMatch || isAndroidBridge || isReferrerAndroid || isSessionAndroid) {
+      if (isParamAndroid || isUaAndroidMatch || isAndroidBridge || isReferrerAndroid) {
         inAndroidApp = true;
-        sessionStorage.setItem('l2b_is_android_app', 'true');
-        localStorage.setItem('l2b_android_app_installed', 'true');
       }
 
       // 2. Check PWA Standalone App Recognition
       const isParamApp = urlParams.get('mode') === 'app' || urlParams.get('source') === 'pwa';
       const isStandaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
       const isIosStandalone = window.navigator.standalone === true;
-      const isSessionApp = sessionStorage.getItem('l2b_is_app') === 'true';
-      const isStoredInstalled =
-        localStorage.getItem('l2b_app_installed') === 'true' ||
-        localStorage.getItem('l2b_installed_app_first_launch') === 'true';
 
-      if (isParamApp || isStandaloneMedia || isIosStandalone || isSessionApp) {
+      if (isParamApp || isStandaloneMedia || isIosStandalone) {
         inPwaApp = true;
-        sessionStorage.setItem('l2b_is_app', 'true');
-        localStorage.setItem('l2b_app_installed', 'true');
       }
 
+      const isCurrentlyInside = inAndroidApp || inPwaApp;
       setIsAndroidApp(inAndroidApp);
-      setIsInsideInstalledApp(inAndroidApp || inPwaApp);
+      setIsInsideInstalledApp(isCurrentlyInside);
+      setIsAlreadyInstalled(isCurrentlyInside);
 
-      if (inAndroidApp || inPwaApp || isStoredAndroid || isStoredInstalled || isStandaloneMedia || isIosStandalone) {
-        setIsAlreadyInstalled(true);
+      // Verify with Chromium getInstalledRelatedApps API if running in browser
+      if (!isCurrentlyInside && typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) {
+        navigator.getInstalledRelatedApps().then((relatedApps) => {
+          if (Array.isArray(relatedApps) && relatedApps.length > 0) {
+            setIsAlreadyInstalled(true);
+          } else {
+            setIsAlreadyInstalled(false);
+            try {
+              localStorage.removeItem('l2b_app_installed');
+              sessionStorage.removeItem('l2b_is_app');
+            } catch (e) {}
+          }
+        }).catch(() => {});
       }
     }
 
     if (typeof window !== 'undefined' && window.__deferredInstallPrompt) {
       setDeferredPrompt(window.__deferredInstallPrompt);
+      setIsAlreadyInstalled(false);
     }
 
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       window.__deferredInstallPrompt = e;
       setDeferredPrompt(e);
+      setIsAlreadyInstalled(false);
+      setIsInsideInstalledApp(false);
+      try {
+        localStorage.removeItem('l2b_app_installed');
+        sessionStorage.removeItem('l2b_is_app');
+      } catch (err) {}
     };
 
     const handleAppInstalled = () => {
       setIsAlreadyInstalled(true);
       setIsInsideInstalledApp(true);
-      localStorage.setItem('l2b_app_installed', 'true');
-      sessionStorage.setItem('l2b_is_app', 'true');
       setDeferredPrompt(null);
       setTopBannerOpen(false);
       toast.success('🎉 Thanks for downloading & installing LOCAL2BRAND Web App!', {
@@ -235,6 +243,7 @@ export default function AppDownload() {
     const handlePwaReady = () => {
       if (window.__deferredInstallPrompt) {
         setDeferredPrompt(window.__deferredInstallPrompt);
+        setIsAlreadyInstalled(false);
       }
     };
 
@@ -403,8 +412,6 @@ export default function AppDownload() {
         if (outcome === 'accepted') {
           setIsAlreadyInstalled(true);
           setIsInsideInstalledApp(true);
-          localStorage.setItem('l2b_app_installed', 'true');
-          sessionStorage.setItem('l2b_is_app', 'true');
           setTopBannerOpen(false);
           toast.success('🎉 Thanks for downloading & installing LOCAL2BRAND Web App!', {
             toastId: 'pwa-installed-notification',
@@ -536,7 +543,7 @@ export default function AppDownload() {
     <>
       <SEO
         title={
-          isInsideInstalledApp || isAlreadyInstalled
+          isInsideInstalledApp
             ? `LOCAL2BRAND Web App — Installed & Active (${appConfig.version || 'v2.4.0'})`
             : `Install ${appConfig.appName || 'LOCAL2BRAND Web App'} (${appConfig.version || 'v2.4.0 PWA'})`
         }
@@ -625,7 +632,7 @@ export default function AppDownload() {
               <span className="text-slate-700 dark:text-slate-300">
                 {isAndroidApp
                   ? 'Android App Active 🤖'
-                  : isInsideInstalledApp || isAlreadyInstalled
+                  : isInsideInstalledApp
                   ? 'Installed Web App Active'
                   : 'Official Inbuilt Web App'}
               </span>
@@ -653,7 +660,7 @@ export default function AppDownload() {
                         <Smartphone className="w-3 h-3 text-emerald-600" />
                         <span>Android App Active</span>
                       </span>
-                    ) : isInsideInstalledApp || isAlreadyInstalled ? (
+                    ) : isInsideInstalledApp ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold uppercase tracking-wider">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                         <span>Installed &amp; Active</span>
@@ -673,13 +680,13 @@ export default function AppDownload() {
                   </div>
                 </div>
 
-                {/* Main Headline (Celebratory when already installed or inside Android/PWA app) */}
+                {/* Main Headline (Celebratory when already inside Android/PWA app) */}
                 {isAndroidApp ? (
                   <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
                     Thanks For Downloading!{' '}
                     <span className="l2b-gradient-text block sm:inline">LOCAL2BRAND Android App.</span>
                   </h1>
-                ) : isInsideInstalledApp || isAlreadyInstalled ? (
+                ) : isInsideInstalledApp ? (
                   <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
                     Thanks For Downloading!{' '}
                     <span className="l2b-gradient-text block sm:inline">LOCAL2BRAND App.</span>
@@ -696,9 +703,9 @@ export default function AppDownload() {
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
                     You have successfully opened the official LOCAL2BRAND Android application ({appConfig.androidPackageName || appConfig.packageName || 'com.local2brand.webapp'}). Enjoy ultra-fast 60-120FPS native fluidity, real-time sprint radar tracking, 50+ interactive template previews, and direct lead developer consultations.
                   </p>
-                ) : isInsideInstalledApp || isAlreadyInstalled ? (
+                ) : isInsideInstalledApp ? (
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
-                    You have successfully installed the official LOCAL2BRAND Web App! Enjoy instant 60FPS fluid navigation, live sprint radar tracking, 50+ interactive demo previews, and direct lead developer consultations with zero device storage footprint.
+                    You have successfully opened the official LOCAL2BRAND Web App workspace! Enjoy instant 60FPS fluid navigation, live sprint radar tracking, 50+ interactive demo previews, and direct lead developer consultations with zero device storage footprint.
                   </p>
                 ) : (
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
@@ -739,7 +746,7 @@ export default function AppDownload() {
               <div className="pt-2 space-y-4">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
                   
-                  {isAndroidApp || isInsideInstalledApp || isAlreadyInstalled ? (
+                  {isAndroidApp || isInsideInstalledApp ? (
                     /* INSTALLED STATE: PROMINENT "OPEN APP" ACTION BUTTON */
                     <button
                       type="button"
@@ -819,7 +826,7 @@ export default function AppDownload() {
                 </div>
 
                 {/* Quick Action Navigation Grid for Installed App Users */}
-                {(isInsideInstalledApp || isAlreadyInstalled) && (
+                {isInsideInstalledApp && (
                   <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-left">
                     <button
                       type="button"
@@ -1066,7 +1073,7 @@ export default function AppDownload() {
           <div className="mt-16 sm:mt-24">
             <div className="bg-white/80 dark:bg-slate-900/80 p-5 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-2xs relative overflow-hidden">
               
-              {isAndroidApp || isInsideInstalledApp || isAlreadyInstalled ? (
+              {isAndroidApp || isInsideInstalledApp ? (
                 /* INSTALLED EXPERIENCE */
                 <>
                   <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">

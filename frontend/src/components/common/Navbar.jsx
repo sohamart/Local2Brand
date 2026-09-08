@@ -138,24 +138,15 @@ export default function Navbar() {
         (document.referrer.includes('android-app://') ||
           (configuredPackage && document.referrer.includes(configuredPackage)))
       );
-      const isSessionAndroid = sessionStorage.getItem('l2b_is_android_app') === 'true';
 
-      const isAndroid = isParamAndroid || isUaAndroidMatch || isAndroidBridge || isReferrerAndroid || isSessionAndroid;
+      const isAndroid = isParamAndroid || isUaAndroidMatch || isAndroidBridge || isReferrerAndroid;
 
       // 2. Check PWA Standalone App Recognition
       const isParamApp = urlParams.get('mode') === 'app' || urlParams.get('source') === 'pwa';
       const isStandaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
       const isIosStandalone = window.navigator.standalone === true;
-      const isSessionApp = sessionStorage.getItem('l2b_is_app') === 'true';
 
-      const isInstalled = isAndroid || isParamApp || isStandaloneMedia || isIosStandalone || isSessionApp;
-
-      if (isAndroid) {
-        sessionStorage.setItem('l2b_is_android_app', 'true');
-      }
-      if (isParamApp || isStandaloneMedia || isIosStandalone) {
-        sessionStorage.setItem('l2b_is_app', 'true');
-      }
+      const isInstalled = isAndroid || isParamApp || isStandaloneMedia || isIosStandalone;
 
       setIsAndroidApp(isAndroid);
       setIsInsideInstalledApp(isInstalled);

@@ -11,7 +11,7 @@ export default function AppSplashScreen() {
   const [isAndroidApp, setIsAndroidApp] = useState(false);
 
   useEffect(() => {
-    // 1. Detect if running inside Installed Web App (Standalone PWA) or Android App
+    // 1. Detect if currently running inside Installed Web App (Standalone PWA) or Android App
     let isApp = false;
     let isAndroid = false;
     if (typeof window !== 'undefined') {
@@ -19,23 +19,19 @@ export default function AppSplashScreen() {
       const ua = (navigator.userAgent || '').toLowerCase();
       const isParamAndroid = urlParams.get('mode') === 'android_app' || urlParams.get('source') === 'android' || urlParams.get('platform') === 'android' || urlParams.has('package');
       const isUaAndroid = ua.includes('; wv') || ua.includes('local2brand-android') || (ua.includes('android') && ua.includes('version/4.0'));
-      const isSessionAndroid = sessionStorage.getItem('l2b_is_android_app') === 'true';
+      const isAndroidBridge = !!(window.Android || window.AndroidBridge || window.Local2BrandAndroid);
 
-      if (isParamAndroid || isUaAndroid || isSessionAndroid) {
+      if (isParamAndroid || isUaAndroid || isAndroidBridge) {
         isAndroid = true;
         isApp = true;
-        sessionStorage.setItem('l2b_is_android_app', 'true');
-        sessionStorage.setItem('l2b_is_app', 'true');
       }
 
       const isParamApp = urlParams.get('mode') === 'app' || urlParams.get('source') === 'pwa';
       const isStandaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
       const isIosStandalone = window.navigator.standalone === true;
-      const isSessionApp = sessionStorage.getItem('l2b_is_app') === 'true';
 
-      if (isParamApp || isStandaloneMedia || isIosStandalone || isSessionApp) {
+      if (isParamApp || isStandaloneMedia || isIosStandalone) {
         isApp = true;
-        sessionStorage.setItem('l2b_is_app', 'true');
       }
     }
     setIsAndroidApp(isAndroid);
