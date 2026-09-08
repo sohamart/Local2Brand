@@ -154,7 +154,9 @@ export default function AppDownload() {
       setIsAlreadyInstalled(true);
       setDeferredPrompt(null);
       setTopBannerOpen(false);
-      toast.success('🎉 LOCAL2BRAND Web App successfully installed on your home screen!');
+      toast.success('🎉 LOCAL2BRAND Web App successfully installed on your home screen!', {
+        toastId: 'pwa-installed-notification',
+      });
     };
 
     const handlePwaReady = () => {
@@ -328,9 +330,11 @@ export default function AppDownload() {
         setDownloadProgress(100);
         setDownloading(false);
         if (outcome === 'accepted') {
-          toast.success('🎉 LOCAL2BRAND Web App installed to your home screen!');
           setIsAlreadyInstalled(true);
           setTopBannerOpen(false);
+          toast.success('🎉 LOCAL2BRAND Web App successfully installed on your home screen!', {
+            toastId: 'pwa-installed-notification',
+          });
         }
         setDeferredPrompt(null);
         if (typeof window !== 'undefined') window.__deferredInstallPrompt = null;
@@ -340,11 +344,15 @@ export default function AppDownload() {
       }
     } else {
       if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-        toast.success('🎉 LOCAL2BRAND Web App is already active on your device!');
+        toast.success('🎉 LOCAL2BRAND Web App is already active on your device!', {
+          toastId: 'pwa-already-installed',
+        });
         setIsAlreadyInstalled(true);
       } else {
         setInstallModalOpen(true);
-        toast.info('📲 Follow the quick step on screen to add LOCAL2BRAND to your home screen!');
+        toast.info('📲 Follow the quick step on screen to add LOCAL2BRAND to your home screen!', {
+          toastId: 'pwa-install-guide',
+        });
       }
     }
   };

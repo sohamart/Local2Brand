@@ -3,7 +3,7 @@
   "short_name": "LOCAL2BRAND",
   "name": "LOCAL2BRAND — Web App",
   "description": "LOCAL2BRAND Web App — Transform your local business into a global brand with sub-second speeds and 48-hour delivery.",
-  "start_url": "/",
+  "start_url": "/?mode=app",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
