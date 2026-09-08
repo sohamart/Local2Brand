@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Download,
   Smartphone,
@@ -35,6 +35,11 @@ import {
   PlusCircle,
   Monitor,
   ArrowDownToLine,
+  LayoutDashboard,
+  Palette,
+  CheckCircle,
+  Home,
+  Rocket,
   Smartphone as PhoneIcon
 } from 'lucide-react';
 import { toast } from 'react-toastify';
@@ -72,6 +77,7 @@ const AppleIcon = ({ className = 'w-5 h-5' }) => (
 );
 
 export default function AppDownload() {
+  const navigate = useNavigate();
   const { settings } = useSiteSettings();
   const { user } = useAuth();
 
@@ -127,6 +133,7 @@ export default function AppDownload() {
   const [topBannerOpen, setTopBannerOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInsideInstalledApp, setIsInsideInstalledApp] = useState(false);
   const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(false);
   const [activeTabPlatform, setActiveTabPlatform] = useState('android');
 
@@ -138,8 +145,32 @@ export default function AppDownload() {
   const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
   const [waitlistSuccess, setWaitlistSuccess] = useState(false);
 
-  // Capture PWA Install Prompt (from global window or local event)
+  // Capture PWA Install Prompt and Detect Standalone / Installed App Execution
   useEffect(() => {
+    let inApp = false;
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isParamApp = urlParams.get('mode') === 'app' || urlParams.get('source') === 'pwa';
+      const isStandaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
+      const isIosStandalone = window.navigator.standalone === true;
+      const isSessionApp = sessionStorage.getItem('l2b_is_app') === 'true';
+      const isStoredInstalled =
+        localStorage.getItem('l2b_app_installed') === 'true' ||
+        localStorage.getItem('l2b_installed_app_first_launch') === 'true';
+
+      if (isParamApp || isStandaloneMedia || isIosStandalone || isSessionApp) {
+        inApp = true;
+        sessionStorage.setItem('l2b_is_app', 'true');
+        localStorage.setItem('l2b_app_installed', 'true');
+      }
+
+      setIsInsideInstalledApp(inApp);
+
+      if (inApp || isStoredInstalled || isStandaloneMedia || isIosStandalone) {
+        setIsAlreadyInstalled(true);
+      }
+    }
+
     if (typeof window !== 'undefined' && window.__deferredInstallPrompt) {
       setDeferredPrompt(window.__deferredInstallPrompt);
     }
@@ -152,6 +183,9 @@ export default function AppDownload() {
 
     const handleAppInstalled = () => {
       setIsAlreadyInstalled(true);
+      setIsInsideInstalledApp(true);
+      localStorage.setItem('l2b_app_installed', 'true');
+      sessionStorage.setItem('l2b_is_app', 'true');
       setDeferredPrompt(null);
       setTopBannerOpen(false);
       toast.success('🎉 LOCAL2BRAND Web App successfully installed on your home screen!', {
@@ -168,10 +202,6 @@ export default function AppDownload() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
     window.addEventListener('pwa-install-ready', handlePwaReady);
-
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-      setIsAlreadyInstalled(true);
-    }
 
     // Detect user OS platform
     if (typeof navigator !== 'undefined') {
@@ -316,8 +346,10 @@ export default function AppDownload() {
 
   // Web App 1-Tap Immediate Install Handler
   const handleInstallWebApp = async () => {
-    // Show top popup banner immediately as requested
-    setTopBannerOpen(true);
+    // Show top popup banner only if not already running in standalone app
+    if (!isInsideInstalledApp) {
+      setTopBannerOpen(true);
+    }
 
     const promptObj = deferredPrompt || (typeof window !== 'undefined' && window.__deferredInstallPrompt);
 
@@ -331,8 +363,11 @@ export default function AppDownload() {
         setDownloading(false);
         if (outcome === 'accepted') {
           setIsAlreadyInstalled(true);
+          setIsInsideInstalledApp(true);
+          localStorage.setItem('l2b_app_installed', 'true');
+          sessionStorage.setItem('l2b_is_app', 'true');
           setTopBannerOpen(false);
-          toast.success('🎉 LOCAL2BRAND Web App successfully installed on your home screen!', {
+          toast.success('🎉 Thanks for downloading & installing LOCAL2BRAND Web App!', {
             toastId: 'pwa-installed-notification',
           });
         }
@@ -343,17 +378,31 @@ export default function AppDownload() {
         setInstallModalOpen(true);
       }
     } else {
-      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+      if (isInsideInstalledApp || (typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true))) {
         toast.success('🎉 LOCAL2BRAND Web App is already active on your device!', {
           toastId: 'pwa-already-installed',
         });
         setIsAlreadyInstalled(true);
+        setIsInsideInstalledApp(true);
       } else {
         setInstallModalOpen(true);
         toast.info('📲 Follow the quick step on screen to add LOCAL2BRAND to your home screen!', {
           toastId: 'pwa-install-guide',
         });
       }
+    }
+  };
+
+  // Launch / Open Web App Workspace Handler
+  const handleOpenApp = (destination = '/') => {
+    toast.success('🚀 Launching LOCAL2BRAND Web App workspace...', {
+      autoClose: 1500,
+      toastId: 'launch-l2b-app',
+    });
+    if (destination === 'dashboard' || (destination === '/' && user)) {
+      navigate('/dashboard');
+    } else {
+      navigate(destination);
     }
   };
 
@@ -447,12 +496,16 @@ export default function AppDownload() {
   return (
     <>
       <SEO
-        title={`Install ${appConfig.appName || 'LOCAL2BRAND Web App'} (${appConfig.version || 'v2.4.0 PWA'})`}
+        title={
+          isInsideInstalledApp || isAlreadyInstalled
+            ? `LOCAL2BRAND Web App — Installed & Active (${appConfig.version || 'v2.4.0'})`
+            : `Install ${appConfig.appName || 'LOCAL2BRAND Web App'} (${appConfig.version || 'v2.4.0 PWA'})`
+        }
         description={appConfig.appDescription || 'Install official Inbuilt Web App with 1-tap home screen access and zero storage overhead.'}
       />
 
-      {/* TOP FLOATING INBUILT INSTALL NOTIFICATION POPUP (Requested by User) */}
-      {topBannerOpen && (
+      {/* TOP FLOATING INBUILT INSTALL NOTIFICATION POPUP (Only shown in browser when not yet in standalone app) */}
+      {topBannerOpen && !isInsideInstalledApp && (
         <div className="fixed top-20 inset-x-3 sm:inset-x-auto sm:right-6 z-[999999] max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-4 rounded-3xl border-2 border-purple-500/80 shadow-[0_15px_40px_rgba(124,58,237,0.35)] animate-in slide-in-from-top-6 duration-300">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -531,7 +584,7 @@ export default function AppDownload() {
               </span>
               <span className="text-slate-300 dark:text-slate-600">|</span>
               <span className="text-slate-700 dark:text-slate-300">
-                Official Inbuilt Web App
+                {isInsideInstalledApp || isAlreadyInstalled ? 'Installed Web App Active' : 'Official Inbuilt Web App'}
               </span>
             </div>
           </div>
@@ -552,37 +605,64 @@ export default function AppDownload() {
                     </div>
                   </div>
                   <div className="text-left leading-tight">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold uppercase tracking-wider">
-                      <Sparkles className="w-3 h-3 text-purple-600" />
-                      <span>Verified Web App</span>
-                    </span>
+                    {isInsideInstalledApp || isAlreadyInstalled ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold uppercase tracking-wider">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span>Installed &amp; Active</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold uppercase tracking-wider">
+                        <Sparkles className="w-3 h-3 text-purple-600" />
+                        <span>Verified Web App</span>
+                      </span>
+                    )}
                     <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5">
                       {appConfig.appName || 'LOCAL2BRAND Web App'}
                     </h2>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {appConfig.version || 'v2.4.0 (PWA)'} • Official Client Companion
+                      {appConfig.version || 'v2.4.0 (PWA)'} • {isInsideInstalledApp ? 'Standalone App Workspace' : 'Official Client Companion'}
                     </span>
                   </div>
                 </div>
 
-                {/* Main Headline */}
-                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
-                  Transform Your Business{' '}
-                  <span className="l2b-gradient-text block sm:inline">On Your Phone.</span>
-                </h1>
+                {/* Main Headline (Celebratory when already installed or inside installed app) */}
+                {isInsideInstalledApp || isAlreadyInstalled ? (
+                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
+                    Thanks For Downloading!{' '}
+                    <span className="l2b-gradient-text block sm:inline">LOCAL2BRAND App.</span>
+                  </h1>
+                ) : (
+                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
+                    Transform Your Business{' '}
+                    <span className="l2b-gradient-text block sm:inline">On Your Phone.</span>
+                  </h1>
+                )}
 
                 {/* Subtitle */}
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
-                  {appConfig.appDescription || 'Install our ultra-fast inbuilt web app directly to your device home screen with 0 MB storage overhead.'}
-                </p>
+                {isInsideInstalledApp || isAlreadyInstalled ? (
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
+                    You have successfully installed the official LOCAL2BRAND Web App! Enjoy instant 60FPS fluid navigation, live sprint radar tracking, 50+ interactive demo previews, and direct lead developer consultations with zero device storage footprint.
+                  </p>
+                ) : (
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
+                    {appConfig.appDescription || 'Install our ultra-fast inbuilt web app directly to your device home screen with 0 MB storage overhead.'}
+                  </p>
+                )}
               </div>
 
-              {/* Minimal Trust Capsules */}
+              {/* Minimal Trust / Telemetry Capsules */}
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs font-semibold">
-                <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shadow-2xs">
-                  <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                  <span>4.9 / 5.0 Rating</span>
-                </div>
+                {isInsideInstalledApp ? (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 shadow-2xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Active Standalone Mode</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shadow-2xs">
+                    <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                    <span>4.9 / 5.0 Rating</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shadow-2xs">
                   <HardDrive className="w-3.5 h-3.5 text-purple-500" />
                   <span>0 MB Storage</span>
@@ -593,41 +673,60 @@ export default function AppDownload() {
                 </div>
               </div>
 
-              {/* Action Buttons: Prominent 1-Tap Install + QR Scanner */}
+              {/* Action Buttons: Open App / Direct Install */}
               <div className="pt-2 space-y-4">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
                   
-                  {/* Primary Install Web App Button */}
-                  <button
-                    type="button"
-                    onClick={isPwaMode ? handleInstallWebApp : handleDirectApkDownload}
-                    disabled={downloading}
-                    className="relative group py-4 px-8 rounded-2xl font-black text-sm sm:text-base text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-3 cursor-pointer active:scale-98 overflow-hidden w-full sm:w-auto"
-                  >
-                    {downloading ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <div className="text-left leading-tight">
-                          <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">Installing PWA</span>
-                          <span className="block">Installing ({downloadProgress}%)...</span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <ArrowDownToLine className="w-5 h-5 text-amber-300 animate-bounce" />
-                        <div className="text-left leading-tight">
-                          <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">
-                            {isAlreadyInstalled ? 'Installed on Device' : '1-Tap Direct Install'}
-                          </span>
-                          <span className="block">
-                            {isAlreadyInstalled ? 'Open / Reinstall Web App' : '⚡ Install Web App Now'}
-                          </span>
-                        </div>
-                      </>
-                    )}
-
-                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
-                  </button>
+                  {isInsideInstalledApp || isAlreadyInstalled ? (
+                    /* INSTALLED STATE: PROMINENT "OPEN APP" ACTION BUTTON */
+                    <button
+                      type="button"
+                      onClick={() => handleOpenApp(user ? '/dashboard' : '/')}
+                      className="relative group py-4 px-8 rounded-2xl font-black text-sm sm:text-base text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-3 cursor-pointer active:scale-98 overflow-hidden w-full sm:w-auto"
+                    >
+                      <Sparkles className="w-5 h-5 text-amber-300 animate-spin [animation-duration:4s]" />
+                      <div className="text-left leading-tight">
+                        <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">
+                          Official Web App Workspace
+                        </span>
+                        <span className="block">
+                          🚀 Open App / Launch Studio
+                        </span>
+                      </div>
+                      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
+                    </button>
+                  ) : (
+                    /* UNINSTALLED STATE: 1-TAP INSTALL WEB APP BUTTON */
+                    <button
+                      type="button"
+                      onClick={isPwaMode ? handleInstallWebApp : handleDirectApkDownload}
+                      disabled={downloading}
+                      className="relative group py-4 px-8 rounded-2xl font-black text-sm sm:text-base text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-3 cursor-pointer active:scale-98 overflow-hidden w-full sm:w-auto"
+                    >
+                      {downloading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <div className="text-left leading-tight">
+                            <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">Installing PWA</span>
+                            <span className="block">Installing ({downloadProgress}%)...</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <ArrowDownToLine className="w-5 h-5 text-amber-300 animate-bounce" />
+                          <div className="text-left leading-tight">
+                            <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">
+                              1-Tap Direct Install
+                            </span>
+                            <span className="block">
+                              ⚡ Install Web App Now
+                            </span>
+                          </div>
+                        </>
+                      )}
+                      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
+                    </button>
+                  )}
 
                   {/* QR Code Quick Card */}
                   <div 
@@ -647,7 +746,7 @@ export default function AppDownload() {
                         Scan with Phone
                       </strong>
                       <span className="text-slate-500 dark:text-slate-400 text-[10px]">
-                        Instant mobile install
+                        {isInsideInstalledApp ? 'Share with mobile' : 'Instant mobile install'}
                       </span>
                     </div>
                     <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 group-hover:bg-purple-600 group-hover:text-white transition-colors shrink-0">
@@ -656,6 +755,67 @@ export default function AppDownload() {
                   </div>
 
                 </div>
+
+                {/* Quick Action Navigation Grid for Installed App Users */}
+                {(isInsideInstalledApp || isAlreadyInstalled) && (
+                  <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-left">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenApp('/')}
+                      className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 hover:border-purple-500 flex items-center gap-2 transition-all cursor-pointer shadow-2xs group"
+                    >
+                      <div className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-950 text-purple-600 dark:text-purple-300 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                        <Home className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="leading-tight">
+                        <span className="block text-[11px] font-bold text-slate-900 dark:text-white">Studio Home</span>
+                        <span className="text-[9px] text-slate-400">Main overview</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenApp('/dashboard')}
+                      className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 hover:border-purple-500 flex items-center gap-2 transition-all cursor-pointer shadow-2xs group"
+                    >
+                      <div className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                        <LayoutDashboard className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="leading-tight">
+                        <span className="block text-[11px] font-bold text-slate-900 dark:text-white">Dashboard</span>
+                        <span className="text-[9px] text-slate-400">Client portal</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenApp('/demos')}
+                      className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 hover:border-purple-500 flex items-center gap-2 transition-all cursor-pointer shadow-2xs group"
+                    >
+                      <div className="p-1.5 rounded-lg bg-pink-100 dark:bg-pink-950 text-pink-600 dark:text-pink-300 group-hover:bg-pink-600 group-hover:text-white transition-colors">
+                        <Palette className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="leading-tight">
+                        <span className="block text-[11px] font-bold text-slate-900 dark:text-white">50+ Demos</span>
+                        <span className="text-[9px] text-slate-400">Live templates</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenApp('/track-order')}
+                      className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 hover:border-purple-500 flex items-center gap-2 transition-all cursor-pointer shadow-2xs group"
+                    >
+                      <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <Compass className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="leading-tight">
+                        <span className="block text-[11px] font-bold text-slate-900 dark:text-white">Sprint Radar</span>
+                        <span className="text-[9px] text-slate-400">Track delivery</span>
+                      </div>
+                    </button>
+                  </div>
+                )}
 
                 {/* Native Android & iOS Versions: EXPLICITLY MARKED AS COMING SOON */}
                 <div className="pt-1 flex flex-wrap items-center justify-center lg:justify-start gap-2">
@@ -840,81 +1000,157 @@ export default function AppDownload() {
             </div>
           </div>
 
-          {/* SECTION 4: 3-STEP VISUAL INSTALLATION GUIDE FOR INBUILT WEB APP */}
+          {/* SECTION 4: 3-STEP VISUAL INSTALLATION GUIDE / INSTALLED STATUS */}
           <div className="mt-16 sm:mt-24">
             <div className="bg-white/80 dark:bg-slate-900/80 p-5 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-2xs relative overflow-hidden">
               
-              <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
-                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[9px] font-black uppercase tracking-wider">
-                  <CheckCircle2 className="w-3 h-3" />
-                  <span>3 Simple Steps</span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                  How To Install The Web App
-                </h2>
-                <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Add to your phone or desktop home screen in seconds with 0 MB storage used.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-                
-                {/* Step 1 */}
-                <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 relative space-y-1.5">
-                  <div className="w-7 h-7 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                    1
+              {isInsideInstalledApp || isAlreadyInstalled ? (
+                /* INSTALLED EXPERIENCE */
+                <>
+                  <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
+                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[9px] font-black uppercase tracking-wider">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>Web App Active &amp; Ready</span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      Your Installed Web App Advantages 🎉
+                    </h2>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">
+                      You are using the highest-tier web application stack with instant launches and zero device lag.
+                    </p>
                   </div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Tap &quot;Install Web App&quot;
-                  </h4>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Click the <strong>Install Web App Now</strong> button above or scan the QR code with your phone.
-                  </p>
-                </div>
 
-                {/* Step 2 */}
-                <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 relative space-y-1.5">
-                  <div className="w-7 h-7 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                    2
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                    {/* Feature 1 */}
+                    <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 relative space-y-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                        <Zap className="w-4 h-4" />
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                        1-Tap Home Screen Launch
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Directly launch without opening browser tabs or typing URLs. Enjoy full-screen distraction-free workspace.
+                      </p>
+                    </div>
+
+                    {/* Feature 2 */}
+                    <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 relative space-y-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                        <Flame className="w-4 h-4" />
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                        Sub-Second 60FPS Speed
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Pre-cached service worker architecture loads pages in under 0.3s with zero storage space occupied.
+                      </p>
+                    </div>
+
+                    {/* Feature 3 */}
+                    <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 relative space-y-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                        <MessageSquare className="w-4 h-4" />
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                        Real-Time WhatsApp &amp; Sprint Radar
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Track live staging deployments, approve milestone mockups, and chat directly with lead architects.
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Add To Home Screen
-                  </h4>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Confirm prompt or tap <strong>Add to Home screen</strong> from your browser menu or share sheet.
-                  </p>
-                </div>
 
-                {/* Step 3 */}
-                <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 relative space-y-1.5">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                    3
+                  {/* Bottom CTA for Installed App */}
+                  <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 text-[11px] font-medium">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>Running in Standalone Mode • Version {appConfig.version || 'v2.4.0'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenApp(user ? '/dashboard' : '/')}
+                      className="px-6 py-2.5 rounded-xl font-bold text-white l2b-gradient-bg hover:opacity-95 transition-opacity flex items-center gap-1.5 cursor-pointer shadow-xs w-full sm:w-auto justify-center"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>🚀 Open App</span>
+                    </button>
                   </div>
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                    Launch &amp; Track Instantly
-                  </h4>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                    Open the app from your home screen anytime. Track milestones and message our lead architect!
-                  </p>
-                </div>
+                </>
+              ) : (
+                /* UNINSTALLED 3-STEP GUIDE */
+                <>
+                  <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
+                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[9px] font-black uppercase tracking-wider">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>3 Simple Steps</span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                      How To Install The Web App
+                    </h2>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">
+                      Add to your phone or desktop home screen in seconds with 0 MB storage used.
+                    </p>
+                  </div>
 
-              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                    {/* Step 1 */}
+                    <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 relative space-y-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                        1
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                        Tap &quot;Install Web App&quot;
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Click the <strong>Install Web App Now</strong> button above or scan the QR code with your phone.
+                      </p>
+                    </div>
 
-              {/* Bottom CTA */}
-              <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 text-[11px] font-medium">
-                  <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span>100% Safe • Zero APK permissions • Instant auto-updates</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleInstallWebApp}
-                  className="px-5 py-2.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs w-full sm:w-auto justify-center"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Install Web App Now</span>
-                </button>
-              </div>
+                    {/* Step 2 */}
+                    <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 relative space-y-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                        2
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                        Add To Home Screen
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Confirm prompt or tap <strong>Add to Home screen</strong> from your browser menu or share sheet.
+                      </p>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 relative space-y-1.5">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                        3
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                        Launch &amp; Track Instantly
+                      </h4>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Open the app from your home screen anytime. Track milestones and message our lead architect!
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Bottom CTA */}
+                  <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 text-[11px] font-medium">
+                      <Lock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span>100% Safe • Zero APK permissions • Instant auto-updates</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleInstallWebApp}
+                      className="px-5 py-2.5 rounded-xl font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs w-full sm:w-auto justify-center"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Install Web App Now</span>
+                    </button>
+                  </div>
+                </>
+              )}
 
             </div>
           </div>
