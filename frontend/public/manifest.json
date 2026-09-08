@@ -3,36 +3,39 @@
   "short_name": "LOCAL2BRAND",
   "name": "LOCAL2BRAND — Web App",
   "description": "LOCAL2BRAND Web App — Transform your local business into a global brand with sub-second speeds and 48-hour delivery.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "background_color": "#07090e",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
-      "src": "/favicon.jpg",
-      "type": "image/jpeg",
+      "src": "/icon-192.png",
+      "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "/favicon.jpg",
-      "type": "image/jpeg",
+      "src": "/icon-192-maskable.png",
+      "type": "image/png",
       "sizes": "192x192",
       "purpose": "maskable"
     },
     {
-      "src": "/favicon.jpg",
-      "type": "image/jpeg",
+      "src": "/icon-512.png",
+      "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "/favicon.jpg",
-      "type": "image/jpeg",
+      "src": "/icon-512-maskable.png",
+      "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
     }
-  ],
-  "start_url": "/",
-  "background_color": "#07090e",
-  "theme_color": "#7c3aed",
-  "display": "standalone",
-  "orientation": "portrait-primary",
-  "scope": "/"
+  ]
 }
