@@ -67,7 +67,7 @@ import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import AdminMedia from './pages/Admin/AdminMedia';
 
 
-function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }) {
+function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute, isDashboardRoute }) {
   const { displayLocation } = usePageTransition();
   const location = useLocation();
 
@@ -135,7 +135,7 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute }
       </Routes>
 
       {/* Footer */}
-      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <Footer />}
+      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && !isDashboardRoute && <Footer />}
     </div>
   );
 }
@@ -151,12 +151,15 @@ function MainAppContent() {
     location.pathname.startsWith('/live');
 
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isDashboardRoute = location.pathname.startsWith('/dashboard');
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
   const isStandaloneFormRoute =
     location.pathname.startsWith('/get-started') ||
     location.pathname.startsWith('/start-project') ||
     location.pathname.startsWith('/order') ||
     location.pathname.startsWith('/track');
+
+  const isStandaloneLayout = isLivePreview || isAdminRoute || isDashboardRoute || isStandaloneFormRoute;
 
   const isMaintenanceOrComingSoon =
     (settings.isMaintenanceMode || settings.isComingSoonMode) && !isAdminRoute && !isAuthRoute;
@@ -223,7 +226,7 @@ function MainAppContent() {
     <div className="relative min-h-screen flex flex-col font-sans text-slate-900 dark:text-slate-100 selection:bg-purple-600 selection:text-white transition-colors duration-300">
       
       {/* Animated Initial Liquid Glass Preloader */}
-      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <Preloader />}
+      {!isStandaloneLayout && <Preloader />}
 
       {/* Admin Bypass Pill */}
       {isBypassed && isMaintenanceOrComingSoon && (
@@ -249,10 +252,10 @@ function MainAppContent() {
       <CustomCursor />
 
       {/* Ambient Liquid Background */}
-      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <LiquidBackground />}
+      {!isStandaloneLayout && <LiquidBackground />}
 
       {/* Global Navbar with integrated Marquee Announcement Header */}
-      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <Navbar />}
+      {!isStandaloneLayout && <Navbar />}
 
 
 
@@ -263,15 +266,16 @@ function MainAppContent() {
             isLivePreview={isLivePreview}
             isAdminRoute={isAdminRoute}
             isStandaloneFormRoute={isStandaloneFormRoute}
+            isDashboardRoute={isDashboardRoute}
           />
         </PageTransition>
       </div>
 
       {/* Floating Interactive Assistant (Bottom-Right) */}
-      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <AssistantChatbot />}
+      {!isStandaloneLayout && <AssistantChatbot />}
 
       {/* Floating Mobile Inbox & Notifications Trigger (Bottom-Left on Mobile, opposite to Chatbot) */}
-      {!isLivePreview && !isAdminRoute && !isStandaloneFormRoute && <FloatingMobileInbox />}
+      {!isStandaloneLayout && <FloatingMobileInbox />}
 
       {/* Global Push Notification Permission Prompt */}
       <NotificationPrompt />
