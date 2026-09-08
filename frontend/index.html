@@ -36,10 +36,32 @@
       console.log('L2B PWA: beforeinstallprompt captured successfully!');
     });
 
+    // Chunk Failure Auto-Recovery on New Vercel Deploys
+    window.addEventListener('vite:preloadError', function () {
+      console.warn('L2B Vite: Chunk load error detected, reloading fresh build...');
+      window.location.reload();
+    });
+
+    window.addEventListener('error', function (e) {
+      if (
+        e &&
+        e.message &&
+        (e.message.includes('Failed to fetch dynamically imported module') ||
+          e.message.includes('Expected a JavaScript-or-Wasm module script'))
+      ) {
+        var hasReloaded = sessionStorage.getItem('l2b_chunk_reload');
+        if (!hasReloaded) {
+          sessionStorage.setItem('l2b_chunk_reload', 'true');
+          window.location.reload();
+        }
+      }
+    });
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('/sw.js').then(
           function (registration) {
+            registration.update();
             console.log('L2B PWA ServiceWorker registered with scope: ', registration.scope);
           },
           function (err) {
