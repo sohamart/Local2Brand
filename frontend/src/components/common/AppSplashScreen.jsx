@@ -8,12 +8,26 @@ export default function AppSplashScreen() {
   const [isRemoved, setIsRemoved] = useState(false);
   const [isFirstAppLaunch, setIsFirstAppLaunch] = useState(false);
   const [isInstalledApp, setIsInstalledApp] = useState(false);
+  const [isAndroidApp, setIsAndroidApp] = useState(false);
 
   useEffect(() => {
-    // 1. Detect if running inside Installed Web App (Standalone PWA)
+    // 1. Detect if running inside Installed Web App (Standalone PWA) or Android App
     let isApp = false;
+    let isAndroid = false;
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
+      const ua = (navigator.userAgent || '').toLowerCase();
+      const isParamAndroid = urlParams.get('mode') === 'android_app' || urlParams.get('source') === 'android' || urlParams.get('platform') === 'android' || urlParams.has('package');
+      const isUaAndroid = ua.includes('; wv') || ua.includes('local2brand-android') || (ua.includes('android') && ua.includes('version/4.0'));
+      const isSessionAndroid = sessionStorage.getItem('l2b_is_android_app') === 'true';
+
+      if (isParamAndroid || isUaAndroid || isSessionAndroid) {
+        isAndroid = true;
+        isApp = true;
+        sessionStorage.setItem('l2b_is_android_app', 'true');
+        sessionStorage.setItem('l2b_is_app', 'true');
+      }
+
       const isParamApp = urlParams.get('mode') === 'app' || urlParams.get('source') === 'pwa';
       const isStandaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
       const isIosStandalone = window.navigator.standalone === true;
@@ -24,6 +38,7 @@ export default function AppSplashScreen() {
         sessionStorage.setItem('l2b_is_app', 'true');
       }
     }
+    setIsAndroidApp(isAndroid);
     setIsInstalledApp(isApp);
 
     // 2. Check First Time App Opening (Distinct for Installed App vs Web)
@@ -102,7 +117,12 @@ export default function AppSplashScreen() {
       {/* 2. TOP STATUS / INSTALLED APP CHIP */}
       <div className="relative z-10 w-full pt-8 sm:pt-10 px-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {isInstalledApp ? (
+          {isAndroidApp ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-in fade-in duration-500">
+              <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Android App Active</span>
+            </span>
+          ) : isInstalledApp ? (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 backdrop-blur-md shadow-[0_0_15px_rgba(168,85,247,0.3)] animate-in fade-in duration-500">
               <Smartphone className="w-3.5 h-3.5 text-purple-400" />
               <span>Installed Web App</span>

@@ -98,6 +98,9 @@ export default function AppDownload() {
       minAndroid: 'All Android devices (Chrome / Firefox / Edge / Samsung Browser)',
       minIos: 'iOS 14.0+ (Safari / Chrome)',
       packageName: 'com.local2brand.webapp',
+      androidPackageName: 'com.local2brand.webapp',
+      androidUserAgent: 'local2brand-android-app',
+      customUserAgent: 'local2brand-android-app',
       androidStatus: 'coming_soon',
       iosStatus: 'coming_soon',
       apkDownloadUrl: '',
@@ -133,6 +136,7 @@ export default function AppDownload() {
   const [topBannerOpen, setTopBannerOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isAndroidApp, setIsAndroidApp] = useState(false);
   const [isInsideInstalledApp, setIsInsideInstalledApp] = useState(false);
   const [isAlreadyInstalled, setIsAlreadyInstalled] = useState(false);
   const [activeTabPlatform, setActiveTabPlatform] = useState('android');
@@ -145,11 +149,45 @@ export default function AppDownload() {
   const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
   const [waitlistSuccess, setWaitlistSuccess] = useState(false);
 
-  // Capture PWA Install Prompt and Detect Standalone / Installed App Execution
+  // Capture PWA Install Prompt and Detect Standalone / Android Package Execution
   useEffect(() => {
-    let inApp = false;
+    let inPwaApp = false;
+    let inAndroidApp = false;
+
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
+      const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+      
+      const configuredPackage = (appConfig.androidPackageName || appConfig.packageName || '').trim().toLowerCase();
+      const configuredAgent = (appConfig.androidUserAgent || appConfig.customUserAgent || '').trim().toLowerCase();
+
+      // 1. Check Android App Package & User-Agent Recognition
+      const isParamAndroid = 
+        urlParams.get('mode') === 'android_app' ||
+        urlParams.get('source') === 'android' ||
+        urlParams.get('platform') === 'android' ||
+        (configuredPackage && urlParams.get('package')?.toLowerCase() === configuredPackage) ||
+        (configuredPackage && urlParams.get('app_package')?.toLowerCase() === configuredPackage) ||
+        (configuredPackage && urlParams.get('android_package')?.toLowerCase() === configuredPackage) ||
+        (configuredAgent && urlParams.get('agent')?.toLowerCase() === configuredAgent);
+
+      const isUaAndroidMatch = 
+        (configuredAgent && ua.includes(configuredAgent)) ||
+        (configuredPackage && ua.includes(configuredPackage)) ||
+        (ua.includes('android') && (ua.includes('; wv') || ua.includes('version/4.0') || ua.includes('local2brand')));
+
+      const isAndroidBridge = !!(window.Android || window.AndroidBridge || window.Local2BrandAndroid);
+      const isReferrerAndroid = !!(document.referrer && (document.referrer.includes('android-app://') || (configuredPackage && document.referrer.includes(configuredPackage))));
+      const isSessionAndroid = sessionStorage.getItem('l2b_is_android_app') === 'true';
+      const isStoredAndroid = localStorage.getItem('l2b_android_app_installed') === 'true';
+
+      if (isParamAndroid || isUaAndroidMatch || isAndroidBridge || isReferrerAndroid || isSessionAndroid) {
+        inAndroidApp = true;
+        sessionStorage.setItem('l2b_is_android_app', 'true');
+        localStorage.setItem('l2b_android_app_installed', 'true');
+      }
+
+      // 2. Check PWA Standalone App Recognition
       const isParamApp = urlParams.get('mode') === 'app' || urlParams.get('source') === 'pwa';
       const isStandaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
       const isIosStandalone = window.navigator.standalone === true;
@@ -159,14 +197,15 @@ export default function AppDownload() {
         localStorage.getItem('l2b_installed_app_first_launch') === 'true';
 
       if (isParamApp || isStandaloneMedia || isIosStandalone || isSessionApp) {
-        inApp = true;
+        inPwaApp = true;
         sessionStorage.setItem('l2b_is_app', 'true');
         localStorage.setItem('l2b_app_installed', 'true');
       }
 
-      setIsInsideInstalledApp(inApp);
+      setIsAndroidApp(inAndroidApp);
+      setIsInsideInstalledApp(inAndroidApp || inPwaApp);
 
-      if (inApp || isStoredInstalled || isStandaloneMedia || isIosStandalone) {
+      if (inAndroidApp || inPwaApp || isStoredAndroid || isStoredInstalled || isStandaloneMedia || isIosStandalone) {
         setIsAlreadyInstalled(true);
       }
     }
@@ -188,7 +227,7 @@ export default function AppDownload() {
       sessionStorage.setItem('l2b_is_app', 'true');
       setDeferredPrompt(null);
       setTopBannerOpen(false);
-      toast.success('🎉 LOCAL2BRAND Web App successfully installed on your home screen!', {
+      toast.success('🎉 Thanks for downloading & installing LOCAL2BRAND Web App!', {
         toastId: 'pwa-installed-notification',
       });
     };
@@ -220,7 +259,7 @@ export default function AppDownload() {
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('pwa-install-ready', handlePwaReady);
     };
-  }, []);
+  }, [appConfig.androidPackageName, appConfig.packageName, appConfig.androidUserAgent, appConfig.customUserAgent]);
 
   // Auto trigger Coming Soon modal if showComingSoonPopup is true
   useEffect(() => {
@@ -584,7 +623,11 @@ export default function AppDownload() {
               </span>
               <span className="text-slate-300 dark:text-slate-600">|</span>
               <span className="text-slate-700 dark:text-slate-300">
-                {isInsideInstalledApp || isAlreadyInstalled ? 'Installed Web App Active' : 'Official Inbuilt Web App'}
+                {isAndroidApp
+                  ? 'Android App Active 🤖'
+                  : isInsideInstalledApp || isAlreadyInstalled
+                  ? 'Installed Web App Active'
+                  : 'Official Inbuilt Web App'}
               </span>
             </div>
           </div>
@@ -605,7 +648,12 @@ export default function AppDownload() {
                     </div>
                   </div>
                   <div className="text-left leading-tight">
-                    {isInsideInstalledApp || isAlreadyInstalled ? (
+                    {isAndroidApp ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold uppercase tracking-wider">
+                        <Smartphone className="w-3 h-3 text-emerald-600" />
+                        <span>Android App Active</span>
+                      </span>
+                    ) : isInsideInstalledApp || isAlreadyInstalled ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold uppercase tracking-wider">
                         <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                         <span>Installed &amp; Active</span>
@@ -620,13 +668,18 @@ export default function AppDownload() {
                       {appConfig.appName || 'LOCAL2BRAND Web App'}
                     </h2>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {appConfig.version || 'v2.4.0 (PWA)'} • {isInsideInstalledApp ? 'Standalone App Workspace' : 'Official Client Companion'}
+                      {appConfig.version || 'v2.4.0'} • {isAndroidApp ? (appConfig.androidPackageName || appConfig.packageName || 'Android App') : isInsideInstalledApp ? 'Standalone App Workspace' : 'Official Client Companion'}
                     </span>
                   </div>
                 </div>
 
-                {/* Main Headline (Celebratory when already installed or inside installed app) */}
-                {isInsideInstalledApp || isAlreadyInstalled ? (
+                {/* Main Headline (Celebratory when already installed or inside Android/PWA app) */}
+                {isAndroidApp ? (
+                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
+                    Thanks For Downloading!{' '}
+                    <span className="l2b-gradient-text block sm:inline">LOCAL2BRAND Android App.</span>
+                  </h1>
+                ) : isInsideInstalledApp || isAlreadyInstalled ? (
                   <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
                     Thanks For Downloading!{' '}
                     <span className="l2b-gradient-text block sm:inline">LOCAL2BRAND App.</span>
@@ -639,7 +692,11 @@ export default function AppDownload() {
                 )}
 
                 {/* Subtitle */}
-                {isInsideInstalledApp || isAlreadyInstalled ? (
+                {isAndroidApp ? (
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
+                    You have successfully opened the official LOCAL2BRAND Android application ({appConfig.androidPackageName || appConfig.packageName || 'com.local2brand.webapp'}). Enjoy ultra-fast 60-120FPS native fluidity, real-time sprint radar tracking, 50+ interactive template previews, and direct lead developer consultations.
+                  </p>
+                ) : isInsideInstalledApp || isAlreadyInstalled ? (
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
                     You have successfully installed the official LOCAL2BRAND Web App! Enjoy instant 60FPS fluid navigation, live sprint radar tracking, 50+ interactive demo previews, and direct lead developer consultations with zero device storage footprint.
                   </p>
@@ -652,7 +709,12 @@ export default function AppDownload() {
 
               {/* Minimal Trust / Telemetry Capsules */}
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2 text-xs font-semibold">
-                {isInsideInstalledApp ? (
+                {isAndroidApp ? (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 shadow-2xs font-mono">
+                    <Smartphone className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>{appConfig.androidPackageName || appConfig.packageName || 'com.local2brand.webapp'}</span>
+                  </div>
+                ) : isInsideInstalledApp ? (
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 shadow-2xs">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Active Standalone Mode</span>
@@ -665,7 +727,7 @@ export default function AppDownload() {
                 )}
                 <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shadow-2xs">
                   <HardDrive className="w-3.5 h-3.5 text-purple-500" />
-                  <span>0 MB Storage</span>
+                  <span>{isAndroidApp ? 'Hardware Accelerated' : '0 MB Storage'}</span>
                 </div>
                 <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 shadow-2xs">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
@@ -677,7 +739,7 @@ export default function AppDownload() {
               <div className="pt-2 space-y-4">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
                   
-                  {isInsideInstalledApp || isAlreadyInstalled ? (
+                  {isAndroidApp || isInsideInstalledApp || isAlreadyInstalled ? (
                     /* INSTALLED STATE: PROMINENT "OPEN APP" ACTION BUTTON */
                     <button
                       type="button"
@@ -687,7 +749,7 @@ export default function AppDownload() {
                       <Sparkles className="w-5 h-5 text-amber-300 animate-spin [animation-duration:4s]" />
                       <div className="text-left leading-tight">
                         <span className="block text-[10px] font-bold text-white/80 uppercase tracking-wider">
-                          Official Web App Workspace
+                          {isAndroidApp ? 'Official Android Workspace' : 'Official Web App Workspace'}
                         </span>
                         <span className="block">
                           🚀 Open App / Launch Studio
@@ -1004,19 +1066,21 @@ export default function AppDownload() {
           <div className="mt-16 sm:mt-24">
             <div className="bg-white/80 dark:bg-slate-900/80 p-5 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-white/10 shadow-2xs relative overflow-hidden">
               
-              {isInsideInstalledApp || isAlreadyInstalled ? (
+              {isAndroidApp || isInsideInstalledApp || isAlreadyInstalled ? (
                 /* INSTALLED EXPERIENCE */
                 <>
                   <div className="text-center max-w-2xl mx-auto space-y-1.5 mb-6 sm:mb-8">
                     <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[9px] font-black uppercase tracking-wider">
                       <CheckCircle2 className="w-3 h-3" />
-                      <span>Web App Active &amp; Ready</span>
+                      <span>{isAndroidApp ? 'Android App Active & Ready' : 'Web App Active & Ready'}</span>
                     </div>
                     <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                      Your Installed Web App Advantages 🎉
+                      {isAndroidApp ? 'Your Installed Android App Advantages 🎉' : 'Your Installed Web App Advantages 🎉'}
                     </h2>
                     <p className="text-xs text-slate-600 dark:text-slate-300">
-                      You are using the highest-tier web application stack with instant launches and zero device lag.
+                      {isAndroidApp
+                        ? 'You are running the official Android package with dedicated hardware acceleration and zero lag.'
+                        : 'You are using the highest-tier web application stack with instant launches and zero device lag.'}
                     </p>
                   </div>
 
@@ -1027,10 +1091,12 @@ export default function AppDownload() {
                         <Zap className="w-4 h-4" />
                       </div>
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                        1-Tap Home Screen Launch
+                        {isAndroidApp ? 'Direct App Launcher Access' : '1-Tap Home Screen Launch'}
                       </h4>
                       <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Directly launch without opening browser tabs or typing URLs. Enjoy full-screen distraction-free workspace.
+                        {isAndroidApp
+                          ? 'Launch directly from your Android device application drawer with full native hardware integration.'
+                          : 'Directly launch without opening browser tabs or typing URLs. Enjoy full-screen distraction-free workspace.'}
                       </p>
                     </div>
 
@@ -1040,10 +1106,10 @@ export default function AppDownload() {
                         <Flame className="w-4 h-4" />
                       </div>
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                        Sub-Second 60FPS Speed
+                        Sub-Second 60-120FPS Speed
                       </h4>
                       <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-                        Pre-cached service worker architecture loads pages in under 0.3s with zero storage space occupied.
+                        Hardware accelerated client portal engine loads staging previews and deliverables with ultra-smooth 60FPS.
                       </p>
                     </div>
 
@@ -1065,7 +1131,11 @@ export default function AppDownload() {
                   <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                     <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 text-[11px] font-medium">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>Running in Standalone Mode • Version {appConfig.version || 'v2.4.0'}</span>
+                      <span>
+                        {isAndroidApp
+                          ? `Android App Active • ${appConfig.androidPackageName || appConfig.packageName || 'com.local2brand.webapp'}`
+                          : `Running in Standalone Mode • Version ${appConfig.version || 'v2.4.0'}`}
+                      </span>
                     </div>
                     <button
                       type="button"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Menu,
@@ -18,7 +18,8 @@ import {
   Zap,
   Info,
   Layers,
-  Smartphone
+  Smartphone,
+  CheckCircle2
 } from 'lucide-react';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAuth } from '../../context/AuthContext';
@@ -94,6 +95,8 @@ export default function Navbar() {
   const [moreDropdownOpen, setMoreDropdownOpen] = useState(false);
   const [isAnnouncementDismissed, setIsAnnouncementDismissed] = useState(false);
   const [hoveredMoreItem, setHoveredMoreItem] = useState(null);
+  const [isInsideInstalledApp, setIsInsideInstalledApp] = useState(false);
+  const [isAndroidApp, setIsAndroidApp] = useState(false);
 
   const dropdownTimerRef = useRef(null);
   const moreDropdownTimerRef = useRef(null);
@@ -103,6 +106,86 @@ export default function Navbar() {
   const { openOrderModal, openCallbackModal } = useOrderModal();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Detect Installed Standalone Web App or Android App
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const appConfig = settings?.appConfig || {};
+      const urlParams = new URLSearchParams(window.location.search);
+      const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+
+      const configuredPackage = (appConfig.androidPackageName || appConfig.packageName || '').trim().toLowerCase();
+      const configuredAgent = (appConfig.androidUserAgent || appConfig.customUserAgent || '').trim().toLowerCase();
+
+      // 1. Check Android App Package & User-Agent Recognition
+      const isParamAndroid =
+        urlParams.get('mode') === 'android_app' ||
+        urlParams.get('source') === 'android' ||
+        urlParams.get('platform') === 'android' ||
+        (configuredPackage && urlParams.get('package')?.toLowerCase() === configuredPackage) ||
+        (configuredPackage && urlParams.get('app_package')?.toLowerCase() === configuredPackage) ||
+        (configuredPackage && urlParams.get('android_package')?.toLowerCase() === configuredPackage) ||
+        (configuredAgent && urlParams.get('agent')?.toLowerCase() === configuredAgent);
+
+      const isUaAndroidMatch =
+        (configuredAgent && ua.includes(configuredAgent)) ||
+        (configuredPackage && ua.includes(configuredPackage)) ||
+        (ua.includes('android') && (ua.includes('; wv') || ua.includes('version/4.0') || ua.includes('local2brand')));
+
+      const isAndroidBridge = !!(window.Android || window.AndroidBridge || window.Local2BrandAndroid);
+      const isReferrerAndroid = !!(
+        document.referrer &&
+        (document.referrer.includes('android-app://') ||
+          (configuredPackage && document.referrer.includes(configuredPackage)))
+      );
+      const isSessionAndroid = sessionStorage.getItem('l2b_is_android_app') === 'true';
+
+      const isAndroid = isParamAndroid || isUaAndroidMatch || isAndroidBridge || isReferrerAndroid || isSessionAndroid;
+
+      // 2. Check PWA Standalone App Recognition
+      const isParamApp = urlParams.get('mode') === 'app' || urlParams.get('source') === 'pwa';
+      const isStandaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
+      const isIosStandalone = window.navigator.standalone === true;
+      const isSessionApp = sessionStorage.getItem('l2b_is_app') === 'true';
+
+      const isInstalled = isAndroid || isParamApp || isStandaloneMedia || isIosStandalone || isSessionApp;
+
+      if (isAndroid) {
+        sessionStorage.setItem('l2b_is_android_app', 'true');
+      }
+      if (isParamApp || isStandaloneMedia || isIosStandalone) {
+        sessionStorage.setItem('l2b_is_app', 'true');
+      }
+
+      setIsAndroidApp(isAndroid);
+      setIsInsideInstalledApp(isInstalled);
+    }
+  }, [settings?.appConfig]);
+
+  const appVersion = settings?.appConfig?.version || 'v2.4.0';
+
+  // Dynamic Navigation Links: Show "Thanks for Installing!" & Version only in Installed App
+  const moreNavLinks = useMemo(() => {
+    return MORE_NAV_LINKS.map((item) => {
+      if (item.href === '/app') {
+        if (isInsideInstalledApp || isAndroidApp) {
+          return {
+            label: 'Thanks for Installing!',
+            href: '/app',
+            desc: isAndroidApp
+              ? `Android App Active • ${appVersion}`
+              : `Installed Web App • ${appVersion}`,
+            icon: CheckCircle2,
+            badge: `Installed (${appVersion})`,
+            badgeColor:
+              'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-700/60',
+            iconBg: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400'
+          };
+        }
+      }
+      return item;
+    });
+  }, [isInsideInstalledApp, isAndroidApp, appVersion]);
 
   const hasAnnouncement = Boolean(settings?.announcementBar?.enabled && !isAnnouncementDismissed);
 
@@ -129,7 +212,7 @@ export default function Navbar() {
     opacity: 0,
   });
 
-  const isMoreActive = MORE_NAV_LINKS.some(
+  const isMoreActive = moreNavLinks.some(
     (item) => location.pathname === item.href || (item.href !== '/' && location.pathname.startsWith(item.href))
   );
 
@@ -143,7 +226,7 @@ export default function Navbar() {
     const updateMorePill = () => {
       let targetKey = hoveredMoreItem;
       if (!targetKey) {
-        const activeLink = MORE_NAV_LINKS.find(
+        const activeLink = moreNavLinks.find(
           (item) =>
             location.pathname === item.href ||
             (item.href !== '/' && location.pathname.startsWith(item.href))
@@ -179,7 +262,7 @@ export default function Navbar() {
       cancelAnimationFrame(frameId);
       clearTimeout(timeoutId);
     };
-  }, [moreDropdownOpen, hoveredMoreItem, location.pathname]);
+  }, [moreDropdownOpen, hoveredMoreItem, location.pathname, moreNavLinks]);
 
   // Sync body class for zero-overhead, pure hardware-accelerated CSS page offset
   useEffect(() => {
@@ -506,7 +589,7 @@ export default function Navbar() {
                           <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white dark:via-white/70 to-transparent" />
                         </div>
 
-                        {MORE_NAV_LINKS.map((item) => {
+                        {moreNavLinks.map((item) => {
                           const Icon = item.icon;
                           const isCurrent =
                             location.pathname === item.href ||
@@ -945,7 +1028,7 @@ export default function Navbar() {
                   Explore &amp; Services
                 </div>
 
-                {MORE_NAV_LINKS.map((item) => {
+                {moreNavLinks.map((item) => {
                   const Icon = item.icon;
                   return (
                     <NavLink
@@ -960,11 +1043,25 @@ export default function Navbar() {
                         }`
                       }
                     >
-                      <span className="flex items-center   gap-2.5">
-                        <Icon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                        <span>{item.label}</span>
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                        <div className="flex flex-col text-left truncate">
+                          <span className="truncate">{item.label}</span>
+                          {item.desc && (
+                            <span className="text-[10px] text-slate-400 font-normal truncate">
+                              {item.desc}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {item.badge && (
+                          <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full border shadow-2xs ${item.badgeColor}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                        <ChevronRight className="w-4 h-4 text-slate-400" />
+                      </div>
                     </NavLink>
                   );
                 })}

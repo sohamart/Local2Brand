@@ -2679,6 +2679,67 @@ export default function AdminSettings() {
                   className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500"
                 />
               </div>
+
+              {/* Android Package & User-Agent Auto-Detection Settings */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-slate-50 to-purple-500/10 dark:from-emerald-950/30 dark:via-slate-900/60 dark:to-purple-950/30 border border-emerald-300/60 dark:border-emerald-700/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-emerald-600" />
+                    <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                      Android App Package &amp; User-Agent Auto-Detection 🤖
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">
+                    Smart Android Recognition
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                  When a user opens the website or download page from your Android APK, WebView, or TWA containing this <strong>Package Name</strong> or <strong>Custom User-Agent</strong> (or passing URL parameters like <code>?package=...</code> or <code>?mode=android_app</code>), the system will automatically show <strong>&quot;Thanks For Downloading! LOCAL2BRAND Android App&quot;</strong> and provide the <strong>&quot;🚀 Open App&quot;</strong> button!
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                      <span>Android Package Name (Application ID)</span>
+                      <span className="text-[10px] text-emerald-600 font-bold">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.appConfig?.androidPackageName || formData.appConfig?.packageName || ''}
+                      onChange={(e) => {
+                        handleAppConfigChange('androidPackageName', e.target.value);
+                        handleAppConfigChange('packageName', e.target.value);
+                      }}
+                      placeholder="e.g. com.local2brand.webapp or com.local2brand.app"
+                      className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-emerald-500 font-mono text-xs font-bold text-slate-900 dark:text-white"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-1 block">
+                      Matches Android package in referrer or intent (e.g. <code>com.local2brand.webapp</code>).
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
+                      <span>Android Custom User-Agent Substring / Identifier</span>
+                      <span className="text-[10px] text-purple-600 font-bold">(Agent Tag)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.appConfig?.androidUserAgent || formData.appConfig?.customUserAgent || ''}
+                      onChange={(e) => {
+                        handleAppConfigChange('androidUserAgent', e.target.value);
+                        handleAppConfigChange('customUserAgent', e.target.value);
+                      }}
+                      placeholder="e.g. local2brand-android-app or LOCAL2BRAND_Android"
+                      className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-mono text-xs font-bold text-slate-900 dark:text-white"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-1 block">
+                      When this keyword is in <code>navigator.userAgent</code> or <code>?agent=...</code>, Android App mode activates!
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* SUBSECTION 2: DIRECT APK BINARY & DOWNLOAD FILE */}
