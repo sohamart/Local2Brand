@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, Zap, Smartphone, ChevronRight } from 'lucide-react';
 import AshokaChakra from './AshokaChakra';
 
@@ -6,32 +6,46 @@ export default function AppSplashScreen() {
   const [progress, setProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isRemoved, setIsRemoved] = useState(false);
-  const [isFirstTime, setIsFirstTime] = useState(false);
-  const [isPwaStandalone, setIsPwaStandalone] = useState(false);
+  const [isFirstAppLaunch, setIsFirstAppLaunch] = useState(false);
+  const [isInstalledApp, setIsInstalledApp] = useState(false);
 
   useEffect(() => {
-    // 1. Detect if First Time opening
-    try {
-      const hasVisited = localStorage.getItem('l2b_app_welcomed_v2');
-      if (!hasVisited) {
-        setIsFirstTime(true);
-        localStorage.setItem('l2b_app_welcomed_v2', 'true');
+    // 1. Detect if running inside Installed Web App (Standalone PWA)
+    let isApp = false;
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isParamApp = urlParams.get('mode') === 'app' || urlParams.get('source') === 'pwa';
+      const isStandaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
+      const isIosStandalone = window.navigator.standalone === true;
+      const isSessionApp = sessionStorage.getItem('l2b_is_app') === 'true';
+
+      if (isParamApp || isStandaloneMedia || isIosStandalone || isSessionApp) {
+        isApp = true;
+        sessionStorage.setItem('l2b_is_app', 'true');
       }
-    } catch (e) {
-      setIsFirstTime(false);
     }
+    setIsInstalledApp(isApp);
 
-    // 2. Detect PWA Standalone Mode
-    if (
-      typeof window !== 'undefined' &&
-      (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true)
-    ) {
-      setIsPwaStandalone(true);
-    }
+    // 2. Check First Time App Opening (Distinct for Installed App vs Web)
+    try {
+      if (isApp) {
+        const hasOpenedApp = localStorage.getItem('l2b_installed_app_first_launch');
+        if (!hasOpenedApp) {
+          setIsFirstAppLaunch(true);
+          localStorage.setItem('l2b_installed_app_first_launch', 'true');
+        }
+      } else {
+        const hasVisitedWeb = sessionStorage.getItem('l2b_web_splash_shown');
+        if (!hasVisitedWeb) {
+          sessionStorage.setItem('l2b_web_splash_shown', 'true');
+        }
+      }
+    } catch (e) {}
 
-    // 3. Fast, High-Performance Progress Animation (1.2s - 1.4s lifecycle)
+    // 3. Fast, High-Performance Progress Animation (1.2s - 1.6s lifecycle)
     const startTime = Date.now();
-    const duration = isFirstTime ? 1600 : 1300; // slightly longer for first time to appreciate the welcome banner
+    // In installed app with first launch, give ~1.5s to enjoy the welcome banner; otherwise super-snappy ~1.1s
+    const duration = isApp && isFirstAppLaunch ? 1500 : (isApp ? 1200 : 950);
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -41,17 +55,17 @@ export default function AppSplashScreen() {
       if (pct >= 100) {
         clearInterval(interval);
         setTimeout(() => setIsLoaded(true), 120);
-        setTimeout(() => setIsRemoved(true), 600);
+        setTimeout(() => setIsRemoved(true), 500);
       }
     }, 25);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isFirstAppLaunch]);
 
   // Instant dismiss on click / tap
   const handleSkip = () => {
     setIsLoaded(true);
-    setTimeout(() => setIsRemoved(true), 300);
+    setTimeout(() => setIsRemoved(true), 250);
   };
 
   if (isRemoved) return null;
@@ -85,13 +99,13 @@ export default function AppSplashScreen() {
         />
       </div>
 
-      {/* 2. TOP STATUS / PWA CHIP */}
+      {/* 2. TOP STATUS / INSTALLED APP CHIP */}
       <div className="relative z-10 w-full pt-8 sm:pt-10 px-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {isPwaStandalone ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 backdrop-blur-md animate-in fade-in duration-500">
+          {isInstalledApp ? (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 backdrop-blur-md shadow-[0_0_15px_rgba(168,85,247,0.3)] animate-in fade-in duration-500">
               <Smartphone className="w-3.5 h-3.5 text-purple-400" />
-              <span>Inbuilt Web App</span>
+              <span>Installed Web App</span>
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 text-slate-400 border border-white/10 backdrop-blur-md">
@@ -130,11 +144,11 @@ export default function AppSplashScreen() {
           </div>
         </div>
 
-        {/* FIRST TIME WELCOME BADGE VS RETURNING LAUNCH */}
-        {isFirstTime ? (
+        {/* SPECIAL WELCOME TO OUR APP FOR INSTALLED APP LAUNCH */}
+        {isInstalledApp && isFirstAppLaunch ? (
           <div className="space-y-3 animate-in zoom-in-95 duration-500">
             {/* Animated Welcome Ribbon */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-purple-600/30 border border-purple-400/50 shadow-[0_0_20px_rgba(168,85,247,0.3)] backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-purple-600/30 border border-purple-400/60 shadow-[0_0_25px_rgba(168,85,247,0.4)] backdrop-blur-md">
               <Sparkles className="w-4 h-4 text-amber-300 animate-spin [animation-duration:4s]" />
               <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200">
                 Welcome To Our App
@@ -148,12 +162,26 @@ export default function AppSplashScreen() {
             </h1>
 
             <p className="text-xs sm:text-sm font-medium text-slate-300/90 max-w-xs mx-auto leading-relaxed">
-              Transform your local business into an iconic global brand.
+              Official Inbuilt Web App • High-Speed 60FPS Companion
+            </p>
+          </div>
+        ) : isInstalledApp ? (
+          <div className="space-y-2 animate-in fade-in duration-300">
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
+                LOCAL<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">2</span>BRAND
+              </h1>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-600/30 text-purple-300 border border-purple-400/40">
+                APP
+              </span>
+            </div>
+
+            <p className="text-xs sm:text-sm font-semibold tracking-widest uppercase text-slate-400">
+              Build Local. Think Global.
             </p>
           </div>
         ) : (
           <div className="space-y-2 animate-in fade-in duration-300">
-            {/* Standard Launch Header */}
             <div className="flex items-center justify-center gap-2">
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
                 LOCAL<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">2</span>BRAND
@@ -182,7 +210,13 @@ export default function AppSplashScreen() {
           <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
             <span className="flex items-center gap-1.5 text-[11px] font-sans font-medium text-slate-300">
               <Zap className="w-3 h-3 text-purple-400 animate-pulse" />
-              <span>{isFirstTime ? 'Initializing Experience...' : 'Launching Workspace...'}</span>
+              <span>
+                {isInstalledApp && isFirstAppLaunch
+                  ? 'Initializing App Workspace...'
+                  : isInstalledApp
+                  ? 'Launching App...'
+                  : 'Loading Studio...'}
+              </span>
             </span>
             <span className="font-bold text-purple-400 font-mono">{progress}%</span>
           </div>
