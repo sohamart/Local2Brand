@@ -32,6 +32,7 @@ import { useAuth } from '../context/AuthContext';
 import ShareDemoModal from '../components/demos/ShareDemoModal';
 import DashboardLoader from '../components/common/DashboardLoader';
 import { formatPriceByCountry } from '../data/countryThemes';
+import { SEO } from '../components/common/CommonUI';
 import api from '../services/api';
 
 // Reliable Built-in Fallbacks for Instant Resilient Load
@@ -354,6 +355,12 @@ export default function LiveDemoViewer() {
 
   return (
     <div className="h-screen h-[100dvh] w-screen overflow-hidden bg-slate-100 dark:bg-[#06080e] text-slate-900 dark:text-slate-100 flex flex-col select-none transition-colors duration-200">
+      <SEO
+        title={`${activeDemo.title || 'Live Website Demo'} — LOCAL2BRAND (Local To Brand)`}
+        description={activeDemo.description || `Test this live interactive ${activeDemo.category || 'commercial'} website demo by LOCAL2BRAND. 48-hour turnkey deployment with WhatsApp ordering.`}
+        keywords={`${activeDemo.category || 'website'} template, ${activeDemo.title || 'live demo'}, local2brand demo, local to brand templates, local 2 brand live demo, interactive website`}
+        image={activeDemo.heroImage || activeDemo.thumbnail || 'https://local2brand.cyou/logo.jpg'}
+      />
       
       {/* ========================================================================= */}
       {/* 1. TOP HEADER (MOBILE DEDICATED SWITCHER & PC STUDIO CONTROLS) */}

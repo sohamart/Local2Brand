@@ -18,8 +18,9 @@ export default function Home() {
   return (
     <>
       <SEO 
-        title="We Build Digital Experiences That Turn Local Brands Into Big Brands"
-        description="Premium digital agency crafting high-converting websites, liquid glass UI designs, and ready-made demo templates with direct WhatsApp ordering."
+        title="LOCAL2BRAND (Local To Brand) — Build Local. Think Global. | #1 Fast-Track Web Experience Studio"
+        description="LOCAL2BRAND (Local To Brand / Local 2 Brand) builds digital experiences that turn ambitious local businesses into recognized global brands. 48-Hour delivery, bespoke design systems, 12+ live commercial demo templates, and direct WhatsApp lead generation."
+        keywords="local2brand, local to brand, local 2 brand, local2brand.cyou, Local2Brand India, fast website development, 48 hour website delivery, website design agency India, ecommerce website builder, restaurant website template, bespoke web agency"
       />
       
       <main>

@@ -357,7 +357,7 @@ export default function AdminLeads() {
                           <div className="font-extrabold text-slate-900 dark:text-white text-sm">{lead.name}</div>
                           <div className="text-slate-400 flex items-center gap-2 mt-0.5">
                             <a href={`tel:${lead.phone}`} className="text-emerald-600 font-mono hover:underline">{lead.phone}</a>
-                            {lead.email && !lead.email.includes('beta-app@local2brand.com') && (
+                            {lead.email && !lead.email.includes('beta-app@local2brand.cyou') && !lead.email.includes('beta-app@local2brand.com') && (
                               <>
                                 <span>•</span>
                                 <span className="truncate max-w-[150px]">{lead.email}</span>

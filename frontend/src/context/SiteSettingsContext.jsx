@@ -34,7 +34,7 @@ export function SiteSettingsProvider({ children }) {
 
     return {
       brandName: staticFallback.brandName || 'LOCAL2BRAND',
-      domain: staticFallback.domain || 'local2brand.com',
+      domain: staticFallback.domain || 'local2brand.cyou',
       tagline: staticFallback.tagline || 'Build Local. Think Global.',
       supportEmail: staticFallback.email || 'local2brand.contact@gmail.com',
       displayPhone: staticFallback.phone || '+91 87100 43923',

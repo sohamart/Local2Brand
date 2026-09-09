@@ -174,10 +174,14 @@ export const sendBroadcastEmail = async (req, res) => {
       messageHtml,
       actionText,
       actionUrl,
+      imageUrl,
+      emailImage,
       targetAudience = 'all',
       customEmails = '',
       isImportant = false,
     } = req.body;
+
+    const emailBannerImg = imageUrl || emailImage || req.body?.emailBannerImg || '';
 
     if (!subject || !messageHtml) {
       return res.status(400).json({ success: false, message: 'Subject and Message content are required' });

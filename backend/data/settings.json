@@ -2,7 +2,7 @@
   {
     "_id": "6a955e52fbc06cc76d6648d3",
     "brandName": "LOCAL2BRAND",
-    "domain": "local2brand.vercel.app",
+    "domain": "local2brand.cyou",
     "tagline": "Build Local. Think Global.",
     "supportEmail": "local2brand.contact@gmail.com",
     "displayPhone": "+918710043923",
@@ -58,10 +58,10 @@
             "_id": "6a9877eac887a2d1358e435c"
           },
           {
-            "name": "SAYANTAN GHOSH",
+            "name": "Sayantan Ghosh",
             "role": "Co-Founder",
-            "bio": "Full-Stack Engineer & Product Designer leading high-performance web systems.",
-            "instagram": "@soham_dutta_offcial",
+            "bio": "Co-Founder & Operations Lead managing client success and platform development.",
+            "instagram": "https://instagram.com/sayantan_ghosh",
             "linkedin": "",
             "email": "sayantanghosh.bwn@gmail.com",
             "phone": "",

@@ -6,10 +6,11 @@ import { toast } from 'react-toastify';
  * Custom React Hook for OneSignal Web Push Notifications
  */
 export function useOneSignal() {
-  const [isSupported, setIsSupported] = useState(false);
-  const [permission, setPermission] = useState('default');
+  const [isSupported, setIsSupported] = useState(() => oneSignalService.isPushSupported());
+  const [permission, setPermission] = useState(() => oneSignalService.getPermission());
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
 
   const checkStatus = useCallback(async () => {
     const supported = oneSignalService.isPushSupported();
@@ -34,7 +35,10 @@ export function useOneSignal() {
   }, []);
 
   useEffect(() => {
-    // Initialize OneSignal
+    // Check initial state immediately
+    checkStatus();
+
+    // Initialize OneSignal in background
     oneSignalService.init().then(() => {
       checkStatus();
     });
@@ -64,7 +68,7 @@ export function useOneSignal() {
       return false;
     }
 
-    setIsLoading(true);
+    setIsRequesting(true);
     try {
       const res = await oneSignalService.requestPermission();
       await checkStatus();
@@ -82,7 +86,7 @@ export function useOneSignal() {
       toast.error(err.message || 'Failed to request notification permission');
       return false;
     } finally {
-      setIsLoading(false);
+      setIsRequesting(false);
     }
   };
 
@@ -132,6 +136,7 @@ export function useOneSignal() {
     permission,
     isSubscribed,
     isLoading,
+    isRequesting,
     requestPermission,
     optIn,
     optOut,

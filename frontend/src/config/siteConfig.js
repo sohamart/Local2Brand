@@ -1,6 +1,6 @@
 export const siteConfig = {
   brandName: "LOCAL2BRAND",
-  domain: "local2brand.com",
+  domain: "local2brand.cyou",
   tagline: "Build Local. Think Global.",
   
   // Default Brand Details (Managed live via Database & Admin Customization)
@@ -53,7 +53,7 @@ export const siteConfig = {
     minAndroid: 'Android 8.0 & above',
     minIos: 'iOS 15.0 & above',
     packageName: 'com.local2brand.app',
-    apkDownloadUrl: 'https://local2brand.com/downloads/local2brand-v2.4.0.apk',
+    apkDownloadUrl: 'https://local2brand.cyou/downloads/local2brand-v2.4.0.apk',
     playStoreUrl: '',
     appStoreUrl: '',
     indusStoreUrl: '',

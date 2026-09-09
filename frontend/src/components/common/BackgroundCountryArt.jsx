@@ -189,7 +189,7 @@ function BackgroundCountryArt({ country = 'India' }) {
   }, [videoSrc, youtubeId, country, attemptPlay, isMuted]);
 
   return (
-    <div className="fixed inset-0 w-full h-full min-h-screen pointer-events-none overflow-hidden z-0 select-none bg-slate-950">
+    <div className="fixed inset-0 w-full h-full min-h-screen pointer-events-none overflow-hidden z-0 select-none bg-slate-50 dark:bg-slate-950 transition-colors duration-700">
       
       {/* 1. Scenic Poster / Thumbnail (ONLY while video is buffering or if video fails) */}
       {videoPoster && (
@@ -200,7 +200,7 @@ function BackgroundCountryArt({ country = 'India' }) {
           className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 scale-[1.14] filter saturate-125 contrast-105 ${
             videoPlaying && !videoFailed
               ? 'opacity-0 pointer-events-none'
-              : 'opacity-80 sm:opacity-65 dark:opacity-50 sm:dark:opacity-35'
+              : 'opacity-40 sm:opacity-30 dark:opacity-50 sm:dark:opacity-35'
           }`}
         />
       )}

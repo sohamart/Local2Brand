@@ -3,7 +3,7 @@ import { BellRing, X, Sparkles, Check } from 'lucide-react';
 import useOneSignal from '../../hooks/useOneSignal';
 
 export default function NotificationPrompt() {
-  const { isSupported, permission, isSubscribed, isLoading, requestPermission } = useOneSignal();
+  const { isSupported, permission, isSubscribed, isRequesting, requestPermission } = useOneSignal();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -92,11 +92,11 @@ export default function NotificationPrompt() {
           <button
             type="button"
             onClick={handleAllow}
-            disabled={isLoading}
-            className="flex-1 py-2.5 px-4 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
+            disabled={isRequesting}
+            className="flex-1 py-2.5 px-4 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-60"
           >
             <BellRing className="w-3.5 h-3.5" />
-            <span>{isLoading ? 'Connecting...' : 'Allow Push Notifications'}</span>
+            <span>{isRequesting ? 'Requesting...' : 'Allow Push Notifications'}</span>
           </button>
 
           <button

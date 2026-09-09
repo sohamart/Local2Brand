@@ -2378,7 +2378,7 @@ export default function GetStarted() {
         ownerName: formData.fullName || user?.name || 'Valued Client',
         contactPerson: formData.fullName || user?.name || 'Valued Client',
         businessName: formData.businessName || formData.fullName || 'New Website Project',
-        email: (formData.emailAddress || user?.email || 'customer@local2brand.com').toLowerCase().trim(),
+        email: (formData.emailAddress || user?.email || 'customer@local2brand.cyou').toLowerCase().trim(),
         mobile: formData.mobileNumber || user?.phone || 'Not Provided',
         phone: formData.mobileNumber || user?.phone || 'Not Provided',
         whatsapp: formData.whatsappNumber || formData.mobileNumber || user?.phone || '',

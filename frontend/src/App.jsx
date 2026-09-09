@@ -40,6 +40,8 @@ import LiveDemoViewer from './pages/LiveDemoViewer';
 import GetStarted from './pages/GetStarted';
 import TrackOrder from './pages/TrackOrder';
 import AppDownload from './pages/AppDownload';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import NotFound from './pages/NotFound';
 
 // Auth Pages
@@ -93,6 +95,10 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute, 
         <Route path="/download-app" element={<AppDownload />} />
         <Route path="/apk" element={<AppDownload />} />
         <Route path="/download" element={<AppDownload />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/terms-and-conditions" element={<Terms />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/privacy-policy" element={<Privacy />} />
 
         {/* Dedicated Standalone Interactive Form & Tracking Routes */}
         <Route path="/get-started" element={<GetStarted />} />

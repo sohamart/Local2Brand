@@ -72,7 +72,7 @@ export default function AdminSettings() {
 
   const [formData, setFormData] = useState({
     brandName: settings.brandName || 'LOCAL2BRAND',
-    domain: settings.domain || 'local2brand.com',
+    domain: settings.domain || 'local2brand.cyou',
     tagline: settings.tagline || 'Build Local. Think Global.',
     supportEmail: settings.supportEmail || 'local2brand.contact@gmail.com',
     displayPhone: settings.displayPhone || settings.aiSettings?.adminShowableDetails?.contactPhone || '+91 87100 43923',
@@ -2796,7 +2796,7 @@ export default function AdminSettings() {
                     type="text"
                     value={formData.appConfig?.apkDownloadUrl || ''}
                     onChange={(e) => handleAppConfigChange('apkDownloadUrl', e.target.value)}
-                    placeholder="https://local2brand.com/uploads/local2brand-v2.4.0.apk"
+                    placeholder="https://local2brand.cyou/uploads/local2brand-v2.4.0.apk"
                     className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono focus:outline-purple-500"
                   />
                   <span className="text-[10px] text-slate-400 mt-1 block">
@@ -2899,7 +2899,7 @@ export default function AdminSettings() {
                         src={
                           formData.appConfig?.qrCodeUrl ||
                           `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(
-                            formData.appConfig?.apkDownloadUrl || 'https://local2brand.com/app'
+                            formData.appConfig?.apkDownloadUrl || 'https://local2brand.cyou/app'
                           )}&color=6b21a8&bgcolor=ffffff&qzone=1`
                         }
                         alt="Mobile QR Code Preview"
@@ -2959,7 +2959,7 @@ export default function AdminSettings() {
                       href={
                         formData.appConfig?.qrCodeUrl ||
                         `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(
-                          formData.appConfig?.apkDownloadUrl || 'https://local2brand.com/app'
+                          formData.appConfig?.apkDownloadUrl || 'https://local2brand.cyou/app'
                         )}&color=6b21a8&bgcolor=ffffff&qzone=1`
                       }
                       download="local2brand_app_qrcode.png"
@@ -3404,7 +3404,7 @@ export default function AdminSettings() {
                             const isIos = (lead.service || '').includes('iOS');
                             const cleanPhone = (lead.phone || '').replace(/[^0-9]/g, '');
                             const wpMessage = encodeURIComponent(
-                              `Hello ${lead.name || 'Friend'}, your early beta access invitation to LOCAL2BRAND Mobile (${formData.appConfig?.version || 'v2.4.0'}) is now ready! 🚀\n\nDownload official release here: ${typeof window !== 'undefined' ? window.location.origin : 'https://local2brand.com'}/app`
+                              `Hello ${lead.name || 'Friend'}, your early beta access invitation to LOCAL2BRAND Mobile (${formData.appConfig?.version || 'v2.4.0'}) is now ready! 🚀\n\nDownload official release here: ${typeof window !== 'undefined' ? window.location.origin : 'https://local2brand.cyou'}/app`
                             );
                             const wpUrl = cleanPhone ? `https://wa.me/${cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone}?text=${wpMessage}` : null;
 
@@ -3427,7 +3427,7 @@ export default function AdminSettings() {
                                         <span>{lead.phone}</span>
                                       </div>
                                     )}
-                                    {lead.email && !lead.email.includes('beta-app@local2brand.com') && (
+                                    {lead.email && !lead.email.includes('beta-app@local2brand.cyou') && !lead.email.includes('beta-app@local2brand.com') && (
                                       <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
                                         <Mail className="w-3 h-3 text-slate-400" />
                                         <span>{lead.email}</span>

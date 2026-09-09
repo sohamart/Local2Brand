@@ -20,7 +20,7 @@ export default function ShareDemoModal({ isOpen, onClose, demo }) {
   const demoCategory = demo.category || 'Website Template';
   const demoUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/demos/${demo.slug || demo.templateId}`
-    : `https://local2brand.com/demos/${demo.slug || demo.templateId}`;
+    : `https://local2brand.cyou/demos/${demo.slug || demo.templateId}`;
 
   const shareText = `Check out this amazing live interactive website demo for ${demoTitle} (${demoCategory}) by LOCAL2BRAND: ${demoUrl}`;
 

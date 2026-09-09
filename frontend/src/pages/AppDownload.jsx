@@ -527,7 +527,7 @@ export default function AppDownload() {
 
   // Copy shareable link
   const handleCopyLink = () => {
-    const url = typeof window !== 'undefined' ? window.location.href : 'https://local2brand.com/app';
+    const url = typeof window !== 'undefined' ? window.location.href : 'https://local2brand.cyou/app';
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     toast.success('Link copied to clipboard! 📋');
@@ -535,7 +535,7 @@ export default function AppDownload() {
   };
 
   // QR Code generator
-  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://local2brand.com';
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://local2brand.cyou';
   const qrTargetUrl = `${currentOrigin}/app`;
   const qrCodeImageUrl = appConfig.qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrTargetUrl)}&color=6b21a8&bgcolor=ffffff&qzone=1`;
 

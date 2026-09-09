@@ -69,21 +69,24 @@ CURRENT CONVERSATION PARTNER:
     const formattedFounders = foundersList
       .filter((f) => f && f.name)
       .map((f, i) => {
-        const parts = [`  ${i + 1}. ${f.name} (${f.role || (i === 0 ? 'Founder & Lead Architect / Boss' : 'Co-Founder')})`];
+        const parts = [
+          `  * Founder #${i + 1}: ${f.name}`,
+          `Role: ${f.role || (i === 0 ? 'Founder & Lead Architect' : 'Co-Founder')}`,
+        ];
         if (f.bio) parts.push(`Bio: ${f.bio}`);
-        if (f.instagram) parts.push(`Instagram: ${f.instagram}`);
+        if (f.instagram) parts.push(`Instagram Profile: ${f.instagram}`);
         if (f.linkedin) parts.push(`LinkedIn: ${f.linkedin}`);
-        if (f.email) parts.push(`Direct Email: ${f.email}`);
-        if (f.phone) parts.push(`Phone: ${f.phone}`);
+        if (f.email) parts.push(`Personal/Direct Email: ${f.email}`);
+        if (f.phone) parts.push(`Direct Mobile: ${f.phone}`);
         return parts.join(' | ');
       })
       .join('\n');
 
     foundersBlock = `- Total Founders / Leadership Count: ${founderCount}
-- Founders & Co-Founders Directory:
+- Verified Founders & Co-Founders Directory (KEEP DETAILS STRICTLY SEPARATED PER PERSON):
 ${formattedFounders}`;
   } else {
-    foundersBlock = `- Core Leadership / Boss: ${adminDetails.founderName || 'Soham Dutta (Founder & Lead Architect) & Core Engineering Team'}`;
+    foundersBlock = `- Core Leadership / Boss: ${adminDetails.founderName || 'Soham Dutta (Founder & Lead Architect) & Founding Team'}`;
   }
 
   // Build Admin & Company Showable Details block
@@ -131,7 +134,7 @@ CORE OFFERINGS & PACKAGES:
    - Promo Code "INDIA2025": Gives an instant 20% DISCOUNT + Free SSL certificate + Free custom domain setup.
    - Live Announcement: "${announcementText}"
 4. Direct Actions You Can Perform:
-   - "Instant Callback": If the user provides a phone number or asks for a call, our backend auto-registers an instant callback request and alerts the founders (local2brand.contact@gmail.com).
+   - "Instant Callback": If the user provides a phone number or asks for a call, our backend auto-registers an instant callback request and alerts the founders (${officialSupportEmail}).
    - "Step-by-Step Project Order Intake": When a client wants to build a website or place an order, systematically guide them step-by-step through requirements gathering, summarize their details, and confirm the order with their exact specifications!
    - Official Verified Email: ${officialSupportEmail}${servicesBlock}${demosBlock}
 ========================================
@@ -166,7 +169,12 @@ ${customInstructions ? `========================================\nADMIN CUSTOM I
 
 CRITICAL OPERATIONAL & COMMUNICATION RULES:
 1. Step-by-Step Clarity: Do NOT overwhelm the user with a massive form in one go unless they provide everything at once. Ask sequentially and build the order profile step by step.
-2. Founders & Boss Identity: When anyone asks "who is your boss?", "who is the owner?", "founder ke?", "founder details ki?", "co-founder ke?", or requests Instagram/emails, introduce our founder(s) and co-founders proudly with their exact names, roles, and verified email (${officialSupportEmail}).
+2. Founders & Leadership Identity (STRICT NO-MIXUP RULE):
+   - When anyone asks "who is your boss?", "who is the owner?", "founder ke?", "founder details ki?", "co-founder ke?", or requests Instagram/emails/phone numbers, consult the Verified Founders Directory above.
+   - NEVER MIX UP one founder's Instagram handle, email, or phone number with another founder.
+   - For Soham Dutta: state Soham Dutta's exact role, bio, and Instagram (@sohamart).
+   - For Sayantan Ghosh: state Sayantan Ghosh's exact role, bio, and Instagram (@sayantan_ghosh).
+   - If asked about all founders, list each person on their own distinct bullet point.
 3. Email Integrity: ALWAYS use "${officialSupportEmail}" as the single official contact & support email.
 4. Complete, Crisp & Structured (পরিপূর্ণ, স্পষ্ট ও পরিপাটি): Always provide complete responses. Never stop midway. Use 2-4 clean bullet points and bold key details.
 5. User Awareness: If the user is logged in, you MUST know and acknowledge their details (name, email, role) when asked.
@@ -517,8 +525,8 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
     ? adminDetails.founders
     : [{ name: 'Soham Dutta', role: 'Founder & Lead Architect', email: 'local2brand.contact@gmail.com', phone: '+91 87100 43923', instagram: 'https://instagram.com/sohamart' }];
 
-  const formattedFoundersBn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder' : 'Co-Founder')}) • ✉️ Email: \`${f.email || supportEmail}\`${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}`).join('\n');
-  const formattedFoundersEn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder' : 'Co-Founder')}) • ✉️ Email: \`${f.email || supportEmail}\`${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}`).join('\n');
+  const formattedFoundersBn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder & Lead Architect' : 'Co-Founder')})${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}${f.email ? ` • ✉️ Email: \`${f.email}\`` : ''}${f.phone ? ` • 📱 Phone: ${f.phone}` : ''}`).join('\n');
+  const formattedFoundersEn = founders.map((f, i) => `- 👤 **${f.name}** (${f.role || (i === 0 ? 'Founder & Lead Architect' : 'Co-Founder')})${f.instagram ? ` • 📷 Instagram: ${f.instagram}` : ''}${f.email ? ` • ✉️ Email: \`${f.email}\`` : ''}${f.phone ? ` • 📱 Phone: ${f.phone}` : ''}`).join('\n');
 
   // Bengali Detection
   const isBengali = /[\u0980-\u09FF]/.test(lastUserMsg) || /kemon|ki|lagbe|koto|kore|hobe|dorkar|valo|bhalo|bhai|taka|ke|boss|founder|owner|naam|nam/i.test(lastUserMsg);

@@ -22,7 +22,9 @@ class NotificationDispatcher {
     data = {},
     emailHtml = '',
     priority = 'normal',
-    sendPush = true,
+    sendPush = false, // Default to false: push is only sent for broadcast or generic web inbox message
+    customPushTitle = null,
+    customPushMessage = null,
   }) {
     if (!title || !message) return null;
 
@@ -57,10 +59,11 @@ class NotificationDispatcher {
         priority,
       });
 
-      // 3. Dispatch OneSignal Push Notification if enabled
+      // 3. Dispatch OneSignal Push Notification ONLY if explicitly enabled
+      // Web push notifications are sanitized to preserve privacy (no sensitive emails or order details)
       if (sendPush && oneSignalBackend.isConfigured()) {
-        const pushTitle = title || '🔔 New Notification from LOCAL2BRAND';
-        const pushMessage = message || 'You have a new update in your LOCAL2BRAND inbox. Tap to view.';
+        const pushTitle = customPushTitle || 'LOCAL2BRAND Web Inbox';
+        const pushMessage = customPushMessage || 'You have a message in web inbox.';
         const pushUrl = link || (recipientRole === 'admin' ? '/admin/inbox' : '/dashboard');
 
         if (recipientRole === 'admin') {
@@ -79,15 +82,6 @@ class NotificationDispatcher {
             url: pushUrl,
             data: { notificationId: notificationRecord._id.toString(), type },
           });
-          // If specific player wasn't subscribed, ensure active subscribers receive the alert
-          if (!pushResult || !pushResult.success) {
-            pushResult = await oneSignalBackend.broadcastPushNotification({
-              title: pushTitle,
-              message: pushMessage,
-              url: pushUrl,
-              data: { notificationId: notificationRecord._id.toString(), type },
-            });
-          }
         } else {
           // Broadcast to all subscribed devices
           pushResult = await oneSignalBackend.broadcastPushNotification({
@@ -121,11 +115,13 @@ class NotificationDispatcher {
     message,
     type = 'system',
     category = 'Admin Alert',
-    link = '/admin',
+    link = '/admin/inbox',
     data = {},
     emailHtml = '',
     priority = 'high',
-    sendPush = true,
+    sendPush = false,
+    customPushTitle = null,
+    customPushMessage = null,
   }) {
     return this.dispatch({
       recipient: null,
@@ -139,6 +135,8 @@ class NotificationDispatcher {
       emailHtml,
       priority,
       sendPush,
+      customPushTitle,
+      customPushMessage,
     });
   }
 
@@ -156,7 +154,9 @@ class NotificationDispatcher {
     data = {},
     emailHtml = '',
     priority = 'normal',
-    sendPush = true,
+    sendPush = false,
+    customPushTitle = null,
+    customPushMessage = null,
   }) {
     return this.dispatch({
       recipient: userId || null,
@@ -171,6 +171,8 @@ class NotificationDispatcher {
       emailHtml,
       priority,
       sendPush,
+      customPushTitle,
+      customPushMessage,
     });
   }
 }

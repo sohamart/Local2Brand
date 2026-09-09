@@ -61,7 +61,7 @@ export function generateWhatsAppOrderUrl(orderData = {}) {
     requirements ? `\n📝 *Project Requirements:*\n"${requirements}"` : '',
     '\n━━━━━━━━━━━━━━━━━━━━',
     '⚡ *Turnaround Goal:* 3 - 7 Days Delivery',
-    '🇮🇳 *Origin:* local2brand.com'
+    '🇮🇳 *Origin:* local2brand.cyou'
   ].filter(Boolean);
 
   const encodedMessage = encodeURIComponent(messageLines.join('\n'));

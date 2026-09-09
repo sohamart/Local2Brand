@@ -177,9 +177,9 @@ export default function Footer() {
             © {currentYear} {settings.brandName}. All rights reserved. Crafted with Pride in India 🇮🇳.
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/pricing" className="hover:text-purple-600">Privacy Policy</Link>
+            <Link to="/privacy" className="hover:text-purple-600">Privacy Policy</Link>
             <span>•</span>
-            <Link to="/pricing" className="hover:text-purple-600">Terms of Service</Link>
+            <Link to="/terms" className="hover:text-purple-600">Terms of Service</Link>
           </div>
         </div>
 

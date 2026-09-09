@@ -42,8 +42,14 @@ class OneSignalService {
     }
 
     this.initPromise = new Promise((resolve) => {
+      // Safety timeout: resolve within 2.5s even if external CDN is blocked/delayed
+      const timer = setTimeout(() => {
+        resolve(this.isInitialized);
+      }, 2500);
+
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async (OneSignal) => {
+        clearTimeout(timer);
         try {
           await OneSignal.init({
             appId: this.appId,
@@ -92,15 +98,6 @@ class OneSignalService {
                 OneSignal.User.PushSubscription.optIn().catch(() => {});
               }
             } catch (e) {}
-          } else if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-            // Fresh prompt for all unprompted / previous visitors
-            setTimeout(() => {
-              try {
-                if (OneSignal.Slidedown?.promptPush) {
-                  OneSignal.Slidedown.promptPush({ force: true }).catch(() => {});
-                }
-              } catch (e) {}
-            }, 800);
           }
 
           // Listen to push subscription changes
@@ -159,8 +156,13 @@ class OneSignalService {
     } catch (e) {}
 
     return new Promise((resolve) => {
+      const fallbackTimer = setTimeout(() => {
+        resolve(Notification.permission === 'granted');
+      }, 1500);
+
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push((OneSignal) => {
+        clearTimeout(fallbackTimer);
         try {
           const pushSub = OneSignal.User?.PushSubscription;
           if (pushSub && typeof pushSub.optedIn === 'boolean') {
@@ -183,28 +185,52 @@ class OneSignalService {
       throw new Error('Push notifications are not supported on this browser or device.');
     }
 
-    await this.init();
+    // Attempt browser prompt directly if Notification API is present
+    let nativePerm = null;
+    if (typeof Notification !== 'undefined' && Notification.requestPermission) {
+      try {
+        nativePerm = await Notification.requestPermission();
+      } catch (e) {
+        console.warn('Native permission prompt notice:', e);
+      }
+    }
 
-    return new Promise((resolve, reject) => {
+    await this.init().catch(() => {});
+
+    return new Promise((resolve) => {
+      const fallbackResolve = (perm) => {
+        const p = perm || (typeof Notification !== 'undefined' ? Notification.permission : 'default');
+        if (p === 'granted') {
+          try { localStorage.removeItem('l2b_push_muted'); } catch (e) {}
+          this.notifyListeners({ type: 'permissionGranted', isSubscribed: true });
+          resolve({ success: true, permission: 'granted' });
+        } else if (p === 'denied') {
+          resolve({ success: false, permission: 'denied', message: 'Notification permission was blocked in browser settings.' });
+        } else {
+          resolve({ success: false, permission: p });
+        }
+      };
+
+      const safetyTimer = setTimeout(() => {
+        fallbackResolve(nativePerm);
+      }, 2000);
+
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async (OneSignal) => {
+        clearTimeout(safetyTimer);
         try {
-          // Request notification permission
           if (OneSignal.Notifications?.requestPermission) {
-            await OneSignal.Notifications.requestPermission();
-          } else if (Notification.requestPermission) {
-            await Notification.requestPermission();
+            await OneSignal.Notifications.requestPermission().catch(() => {});
           }
 
-          const currentPerm = Notification.permission;
+          const currentPerm = (typeof Notification !== 'undefined' ? Notification.permission : null) || nativePerm || 'default';
 
           if (currentPerm === 'granted') {
             if (OneSignal.User?.PushSubscription?.optIn) {
-              await OneSignal.User.PushSubscription.optIn();
+              await OneSignal.User.PushSubscription.optIn().catch(() => {});
             }
             try { localStorage.removeItem('l2b_push_muted'); } catch (e) {}
 
-            // Auto sync cached user if available
             try {
               const cached = localStorage.getItem('l2b_cached_user');
               if (cached) {
@@ -220,7 +246,7 @@ class OneSignalService {
             resolve({ success: false, permission: currentPerm });
           }
         } catch (err) {
-          reject(err);
+          fallbackResolve(nativePerm);
         }
       });
     });

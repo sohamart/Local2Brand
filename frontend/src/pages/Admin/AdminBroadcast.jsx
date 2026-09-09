@@ -874,7 +874,7 @@ export default function AdminBroadcast() {
                       src="/favicon.jpg"
                       alt="Local2Brand"
                       className="w-11 h-11 rounded-2xl object-cover border border-purple-500/40 shadow-md shrink-0"
-                      onError={(e) => { e.target.src = 'https://local2brand.com/favicon.jpg'; }}
+                      onError={(e) => { e.target.src = 'https://local2brand.cyou/favicon.jpg'; }}
                     />
 
                     <div className="space-y-1 min-w-0 flex-1">
