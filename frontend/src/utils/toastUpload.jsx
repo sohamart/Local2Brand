@@ -133,7 +133,8 @@ export const uploadWithToast = async ({
 
     if (directSig) {
       // Direct high-speed upload straight from client browser to Cloudinary CDN edge
-      const directUploadPromises = fileListToUpload.map(async (singleFile) => {
+      const loadedPerFile = new Array(fileListToUpload.length).fill(0);
+      const directUploadPromises = fileListToUpload.map(async (singleFile, idx) => {
         const directData = new FormData();
         directData.append('file', singleFile);
         directData.append('api_key', directSig.apiKey);
@@ -142,8 +143,19 @@ export const uploadWithToast = async ({
         directData.append('folder', directSig.folder || (isVideo ? 'local2brand_videos' : 'local2brand_assets'));
 
         const targetUrl = `https://api.cloudinary.com/v1_1/${directSig.cloudName}/${isVideo ? 'video' : 'auto'}/upload`;
-        const cloudData = await api.uploadWithProgress(targetUrl, directData, progressHandler);
+        
+        const fileProgressHandler = ({ loaded }) => {
+          loadedPerFile[idx] = loaded;
+          const currentTotalLoaded = loadedPerFile.reduce((acc, curr) => acc + curr, 0);
+          const percent = Math.min(99, Math.round((currentTotalLoaded * 100) / Math.max(1, totalBytes)));
+          progressHandler({
+            loaded: currentTotalLoaded,
+            total: totalBytes,
+            percent,
+          });
+        };
 
+        const cloudData = await api.uploadWithProgress(targetUrl, directData, fileProgressHandler);
         return cloudData?.secure_url || cloudData?.url;
       });
 

@@ -65,6 +65,7 @@ import { toast } from 'react-toastify';
 import api from '../../services/api';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { SEO } from '../../components/common/CommonUI';
+import { uploadWithToast } from '../../utils/toastUpload';
 
 export default function AdminSettings() {
   const { settings, refreshSettings, updateLocalSettingsState } = useSiteSettings();
@@ -527,13 +528,12 @@ export default function AdminSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Banner size must be under 10MB');
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('Banner size must be under 15MB');
       return;
     }
 
     setUploadingBanner(true);
-    const toastId = toast.loading('Uploading website banner / asset... ⏳');
 
     // Instant local preview
     const reader = new FileReader();
@@ -545,29 +545,17 @@ export default function AdminSettings() {
     reader.readAsDataURL(file);
 
     try {
-      const data = new FormData();
-      data.append('file', file);
-
-      const res = await api.post('/upload', data);
-      if (res && res.success && res.url) {
-        setFormData((prev) => ({ ...prev, bannerImage: res.url }));
-        toast.update(toastId, {
-          render: 'Banner uploaded & synchronized successfully! 🖼️',
-          type: 'success',
-          isLoading: false,
-          autoClose: 3000,
-        });
-      } else {
-        throw new Error(res?.message || 'Upload failed');
+      const res = await uploadWithToast({
+        file,
+        title: `Uploading Banner (${file.name})`,
+        successMessage: 'Banner uploaded & synchronized successfully! 🖼️'
+      });
+      if (res && (res.url || res.urls?.[0])) {
+        const uploadedUrl = res.url || res.urls[0];
+        setFormData((prev) => ({ ...prev, bannerImage: uploadedUrl }));
       }
     } catch (err) {
       console.warn('Backend banner upload notice, preview retained:', err.message);
-      toast.update(toastId, {
-        render: 'Banner preview saved locally! ✅',
-        type: 'success',
-        isLoading: false,
-        autoClose: 3000,
-      });
     } finally {
       setUploadingBanner(false);
     }
@@ -594,33 +582,20 @@ export default function AdminSettings() {
 
     setUploadingApk(true);
     const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
-    const toastId = toast.loading(`Uploading Android APK binary (${file.name}, ${sizeMb} MB)... ⏳`);
 
     try {
-      const data = new FormData();
-      data.append('file', file);
-
-      const res = await api.post('/upload', data);
-      if (res && res.success && res.url) {
-        handleAppConfigChange('apkDownloadUrl', res.url);
+      const res = await uploadWithToast({
+        file,
+        title: `Uploading Android APK (${file.name})`,
+        successMessage: `APK binary uploaded successfully! (${sizeMb} MB) 📱`
+      });
+      if (res && (res.url || res.urls?.[0])) {
+        const uploadedUrl = res.url || res.urls[0];
+        handleAppConfigChange('apkDownloadUrl', uploadedUrl);
         handleAppConfigChange('fileSize', `${sizeMb} MB`);
-        toast.update(toastId, {
-          render: `APK binary uploaded successfully! (${sizeMb} MB) 📱`,
-          type: 'success',
-          isLoading: false,
-          autoClose: 3000,
-        });
-      } else {
-        throw new Error(res?.message || 'Upload failed');
       }
     } catch (err) {
       console.error('APK upload error:', err);
-      toast.update(toastId, {
-        render: err.response?.data?.message || err.message || 'APK upload failed. You can also paste direct URL.',
-        type: 'error',
-        isLoading: false,
-        autoClose: 4000,
-      });
     } finally {
       setUploadingApk(false);
       e.target.value = '';
@@ -631,38 +606,25 @@ export default function AdminSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('QR Code image size must be under 10MB');
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('QR Code image size must be under 15MB');
       return;
     }
 
     setUploadingQr(true);
-    const toastId = toast.loading(`Uploading custom QR Code image (${file.name})... ⏳`);
 
     try {
-      const data = new FormData();
-      data.append('file', file);
-
-      const res = await api.post('/upload', data);
-      if (res && res.success && res.url) {
-        handleAppConfigChange('qrCodeUrl', res.url);
-        toast.update(toastId, {
-          render: 'Custom QR Code uploaded & linked successfully! 📷',
-          type: 'success',
-          isLoading: false,
-          autoClose: 3000,
-        });
-      } else {
-        throw new Error(res?.message || 'Upload failed');
+      const res = await uploadWithToast({
+        file,
+        title: `Uploading QR Code (${file.name})`,
+        successMessage: 'Custom QR Code uploaded & linked successfully! 📷'
+      });
+      if (res && (res.url || res.urls?.[0])) {
+        const uploadedUrl = res.url || res.urls[0];
+        handleAppConfigChange('qrCodeUrl', uploadedUrl);
       }
     } catch (err) {
       console.error('QR upload error:', err);
-      toast.update(toastId, {
-        render: err.response?.data?.message || err.message || 'QR Code upload failed.',
-        type: 'error',
-        isLoading: false,
-        autoClose: 4000,
-      });
     } finally {
       setUploadingQr(false);
       e.target.value = '';
@@ -673,22 +635,23 @@ export default function AdminSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Screenshot size must be under 10MB');
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('Screenshot size must be under 15MB');
       return;
     }
 
     setUploadingScreenshot(true);
-    const toastId = toast.loading(`Uploading screenshot (${file.name})... ⏳`);
 
     try {
-      const data = new FormData();
-      data.append('file', file);
-
-      const res = await api.post('/upload', data);
-      if (res && res.success && res.url) {
+      const res = await uploadWithToast({
+        file,
+        title: `Uploading Screenshot (${file.name})`,
+        successMessage: 'Screenshot uploaded & added to showcase! 🖼️'
+      });
+      if (res && (res.url || res.urls?.[0])) {
+        const uploadedUrl = res.url || res.urls[0];
         const newScreenshot = {
-          url: res.url,
+          url: uploadedUrl,
           title: newScreenshotTitle.trim() || `App Preview ${(formData.appConfig?.screenshots?.length || 0) + 1}`,
           caption: newScreenshotCaption.trim() || 'Interactive mobile interface showcase'
         };
@@ -702,22 +665,9 @@ export default function AdminSettings() {
         setNewScreenshotTitle('');
         setNewScreenshotCaption('');
         setNewScreenshotUrl('');
-        toast.update(toastId, {
-          render: 'Screenshot uploaded & added to showcase! 🖼️',
-          type: 'success',
-          isLoading: false,
-          autoClose: 2500,
-        });
-      } else {
-        throw new Error(res?.message || 'Upload failed');
       }
     } catch (err) {
-      toast.update(toastId, {
-        render: err.response?.data?.message || err.message || 'Screenshot upload failed',
-        type: 'error',
-        isLoading: false,
-        autoClose: 3500,
-      });
+      console.error('Screenshot upload error:', err);
     } finally {
       setUploadingScreenshot(false);
       e.target.value = '';

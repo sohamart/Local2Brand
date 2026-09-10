@@ -1,12 +1,28 @@
 # ==============================================================================
 # LOCAL2BRAND — Production Robots.txt
-# https://local2brand.cyou
+# Official Domain: https://local2brand.cyou
 # ==============================================================================
 
 User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: DuckDuckBot
+Allow: /
 
 # Host & XML Sitemaps
 Host: https://local2brand.cyou

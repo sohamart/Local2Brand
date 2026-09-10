@@ -15,19 +15,51 @@ export default function NotificationPrompt() {
       return;
     }
 
-    // Show prompt promptly after 800ms of page load
+    // Don't show if user dismissed recently (within 7 days)
+    try {
+      const dismissedTime = localStorage.getItem('l2b_push_prompt_dismissed');
+      if (dismissedTime && (Date.now() - parseInt(dismissedTime, 10)) < 7 * 24 * 60 * 60 * 1000) {
+        setIsVisible(false);
+        return;
+      }
+    } catch (e) {}
+
+    // Show prompt after 1200ms of page load
     const timer = setTimeout(() => {
       if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-        setIsVisible(true);
+        try {
+          const dismissedTime = localStorage.getItem('l2b_push_prompt_dismissed');
+          if (!dismissedTime || (Date.now() - parseInt(dismissedTime, 10)) > 7 * 24 * 60 * 60 * 1000) {
+            setIsVisible(true);
+          }
+        } catch (e) {
+          setIsVisible(true);
+        }
       }
-    }, 800);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, [isSupported, permission, isSubscribed]);
 
   const handleAllow = async () => {
-    const success = await requestPermission();
-    if (success) {
+    try {
+      // Safety auto-dismiss modal so it never hangs in requesting state
+      const promise = requestPermission();
+      // Wait up to 3s for user interaction, then close prompt regardless
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+      }, 3500);
+
+      const success = await promise;
+      clearTimeout(timer);
+      setIsVisible(false);
+
+      if (!success) {
+        try {
+          localStorage.setItem('l2b_push_prompt_dismissed', Date.now().toString());
+        } catch (e) {}
+      }
+    } catch (err) {
       setIsVisible(false);
     }
   };
