@@ -276,13 +276,32 @@ export const sendBroadcastEmail = async (req, res) => {
       recipients = allUsers.map((u) => u.email);
     }
 
-    // Deduplicate & normalize
-    recipients = [...new Set(recipients.map((e) => (e || '').toLowerCase().trim()).filter((e) => e && e.includes('@')))];
+    // Strict email format validation & non-existent domain filtering to protect IP reputation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const sanitizedRecipients = [...new Set(
+      recipients
+        .map((e) => (e || '').toLowerCase().trim())
+        .filter((e) => {
+          if (!e || !emailRegex.test(e)) return false;
+          // Filter out dummy or non-existent domains that cause hard bounces
+          if (
+            e.includes('@local2brand.com') ||
+            e.includes('@client.local2brand.com') ||
+            e.includes('customer@local2brand.com') ||
+            e.includes('beta-app@local2brand.com') ||
+            e.includes('@example.com') ||
+            e.includes('@test.com')
+          ) {
+            return false;
+          }
+          return true;
+        })
+    )];
 
-    if (recipients.length === 0) {
+    if (sanitizedRecipients.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'No recipient email addresses found for the selected audience segment.',
+        message: 'No valid recipient email addresses found for the selected audience segment.',
       });
     }
 
@@ -317,37 +336,44 @@ export const sendBroadcastEmail = async (req, res) => {
       ctaUrl: actionText && actionUrl ? resolvedActionUrl : '',
     });
 
-    // Throttled Sequential/Batch Dispatch to prevent SMTP burst rate-limit & spam classification
+    // Send strictly ONE BY ONE (Individual Isolated Dispatch)
+    // with gentle adaptive delay between each email to prevent ESP/ISP rate-limiting and blocking
     let sentCount = 0;
     let failedCount = 0;
-    const BATCH_SIZE = 2;
+    const failedList = [];
+    const DELAY_BETWEEN_EMAILS_MS = 650; // 650ms delay between each individual send
 
-    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
-      const batch = recipients.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.allSettled(
-        batch.map((email) =>
-          sendEmail({
-            to: email,
-            subject: subject,
-            html: formattedHtml,
-            text: messageHtml,
-            isImportant: Boolean(isImportant),
-            priority: isImportant ? 'high' : 'normal',
-          })
-        )
-      );
+    console.log(`🚀 Starting 1-by-1 email broadcast to ${sanitizedRecipients.length} recipients...`);
 
-      batchResults.forEach((res) => {
-        if (res.status === 'fulfilled' && res.value && res.value.success) {
+    for (let i = 0; i < sanitizedRecipients.length; i++) {
+      const email = sanitizedRecipients[i];
+      try {
+        console.log(`[Broadcast ${i + 1}/${sanitizedRecipients.length}] Sending to ${email}...`);
+
+        const sendResult = await sendEmail({
+          to: email,
+          subject: subject,
+          html: formattedHtml,
+          text: messageHtml,
+          isImportant: false, // Standard priority avoids aggressive spam scoring
+          priority: 'normal',
+        });
+
+        if (sendResult && (sendResult.success || sendResult.messageId)) {
           sentCount++;
         } else {
           failedCount++;
+          failedList.push({ email, reason: sendResult?.error || 'Delivery rejected' });
         }
-      });
+      } catch (sendErr) {
+        failedCount++;
+        failedList.push({ email, reason: sendErr.message || 'Send error' });
+        console.warn(`⚠️ Broadcast error for ${email}:`, sendErr.message);
+      }
 
-      // Small throttle sleep between batches
-      if (i + BATCH_SIZE < recipients.length) {
-        await new Promise((resolve) => setTimeout(resolve, 400));
+      // Safe pacing pause between each individual email
+      if (i + 1 < sanitizedRecipients.length) {
+        await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_EMAILS_MS));
       }
     }
 
@@ -366,10 +392,11 @@ export const sendBroadcastEmail = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: `Broadcast completed! Dispatched to ${sentCount} email recipients.`,
+      message: `Broadcast completed! Successfully delivered to ${sentCount} recipients (one-by-one with anti-block pacing).`,
       sentCount,
       failedCount,
-      total: recipients.length,
+      total: sanitizedRecipients.length,
+      failedList: failedList.slice(0, 10),
     });
   } catch (error) {
     console.error('Broadcast email error:', error);

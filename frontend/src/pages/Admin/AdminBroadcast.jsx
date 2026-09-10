@@ -418,11 +418,11 @@ export default function AdminBroadcast() {
           isImportant,
           sendPush: sendPushWithEmail,
         },
-        { timeout: 120000 }
+        { timeout: 300000 }
       );
 
       if (res.success) {
-        toast.success(`Broadcast sent successfully to ${res.sentCount} recipients! 🚀`);
+        toast.success(`Broadcast sent successfully to ${res.sentCount} recipients (1-by-1)! 🚀`);
         setResult({
           type: 'success',
           message: res.message || `Sent successfully to ${res.sentCount} recipients!`,

@@ -149,31 +149,48 @@ export const sendViaBrevoApi = async ({ to, subject, html, text }) => {
       if (item && item.email) return { email: String(item.email).trim(), name: item.name };
       return null;
     })
-    .filter((r) => r && r.email && r.email.includes('@'));
+    .filter((r) => r && r.email && r.email.includes('@') && !r.email.includes('@local2brand.com'));
 
   if (recipients.length === 0) return null;
 
   try {
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    const payload = {
+      sender: { name: senderName, email: senderEmail },
+      replyTo: { name: `${senderName} Support`, email: supportEmail },
+      to: recipients,
+      subject,
+      htmlContent: html,
+      textContent: text,
+    };
+
+    let response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
         accept: 'application/json',
         'api-key': apiKey,
         'content-type': 'application/json',
       },
-      body: JSON.stringify({
-        sender: { name: senderName, email: senderEmail },
-        replyTo: { name: `${senderName} Support`, email: supportEmail },
-        to: recipients,
-        subject,
-        htmlContent: html,
-        textContent: text,
-      }),
+      body: JSON.stringify(payload),
     });
+
+    // Handle temporary rate limiting (429) gracefully with backoff & retry
+    if (response.status === 429) {
+      console.warn('⚠️ Brevo API rate limit hit (429). Backing off for 2.5s before retry...');
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'api-key': apiKey,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+    }
 
     const data = await response.json();
     if (response.ok && data.messageId) {
-      console.log(`✅ Email sent successfully via Brevo API to ${to} (MessageId: ${data.messageId})`);
+      console.log(`✅ Email sent successfully via Brevo API to ${recipients.map(r => r.email).join(', ')} (MessageId: ${data.messageId})`);
       return { success: true, messageId: data.messageId };
     } else {
       console.warn(`⚠️ Brevo API response note:`, data);
@@ -185,7 +202,7 @@ export const sendViaBrevoApi = async ({ to, subject, html, text }) => {
   }
 };
 
-export const sendEmail = async ({ to, subject, html, text, priority = 'high', isImportant = true }) => {
+export const sendEmail = async ({ to, subject, html, text, priority = 'normal', isImportant = false }) => {
   const fromEmail = process.env.EMAIL_FROM || `"LOCAL2BRAND" <${process.env.EMAIL_USER || 'local2brand.contact@gmail.com'}>`;
   const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
 
@@ -229,25 +246,14 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'high', is
     return { success: true, simulated: true };
   }
 
-  // High-Priority / Important MIME headers for Primary Inbox placement
-  const emailHeaders = {};
-  if (isImportant || priority === 'high') {
-    emailHeaders['X-Priority'] = '1 (Highest)';
-    emailHeaders['X-MSMail-Priority'] = 'High';
-    emailHeaders['Importance'] = 'High';
-    emailHeaders['Priority'] = 'urgent';
-  } else {
-    emailHeaders['X-Priority'] = '3 (Normal)';
-    emailHeaders['X-MSMail-Priority'] = 'Normal';
-    emailHeaders['Importance'] = 'Normal';
-  }
-
-  // Anti-spam compliance & Deliverability headers (RFC 2369 / RFC 8058)
+  // Inbox Deliverability Headers (Standard Transactional, No Spam Scoring Flags)
   const appClientUrl = getClientUrl();
-  emailHeaders['List-Unsubscribe'] = `<mailto:${supportEmail}?subject=Unsubscribe>, <${appClientUrl}>`;
-  emailHeaders['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click';
-  emailHeaders['X-Entity-Ref-ID'] = `L2B-DISPATCH-${Date.now()}`;
-  emailHeaders['X-Auto-Response-Suppress'] = 'OOF, AutoReply';
+  const emailHeaders = {
+    'X-Entity-Ref-ID': `L2B-DISPATCH-${Date.now()}`,
+    'X-Auto-Response-Suppress': 'OOF, AutoReply',
+    'List-Unsubscribe': `<mailto:${supportEmail}?subject=Unsubscribe>, <${appClientUrl}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+  };
 
   try {
     const info = await transporter.sendMail({
@@ -507,7 +513,7 @@ export const sendRequirementConfirmationEmail = async (reqDoc) => {
     return { success: false, error: 'No client email provided' };
   }
 
-  const subject = `🎉 Order Confirmed: ${businessName} (${reqId}) — LOCAL2BRAND`;
+  const subject = `Order Confirmed: ${businessName} (${reqId}) — LOCAL2BRAND`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -560,8 +566,8 @@ export const sendRequirementConfirmationEmail = async (reqDoc) => {
 
   const html = wrapAgencyEmail({
     preheader: `Order ${reqId} confirmed for ${businessName}. Tracking is now active.`,
-    headerBadge: '🚀 WEBSITE ORDER INITIALIZED',
-    title: `Website Order Confirmed! 🎉`,
+    headerBadge: 'WEBSITE ORDER INITIALIZED',
+    title: `Website Order Confirmed`,
     subtitle: `We have logged your specifications and started architecture planning.`,
     orderId: reqId,
     contentHtml,
@@ -577,7 +583,9 @@ export const sendAdminRequirementAlert = async (reqDoc) => {
   const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'local2brand.contact@gmail.com';
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com'])).filter(Boolean).join(', ');
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com']))
+    .filter(Boolean)
+    .filter(e => !e.includes('@local2brand.com'));
 
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
@@ -586,7 +594,7 @@ export const sendAdminRequirementAlert = async (reqDoc) => {
   const phone = reqDoc.clientInfo?.mobile || 'N/A';
   const email = reqDoc.clientInfo?.email || 'N/A';
 
-  const subject = `🔥 [NEW WEBSITE ORDER ${reqId}] ${businessName} (${reqDoc.budget || 'Quotation'})`;
+  const subject = `New Website Order: ${businessName} (${reqId})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -786,8 +794,8 @@ export const sendLeadConfirmationEmail = async (lead) => {
 
   const html = wrapAgencyEmail({
     preheader: `We have received your website inquiry for ${lead.websiteType}.`,
-    headerBadge: '📋 IMPORTANT • PROPOSAL INTAKE CONFIRMATION',
-    title: `Inquiry Received! 🎉`,
+    headerBadge: 'PROPOSAL INTAKE CONFIRMATION',
+    title: `Inquiry Received`,
     subtitle: `Reference: #${leadIdShort}`,
     orderId: `#${leadIdShort}`,
     contentHtml,
@@ -795,7 +803,7 @@ export const sendLeadConfirmationEmail = async (lead) => {
     ctaUrl: `${clientUrl}/dashboard`,
   });
 
-  return await sendEmail({ to: lead.email, subject, html, text: `Thank you for your inquiry, ${lead.name}!`, isImportant: true, priority: 'high' });
+  return await sendEmail({ to: lead.email, subject, html, text: `Thank you for your inquiry, ${lead.name}!` });
 };
 
 // 6. Admin Notification on New Lead or Contact Form Message
@@ -803,12 +811,14 @@ export const sendAdminNewLeadAlert = async (lead) => {
   const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'local2brand.contact@gmail.com';
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com'])).filter(Boolean).join(', ');
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com']))
+    .filter(Boolean)
+    .filter(e => !e.includes('@local2brand.com'));
 
   const isContactForm = lead.industry === 'Direct Contact Form' || lead.websiteType?.includes('Contact Form') || lead.budget === 'Custom Quotation';
   const subject = isContactForm
-    ? `🚨 [NEW CONTACT MESSAGE] ${lead.name} (${lead.phone}) — LOCAL2BRAND`
-    : `🚨 [IMPORTANT INCOMING LEAD] ${lead.name} — ${lead.websiteType} (${lead.budget})`;
+    ? `New Contact Message: ${lead.name} (${lead.phone}) — LOCAL2BRAND`
+    : `New Project Inquiry: ${lead.name} — ${lead.websiteType} (${lead.budget})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -1002,7 +1012,7 @@ export const sendCallbackConfirmationEmail = async (callback) => {
   if (!callback.email) return;
   const clientUrl = getClientUrl();
   const cbId = (callback._id || '').toString().slice(-6).toUpperCase();
-  const subject = `📞 [IMPORTANT] Founder Callback Confirmed — LOCAL2BRAND 📞`;
+  const subject = `Callback Confirmed: Consultation with LOCAL2BRAND (${cbId ? `#${cbId}` : 'Scheduled'})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -1037,16 +1047,16 @@ export const sendCallbackConfirmationEmail = async (callback) => {
 
   const html = wrapAgencyEmail({
     preheader: `Your 15-min consultation callback is confirmed for ${callback.preferredTime}.`,
-    headerBadge: '📞 IMPORTANT • FOUNDER CALLBACK QUEUE',
-    title: `Callback Request Confirmed! 📞`,
-    subtitle: `We'll call you at ${callback.phone} (${callback.preferredTime})`,
+    headerBadge: 'FOUNDER CALLBACK QUEUE',
+    title: `Callback Request Confirmed`,
+    subtitle: `We will call you at ${callback.phone} (${callback.preferredTime})`,
     orderId: cbId ? `CALL-${cbId}` : undefined,
     contentHtml,
     ctaText: 'Visit LOCAL2BRAND Portal',
     ctaUrl: `${clientUrl}/dashboard`,
   });
 
-  return await sendEmail({ to: callback.email, subject, html, text: `Callback request received for ${callback.phone}`, isImportant: true, priority: 'high' });
+  return await sendEmail({ to: callback.email, subject, html, text: `Callback request received for ${callback.phone}` });
 };
 
 // 8. Admin & Brand Instant Alert on Callback Request
@@ -1054,9 +1064,11 @@ export const sendAdminCallbackAlert = async (callback) => {
   const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'local2brand.contact@gmail.com';
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com'])).filter(Boolean).join(', ');
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com']))
+    .filter(Boolean)
+    .filter(e => !e.includes('@local2brand.com'));
 
-  const subject = `🚨 [IMPORTANT CALLBACK REQUEST] ${callback.name} — ${callback.phone}`;
+  const subject = `New Callback Request: ${callback.name} (${callback.phone})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -1118,9 +1130,11 @@ export const sendAdminNewUserAlertEmail = async ({ user }) => {
   const clientUrl = getClientUrl();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.ADMIN_ALERT_EMAIL || 'local2brand.contact@gmail.com';
   const brandEmail = process.env.BRAND_EMAIL || process.env.SUPPORT_EMAIL || 'local2brand.contact@gmail.com';
-  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com'])).filter(Boolean).join(', ');
+  const recipients = Array.from(new Set([adminEmail, brandEmail, 'local2brand.contact@gmail.com']))
+    .filter(Boolean)
+    .filter(e => !e.includes('@local2brand.com'));
 
-  const subject = `👤 [NEW USER REGISTRATION] ${user.name} (${user.email}) — LOCAL2BRAND`;
+  const subject = `New User Registration: ${user.name} (${user.email}) — LOCAL2BRAND`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
