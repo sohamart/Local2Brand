@@ -219,22 +219,21 @@ function MainAppContent() {
     window.location.reload();
   };
 
-  // Render maintenance screen if active and not bypassed
-  if (isMaintenanceOrComingSoon && !isBypassed) {
-    return (
-      <div className="min-h-screen bg-[#07090e] font-sans text-slate-100 selection:bg-purple-600 selection:text-white">
-        <MaintenanceMode onBypassGranted={() => setIsBypassed(true)} />
-        <CallbackModal />
-        <AuthModal />
-      </div>
-    );
-  }
+  const shouldShowPreloader = !isAdminRoute;
 
   return (
-    <div className="relative min-h-screen flex flex-col font-sans text-slate-900 dark:text-slate-100 selection:bg-purple-600 selection:text-white transition-colors duration-300">
-      
-      {/* Animated Initial Liquid Glass Preloader */}
-      {!isStandaloneLayout && <Preloader />}
+    <>
+      {/* Animated Initial Liquid Glass Preloader - Holds view until backend settings load */}
+      {shouldShowPreloader && <Preloader />}
+
+      {isMaintenanceOrComingSoon && !isBypassed ? (
+        <div className="min-h-screen bg-[#07090e] font-sans text-slate-100 selection:bg-purple-600 selection:text-white">
+          <MaintenanceMode onBypassGranted={() => setIsBypassed(true)} />
+          <CallbackModal />
+          <AuthModal />
+        </div>
+      ) : (
+        <div className="relative min-h-screen flex flex-col font-sans text-slate-900 dark:text-slate-100 selection:bg-purple-600 selection:text-white transition-colors duration-300">
 
       {/* Admin Bypass Pill */}
       {isBypassed && isMaintenanceOrComingSoon && (
@@ -310,7 +309,9 @@ function MainAppContent() {
       />
 
 
-    </div>
+        </div>
+      )}
+    </>
   );
 }
 

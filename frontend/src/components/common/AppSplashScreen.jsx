@@ -1,14 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Zap, Smartphone, ChevronRight } from 'lucide-react';
 import AshokaChakra from './AshokaChakra';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 export default function AppSplashScreen() {
+  const { loading: settingsLoading } = useSiteSettings();
   const [progress, setProgress] = useState(0);
+  const [statusText, setStatusText] = useState('Initializing Studio...');
   const [isLoaded, setIsLoaded] = useState(false);
   const [isRemoved, setIsRemoved] = useState(false);
   const [isFirstAppLaunch, setIsFirstAppLaunch] = useState(false);
   const [isInstalledApp, setIsInstalledApp] = useState(false);
   const [isAndroidApp, setIsAndroidApp] = useState(false);
+
+  const startTimeRef = useRef(Date.now());
+  const finishedRef = useRef(false);
+
+  useEffect(() => {
+    startTimeRef.current = Date.now();
+  }, []);
 
   useEffect(() => {
     // 1. Detect if currently running inside Installed Web App (Standalone PWA) or Android App
@@ -52,29 +62,81 @@ export default function AppSplashScreen() {
         }
       }
     } catch (e) {}
+  }, []);
 
-    // 3. Fast, High-Performance Progress Animation (1.2s - 1.6s lifecycle)
-    const startTime = Date.now();
-    // In installed app with first launch, give ~1.5s to enjoy the welcome banner; otherwise super-snappy ~1.1s
-    const duration = isApp && isFirstAppLaunch ? 1500 : (isApp ? 1200 : 950);
+  useEffect(() => {
+    if (finishedRef.current) return;
+
+    const minDuration = isInstalledApp && isFirstAppLaunch ? 1400 : (isInstalledApp ? 1100 : 900);
 
     const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const pct = Math.min(Math.round((elapsed / duration) * 100), 100);
-      setProgress(pct);
+      const elapsed = Date.now() - startTimeRef.current;
+      const isPastMinDuration = elapsed >= minDuration;
+      // Allow up to 10s maximum before safety fallback kicks in
+      const isBackendReady = !settingsLoading || elapsed >= 10000;
 
-      if (pct >= 100) {
-        clearInterval(interval);
-        setTimeout(() => setIsLoaded(true), 120);
-        setTimeout(() => setIsRemoved(true), 500);
+      setProgress((prev) => {
+        if (prev >= 100) return 100;
+
+        // While backend is loading, smoothly approach 88% and hold there
+        if (!isBackendReady) {
+          const targetCap = 88;
+          if (prev < targetCap) {
+            const increment = Math.max(1, Math.round((targetCap - prev) / 6));
+            return Math.min(prev + increment, targetCap);
+          }
+          return targetCap;
+        }
+
+        // Backend is ready:
+        if (!isPastMinDuration) {
+          // Approach 95% while waiting for aesthetic minimum duration
+          const target = 95;
+          if (prev < target) {
+            const increment = Math.max(1, Math.round((target - prev) / 4));
+            return Math.min(prev + increment, target);
+          }
+          return prev;
+        }
+
+        // Both backend is ready and minimum animation duration is satisfied:
+        const next = prev + 5;
+        if (next >= 100) {
+          clearInterval(interval);
+          finishedRef.current = true;
+          setTimeout(() => setIsLoaded(true), 150);
+          setTimeout(() => setIsRemoved(true), 600);
+          return 100;
+        }
+        return next;
+      });
+
+      // Update friendly real-time status label
+      if (!isBackendReady) {
+        if (elapsed > 3000) {
+          setStatusText('Waking up server & applying configuration...');
+        } else {
+          setStatusText('Loading site settings from backend...');
+        }
+      } else if (!isPastMinDuration) {
+        setStatusText('Applying site settings...');
+      } else {
+        setStatusText(
+          isInstalledApp && isFirstAppLaunch
+            ? 'Workspace Ready • Launching...'
+            : isInstalledApp
+            ? 'Launching App...'
+            : 'Welcome to LOCAL2BRAND'
+        );
       }
-    }, 25);
+    }, 30);
 
     return () => clearInterval(interval);
-  }, [isFirstAppLaunch]);
+  }, [settingsLoading, isInstalledApp, isFirstAppLaunch]);
 
-  // Instant dismiss on click / tap
+  // Instant dismiss on click / tap only once backend settings have loaded
   const handleSkip = () => {
+    if (settingsLoading) return;
     setIsLoaded(true);
     setTimeout(() => setIsRemoved(true), 250);
   };
@@ -86,7 +148,9 @@ export default function AppSplashScreen() {
       onClick={handleSkip}
       role="banner"
       aria-label="App Splash Screen"
-      className={`fixed inset-0 z-[2147483646] flex flex-col items-center justify-between select-none cursor-pointer overflow-hidden bg-[#06080d] transition-all duration-500 ease-out ${
+      className={`fixed inset-0 z-[2147483646] flex flex-col items-center justify-between select-none overflow-hidden bg-[#06080d] transition-all duration-500 ease-out ${
+        settingsLoading ? 'cursor-wait' : 'cursor-pointer'
+      } ${
         isLoaded ? 'opacity-0 scale-105 blur-sm pointer-events-none' : 'opacity-100 scale-100 blur-0'
       }`}
       style={{ willChange: 'opacity, transform' }}
@@ -224,15 +288,9 @@ export default function AppSplashScreen() {
           </div>
 
           <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
-            <span className="flex items-center gap-1.5 text-[11px] font-sans font-medium text-slate-300">
-              <Zap className="w-3 h-3 text-purple-400 animate-pulse" />
-              <span>
-                {isInstalledApp && isFirstAppLaunch
-                  ? 'Initializing App Workspace...'
-                  : isInstalledApp
-                  ? 'Launching App...'
-                  : 'Loading Studio...'}
-              </span>
+            <span className="flex items-center gap-1.5 text-[11px] font-sans font-medium text-slate-300 truncate max-w-[190px] sm:max-w-[220px]">
+              <Zap className="w-3 h-3 text-purple-400 animate-pulse shrink-0" />
+              <span className="truncate">{statusText}</span>
             </span>
             <span className="font-bold text-purple-400 font-mono">{progress}%</span>
           </div>
@@ -242,10 +300,19 @@ export default function AppSplashScreen() {
 
       {/* 5. FOOTER & TAP TO SKIP HINT */}
       <div className="relative z-10 w-full pb-8 sm:pb-10 px-6 flex flex-col items-center space-y-3 text-center">
-        <p className="text-[11px] text-slate-500 hover:text-slate-400 transition-colors flex items-center gap-1">
-          <span>Tap anywhere to continue</span>
-          <ChevronRight className="w-3 h-3" />
-        </p>
+        <div className="text-[11px] text-slate-500 hover:text-slate-400 transition-colors flex items-center gap-1">
+          {settingsLoading ? (
+            <span className="flex items-center gap-1.5 text-slate-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
+              <span>Waiting for server settings...</span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-1">
+              <span>Tap anywhere to continue</span>
+              <ChevronRight className="w-3 h-3" />
+            </span>
+          )}
+        </div>
 
         {/* Tricolor Cyber Accent Line */}
         <div className="w-32 h-[2px] rounded-full bg-gradient-to-r from-amber-500 via-blue-500 to-emerald-500 opacity-70" />

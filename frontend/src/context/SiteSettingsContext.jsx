@@ -231,17 +231,33 @@ export function SiteSettingsProvider({ children }) {
     });
   }, []);
 
-  const fetchSettings = useCallback(async () => {
-    try {
-      const res = await api.get('/settings');
-      if (res.success && res.settings) {
-        applySettings(res.settings, true);
+  const fetchSettings = useCallback(async (isInitial = false) => {
+    let attempts = 0;
+    const maxAttempts = isInitial ? 3 : 1;
+    let success = false;
+
+    while (attempts < maxAttempts && !success) {
+      try {
+        attempts++;
+        const res = await api.get('/settings', { timeout: 8000 });
+        if (res && res.success && res.settings) {
+          applySettings(res.settings, true);
+          success = true;
+          break;
+        }
+      } catch (err) {
+        console.warn(`[SiteSettings] Attempt ${attempts}/${maxAttempts} failed:`, err?.message || err);
+        if (attempts < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
       }
-    } catch (err) {
-      console.warn('Using cached site settings (backend offline or loading)');
-    } finally {
-      setLoading(false);
     }
+
+    if (!success) {
+      console.warn('[SiteSettings] Using cached or default site settings (backend offline or loading)');
+    }
+
+    setLoading(false);
   }, [applySettings]);
 
   // Fast delta version checking for cross-device mobile & serverless auto-sync
@@ -254,7 +270,7 @@ export function SiteSettingsProvider({ children }) {
           currentVersionRef.current = res.version;
         } else if (res.version !== lastVersion) {
           currentVersionRef.current = res.version;
-          fetchSettings();
+          fetchSettings(false);
         }
       }
     } catch (e) {}
@@ -262,7 +278,7 @@ export function SiteSettingsProvider({ children }) {
 
   // Initial Fetch & Real-Time Setup
   useEffect(() => {
-    fetchSettings();
+    fetchSettings(true);
 
     // 1. Setup Cross-Tab BroadcastChannel
     if (typeof BroadcastChannel !== 'undefined') {
