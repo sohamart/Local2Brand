@@ -314,12 +314,16 @@ export const updateProfile = async (req, res) => {
       message: 'Profile updated successfully',
       user: {
         id: updatedUser._id || updatedUser.id,
+        _id: updatedUser._id || updatedUser.id,
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.role,
-        avatar: updatedUser.avatar,
-        phone: updatedUser.phone,
-        company: updatedUser.company,
+        avatar: updatedUser.avatar || '',
+        phone: updatedUser.phone || '',
+        company: updatedUser.company || '',
+        status: updatedUser.status || 'active',
+        isEmailVerified: Boolean(updatedUser.isEmailVerified),
+        vipWhatsappEnabled: Boolean(updatedUser.vipWhatsappEnabled),
       },
     });
   } catch (error) {

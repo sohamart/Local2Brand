@@ -7,6 +7,32 @@ const AuthContext = createContext();
 
 export function ThemeProvider() {}
 
+const safeSetCachedUser = (userData) => {
+  if (typeof window === 'undefined' || !userData) return;
+  try {
+    localStorage.setItem('l2b_cached_user', JSON.stringify(userData));
+  } catch (e) {
+    console.warn('LocalStorage quota notice, caching compact user profile:', e.message);
+    try {
+      const compact = {
+        id: userData.id || userData._id,
+        _id: userData._id || userData.id,
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        phone: userData.phone,
+        company: userData.company,
+        avatar: (userData.avatar && userData.avatar.length < 50000) ? userData.avatar : '',
+        isEmailVerified: Boolean(userData.isEmailVerified),
+        vipWhatsappEnabled: Boolean(userData.vipWhatsappEnabled),
+      };
+      localStorage.setItem('l2b_cached_user', JSON.stringify(compact));
+    } catch (innerErr) {
+      console.warn('LocalStorage user cache skipped due to strict storage limits');
+    }
+  }
+};
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -55,7 +81,7 @@ export function AuthProvider({ children }) {
           } else if (savedToken) {
             setToken(savedToken);
           }
-          localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+          safeSetCachedUser(res.user);
           oneSignalService.syncUser(res.user);
         }
       } catch (err) {
@@ -124,7 +150,7 @@ export function AuthProvider({ children }) {
           setToken(res.token);
         }
         setUser(res.user);
-        localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+        safeSetCachedUser(res.user);
         oneSignalService.syncUser(res.user);
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('l2b_auth_login', { detail: res.user }));
@@ -163,7 +189,7 @@ export function AuthProvider({ children }) {
         setToken(res.token);
       }
       setUser(res.user);
-      localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+      safeSetCachedUser(res.user);
       oneSignalService.syncUser(res.user);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('l2b_auth_login', { detail: res.user }));
@@ -279,7 +305,7 @@ export function AuthProvider({ children }) {
     const res = await api.put('/auth/update-profile', profileData);
     if (res.success && res.user) {
       setUser((prev) => ({ ...prev, ...res.user }));
-      localStorage.setItem('l2b_cached_user', JSON.stringify(res.user));
+      safeSetCachedUser(res.user);
       oneSignalService.syncUser(res.user);
       return res.user;
     }
@@ -295,7 +321,7 @@ export function AuthProvider({ children }) {
     if (!updatedUser) return;
     setUser((prev) => {
       const merged = { ...prev, ...updatedUser };
-      localStorage.setItem('l2b_cached_user', JSON.stringify(merged));
+      safeSetCachedUser(merged);
       return merged;
     });
   };

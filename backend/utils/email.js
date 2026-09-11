@@ -174,6 +174,7 @@ export const sendViaBrevoApi = async ({ to, subject, html, text }) => {
 
   const senderName = process.env.BRAND_NAME || 'LOCAL2BRAND';
   const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
+  const clientUrl = getClientUrl();
 
   const rawList = Array.isArray(to) ? to : (typeof to === 'string' ? to.split(',') : [to]);
   const recipients = rawList
@@ -194,6 +195,19 @@ export const sendViaBrevoApi = async ({ to, subject, html, text }) => {
       subject,
       htmlContent: html,
       textContent: text,
+      headers: {
+        'X-Priority': '1',
+        'Importance': 'high',
+        'Priority': 'urgent',
+        'X-MSMail-Priority': 'High',
+        'X-Message-Delivery': 'direct',
+        'X-Auto-Response-Suppress': 'OOF, AutoReply',
+        'Feedback-ID': `L2B-TRANSACTIONAL:${senderEmail}:LOCAL2BRAND`,
+        'List-Unsubscribe': `<mailto:${supportEmail}?subject=Unsubscribe>, <${clientUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        'X-Mailer': 'LOCAL2BRAND Transactional Mailer v2.0',
+      },
+      tags: ['transactional', 'important-notification', 'order-update'],
     };
 
     let response = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -234,7 +248,7 @@ export const sendViaBrevoApi = async ({ to, subject, html, text }) => {
   }
 };
 
-export const sendEmail = async ({ to, subject, html, text, priority = 'normal', isImportant = false }) => {
+export const sendEmail = async ({ to, subject, html, text, priority = 'high', isImportant = true }) => {
   const fromEmail = process.env.EMAIL_FROM || `"LOCAL2BRAND" <support@local2brand.cyou>`;
   const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
 
@@ -280,9 +294,16 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
 
   const appClientUrl = getClientUrl();
   const emailHeaders = {
+    'X-Priority': '1',
+    'Importance': 'high',
+    'Priority': 'urgent',
+    'X-MSMail-Priority': 'High',
+    'X-Message-Delivery': 'direct',
     'X-Entity-Ref-ID': `L2B-${Date.now()}`,
     'X-Auto-Response-Suppress': 'OOF, AutoReply',
+    'Feedback-ID': `L2B-TRANSACTIONAL:LOCAL2BRAND`,
     'List-Unsubscribe': `<mailto:${supportEmail}?subject=Unsubscribe>, <${appClientUrl}>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
   };
 
   try {
@@ -295,7 +316,7 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
       text: cleanPlainText,
       html,
       headers: emailHeaders,
-      priority: isImportant || priority === 'high' ? 'high' : 'normal',
+      priority: 'high',
     });
     console.log(`✅ Email sent successfully via SMTP to ${rawTo} (MessageId: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
@@ -314,7 +335,7 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
           text: cleanPlainText,
           html,
           headers: emailHeaders,
-          priority: isImportant || priority === 'high' ? 'high' : 'normal',
+          priority: 'high',
         });
         console.log(`✅ Email sent successfully via FALLBACK SMTP to ${to} (MessageId: ${fbInfo.messageId})`);
         return { success: true, messageId: fbInfo.messageId };
@@ -331,6 +352,7 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'normal', 
 export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml, ctaText, ctaUrl, footerNote, orderId }) => {
   const currentYear = new Date().getFullYear();
   const clientUrl = getClientUrl();
+  const supportEmail = process.env.SUPPORT_EMAIL || 'local2brand@zohomail.in';
   const logoImgUrl = clientUrl && !clientUrl.includes('localhost') && !clientUrl.includes('127.0.0.1')
     ? `${clientUrl}/logo.jpg`
     : 'https://local2brand.cyou/logo.jpg';
@@ -375,7 +397,11 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
   </style>
 </head>
 <body class="bg-body" style="margin: 0; padding: 24px 8px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
-  ${preheader ? `<div style="display: none; max-height: 0px; overflow: hidden; opacity: 0; font-size: 1px; line-height: 1px; color: transparent;">${preheader}</div>` : ''}
+  ${preheader ? `
+  <div style="display: none; max-height: 0px; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #f8fafc; opacity: 0;">
+    ${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+  </div>
+  ` : ''}
   
   <div style="width: 100%; max-width: 540px; margin: 0 auto; box-sizing: border-box;">
     <div class="bg-card border-theme" style="background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06); box-sizing: border-box; width: 100%;">
@@ -393,13 +419,13 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
         </table>
 
         <div class="badge-theme" style="display: inline-block; padding: 4px 14px; border-radius: 9999px; background-color: #f3e8ff; border: 1px solid #e9d5ff; color: #7e22ce; font-size: 11px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">
-          ${headerBadge || 'LOCAL2BRAND AGENCY'}
+          ${headerBadge || 'IMPORTANT DISPATCH'}
         </div>
         <h1 class="text-title" style="margin: 0; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1.2;">
           LOCAL<span style="color: #c026d3;">2</span>BRAND
         </h1>
         <p class="text-muted" style="margin: 4px 0 0 0; font-size: 11px; color: #64748b; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;">
-          Fast-Track Web Experience Engine &amp; Digital Agency
+          Official Client Dispatch &bull; Fast-Track Web Development
         </p>
 
         ${orderId ? `
@@ -430,15 +456,16 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
         ` : ''}
       </div>
 
-      <div class="bg-footer border-theme" style="padding: 20px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; box-sizing: border-box;">
+      <div class="bg-footer border-theme" style="padding: 22px 20px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center; box-sizing: border-box;">
         <p class="text-muted" style="margin: 0 0 8px 0; font-size: 11px; color: #64748b; line-height: 1.5;">
-          ${footerNote || 'This is an official dispatch from the LOCAL2BRAND Platform.'}
+          ${footerNote || 'This is an important verified notification regarding your LOCAL2BRAND client account & project development.'}
         </p>
-        <div style="font-size: 11px; color: #4b5563; margin-bottom: 8px;">
-          <span>✉️ Contact &amp; Support: <a href="mailto:local2brand@zohomail.in" style="color: #7c3aed; text-decoration: none; font-weight: 600;">local2brand@zohomail.in</a></span>
+        <div style="font-size: 11px; color: #475569; margin-bottom: 8px; line-height: 1.6;">
+          <span>📍 <strong>LOCAL2BRAND Technologies Pvt. Ltd.</strong> &bull; Rathtala, Burdwan, West Bengal - 713102, India</span><br />
+          <span>✉️ Direct Support: <a href="mailto:${supportEmail}" style="color: #7c3aed; text-decoration: none; font-weight: 700;">${supportEmail}</a> &bull; 🌐 <a href="${clientUrl}" style="color: #7c3aed; text-decoration: none; font-weight: 700;">local2brand.cyou</a></span>
         </div>
-        <p class="text-muted" style="margin: 0; font-size: 11px; color: #94a3b8; font-weight: 600;">
-          &copy; ${currentYear} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved.
+        <p class="text-muted" style="margin: 0; font-size: 10px; color: #94a3b8; font-weight: 500;">
+          &copy; ${currentYear} LOCAL2BRAND Technologies Pvt. Ltd. All rights reserved. &bull; <a href="${clientUrl}/dashboard?tab=profile" style="color: #94a3b8; text-decoration: underline;">Manage Notification Settings</a>
         </p>
       </div>
     </div>

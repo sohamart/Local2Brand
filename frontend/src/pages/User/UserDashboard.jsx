@@ -58,6 +58,7 @@ import { useOrderModal } from '../../context/OrderModalContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import api from '../../services/api';
 import { uploadWithToast } from '../../utils/toastUpload';
+import { optimizeAvatarImage } from '../../utils/imageOptimizer';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import DashboardLoader from '../../components/common/DashboardLoader';
 import NotificationToggle from '../../components/common/NotificationToggle';
@@ -379,6 +380,13 @@ export default function UserDashboard() {
     }
   }, [user?.email, authLoading]);
 
+  // Sync avatar whenever user.avatar changes in auth context or after refresh
+  useEffect(() => {
+    if (user?.avatar !== undefined) {
+      setAvatarUrl(user.avatar || '');
+    }
+  }, [user?.avatar]);
+
   // Handle URL track or tab query parameter
   useEffect(() => {
     const urlTrackId = searchParams.get('track');
@@ -445,23 +453,51 @@ export default function UserDashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset input value so selecting the same or new image always triggers cleanly
+    e.target.value = '';
+
     setUploadingAvatar(true);
+
+    let fileToUpload = file;
+    let localPreviewUrl = '';
+
     try {
+      // Step 1: Automatic client-side optimization (resizes, center-crops, compresses to < 150KB)
+      const optimization = await optimizeAvatarImage(file, { maxSize: 600, quality: 0.85 });
+      if (optimization?.file) {
+        fileToUpload = optimization.file;
+      }
+      if (optimization?.previewUrl) {
+        localPreviewUrl = optimization.previewUrl;
+        setAvatarUrl(localPreviewUrl); // Instant optimistic preview
+      }
+    } catch (optErr) {
+      console.warn('Image optimization notice, continuing with original file:', optErr);
+    }
+
+    try {
+      // Step 2: Upload optimized image
       const uploadRes = await uploadWithToast({
-        file,
-        title: 'Uploading Avatar...',
-        successMessage: 'Avatar updated! 📸',
+        file: fileToUpload,
+        title: 'Uploading Profile Photo...',
+        successMessage: 'Profile photo updated! 📸',
       });
 
       const finalUrl = uploadRes?.url || uploadRes?.urls?.[0];
       if (finalUrl) {
         setAvatarUrl(finalUrl);
-        await updateProfile({ avatar: finalUrl });
+        const updatedUser = await updateProfile({ avatar: finalUrl });
+        if (updatedUser?.avatar) {
+          setAvatarUrl(updatedUser.avatar);
+        }
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       }
     } catch (uploadErr) {
       console.error('Avatar upload error:', uploadErr);
+      toast.error(uploadErr.message || 'Failed to update avatar photo');
+      // Revert preview back to saved user avatar if upload failed
+      setAvatarUrl(user?.avatar || '');
     } finally {
       setUploadingAvatar(false);
     }
@@ -882,7 +918,12 @@ export default function UserDashboard() {
                       <div className="w-16 h-16 sm:w-22 sm:h-22 rounded-2xl sm:rounded-3xl overflow-hidden bg-gradient-to-br from-purple-600 via-indigo-600 to-pink-600 p-0.5 shadow-[0_0_20px_rgba(147,51,234,0.4)]">
                         <div className="w-full h-full rounded-[14px] sm:rounded-[22px] overflow-hidden bg-white dark:bg-slate-900 flex items-center justify-center font-black text-xl sm:text-2xl text-purple-600 dark:text-purple-300">
                           {avatarUrl ? (
-                            <img src={avatarUrl} alt={user?.name} className="w-full h-full object-cover" />
+                            <img 
+                              src={avatarUrl} 
+                              alt={user?.name || 'User Avatar'} 
+                              className="w-full h-full object-cover" 
+                              onError={() => setAvatarUrl('')}
+                            />
                           ) : (
                             user?.name?.[0]?.toUpperCase() || 'C'
                           )}
