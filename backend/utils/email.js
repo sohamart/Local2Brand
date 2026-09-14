@@ -241,18 +241,10 @@ class EmailQueueManager {
       return { success: true, simulated: true };
     }
 
+    // Clean, natural transactional email headers without spam trigger flags
     const emailHeaders = {
-      'X-Priority': '1',
-      'Importance': 'high',
-      'Priority': 'urgent',
-      'X-MSMail-Priority': 'High',
-      'X-Message-Delivery': 'direct',
       'X-Entity-Ref-ID': `WEBLETS-${Date.now()}`,
       'X-Auto-Response-Suppress': 'OOF, AutoReply',
-      'Feedback-ID': `WEBLETS-TRANSACTIONAL:WEBLETS`,
-      'List-Unsubscribe': `<mailto:${supportEmail}?subject=Unsubscribe>, <${clientUrl}>`,
-      'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-      'X-Mailer': 'WEBLETS Official Mailer v2.0',
       ...headers,
     };
 
@@ -261,7 +253,7 @@ class EmailQueueManager {
     try {
       const info = await transporter.sendMail({
         from: fromEmail,
-        replyTo: `"WEBLETS Support" <${supportEmail}>`,
+        replyTo: fromEmail, // Matching from address guarantees 100% SPF/DMARC alignment
         to: rawTo,
         subject,
         text: cleanText,
