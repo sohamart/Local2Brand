@@ -6,6 +6,8 @@ import { useSiteSettings } from '../../context/SiteSettingsContext';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import { SEO } from '../../components/common/CommonUI';
 
+import GoogleLoginButton from '../../components/common/GoogleLoginButton';
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -115,7 +117,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -131,6 +133,31 @@ export default function Login() {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
+
+            {/* Google Sign In Option */}
+            <div className="mt-4 space-y-3">
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+                </div>
+                <div className="relative px-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Or continue with
+                </div>
+              </div>
+
+              <GoogleLoginButton
+                onSuccess={(loggedUser) => {
+                  if (loggedUser?.role === 'admin') {
+                    navigate('/admin');
+                  } else {
+                    navigate(redirectPath);
+                  }
+                }}
+                onError={(err) => {
+                  setError(err?.message || 'Google sign-in failed. Please try again.');
+                }}
+              />
+            </div>
 
             {/* Footer */}
             <div className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">

@@ -172,6 +172,47 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const googleLogin = async (googlePayload) => {
+    setIsLoggingIn(true);
+    try {
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('l2b_get_started_draft');
+          localStorage.removeItem('l2b_user_profile');
+          localStorage.removeItem('l2b_user_orders');
+          localStorage.removeItem('l2b_won_voucher');
+        } catch (e) {}
+      }
+
+      const payload = typeof googlePayload === 'string' ? { credential: googlePayload } : googlePayload;
+      const res = await api.post('/auth/google', payload);
+      if (res.success && res.user) {
+        setLoggedInUser(res.user);
+        if (res.token) {
+          api.setToken(res.token);
+          setToken(res.token);
+        }
+        setUser(res.user);
+        safeSetCachedUser(res.user);
+        oneSignalService.syncUser(res.user);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('l2b_auth_login', { detail: res.user }));
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        toast.success(`Welcome back, ${res.user.name || 'User'}! 👋`);
+        return res.user;
+      }
+      toast.error(res.message || 'Google login failed');
+      throw new Error(res.message || 'Google login failed');
+    } finally {
+      setTimeout(() => {
+        setIsLoggingIn(false);
+        setLoggedInUser(null);
+      }, 400);
+    }
+  };
+
   const register = async (userData) => {
     if (typeof window !== 'undefined') {
       try {
@@ -358,6 +399,7 @@ export function AuthProvider({ children }) {
         closeAuthModal,
         authSuccessCallback,
         login,
+        googleLogin,
         register,
         logout,
         updateProfile,

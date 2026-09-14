@@ -18,6 +18,8 @@ import AshokaChakra from './AshokaChakra';
 import PhoneInputWithCountry, { validatePhoneNumber } from './PhoneInputWithCountry';
 import PasswordStrengthMeter, { calculatePasswordStrength } from './PasswordStrengthMeter';
 
+import GoogleLoginButton from './GoogleLoginButton';
+
 export default function AuthModal() {
   const { isAuthModalOpen, closeAuthModal, authSuccessCallback, login, register } = useAuth();
   const navigate = useNavigate();
@@ -276,6 +278,38 @@ export default function AuthModal() {
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
+
+        {/* Google Login for Sign In mode only (No Google register as requested) */}
+        {mode === 'login' && (
+          <div className="mt-3.5 space-y-2.5">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+              </div>
+              <div className="relative px-2.5 bg-white dark:bg-slate-900 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Or
+              </div>
+            </div>
+
+            <GoogleLoginButton
+              onSuccess={(loggedUser) => {
+                closeAuthModal();
+                if (typeof authSuccessCallback === 'function') {
+                  authSuccessCallback(loggedUser);
+                } else {
+                  if (loggedUser?.role === 'admin') {
+                    navigate('/admin');
+                  } else {
+                    navigate('/dashboard');
+                  }
+                }
+              }}
+              onError={(err) => {
+                setError(err?.message || 'Google sign-in failed. Please try again.');
+              }}
+            />
+          </div>
+        )}
 
       </div>
     </div>
