@@ -20,21 +20,21 @@ export const ensureDb = async () => {
 // Default initial admin & settings
 const DEFAULT_ADMIN = {
   _id: 'admin_default_id_001',
-  name: 'LOCAL2BRAND Master Admin',
-  email: 'admin@local2brand.com',
+  name: 'WEBLETS Master Admin',
+  email: 'admin@weblets.bond',
   passwordHash: '$2b$10$PW8Q2cMv0bHMFwu1nNbCDugHy2RxmvNXCjQH/fhJzWRsSzRNS7twm', // Admin@12345
   role: 'admin',
   phone: '+91 87100 43923',
-  company: 'LOCAL2BRAND HQ',
+  company: 'WEBLETS Studio',
   status: 'active',
   createdAt: new Date().toISOString(),
 };
 
 const DEFAULT_SETTINGS = {
-  brandName: 'LOCAL2BRAND',
-  domain: 'local2brand.com',
-  tagline: 'Build Local. Think Global.',
-  supportEmail: 'local2brand.contact@gmail.com',
+  brandName: 'WEBLETS',
+  domain: 'weblets.bond',
+  tagline: 'Lets make website together',
+  supportEmail: 'contact@weblets.bond',
   displayPhone: '+91 87100 43923',
   turnaroundTime: '48 Hours',
   startingPriceUsd: '$399',
@@ -43,21 +43,23 @@ const DEFAULT_SETTINGS = {
   isComingSoonMode: false,
   maintenanceMessage: 'We are currently upgrading our platform. We will be back online shortly!',
   targetLaunchDate: '',
+  logoLightUrl: '/logo.png',
+  logoDarkUrl: '/logo-dark.png',
   socialLinks: {
-    instagram: 'https://instagram.com/local2brand',
-    instagramHandle: '@local2brand',
-    linkedin: 'https://linkedin.com/company/local2brand',
-    github: 'https://github.com/local2brand',
-    twitter: 'https://twitter.com/local2brand',
+    instagram: 'https://instagram.com/weblets.bond',
+    instagramHandle: '@weblets.bond',
+    linkedin: 'https://linkedin.com/company/weblets',
+    github: 'https://github.com/weblets',
+    twitter: 'https://twitter.com/weblets',
   },
   heroConfig: {
-    badge: '🇮🇳 India’s #1 Fast-Track Web Experience Engine',
-    title: 'Transform Your Local Business Into A Global Brand',
+    badge: '⚡ Modern High-Converting Web Experience Engine',
+    title: 'Lets Make Website Together — Fast, Modern & Scalable',
     subtitle: 'World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale.',
   },
   announcementBar: {
     enabled: false,
-    text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
+    text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code WEBLETS20',
     badge: 'FLASH OFFER',
     link: '/pricing',
     promoCode: 'INDIA2025',
@@ -719,7 +721,25 @@ export const dataStore = {
       try {
         const { SiteSettings } = await import('../models/SiteSettings.js');
         let s = await SiteSettings.findOne().lean();
-        if (s) return s;
+        if (s) {
+          if (s.brandName === 'LOCAL2BRAND' || s.tagline === 'Build Local. Think Global.' || !s.brandName) {
+            s = await SiteSettings.findOneAndUpdate(
+              { _id: s._id },
+              {
+                $set: {
+                  brandName: 'WEBLETS',
+                  domain: 'weblets.bond',
+                  tagline: 'Lets make website together',
+                  supportEmail: 'contact@weblets.bond',
+                  logoLightUrl: s.logoLightUrl || '/logo.png',
+                  logoDarkUrl: s.logoDarkUrl || '/logo-dark.png'
+                }
+              },
+              { new: true }
+            ).lean();
+          }
+          return s;
+        }
         const created = await SiteSettings.create(DEFAULT_SETTINGS);
         return created ? (created.toObject ? created.toObject() : created) : DEFAULT_SETTINGS;
       } catch (err) {
@@ -727,7 +747,22 @@ export const dataStore = {
       }
     }
     const settingsList = readLocalStore('settings');
-    if (settingsList && settingsList.length > 0) return settingsList[0];
+    if (settingsList && settingsList.length > 0) {
+      let s = settingsList[0];
+      if (s.brandName === 'LOCAL2BRAND' || s.tagline === 'Build Local. Think Global.' || !s.brandName) {
+        s = {
+          ...s,
+          brandName: 'WEBLETS',
+          domain: 'weblets.bond',
+          tagline: 'Lets make website together',
+          supportEmail: 'contact@weblets.bond',
+          logoLightUrl: s.logoLightUrl || '/logo.png',
+          logoDarkUrl: s.logoDarkUrl || '/logo-dark.png'
+        };
+        writeLocalStore('settings', [s]);
+      }
+      return s;
+    }
     const initial = { _id: 'settings_default_id_001', ...DEFAULT_SETTINGS };
     writeLocalStore('settings', [initial]);
     return initial;

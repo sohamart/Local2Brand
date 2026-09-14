@@ -9,6 +9,7 @@ import FinalCTA from '../components/home/FinalCTA';
 import { useOrderModal } from '../context/OrderModalContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import AshokaChakra from '../components/common/AshokaChakra';
+import FounderCard from '../components/common/FounderCard';
 
 const InstagramIcon = ({ className = 'w-4 h-4' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -176,67 +177,9 @@ export default function About() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {founders.map((founder, idx) => (
-                <div
-                  key={idx}
-                  className="glass-panel p-6 sm:p-8 rounded-card border border-white dark:border-slate-800 shadow-glass-lg relative flex flex-col justify-between group hover:border-purple-400/60 transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-black text-lg shadow-md shadow-purple-500/20">
-                      {founder.name ? founder.name.charAt(0).toUpperCase() : 'L'}
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                        {founder.name || 'Core Founder'}
-                      </h3>
-                      <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
-                        {founder.role || 'Founding Engineer'}
-                      </span>
-                    </div>
-
-                    {founder.bio && (
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                        {founder.bio}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
-                    {founder.instagram && (
-                      <a
-                        href={founder.instagram.startsWith('http') ? founder.instagram : `https://instagram.com/${founder.instagram.replace('@', '')}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2 rounded-xl bg-pink-50 dark:bg-pink-950/60 text-pink-600 hover:bg-pink-100 dark:hover:bg-pink-900/60 transition-colors"
-                        title="Instagram Profile"
-                      >
-                        <InstagramIcon className="w-4 h-4" />
-                      </a>
-                    )}
-                    {founder.linkedin && (
-                      <a
-                        href={founder.linkedin.startsWith('http') ? founder.linkedin : `https://linkedin.com/in/${founder.linkedin}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
-                        title="LinkedIn Profile"
-                      >
-                        <LinkedinIcon className="w-4 h-4" />
-                      </a>
-                    )}
-                    {founder.email && (
-                      <a
-                        href={`mailto:${founder.email}`}
-                        className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-colors"
-                        title="Direct Email"
-                      >
-                        <Mail className="w-4 h-4" />
-                      </a>
-                    )}
-                  </div>
-                </div>
+                <FounderCard key={idx} founder={founder} index={idx} />
               ))}
             </div>
           </div>

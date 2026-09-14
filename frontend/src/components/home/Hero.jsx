@@ -323,20 +323,16 @@ export default function Hero() {
       />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Top Unique Clean Indian Flag Luxury Badge */}
+        {/* Top Luxury Weblets Badge */}
         <div className="flex justify-center mb-4 sm:mb-6">
-
-          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full badge-tricolor-india text-xs font-semibold text-slate-800 dark:text-slate-200 animate-float relative overflow-hidden">
-            <span className="flex items-center gap-1.5 font-black text-amber-900 dark:text-amber-300 bg-amber-100/80 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/40 shadow-xs">
-              <AshokaChakra size={13} />
-              <span>Made in India</span>
+          <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-purple-100/90 dark:bg-purple-950/60 border border-purple-300/90 dark:border-purple-500/40 text-xs font-semibold shadow-xs backdrop-blur-md animate-float">
+            <span className="flex items-center gap-1.5 font-extrabold text-purple-900 dark:text-purple-200 bg-purple-200/90 dark:bg-purple-600/30 px-2.5 py-0.5 rounded-full border border-purple-300 dark:border-purple-400/40 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-purple-700 dark:text-amber-300 animate-pulse" />
+              <span>Weblets Studio</span>
             </span>
-            <span className="text-slate-300 dark:text-slate-600">|</span>
-            <span className="text-slate-700 dark:text-slate-300 font-medium hidden sm:inline">
-              Scaling Local Brands Into Global Giants
-            </span>
-            <span className="text-slate-700 dark:text-slate-300 font-medium sm:hidden">
-              Scale Your Brand Globally
+            <span className="text-purple-400 dark:text-slate-600 font-bold">|</span>
+            <span className="text-purple-950 dark:text-slate-200 font-bold tracking-wide">
+              Lets make website together
             </span>
           </div>
         </div>
@@ -349,13 +345,13 @@ export default function Hero() {
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.06] relative z-10">
             We Build Websites That Turn{' '}
             <span className="l2b-gradient-text whitespace-nowrap">
-              Local Brands
+              Your Vision
             </span>{' '}
-            Into Big Brands.
+            Into A Global Brand.
           </h1>
 
           <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-xl mx-auto font-normal leading-relaxed relative z-10">
-            World-class UI/UX design, sub-second performance, and instant lead capture for ambitious Indian businesses ready to scale globally.
+            World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale.
           </p>
 
           {/* Signature Custom Action Buttons */}
@@ -377,7 +373,7 @@ export default function Hero() {
             </Link>
           </div>
 
-          {/* Clean Tri-Color Micro Trust Bar */}
+          {/* Clean Modern Trust Bar */}
           <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <span className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200/80 dark:border-slate-800 shadow-xs">
               <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
@@ -385,7 +381,7 @@ export default function Hero() {
             </span>
             <span className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200/80 dark:border-slate-800 shadow-xs">
               <CheckCircle className="w-3.5 h-3.5 text-amber-500" />
-              <span>INR (₹) &amp; UPI Supported</span>
+              <span>INR (₹) &amp; Global Currencies</span>
             </span>
             <span className="flex items-center gap-1.5 bg-white/80 dark:bg-slate-900/80 px-3 py-1 rounded-full border border-slate-200/80 dark:border-slate-800 shadow-xs">
               <CheckCircle className="w-3.5 h-3.5 text-purple-500" />
@@ -470,9 +466,9 @@ export default function Hero() {
                 )}
               </button>
 
-              <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/70 px-3 py-1.5 rounded-xl border border-amber-200/60 dark:border-amber-500/40">
-                <AshokaChakra size={13} />
-                <span>Pan-India Live Engine</span>
+              <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/70 px-3 py-1.5 rounded-xl border border-purple-200/80 dark:border-purple-500/40">
+                <Globe className="w-3.5 h-3.5 text-purple-500" />
+                <span>Global High-Speed Engine</span>
               </div>
             </div>
           </div>
@@ -502,7 +498,7 @@ export default function Hero() {
                 <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80 text-[11px] font-mono text-slate-600 dark:text-slate-300 shadow-inner">
                   <Lock className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span className="truncate max-w-[180px] sm:max-w-xs font-semibold">
-                    local2brand.com/demos/{current.slug}
+                    weblets.bond/demos/{current.slug}
                   </span>
                   {(() => {
                     const isComingSoon = current.status === 'coming_soon';

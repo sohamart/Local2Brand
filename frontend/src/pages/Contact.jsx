@@ -86,16 +86,15 @@ export default function Contact() {
     <>
       <SEO
         title="Contact Us — Direct Project Inquiry & Consultation"
-        description="Get in touch with LOCAL2BRAND. Submit your project requirements or request an instant callback from our founders."
+        description="Get in touch with Weblets. Submit your project requirements or request an instant callback from our founders."
       />
 
       <div className="page-header-offset pb-20">
         
         {/* Page Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
-            <AshokaChakra size={13} />
-            <span>🇮🇳 Direct Indian Founders Line • 24/7 IST Support</span>
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/40 text-purple-900 dark:text-purple-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
+            <span>⚡ Direct Founders Line • 24/7 Rapid Live Support</span>
           </div>
           <SectionHeading
             badge="Direct Communication"
@@ -151,10 +150,10 @@ export default function Contact() {
                   <div className="min-w-0">
                     <span className="text-[11px] text-slate-400 font-bold block">Support &amp; Inquiries Email</span>
                     <a
-                      href={`mailto:${settings.supportEmail || settings.aiSettings?.adminShowableDetails?.contactEmail || 'local2brand.contact@gmail.com'}`}
+                      href={`mailto:${settings.supportEmail || settings.aiSettings?.adminShowableDetails?.contactEmail || 'contact@weblets.bond'}`}
                       className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white hover:text-purple-600 truncate block transition-colors"
                     >
-                      {settings.supportEmail || settings.aiSettings?.adminShowableDetails?.contactEmail || 'local2brand.contact@gmail.com'}
+                      {settings.supportEmail || settings.aiSettings?.adminShowableDetails?.contactEmail || 'contact@weblets.bond'}
                     </a>
                   </div>
                 </div>
@@ -396,7 +395,7 @@ export default function Contact() {
               {/* Interactive Google Map Iframe (Auto-tracks live officeLocation from site settings) */}
               <div className="w-full h-[400px] sm:h-[460px] relative">
                 <iframe
-                  title="LOCAL2BRAND Google Map Location"
+                  title="Weblets Google Map Location"
                   src={(() => {
                     if (
                       settings?.googleMapEmbedUrl &&
@@ -434,7 +433,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight">
-                      {settings.brandName || 'LOCAL2BRAND'} Headquarters
+                      {settings.brandName || 'WEBLETS'} Headquarters
                     </h4>
                     <span className="text-[11px] text-purple-600 dark:text-purple-400 font-bold">
                       Main Engineering &amp; Client Studio

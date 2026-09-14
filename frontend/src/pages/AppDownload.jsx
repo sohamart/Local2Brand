@@ -88,19 +88,19 @@ export default function AppDownload() {
       appMode: 'pwa', // 'pwa' (Inbuilt Web App) | 'apk' | 'coming_soon'
       isComingSoon: false,
       showComingSoonPopup: false,
-      comingSoonTitle: 'LOCAL2BRAND Web & Mobile App — Launching Soon 🚀',
+      comingSoonTitle: 'WEBLETS Web & Mobile App — Launching Soon 🚀',
       comingSoonMessage: 'We are polishing our next-generation digital companion. Pre-register your spot for priority early beta access!',
-      appName: 'LOCAL2BRAND Web App',
+      appName: 'WEBLETS Web App',
       appSubtitle: 'Official Inbuilt Web App & Client Portal',
       appDescription: 'Install our ultra-fast inbuilt web app directly to your device home screen. Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates with 0 MB storage overhead.',
       version: 'v2.4.0 (PWA)',
       fileSize: '0 MB (Web App)',
       minAndroid: 'All Android devices (Chrome / Firefox / Edge / Samsung Browser)',
       minIos: 'iOS 14.0+ (Safari / Chrome)',
-      packageName: 'com.local2brand.webapp',
-      androidPackageName: 'com.local2brand.webapp',
-      androidUserAgent: 'local2brand-android-app',
-      customUserAgent: 'local2brand-android-app',
+      packageName: 'com.weblets.webapp',
+      androidPackageName: 'com.weblets.webapp',
+      androidUserAgent: 'weblets-android-app',
+      customUserAgent: 'weblets-android-app',
       androidStatus: 'coming_soon',
       iosStatus: 'coming_soon',
       apkDownloadUrl: '',
@@ -235,7 +235,7 @@ export default function AppDownload() {
       setIsInsideInstalledApp(true);
       setDeferredPrompt(null);
       setTopBannerOpen(false);
-      toast.success('🎉 Thanks for downloading & installing LOCAL2BRAND Web App!', {
+      toast.success('🎉 Thanks for downloading & installing WEBLETS Web App!', {
         toastId: 'pwa-installed-notification',
       });
     };
@@ -413,7 +413,7 @@ export default function AppDownload() {
           setIsAlreadyInstalled(true);
           setIsInsideInstalledApp(true);
           setTopBannerOpen(false);
-          toast.success('🎉 Thanks for downloading & installing LOCAL2BRAND Web App!', {
+          toast.success('🎉 Thanks for downloading & installing WEBLETS Web App!', {
             toastId: 'pwa-installed-notification',
           });
         }
@@ -425,14 +425,14 @@ export default function AppDownload() {
       }
     } else {
       if (isInsideInstalledApp || (typeof window !== 'undefined' && (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true))) {
-        toast.success('🎉 LOCAL2BRAND Web App is already active on your device!', {
+        toast.success('🎉 WEBLETS Web App is already active on your device!', {
           toastId: 'pwa-already-installed',
         });
         setIsAlreadyInstalled(true);
         setIsInsideInstalledApp(true);
       } else {
         setInstallModalOpen(true);
-        toast.info('📲 Follow the quick step on screen to add LOCAL2BRAND to your home screen!', {
+        toast.info('📲 Follow the quick step on screen to add WEBLETS to your home screen!', {
           toastId: 'pwa-install-guide',
         });
       }
@@ -441,7 +441,7 @@ export default function AppDownload() {
 
   // Launch / Open Web App Workspace Handler
   const handleOpenApp = (destination = '/') => {
-    toast.success('🚀 Launching LOCAL2BRAND Web App workspace...', {
+    toast.success('🚀 Launching WEBLETS Web App workspace...', {
       autoClose: 1500,
       toastId: 'launch-l2b-app',
     });
@@ -462,7 +462,7 @@ export default function AppDownload() {
     const downloadUrl = appConfig.apkDownloadUrl;
     setDownloading(true);
     setDownloadProgress(20);
-    toast.info(`🚀 Starting download for ${appConfig.appName || 'LOCAL2BRAND'} (${appConfig.version || 'v2.4.0'})...`, {
+    toast.info(`🚀 Starting download for ${appConfig.appName || 'WEBLETS'} (${appConfig.version || 'v2.4.0'})...`, {
       autoClose: 2500,
     });
 
@@ -483,7 +483,7 @@ export default function AppDownload() {
 
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = `${(appConfig.appName || 'LOCAL2BRAND').replace(/\s+/g, '_')}_${appConfig.version || 'v2.4.0'}.apk`;
+      link.download = `${(appConfig.appName || 'WEBLETS').replace(/\s+/g, '_')}_${appConfig.version || 'v2.4.0'}.apk`;
       link.target = '_blank';
       document.body.appendChild(link);
       link.click();
@@ -507,7 +507,7 @@ export default function AppDownload() {
     try {
       await api.post('/queries', {
         name: waitlistForm.name || 'Mobile App Beta Tester',
-        email: waitlistForm.phoneOrEmail.includes('@') ? waitlistForm.phoneOrEmail : 'beta-app@local2brand.com',
+        email: waitlistForm.phoneOrEmail.includes('@') ? waitlistForm.phoneOrEmail : 'contact@weblets.bond',
         phone: !waitlistForm.phoneOrEmail.includes('@') ? waitlistForm.phoneOrEmail : (user?.phone || '+91 87100 43923'),
         service: `Mobile App Early Access Beta (${waitlistForm.platform})`,
         requirements: `User registered for early access to ${appConfig.appName} on ${waitlistForm.platform}. Version: ${appConfig.version}.`,
@@ -527,7 +527,7 @@ export default function AppDownload() {
 
   // Copy shareable link
   const handleCopyLink = () => {
-    const url = typeof window !== 'undefined' ? window.location.href : 'https://local2brand.cyou/app';
+    const url = typeof window !== 'undefined' ? window.location.href : 'https://weblets.bond/app';
     navigator.clipboard.writeText(url);
     setCopiedLink(true);
     toast.success('Link copied to clipboard! 📋');
@@ -535,7 +535,7 @@ export default function AppDownload() {
   };
 
   // QR Code generator
-  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://local2brand.cyou';
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://weblets.bond';
   const qrTargetUrl = `${currentOrigin}/app`;
   const qrCodeImageUrl = appConfig.qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrTargetUrl)}&color=6b21a8&bgcolor=ffffff&qzone=1`;
 
@@ -544,8 +544,8 @@ export default function AppDownload() {
       <SEO
         title={
           isInsideInstalledApp
-            ? `LOCAL2BRAND Web App — Installed & Active (${appConfig.version || 'v2.4.0'})`
-            : `Install ${appConfig.appName || 'LOCAL2BRAND Web App'} (${appConfig.version || 'v2.4.0 PWA'})`
+            ? `WEBLETS Web App — Installed & Active (${appConfig.version || 'v2.4.0'})`
+            : `Install ${appConfig.appName || 'WEBLETS Web App'} (${appConfig.version || 'v2.4.0 PWA'})`
         }
         description={appConfig.appDescription || 'Install official Inbuilt Web App with 1-tap home screen access and zero storage overhead.'}
       />
@@ -556,11 +556,11 @@ export default function AppDownload() {
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center font-black text-lg shadow-md shrink-0 p-0.5 overflow-hidden">
-                <img src="/favicon.jpg" alt="App Logo" className="w-full h-full object-cover rounded-xl" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <img src="/logo.png" alt="App Logo" className="w-full h-full object-contain rounded-xl" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
               </div>
               <div className="space-y-0.5">
                 <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">
-                  Install {appConfig.appName || 'LOCAL2BRAND Web App'}
+                  Install {appConfig.appName || 'WEBLETS Web App'}
                 </h4>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   1-Tap Home Screen App • 0 MB Storage

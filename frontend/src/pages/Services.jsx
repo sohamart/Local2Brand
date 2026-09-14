@@ -79,7 +79,7 @@ export default function Services() {
   return (
     <>
       <SEO
-        title="Web Development & Digital Growth Services — LOCAL2BRAND"
+        title="Web Development & Digital Growth Services — Weblets"
         description="Explore our high-performance website development services. 48-hour delivery, custom WhatsApp pipelines, SEO dominance, and bespoke SaaS builds."
       />
 

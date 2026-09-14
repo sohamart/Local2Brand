@@ -661,15 +661,14 @@ export default function UserDashboard() {
         {/* Top Logo & Portal Brand Tag */}
         <div className="p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/30">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-2xl overflow-hidden shadow-sm bg-gradient-to-br from-purple-600 to-indigo-600 p-0.5 border border-purple-400/30">
-              <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover rounded-[14px]" />
+            <div className="w-9 h-9 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/40 border border-white/90 dark:border-slate-700 bg-slate-950 p-0 flex items-center justify-center shrink-0">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-cover scale-110" />
             </div>
             <div>
               <span className="font-black text-sm tracking-tight text-slate-900 dark:text-white leading-none block">
-                LOCAL<span className="l2b-gradient-text">2</span>BRAND
+                WEBLETS
               </span>
               <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-purple-600 dark:text-purple-400 mt-0.5">
-                <AshokaChakra size={10} />
                 <span>Client Hub</span>
               </span>
             </div>
@@ -796,7 +795,7 @@ export default function UserDashboard() {
           {/* Direct WhatsApp Support (VIP Button if enabled by admin, "Not Provided" Tag if not) */}
           {user?.vipWhatsappEnabled ? (
             <a
-              href={settings?.whatsappNumber ? `https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello Local2Brand Founder Team! 👋 I am logged into my VIP Client Console (${user.email}). Requesting direct priority support.`)}` : 'https://wa.me/918710043923'}
+              href={settings?.whatsappNumber ? `https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello Weblets Founder Team! 👋 I am logged into my VIP Client Console (${user.email}). Requesting direct priority support.`)}` : 'https://wa.me/918710043923'}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-2.5 px-3 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-600 border border-emerald-400/40 flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/25 active:scale-98 group cursor-pointer"

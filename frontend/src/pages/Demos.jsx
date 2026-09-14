@@ -86,7 +86,7 @@ export default function Demos() {
   return (
     <>
       <SEO
-        title="Live Website Demos & Interactive Showcases — LOCAL2BRAND"
+        title="Live Website Demos & Interactive Showcases — Weblets"
         description="Experience 100% live working websites for restaurants, salons, real estate, jewellery, boutiques, and gyms. Real-time menus, WhatsApp orders, and instant customization."
       />
 

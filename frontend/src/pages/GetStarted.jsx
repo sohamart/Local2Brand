@@ -1264,6 +1264,7 @@ export default function GetStarted() {
     hasContent: '',
     referenceWebsites: '',
     designInstructions: '',
+    textContentCopy: '',
     logoFile: null, // { name, size, dataUrl }
     photosFiles: [], // [ { name, size, dataUrl } ]
     contentDocFile: null, // { name, size }
@@ -1656,27 +1657,47 @@ export default function GetStarted() {
     toast.info('Started fresh clean order form (cleared images from cloud).');
   };
 
-  // Auto-Save Draft on changes (debounced) — only for Step 2+
-  useEffect(() => {
-    // Only autosave when client has moved past Step 1
-    const hasMeaningfulSaveData = Boolean(
-      currentStep > 1 && (
-        formData.selectedCategory ||
-        formData.businessName?.trim() ||
-        appliedTemplate
-      )
-    );
-
-    if (!hasMeaningfulSaveData) {
-      if (currentStep <= 1) {
-        localStorage.removeItem(draftStorageKey);
+  // Manual Save Draft handler
+  const handleManualSaveDraft = () => {
+    try {
+      const draftFormData = { ...formData };
+      if (draftFormData.logoFile && typeof draftFormData.logoFile.dataUrl === 'string' && draftFormData.logoFile.dataUrl.startsWith('data:image')) {
+        draftFormData.logoFile = {
+          name: draftFormData.logoFile.name,
+          size: draftFormData.logoFile.size,
+          url: draftFormData.logoFile.url && !draftFormData.logoFile.url.startsWith('data:image') ? draftFormData.logoFile.url : ''
+        };
       }
-      return;
-    }
+      if (Array.isArray(draftFormData.photosFiles)) {
+        draftFormData.photosFiles = draftFormData.photosFiles.map(p => ({
+          name: p.name,
+          size: p.size,
+          url: (p.url && !p.url.startsWith('data:image')) ? p.url : ''
+        }));
+      }
 
+      const payloadToStore = {
+        formData: draftFormData,
+        currentStep,
+        appliedTemplate: appliedTemplate || currentTemplateKey || '',
+        isCouponApplied,
+        couponCode,
+        lastSaved: Date.now()
+      };
+      localStorage.setItem(draftStorageKey, JSON.stringify(payloadToStore));
+      localStorage.setItem('l2b_get_started_draft', JSON.stringify(payloadToStore));
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      setLastSavedTime(timeStr);
+      toast.success(`💾 Draft saved successfully (${timeStr})! You can return anytime.`);
+    } catch (e) {
+      toast.error('Could not save draft to local storage.');
+    }
+  };
+
+  // Continuous Auto-Save Draft on changes (debounced)
+  useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        // Strip heavy base64 strings from draft before saving to localStorage to prevent QuotaExceededError
         const draftFormData = { ...formData };
         if (draftFormData.logoFile && typeof draftFormData.logoFile.dataUrl === 'string' && draftFormData.logoFile.dataUrl.startsWith('data:image')) {
           draftFormData.logoFile = {
@@ -1702,11 +1723,12 @@ export default function GetStarted() {
           lastSaved: Date.now()
         };
         localStorage.setItem(draftStorageKey, JSON.stringify(payloadToStore));
-        setLastSavedTime(new Date().toLocaleTimeString());
+        localStorage.setItem('l2b_get_started_draft', JSON.stringify(payloadToStore));
+        setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       } catch (e) {
         console.warn('Draft auto-save notice:', e);
       }
-    }, 600);
+    }, 400);
     return () => clearTimeout(timer);
   }, [formData, currentStep, appliedTemplate, isCouponApplied, couponCode, draftStorageKey, currentTemplateKey]);
 
@@ -1781,60 +1803,7 @@ export default function GetStarted() {
     });
   };
 
-  // Helper for manual draft save
-  const handleManualSaveDraft = () => {
-    try {
-      const hasImagesAttached = Boolean(
-        formData.logoFile ||
-        (Array.isArray(formData.photosFiles) && formData.photosFiles.length > 0)
-      );
 
-      // Sanitize draft payload to prevent QuotaExceededError in localStorage
-      const draftFormData = { ...formData };
-      if (draftFormData.logoFile) {
-        const isCloudUrl = draftFormData.logoFile.url && !draftFormData.logoFile.url.startsWith('data:image');
-        draftFormData.logoFile = {
-          name: draftFormData.logoFile.name,
-          size: draftFormData.logoFile.size,
-          url: isCloudUrl ? draftFormData.logoFile.url : '',
-          dataUrl: isCloudUrl ? draftFormData.logoFile.url : ''
-        };
-      }
-      if (Array.isArray(draftFormData.photosFiles)) {
-        draftFormData.photosFiles = draftFormData.photosFiles.map(p => {
-          const isCloudUrl = p.url && !p.url.startsWith('data:image');
-          return {
-            name: p.name,
-            size: p.size,
-            url: isCloudUrl ? p.url : '',
-            dataUrl: isCloudUrl ? p.url : ''
-          };
-        });
-      }
-
-      const payloadToStore = {
-        formData: draftFormData,
-        currentStep,
-        appliedTemplate: appliedTemplate || currentTemplateKey || '',
-        isCouponApplied,
-        couponCode,
-        lastSaved: Date.now()
-      };
-
-      localStorage.setItem(draftStorageKey, JSON.stringify(payloadToStore));
-      const now = new Date().toLocaleTimeString();
-      setLastSavedTime(now);
-
-      if (hasImagesAttached) {
-        toast.success(`💾 Form progress saved successfully at ${now}! (Note: Cloud-synced media saved)`);
-      } else {
-        toast.success(`💾 Form progress saved successfully at ${now}`);
-      }
-    } catch (e) {
-      console.warn('Manual draft save notice:', e);
-      toast.error('Failed to save draft locally. Please check browser storage permissions.');
-    }
-  };
 
   // Helper to reset form
   const handleResetForm = () => {
@@ -2104,6 +2073,11 @@ export default function GetStarted() {
     toast.info('Photo removed.');
   };
 
+  const handleRemoveContentDoc = () => {
+    setFormData(prev => ({ ...prev, contentDocFile: null }));
+    toast.info('Content document removed.');
+  };
+
   // Validation before advancing step
   const validateStep = (step) => {
     const errors = {};
@@ -2247,6 +2221,14 @@ export default function GetStarted() {
       if (formData.otherIntegrations.includes('Other') && !formData.customIntegrationText.trim()) {
         errors.customIntegrationText = 'Please specify your custom integration *';
       }
+    } else if (step === 9) {
+      if (formData.negotiateBudget !== undefined && formData.negotiateBudget !== '') {
+        const num = Number(formData.negotiateBudget);
+        const minAllowed = Math.max(priceBreakdown.totalApproxPrice - 2000, 4999);
+        if (num < minAllowed) {
+          errors.negotiateBudget = `Negotiation limit: You can negotiate up to max ₹2,000 off the calculated total (Minimum allowed: ₹${minAllowed.toLocaleString('en-IN')}) *`;
+        }
+      }
     }
 
     setStepErrors(errors);
@@ -2301,7 +2283,7 @@ export default function GetStarted() {
     let applied = false;
     let disc = 20;
 
-    if (code === 'INDIA2025' || code === 'L2B20' || code === 'LOCAL2BRAND' || code === 'WELCOME20' || code === 'FIRST20') {
+    if (code === 'INDIA2025' || code === 'WEBLETS' || code === 'WEBLETS20' || code === 'L2B20' || code === 'LOCAL2BRAND' || code === 'WELCOME20' || code === 'FIRST20') {
       applied = true;
       disc = 20;
     } else {
@@ -2329,7 +2311,7 @@ export default function GetStarted() {
         setDiscountPercent(20);
         toast.success(`🎉 Coupon "${code}" applied (20% OFF)!`);
       } else {
-        toast.error(`Invalid coupon code "${code}". Try INDIA2025 for 20% OFF.`);
+        toast.error(`Invalid coupon code "${code}". Try WEBLETS for 20% OFF.`);
       }
     }
   };
@@ -2355,7 +2337,7 @@ export default function GetStarted() {
         ownerName: formData.fullName || user?.name || 'Valued Client',
         contactPerson: formData.fullName || user?.name || 'Valued Client',
         businessName: formData.businessName || formData.fullName || 'New Website Project',
-        email: (formData.emailAddress || user?.email || 'customer@local2brand.cyou').toLowerCase().trim(),
+        email: (formData.emailAddress || user?.email || 'customer@weblets.bond').toLowerCase().trim(),
         mobile: formData.mobileNumber || user?.phone || 'Not Provided',
         phone: formData.mobileNumber || user?.phone || 'Not Provided',
         whatsapp: formData.whatsappNumber || formData.mobileNumber || user?.phone || '',
@@ -4579,15 +4561,15 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 </div>
               </div>
 
-              {/* CONDITIONAL MEDIA UPLOADS BASED ON YES/NO SELECTIONS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {/* CONDITIONAL MEDIA & CONTENT UPLOADS BASED ON YES/NO SELECTIONS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
                 
-                {/* Logo Upload Card (Shown only if hasLogo === 'Yes') */}
+                {/* 1. Logo Upload Card */}
                 {formData.hasLogo === 'Yes' ? (
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-purple-500/40 dark:border-purple-500/40 flex flex-col justify-between animate-in fade-in duration-300 shadow-sm">
                     <div>
                       <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                        <UploadCloud className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Upload Brand Logo (Ready)
+                        <UploadCloud className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Brand Logo (Ready)
                       </label>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">PNG, JPG, SVG or WebP formats supported</p>
                     </div>
@@ -4655,7 +4637,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                   </div>
                 )}
 
-                {/* Multiple Business Photos Upload Card (Shown only if hasPhotos === 'Yes') */}
+                {/* 2. Multiple Business Photos Upload Card */}
                 {formData.hasPhotos === 'Yes' ? (
                   <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-purple-500/40 dark:border-purple-500/40 flex flex-col justify-between animate-in fade-in duration-300 shadow-sm">
                     <div>
@@ -4686,7 +4668,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
 
                     {/* Thumbnail Grid */}
                     {formData.photosFiles && formData.photosFiles.length > 0 && (
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-32 overflow-y-auto p-1">
+                      <div className="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto p-1">
                         {formData.photosFiles.map((photo, idx) => (
                           <div key={idx} className="relative group rounded-lg overflow-hidden border aspect-square bg-slate-100 dark:bg-slate-900">
                             <img src={photo.dataUrl || photo.url} alt={photo.name} className="w-full h-full object-cover" />
@@ -4718,6 +4700,77 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     <p className="text-xs text-slate-400">Select "Yes" above to upload business media.</p>
                   </div>
                 )}
+
+                {/* 3. Website Content / Copywriting Upload Card */}
+                {formData.hasContent === 'Yes' ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-purple-500/40 dark:border-purple-500/40 flex flex-col justify-between animate-in fade-in duration-300 shadow-sm space-y-3">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Website Content &amp; Copy (Ready)
+                      </label>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Upload Doc / PDF or paste Google Docs link / copy below</p>
+                    </div>
+
+                    {formData.contentDocFile ? (
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-950/80 text-purple-600 flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{formData.contentDocFile.name}</p>
+                            <span className="text-[10px] text-slate-400">{formData.contentDocFile.size}</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveContentDoc}
+                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                          title="Remove Document"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-dashed border-purple-300 dark:border-purple-800 hover:border-purple-500 cursor-pointer transition-colors text-center bg-purple-500/5">
+                        <UploadCloud className="w-5 h-5 text-purple-500 mb-0.5" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Upload Doc / PDF / TXT</span>
+                        <span className="text-[10px] text-slate-400">Word, PDF, RTF or Markdown</span>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt,.rtf"
+                          onChange={e => handleFileUpload(e, 'contentDoc')}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+
+                    <div>
+                      <textarea
+                        rows={2}
+                        placeholder="Or paste text copy / Google Doc / Notion link here..."
+                        value={formData.textContentCopy || ''}
+                        onChange={e => setFormData({ ...formData, textContentCopy: e.target.value })}
+                        className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+                ) : formData.hasContent === 'No' ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0 font-bold">
+                      ✍️
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">AI &amp; Copywriting Included</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Our senior content copywriters will write compelling, high-converting SEO copy for all your sections.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-center text-center p-4">
+                    <p className="text-xs text-slate-400">Select "Yes" above to attach content or paste text.</p>
+                  </div>
+                )}
+
               </div>
 
               {/* Reference Website & Additional Instructions */}
@@ -5299,10 +5352,36 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
 
               {/* Estimated Budget & Target Budget Negotiation */}
               <div className="space-y-4">
+                {/* Live System Calculated Total Package Highlight Badge */}
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-purple-500/10 to-teal-500/10 border border-emerald-500/30 dark:border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                        System Calculated Package Estimate (Pre-Selected)
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                      Based on your selected pages, features, domain and hosting requirements.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-mono font-black text-sm sm:text-base shadow-md">
+                      {formatPriceByCountry(priceBreakdown.totalApproxPrice, formData.country)}
+                    </div>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
-                    1. Estimated Budget Range
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                      <span>1. Estimated Budget Range (Locked to Package Total)</span>
+                    </label>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
+                      🔒 Fixed by Specification
+                    </span>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                     {[
                       'Under ₹10,000',
@@ -5311,39 +5390,62 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                       '₹50,000 – ₹1,00,000',
                       'Above ₹1,00,000',
                       'Custom Target'
-                    ].map(b => (
-                      <button
-                        key={b}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, budgetBracket: b })}
-                        className={`p-3 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
-                          formData.budgetBracket === b
-                            ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                            : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
-                        }`}
-                      >
-                        {b}
-                      </button>
-                    ))}
+                    ].map(b => {
+                      const isCalcMatching = 
+                        (b === 'Under ₹10,000' && priceBreakdown.totalApproxPrice < 10000) ||
+                        (b === '₹10,000 – ₹25,000' && priceBreakdown.totalApproxPrice >= 10000 && priceBreakdown.totalApproxPrice <= 25000) ||
+                        (b === '₹25,000 – ₹50,000' && priceBreakdown.totalApproxPrice > 25000 && priceBreakdown.totalApproxPrice <= 50000) ||
+                        (b === '₹50,000 – ₹1,00,000' && priceBreakdown.totalApproxPrice > 50000 && priceBreakdown.totalApproxPrice <= 100000) ||
+                        (b === 'Above ₹1,00,000' && priceBreakdown.totalApproxPrice > 100000);
+
+                      return (
+                        <button
+                          key={b}
+                          type="button"
+                          disabled
+                          className={`p-3 rounded-xl text-xs font-bold border text-center transition-all cursor-not-allowed relative select-none ${
+                            isCalcMatching
+                              ? 'bg-purple-600 border-purple-500 text-white shadow-md ring-2 ring-purple-400/40 opacity-100'
+                              : 'bg-slate-100/60 dark:bg-slate-900/40 border-slate-200/50 dark:border-slate-800/50 text-slate-400 dark:text-slate-600 opacity-50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            <span>{b}</span>
+                            {isCalcMatching && <Lock className="w-3 h-3 text-white" />}
+                          </div>
+                          {isCalcMatching && (
+                            <span className="block text-[9px] font-semibold text-purple-200 mt-0.5">
+                              (Selected by System)
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
+                  <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    <span>Estimated budget bracket is automatically locked based on your selected features. You can propose a negotiable amount below (max ₹2,000 reduction).</span>
+                  </p>
                 </div>
 
-                {/* Target / Negotiate Budget Input with Live Threshold Warning */}
+                {/* Target / Negotiable Budget Input with Max 2000 Reduction Rule */}
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                     <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
-                      Target / Negotiable Budget (Optional)
+                      Target / Negotiable Budget (Optional • Max ₹2,000 off package)
                     </label>
-                    <span className="text-[10px] text-slate-500">
-                      Starting packages from ₹4,999 / $99
+                    <span className="text-[10px] font-mono text-slate-500">
+                      Minimum allowable: {formatPriceByCountry(Math.max(priceBreakdown.totalApproxPrice - 2000, 4999), formData.country)}
                     </span>
                   </div>
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₹</span>
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
+                      {formData.country === 'US' || formData.country === 'GB' || formData.country === 'CA' ? '$' : '₹'}
+                    </span>
                     <input
                       type="number"
-                      placeholder="Enter your exact planned budget (e.g. 15000)"
-                      value={formData.negotiateBudget || ''}
+                      placeholder={`Calculated Approx: ${priceBreakdown.totalApproxPrice}`}
+                      value={formData.negotiateBudget !== undefined && formData.negotiateBudget !== '' ? formData.negotiateBudget : priceBreakdown.totalApproxPrice}
                       onChange={e => {
                         const val = e.target.value;
                         setFormData({ ...formData, negotiateBudget: val, customBudget: val });
@@ -5352,27 +5454,27 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     />
                   </div>
 
-                  {/* Low Budget Alert Modal / Banner */}
-                  {Boolean(formData.negotiateBudget && Number(formData.negotiateBudget) > 0 && Number(formData.negotiateBudget) < 4999) && (
-                    <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-left space-y-2 animate-in fade-in duration-200">
-                      <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-bold text-xs">
-                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
-                        <span>Minimum Standard Package Notice (₹4,999)</span>
-                      </div>
-                      <p className="text-[11.5px] text-slate-700 dark:text-slate-300 leading-relaxed">
-                        Our full-stack tailored website development packages start from <strong>₹4,999</strong> (including responsive UI, domain setup, hosting &amp; security). If you require an ultra-lightweight micro landing page, our lead architects can discuss customized options!
-                      </p>
-                      <a
-                        href="https://wa.me/919876543210?text=Hi%20Weblets%20Team%2C%20I%20would%20like%20to%20discuss%20a%20custom%20budget%20website%20project."
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-sm transition-colors cursor-pointer"
-                      >
-                        <MessageCircle className="w-3.5 h-3.5" />
-                        <span>Chat with Founders on WhatsApp</span>
-                      </a>
+                  {/* Real-Time Live Validation on Negotiable Amount */}
+                  {Boolean(formData.negotiateBudget && Number(formData.negotiateBudget) > 0) && (
+                    <div>
+                      {Number(formData.negotiateBudget) < Math.max(priceBreakdown.totalApproxPrice - 2000, 4999) ? (
+                        <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                          <span>
+                            Negotiation limit: You can reduce up to maximum <strong>₹2,000</strong> from the calculated package estimate (Minimum acceptable: <strong>{formatPriceByCountry(Math.max(priceBreakdown.totalApproxPrice - 2000, 4999), formData.country)}</strong>).
+                          </span>
+                        </div>
+                      ) : Number(formData.negotiateBudget) < priceBreakdown.totalApproxPrice ? (
+                        <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                          <span>
+                            Valid negotiable proposal: <strong>{formatPriceByCountry(priceBreakdown.totalApproxPrice - Number(formData.negotiateBudget), formData.country)}</strong> requested discount within approved tolerance.
+                          </span>
+                        </div>
+                      ) : null}
                     </div>
                   )}
+                  {stepErrors.negotiateBudget && <p className="text-xs text-red-500 mt-1">{stepErrors.negotiateBudget}</p>}
                 </div>
               </div>
 

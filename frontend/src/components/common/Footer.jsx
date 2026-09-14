@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Globe, Mail, PhoneCall, Sparkles, ArrowRight, Shield, Zap, ShieldCheck } from 'lucide-react';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useOrderModal } from '../../context/OrderModalContext';
+import { useTheme } from '../../context/ThemeContext';
 import AshokaChakra from './AshokaChakra';
 import ThemeToggle from './ThemeToggle';
 
@@ -16,8 +17,13 @@ const InstagramIcon = ({ className = 'w-4 h-4' }) => (
 
 export default function Footer() {
   const { settings } = useSiteSettings();
+  const { isDark } = useTheme();
   const { openOrderModal, openCallbackModal } = useOrderModal();
   const currentYear = new Date().getFullYear();
+
+  const activeLogoUrl = isDark
+    ? (settings?.logoDarkUrl || settings?.logoLightUrl || '/logo.png')
+    : (settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png');
 
   return (
     <footer className="relative z-10 pt-16 pb-10 border-t border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-950/80 backdrop-blur-2xl transition-colors duration-300">
@@ -28,12 +34,12 @@ export default function Footer() {
         {/* Top CTA Bento Ribbon */}
         <div className="glass-panel p-6 sm:p-10 rounded-hero border border-white dark:border-slate-700/80 shadow-glass mb-14 flex flex-col lg:flex-row items-center justify-between gap-6 relative overflow-hidden">
           <div className="space-y-2 text-center lg:text-left max-w-xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider">
-              <AshokaChakra size={13} />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/40 text-purple-900 dark:text-purple-300 text-xs font-bold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 animate-pulse" />
               <span>Launch Special • Save 20% Today</span>
             </div>
             <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              Ready to Turn Your Local Business Into A Global Brand?
+              Ready to Turn Your Vision Into A High-Converting Digital Flagship?
             </h3>
             <p className="text-slate-600 dark:text-slate-300 text-sm">
               Connect directly with our engineering & design team. Get a high-converting, {settings.turnaroundTime} delivered website tailored for your business.
@@ -63,14 +69,14 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-10 pb-12 border-b border-slate-200/80 dark:border-slate-800">
           
           <div className="lg:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl overflow-hidden shadow-md shadow-purple-500/20 border border-white dark:border-slate-700 bg-white dark:bg-slate-900">
-                <img src="/logo.png" alt="Weblets Logo" className="w-full h-full object-cover" />
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden shadow-md dark:shadow-[0_0_22px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-0 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <img src={activeLogoUrl} alt={settings?.brandName || 'WEBLETS'} className="w-full h-full object-cover scale-110" onError={(e) => { e.currentTarget.src = '/logo.png'; }} />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
                   <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white leading-none">
-                    {settings.brandName || 'Weblets'}
+                    {settings.brandName || 'WEBLETS'}
                   </span>
                 </div>
                 <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 tracking-wide mt-0.5">

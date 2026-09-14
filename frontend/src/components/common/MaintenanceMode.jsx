@@ -165,25 +165,21 @@ export default function MaintenanceMode({ onBypassSuccess }) {
       <header className="w-full max-w-6xl mx-auto flex items-center justify-between py-2 sm:py-4 gap-2 relative z-20 shrink-0">
         {/* Brand Logo */}
         <div className="flex items-center gap-2 sm:gap-2.5">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/20 border border-white/80 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/20 border border-white/80 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center shrink-0">
             <img
-              src="/logo.jpg"
-              alt="LOCAL2BRAND Official 3D Logo"
-              className="w-full h-full object-cover"
+              src="/logo.png"
+              alt="WEBLETS Logo"
+              className="w-full h-full object-contain"
             />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1 sm:gap-1.5">
               <span className="font-extrabold text-sm sm:text-base lg:text-lg tracking-tight text-slate-900 dark:text-white leading-none">
-                LOCAL<span className="l2b-gradient-text">2</span>BRAND
-              </span>
-              <span className="inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-200/80 dark:border-amber-500/40 px-1 sm:px-1.5 py-0.5 rounded shadow-2xs">
-                <AshokaChakra size={10} />
-                <span>IN</span>
+                WEBLETS
               </span>
             </div>
             <span className="text-[8px] sm:text-[9px] font-semibold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5 truncate max-w-[130px] sm:max-w-none">
-              Build Local. Think Global.
+              Lets make website together
             </span>
           </div>
         </div>

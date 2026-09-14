@@ -67,7 +67,7 @@ class OneSignalService {
                     type: 'push',
                     autoPrompt: true,
                     text: {
-                      actionMessage: "Get instant real-time notifications for order milestones, blueprints, and offers from LOCAL2BRAND.",
+                      actionMessage: "Get instant real-time notifications for order milestones, blueprints, and offers from WEBLETS.",
                       acceptButton: 'Allow Notifications',
                       cancelButton: 'Later',
                     },

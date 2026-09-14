@@ -11,25 +11,23 @@ export default function SEO({
   title,
   description,
   keywords,
-  image = 'https://local2brand.cyou/logo.jpg',
+  image = 'https://weblets.bond/logo.png',
   type = 'website',
   schema
 }) {
   const location = useLocation();
-  const domain = 'https://local2brand.cyou';
+  const domain = 'https://weblets.bond';
   const canonicalUrl = `${domain}${location.pathname === '/' ? '' : location.pathname}`;
 
-  // Brand variations to rank #1 on Google for all permutations:
-  // "local2brand", "local to brand", "local 2 brand", "local2brand.cyou"
-  const brandKeywords = 'local2brand, local to brand, local 2 brand, local2brand.cyou, Local2Brand Agency, Local To Brand India, fast website builder, 48 hour website development, ecommerce store builder, high converting web design agency, restaurant website, cafe website, salon website, real estate website, custom web development India, WhatsApp direct order website';
+  const brandKeywords = 'weblets, weblets.bond, Weblets Agency, Weblets Studio, fast website builder, 48 hour website development, ecommerce store builder, high converting web design agency, restaurant website, cafe website, salon website, real estate website, custom web development, lets make website together';
 
-  const defaultTitle = 'LOCAL2BRAND — Build Local. Think Global. | #1 Fast-Track Web Experience Engine';
-  const defaultDesc = 'LOCAL2BRAND (Local To Brand) turns ambitious local businesses into world-class digital brands. 48-Hour delivery, bespoke conversion UI, 12+ live commercial demo templates, and direct WhatsApp lead capture.';
+  const defaultTitle = 'Weblets — Lets make website together | Modern Web Studio';
+  const defaultDesc = 'Weblets (weblets.bond) crafts digital experiences that scale ambitious businesses into recognized global brands. 48-Hour delivery, bespoke conversion UI, 12+ live commercial demo templates, and direct WhatsApp lead capture.';
 
   const activeTitle = title 
-    ? (title.toLowerCase().includes('local2brand') || title.toLowerCase().includes('local to brand') 
+    ? (title.toLowerCase().includes('weblets') 
         ? title 
-        : `${title} | LOCAL2BRAND (Local To Brand)`)
+        : `${title} | Weblets`)
     : defaultTitle;
     
   const activeDesc = description || defaultDesc;
@@ -57,19 +55,19 @@ export default function SEO({
     setMetaTag('name', 'description', activeDesc);
     setMetaTag('name', 'keywords', activeKeywords);
     setMetaTag('name', 'robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
-    setMetaTag('name', 'author', 'LOCAL2BRAND (Soham Dutta & Team)');
-    setMetaTag('name', 'publisher', 'LOCAL2BRAND');
-    setMetaTag('name', 'application-name', 'LOCAL2BRAND');
+    setMetaTag('name', 'author', 'Weblets (Soham Dutta, Sayantan & Achinta)');
+    setMetaTag('name', 'publisher', 'Weblets');
+    setMetaTag('name', 'application-name', 'Weblets');
 
     // 3. OpenGraph / Facebook / WhatsApp / LinkedIn Preview
-    setMetaTag('property', 'og:site_name', 'LOCAL2BRAND — Local To Brand');
+    setMetaTag('property', 'og:site_name', 'Weblets — Lets make website together');
     setMetaTag('property', 'og:title', activeTitle);
     setMetaTag('property', 'og:description', activeDesc);
     setMetaTag('property', 'og:url', canonicalUrl);
     setMetaTag('property', 'og:type', type);
     setMetaTag('property', 'og:image', activeImage);
     setMetaTag('property', 'og:image:secure_url', activeImage);
-    setMetaTag('property', 'og:image:alt', `${activeTitle} - LOCAL2BRAND`);
+    setMetaTag('property', 'og:image:alt', `${activeTitle} - Weblets`);
     setMetaTag('property', 'og:image:type', activeImage.endsWith('.png') ? 'image/png' : 'image/jpeg');
     setMetaTag('property', 'og:locale', 'en_US');
 
@@ -78,8 +76,8 @@ export default function SEO({
     setMetaTag('name', 'twitter:title', activeTitle);
     setMetaTag('name', 'twitter:description', activeDesc);
     setMetaTag('name', 'twitter:image', activeImage);
-    setMetaTag('name', 'twitter:site', '@local2brand');
-    setMetaTag('name', 'twitter:creator', '@local2brand');
+    setMetaTag('name', 'twitter:site', '@weblets');
+    setMetaTag('name', 'twitter:creator', '@weblets');
 
     // 5. Canonical Link
     let canonicalLink = document.querySelector('link[rel="canonical"]');

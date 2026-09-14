@@ -134,7 +134,7 @@ export default function Testimonials() {
           </h2>
 
           <p className="text-xs sm:text-base text-slate-600 dark:text-slate-400 font-normal leading-relaxed max-w-2xl mx-auto">
-            Discover how restauranteurs, doctors, jewellery owners, and startups transformed their local presence into high-revenue digital brands with LOCAL2BRAND.
+            Discover how restauranteurs, doctors, jewellery owners, and startups transformed their vision into high-revenue digital flagships with Weblets.
           </p>
         </div>
 

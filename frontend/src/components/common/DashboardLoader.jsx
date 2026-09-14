@@ -10,21 +10,21 @@ export default function DashboardLoader({
   return (
     <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-200">
       
-      {/* Minimal Logo Mark with Subtle Spinner */}
+      {/* Minimal Logo Mark with Glowing Spinner */}
       <div className="relative mb-3 flex items-center justify-center">
-        {/* Subtle hairline spinning ring */}
-        <div className={`w-12 h-12 rounded-2xl border-2 border-transparent ${
-          isAdmin ? 'border-t-amber-500 border-r-amber-500/30' : 'border-t-purple-600 border-r-purple-600/30'
+        {/* Glowing spinning ring */}
+        <div className={`w-14 h-14 border-2 border-transparent ${
+          isAdmin ? 'border-t-amber-500 border-r-amber-500/40 shadow-[0_0_20px_rgba(245,158,11,0.3)]' : 'border-t-purple-600 border-r-purple-600/40 shadow-[0_0_20px_rgba(168,85,247,0.35)]'
         } rounded-full animate-spin`} />
         
-        {/* Small Brand Logo / Initial in center */}
-        <div className="absolute inset-0 m-auto w-8 h-8 rounded-xl overflow-hidden shadow-xs bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center justify-center">
+        {/* Small Brand Logo in center (Glowing Circular Orb) */}
+        <div className="absolute inset-0 m-auto w-9 h-9 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-1 ring-purple-400/30 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-1.5 flex items-center justify-center">
           <img
-            src="/logo.jpg"
-            alt="LOCAL2BRAND"
-            className="w-full h-full object-cover"
+            src="/logo.png"
+            alt="WEBLETS"
+            className="w-full h-full object-contain"
             onError={(e) => {
-              e.target.style.display = 'none';
+              e.target.src = '/logo.png';
             }}
           />
         </div>

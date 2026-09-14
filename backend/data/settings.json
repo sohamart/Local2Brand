@@ -16,78 +16,96 @@
     "isComingSoonMode": false,
     "maintenanceMessage": "We are currently upgrading our platform. We will be back online shortly!",
     "socialLinks": {
-      "instagram": "https://instagram.com/weblets.bond",
-      "instagramHandle": "@weblets.bond",
-      "linkedin": "https://linkedin.com/company/weblets",
-      "github": "https://github.com/weblets",
-      "twitter": "https://twitter.com/weblets"
+      "instagram": "https://instagram.com/local2brand",
+      "instagramHandle": "@local2brand",
+      "linkedin": "https://linkedin.com/company/local2brand",
+      "github": "https://github.com/local2brand",
+      "twitter": "https://twitter.com/local2brand"
     },
     "heroConfig": {
-      "badge": "⚡ Modern High-Converting Web Experience Engine",
-      "title": "Lets Make Website Together — Fast, Modern & Scalable",
+      "badge": "🇮🇳 India’s #1 Fast-Track Web Experience Engine",
+      "title": "Transform Your Local Business Into A Global Brand",
       "subtitle": "World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale."
     },
     "announcementBar": {
       "enabled": false,
-      "text": "🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code WEBLETS20",
+      "text": "🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025",
       "badge": "FLASH OFFER",
       "link": "/pricing",
-      "promoCode": "WEBLETS20",
+      "promoCode": "INDIA2025",
       "discountPercent": 20,
       "btnText": "Claim Offer"
     },
     "bannerImage": "",
-    "updatedAt": "2026-09-14T08:00:00.000Z",
+    "updatedAt": "2026-09-14T09:04:04.511Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
     "updatedBy": "6a9551f5ef178dc4ce9260cf",
     "aiSettings": {
       "enabled": true,
-      "customInstructions": "Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code WEBLETS20 for 20% discount. First check the role before match the name.",
-      "businessKnowledge": "WEBLETS builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.",
+      "customInstructions": "Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount. First check the role before match the name ",
+      "businessKnowledge": "LOCAL2BRAND builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.",
       "adminShowableDetails": {
-        "founderName": "Soham Dutta, Sayantan, & Achinta",
+        "founderName": "Soham Dutta (Founder & Lead Architect) & Founding Team",
         "founderCount": 3,
         "showFoundersToAi": true,
         "founders": [
           {
             "name": "Soham Dutta",
             "role": "Founder & Lead Architect",
+            "subtitle": "",
+            "badge": "",
             "bio": "Full-Stack Engineer & Product Designer leading high-performance web systems.",
-            "instagram": "https://instagram.com/sohamart",
+            "image": "https://res.cloudinary.com/tm2pwzjj/image/upload/v1789376640/local2brand_assets/rqtfkaxssfh9kd3rtg4i.jpg",
+            "avatar": "https://res.cloudinary.com/tm2pwzjj/image/upload/v1789376640/local2brand_assets/rqtfkaxssfh9kd3rtg4i.jpg",
+            "skills": [],
+            "instagram": "@soham_dutta_offcial",
             "linkedin": "",
+            "github": "",
             "email": "sohamduttabwn@gmail.com",
             "phone": "",
             "_id": "6a9877eac887a2d1358e435c"
           },
           {
-            "name": "Sayantan Ghosh",
-            "role": "Co-Founder & Technical Lead",
-            "bio": "Co-Founder & Technical Lead overseeing full-stack architecture and reliable systems.",
-            "instagram": "https://instagram.com/sayantan_ghosh",
+            "name": "SAYANTAN GHOSH",
+            "role": "Co-Founder",
+            "subtitle": "",
+            "badge": "",
+            "bio": "Full-Stack Engineer & Product Designer leading high-performance web systems.",
+            "image": "",
+            "avatar": "",
+            "skills": [],
+            "instagram": "",
             "linkedin": "",
+            "github": "",
             "email": "sayantanghosh.bwn@gmail.com",
             "phone": "",
             "_id": "6a9bcf3b186d672012a28a13"
           },
           {
-            "name": "Achinta",
-            "role": "Co-Founder & Operations Lead",
-            "bio": "Co-Founder & Operations Lead managing seamless product delivery and client growth.",
+            "name": "ACHINTA BEJ",
+            "role": "Co-Founder",
+            "subtitle": "",
+            "badge": "",
+            "bio": "",
+            "image": "",
+            "avatar": "",
+            "skills": [],
             "instagram": "",
             "linkedin": "",
-            "email": "achinta@weblets.bond",
+            "github": "",
+            "email": "achintabej96@gmail.com",
             "phone": "",
-            "_id": "6a9bcf3b186d672012a28a14"
+            "_id": "6aa3b62dee8363dedecea581"
           }
         ],
         "contactPhone": "+918710043923",
-        "contactEmail": "contact@weblets.bond",
-        "officeLocation": "Kolkata & Burdwan, West Bengal, India",
+        "contactEmail": "local2brand.contact@gmail.com",
+        "officeLocation": "6RPM+P36, Rathtala Rd, Padmapukur, sitalatala, Bardhaman, West Bengal 713102",
         "workingHours": "Monday - Saturday: 10:00 AM - 8:00 PM IST",
         "whatsappSupport": "+918710043923",
-        "instagram": "https://instagram.com/weblets.bond",
-        "instagramHandle": "@weblets.bond"
+        "instagram": "https://instagram.com/local2brand",
+        "instagramHandle": "@local2brand"
       }
     },
     "demoCategories": [
@@ -134,9 +152,9 @@
         ],
         "ctaText": "Start with Starter",
         "websiteType": "Starter Website",
-        "status": "published",
+        "status": "coming_soon",
         "order": 1,
-        "_id": "6a9877eac887a2d1358e4359"
+        "_id": "6aa3aeb687e41cfbf3b2065d"
       },
       {
         "id": "professional",
@@ -163,9 +181,9 @@
         ],
         "ctaText": "Get Professional",
         "websiteType": "Professional Website",
-        "status": "published",
+        "status": "coming_soon",
         "order": 2,
-        "_id": "6a9877eac887a2d1358e435a"
+        "_id": "6aa3aed146aeb4d19ba6aa55"
       },
       {
         "id": "custom",
@@ -190,9 +208,9 @@
         "notIncluded": [],
         "ctaText": "Discuss Custom Scope",
         "websiteType": "Custom Enterprise Solution",
-        "status": "published",
+        "status": "coming_soon",
         "order": 3,
-        "_id": "6a9877eac887a2d1358e435b"
+        "_id": "6aa3aed146aeb4d19ba6aa56"
       }
     ],
     "luckyWheel": {
@@ -330,24 +348,19 @@
       "qrCodeUrl": "",
       "screenshots": [
         {
-          "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80",
-          "title": "Live Sprint Tracker",
-          "caption": "Real-time project milestone progress and milestone tracking"
+          "url": "https://res.cloudinary.com/tm2pwzjj/image/upload/v1788896594/local2brand_assets/oqtmogsogmug0bx17lvj.jpg",
+          "title": "Home page Preview ",
+          "caption": "Interactive mobile interface showcase Home Page "
         },
         {
-          "url": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80",
-          "title": "Demo Explorer",
-          "caption": "Browse 50+ lightning-fast web templates and live preview"
+          "url": "https://res.cloudinary.com/tm2pwzjj/image/upload/v1788896628/local2brand_assets/ldwhzo3vqtnsyq9kluyk.jpg",
+          "title": "Order  Requirements Form Page",
+          "caption": "Interactive mobile interface showcase Requirement with country theme "
         },
         {
-          "url": "https://images.unsplash.com/photo-1555774698-0b77e0d5fac6?auto=format&fit=crop&w=800&q=80",
-          "title": "Direct Chat & Support",
-          "caption": "24/7 direct communication with dedicated design architect"
-        },
-        {
-          "url": "https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?auto=format&fit=crop&w=800&q=80",
-          "title": "Instant Push Alerts",
-          "caption": "Get notified when your design mockup or sprint is approved"
+          "url": "https://res.cloudinary.com/tm2pwzjj/image/upload/v1788896672/local2brand_assets/ivprbp6uhgjftjkvgvfx.jpg",
+          "title": "DashBoard Preview",
+          "caption": "Interactive mobile interface showcase Dashboard "
         }
       ],
       "features": [
@@ -370,7 +383,7 @@
         }
       ]
     },
-    "targetLaunchDate": "2026-09-08T12:30:00.000Z",
+    "targetLaunchDate": "2026-09-12T12:30:00.000Z",
     "navLinks": [
       {
         "label": "Home",

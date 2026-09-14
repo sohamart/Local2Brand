@@ -73,10 +73,10 @@ export default function AdminSettings() {
 
 
   const [formData, setFormData] = useState({
-    brandName: settings.brandName || 'LOCAL2BRAND',
-    domain: settings.domain || 'local2brand.cyou',
-    tagline: settings.tagline || 'Build Local. Think Global.',
-    supportEmail: settings.supportEmail || 'local2brand.contact@gmail.com',
+    brandName: settings.brandName || 'WEBLETS',
+    domain: settings.domain || 'weblets.bond',
+    tagline: settings.tagline || 'Lets make website together',
+    supportEmail: settings.supportEmail || 'contact@weblets.bond',
     displayPhone: settings.displayPhone || settings.aiSettings?.adminShowableDetails?.contactPhone || '+91 87100 43923',
     whatsappNumber: settings.whatsappNumber || settings.aiSettings?.adminShowableDetails?.whatsappSupport || '+91 87100 43923',
     officeLocation: settings.officeLocation || settings.aiSettings?.adminShowableDetails?.officeLocation || 'Kolkata & Bangalore, India',
@@ -92,10 +92,10 @@ export default function AdminSettings() {
     targetLaunchDate: settings.targetLaunchDate || '',
     announcementBar: {
       enabled: settings.announcementBar?.enabled ?? false,
-      text: settings.announcementBar?.text || '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
+      text: settings.announcementBar?.text || '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code WEBLETS',
       link: settings.announcementBar?.link || '/pricing',
       badge: settings.announcementBar?.badge || 'FLASH OFFER',
-      promoCode: settings.announcementBar?.promoCode || 'INDIA2025',
+      promoCode: settings.announcementBar?.promoCode || 'WEBLETS',
       discountPercent: settings.announcementBar?.discountPercent || 20,
       btnText: settings.announcementBar?.btnText || 'Claim Offer'
     },
@@ -104,30 +104,29 @@ export default function AdminSettings() {
       title: '🎡 Spin & Win Exclusive Launch Rewards',
       subtitle: 'Spin the lucky prize wheel to win instant discounts, free domains, and launch vouchers!',
       btnText: 'Spin & Win Prize',
-      rewardVoucher: 'INDIA2025',
+      rewardVoucher: 'WEBLETS',
       rewardDiscount: 20
     },
     socialLinks: settings.socialLinks || {
-
-      instagram: 'https://instagram.com/local2brand',
-      instagramHandle: '@local2brand',
-      linkedin: 'https://linkedin.com/company/local2brand',
-      github: 'https://github.com/local2brand',
-      twitter: 'https://twitter.com/local2brand'
+      instagram: 'https://instagram.com/weblets.bond',
+      instagramHandle: '@weblets',
+      linkedin: 'https://linkedin.com/company/weblets',
+      github: 'https://github.com/weblets',
+      twitter: 'https://twitter.com/weblets'
     },
     heroConfig: settings.heroConfig || {
-      badge: '🇮🇳 India’s #1 Fast-Track Web Experience Engine',
-      title: 'Transform Your Local Business Into A Global Brand',
-      subtitle: 'World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale.'
+      badge: '✨ Weblets Studio | Lets make website together',
+      title: 'We Build Websites That Turn Your Vision Into A Global Brand.',
+      subtitle: 'World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale globally.'
     },
     bannerImage: settings.bannerImage || '',
     aiSettings: settings.aiSettings || {
       enabled: true,
-      customInstructions: 'Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount.',
-      businessKnowledge: 'LOCAL2BRAND builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.',
+      customInstructions: 'Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code WEBLETS for 20% discount.',
+      businessKnowledge: 'Weblets builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.',
       adminShowableDetails: {
-        founderName: 'Soham Dutta & Core Team',
-        founderCount: 1,
+        founderName: 'Soham Dutta, Sayantan & Achinta',
+        founderCount: 3,
         showFoundersToAi: true,
         founders: [
           {
@@ -136,17 +135,17 @@ export default function AdminSettings() {
             bio: 'Full-Stack Engineer & Designer leading high-performance digital products.',
             instagram: 'https://instagram.com/sohamart',
             linkedin: '',
-            email: 'local2brand.contact@gmail.com',
+            email: 'contact@weblets.bond',
             phone: '+91 87100 43923',
           },
         ],
         contactPhone: '+91 87100 43923',
-        contactEmail: 'local2brand.contact@gmail.com',
+        contactEmail: 'contact@weblets.bond',
         officeLocation: 'Kolkata & Bangalore, India',
         workingHours: 'Monday - Saturday: 10:00 AM - 8:00 PM IST',
         whatsappSupport: '+91 87100 43923',
-        instagram: 'https://instagram.com/local2brand',
-        instagramHandle: '@local2brand',
+        instagram: 'https://instagram.com/weblets.bond',
+        instagramHandle: '@weblets',
       },
     },
     appConfig: settings.appConfig || {
@@ -154,16 +153,16 @@ export default function AdminSettings() {
       appMode: 'pwa',
       isComingSoon: false,
       showComingSoonPopup: false,
-      comingSoonTitle: 'LOCAL2BRAND Web & Mobile App is Coming Soon! 🚀',
+      comingSoonTitle: 'WEBLETS Web & Mobile App is Coming Soon! 🚀',
       comingSoonMessage: 'Our engineering team is fine-tuning the platform. Pre-register your interest for priority early beta access.',
-      appName: 'LOCAL2BRAND Web App',
+      appName: 'WEBLETS Web App',
       appSubtitle: 'Official Inbuilt Web App & Client Portal',
       appDescription: 'Install our fast inbuilt web app directly to your device home screen. Monitor active website builds, communicate in real-time with your lead developer, track live milestones, test responsive demo previews, and receive instant push updates with 0 MB storage overhead.',
       version: 'v2.4.0 (PWA)',
       fileSize: '0 MB (Web App)',
       minAndroid: 'All Android devices (Chrome / Firefox / Edge / Samsung Browser)',
       minIos: 'iOS 14.0+ (Safari / Chrome)',
-      packageName: 'com.local2brand.webapp',
+      packageName: 'com.weblets.webapp',
       androidStatus: 'coming_soon',
       iosStatus: 'coming_soon',
       apkDownloadUrl: '',
@@ -219,6 +218,7 @@ export default function AdminSettings() {
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const [uploadingLogoLight, setUploadingLogoLight] = useState(false);
   const [uploadingLogoDark, setUploadingLogoDark] = useState(false);
+  const [uploadingFounderIdx, setUploadingFounderIdx] = useState(null);
   const [uploadingApk, setUploadingApk] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
   const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
@@ -276,12 +276,48 @@ export default function AdminSettings() {
         {
           name: 'Soham Dutta',
           role: 'Founder & Lead Architect',
-          bio: 'Full-Stack Engineer & Designer leading high-performance digital products.',
+          subtitle: 'Core Architecture & AI Systems',
+          badge: 'Architecture',
+          bio: 'Leading high-performance digital systems, reactive web engines, full-stack microservices, and AI-driven automation pipelines.',
+          image: '',
+          avatar: '',
+          skills: ['React / Vite', 'Node.js & MongoDB', 'Cloud Architecture', 'System Design'],
           instagram: 'https://instagram.com/sohamart',
-          linkedin: '',
-          email: 'local2brand.contact@gmail.com',
+          linkedin: 'https://linkedin.com/in/soham-dutta',
+          github: 'https://github.com/sohamart',
+          email: 'contact@weblets.bond',
           phone: '+91 87100 43923',
         },
+        {
+          name: 'Sayantan',
+          role: 'Technical Lead & Frontend Engineering',
+          subtitle: 'UI/UX Polish & Web Performance',
+          badge: 'Frontend & UI',
+          bio: 'Engineering liquid-smooth interactive interfaces, responsive fluid typography, and glassmorphism styling that elevates businesses into global brands.',
+          image: '',
+          avatar: '',
+          skills: ['Frontend Architecture', 'Fluid Animation', 'Tailwind & Modern CSS', 'PWA & Edge CDN'],
+          instagram: '',
+          linkedin: '',
+          github: '',
+          email: 'contact@weblets.bond',
+          phone: '+91 87100 43923',
+        },
+        {
+          name: 'Achinta',
+          role: 'Operations & Product Delivery Lead',
+          subtitle: 'Client Success & Execution',
+          badge: 'Operations & QA',
+          bio: 'Orchestrating seamless client onboarding, rapid 48-hour delivery pipelines, requirement verification, and ensuring zero-friction project turnarounds.',
+          image: '',
+          avatar: '',
+          skills: ['Agile Delivery', 'Client Strategy', 'Quality Engineering', 'Growth Operations'],
+          instagram: '',
+          linkedin: '',
+          github: '',
+          email: 'contact@weblets.bond',
+          phone: '+91 87100 43923',
+        }
       ];
 
       const loadedFounders =
@@ -524,6 +560,45 @@ export default function AdminSettings() {
         },
       };
     });
+  };
+
+  const handleFounderPhotoUpload = async (e, index) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be under 10MB');
+      return;
+    }
+
+    setUploadingFounderIdx(index);
+
+    // Instant local preview
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      if (uploadEvent.target?.result) {
+        handleFounderFieldChange(index, 'image', uploadEvent.target.result);
+        handleFounderFieldChange(index, 'avatar', uploadEvent.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+
+    try {
+      const res = await uploadWithToast({
+        file,
+        title: `Uploading Founder Photo (${file.name})`,
+        successMessage: 'Founder photo uploaded & saved! 👤'
+      });
+      if (res && (res.url || res.urls?.[0])) {
+        const uploadedUrl = res.url || res.urls[0];
+        handleFounderFieldChange(index, 'image', uploadedUrl);
+        handleFounderFieldChange(index, 'avatar', uploadedUrl);
+      }
+    } catch (err) {
+      console.warn('Founder photo upload fallback notice:', err);
+    } finally {
+      setUploadingFounderIdx(null);
+    }
   };
 
 
@@ -1299,6 +1374,249 @@ export default function AdminSettings() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Section 1.5: Founders & Leadership Team Management */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span>Founders & Leadership Team Profiles</span>
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Manage leadership profiles displayed on <code>/team</code> and <code>/about</code> pages. Upload custom photos, assign roles, bio, and direct social contact links.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAddFounder}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer self-start sm:self-auto"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Founder Profile</span>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {(formData.aiSettings?.adminShowableDetails?.founders || []).map((founder, fIdx) => {
+                const photoUrl = founder.image || founder.avatar || '';
+                const initials = founder.name ? founder.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'W';
+                const isUploading = uploadingFounderIdx === fIdx;
+
+                return (
+                  <div
+                    key={fIdx}
+                    className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-4"
+                  >
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-lg bg-purple-600/20 text-purple-600 dark:text-purple-300 font-black text-xs flex items-center justify-center">
+                          {fIdx + 1}
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                          {founder.name || `Founder #${fIdx + 1}`}
+                        </h3>
+                        {founder.role && (
+                          <span className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold">
+                            • {founder.role}
+                          </span>
+                        )}
+                      </div>
+
+                      {(formData.aiSettings?.adminShowableDetails?.founders?.length || 0) > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFounder(fIdx)}
+                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors"
+                          title="Remove this founder"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Avatar Upload + Info Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                      {/* Left: Photo Upload */}
+                      <div className="md:col-span-4 lg:col-span-3 flex flex-col items-center sm:items-start gap-3">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Founder Photo</label>
+                        <div className="w-24 h-24 rounded-2xl bg-slate-200 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-600 overflow-hidden flex items-center justify-center relative shadow-sm group">
+                          {photoUrl ? (
+                            <img
+                              src={photoUrl}
+                              alt={founder.name || 'Founder'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-black text-2xl">
+                              {initials}
+                            </div>
+                          )}
+                          {isUploading && (
+                            <div className="absolute inset-0 bg-black/70 flex items-center justify-center text-white">
+                              <RotateCw className="w-5 h-5 animate-spin" />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="w-full space-y-1.5">
+                          <label className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold cursor-pointer transition-all shadow-xs">
+                            {isUploading ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                            <span>{isUploading ? 'Uploading...' : 'Upload Photo'}</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => handleFounderPhotoUpload(e, fIdx)}
+                              disabled={isUploading}
+                            />
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Or paste image URL"
+                            value={photoUrl}
+                            onChange={(e) => {
+                              handleFounderFieldChange(fIdx, 'image', e.target.value);
+                              handleFounderFieldChange(fIdx, 'avatar', e.target.value);
+                            }}
+                            className="w-full p-1.5 text-[11px] rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 focus:outline-purple-500"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Right: Core Fields Grid */}
+                      <div className="md:col-span-8 lg:col-span-9 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                        <div>
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Full Name</label>
+                          <input
+                            type="text"
+                            value={founder.name || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'name', e.target.value)}
+                            placeholder="e.g. Soham Dutta"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Role / Designation</label>
+                          <input
+                            type="text"
+                            value={founder.role || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'role', e.target.value)}
+                            placeholder="e.g. Founder & Lead Architect"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Subtitle / Focus Area</label>
+                          <input
+                            type="text"
+                            value={founder.subtitle || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'subtitle', e.target.value)}
+                            placeholder="e.g. Core Architecture & AI Systems"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Category Badge</label>
+                          <input
+                            type="text"
+                            value={founder.badge || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'badge', e.target.value)}
+                            placeholder="e.g. Architecture / Frontend & UI"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Direct Email</label>
+                          <input
+                            type="email"
+                            value={founder.email || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'email', e.target.value)}
+                            placeholder="e.g. contact@weblets.bond"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Direct Phone / WhatsApp</label>
+                          <input
+                            type="text"
+                            value={founder.phone || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'phone', e.target.value)}
+                            placeholder="e.g. +91 87100 43923"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2 lg:col-span-3">
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Skills & Specialties (Comma Separated)</label>
+                          <input
+                            type="text"
+                            value={Array.isArray(founder.skills) ? founder.skills.join(', ') : (founder.skills || '')}
+                            onChange={(e) => {
+                              const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                              handleFounderFieldChange(fIdx, 'skills', arr);
+                            }}
+                            placeholder="e.g. React / Vite, Node.js & MongoDB, Cloud Architecture, System Design"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-2 lg:col-span-3">
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Bio / Profile Description</label>
+                          <textarea
+                            rows={2}
+                            value={founder.bio || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'bio', e.target.value)}
+                            placeholder="Brief description of the founder's expertise and role..."
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold resize-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Instagram URL</label>
+                          <input
+                            type="text"
+                            value={founder.instagram || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'instagram', e.target.value)}
+                            placeholder="https://instagram.com/username"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">LinkedIn URL</label>
+                          <input
+                            type="text"
+                            value={founder.linkedin || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'linkedin', e.target.value)}
+                            placeholder="https://linkedin.com/in/username"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">GitHub URL</label>
+                          <input
+                            type="text"
+                            value={founder.github || ''}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'github', e.target.value)}
+                            placeholder="https://github.com/username"
+                            className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -2291,170 +2609,23 @@ export default function AdminSettings() {
               </p>
             </div>
 
-            {/* --- SUBSECTION A: FOUNDERS & LEADERSHIP TEAM --- */}
-            <div className="space-y-4 pt-2">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-slate-800/60">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-purple-600" />
-                  <span className="font-extrabold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                    Founders & Leadership Team Profiles ({formData.aiSettings?.adminShowableDetails?.founders?.length || 0})
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer mr-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.aiSettings?.adminShowableDetails?.showFoundersToAi ?? true}
-                      onChange={(e) => handleAiAdminDetailsChange('showFoundersToAi', e.target.checked)}
-                      className="w-3.5 h-3.5 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
-                    />
-                    <span>Share with AI & Clients</span>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleAddFounder}
-                    className="px-3 py-1.5 rounded-xl bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold text-xs flex items-center gap-1.5 hover:bg-purple-200 dark:hover:bg-purple-900 border border-purple-200 dark:border-purple-800 cursor-pointer transition-colors shadow-2xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add Founder</span>
-                  </button>
-                </div>
+            {/* Founders AI Context Sync Notice */}
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-purple-600" />
+                <span className="font-bold text-slate-800 dark:text-slate-200">
+                  Founders &amp; Leadership Sync: Managed in Section 1.5 above ({formData.founders?.length || 0} Profiles Active)
+                </span>
               </div>
-
-              {/* Founder Dynamic Cards */}
-              <div className="space-y-3.5">
-                {(formData.aiSettings?.adminShowableDetails?.founders || []).map((founder, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3 relative group"
-                  >
-                    <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-black">
-                          {idx + 1}
-                        </div>
-                        <span className="font-bold text-xs text-slate-800 dark:text-slate-200">
-                          {founder.name ? founder.name : `Founder #${idx + 1}`}
-                        </span>
-                        {founder.role && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 font-semibold border border-purple-200 dark:border-purple-800">
-                            {founder.role}
-                          </span>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFounder(idx)}
-                        disabled={(formData.aiSettings?.adminShowableDetails?.founders || []).length <= 1}
-                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/60 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
-                        title="Remove Founder"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-                      <div>
-                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                          Founder Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          value={founder.name || ''}
-                          onChange={(e) => handleFounderFieldChange(idx, 'name', e.target.value)}
-                          placeholder="e.g. Soham Dutta"
-                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                          Role / Title *
-                        </label>
-                        <input
-                          type="text"
-                          value={founder.role || ''}
-                          onChange={(e) => handleFounderFieldChange(idx, 'role', e.target.value)}
-                          placeholder="e.g. Founder & Lead Architect"
-                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
-                          <InstagramIcon className="w-3.5 h-3.5 text-pink-500" />
-                          <span>Instagram Profile / Handle</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={founder.instagram || ''}
-                          onChange={(e) => handleFounderFieldChange(idx, 'instagram', e.target.value)}
-                          placeholder="https://instagram.com/sohamart or @sohamart"
-                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
-                          <LinkedinIcon className="w-3.5 h-3.5 text-blue-500" />
-                          <span>LinkedIn Profile URL</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={founder.linkedin || ''}
-                          onChange={(e) => handleFounderFieldChange(idx, 'linkedin', e.target.value)}
-                          placeholder="https://linkedin.com/in/username"
-                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
-                          <Mail className="w-3.5 h-3.5 text-purple-500" />
-                          <span>Direct Email</span>
-                        </label>
-                        <input
-                          type="email"
-                          value={founder.email || ''}
-                          onChange={(e) => handleFounderFieldChange(idx, 'email', e.target.value)}
-                          placeholder="local2brand.contact@gmail.com"
-                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 flex items-center gap-1">
-                          <Phone className="w-3.5 h-3.5 text-emerald-500" />
-                          <span>Direct Phone</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={founder.phone || ''}
-                          onChange={(e) => handleFounderFieldChange(idx, 'phone', e.target.value)}
-                          placeholder="+91 87100 43923"
-                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2 lg:col-span-3">
-                        <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                          Bio / Vision / Details (Told by AI when asked about founder)
-                        </label>
-                        <input
-                          type="text"
-                          value={founder.bio || ''}
-                          onChange={(e) => handleFounderFieldChange(idx, 'bio', e.target.value)}
-                          placeholder="Full-Stack Engineer & Product Designer leading high-performance digital systems."
-                          className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.aiSettings?.adminShowableDetails?.showFoundersToAi ?? true}
+                  onChange={(e) => handleAiAdminDetailsChange('showFoundersToAi', e.target.checked)}
+                  className="w-3.5 h-3.5 rounded text-purple-600 focus:ring-purple-500 cursor-pointer"
+                />
+                <span>Share Founders with AI &amp; Visitors</span>
+              </label>
             </div>
 
             {/* --- SUBSECTION B: OFFICIAL BUSINESS & CONTACT CHANNELS --- */}

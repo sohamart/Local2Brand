@@ -49,7 +49,7 @@ export function generateWhatsAppOrderUrl(orderData = {}) {
   const number = getSanitizedWhatsAppNumber();
 
   const messageLines = [
-    '✨ *LOCAL2BRAND — NEW PROJECT INQUIRY* ✨',
+    '✨ *WEBLETS — NEW PROJECT INQUIRY* ✨',
     '━━━━━━━━━━━━━━━━━━━━',
     `👤 *Client Name:* ${name || 'N/A'}`,
     `📱 *Phone / Contact:* ${phone || 'N/A'}`,
@@ -61,7 +61,7 @@ export function generateWhatsAppOrderUrl(orderData = {}) {
     requirements ? `\n📝 *Project Requirements:*\n"${requirements}"` : '',
     '\n━━━━━━━━━━━━━━━━━━━━',
     '⚡ *Turnaround Goal:* 3 - 7 Days Delivery',
-    '🇮🇳 *Origin:* local2brand.cyou'
+    '🌐 *Origin:* weblets.bond'
   ].filter(Boolean);
 
   const encodedMessage = encodeURIComponent(messageLines.join('\n'));
@@ -73,7 +73,7 @@ export function generateWhatsAppOrderUrl(orderData = {}) {
  */
 export function generateWhatsAppGeneralUrl(inquiry = '') {
   const number = getSanitizedWhatsAppNumber();
-  const text = inquiry || 'Hi LOCAL2BRAND team! I want to discuss a new website project for my brand.';
+  const text = inquiry || 'Hi Weblets team! I want to discuss a new website project for my brand.';
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 

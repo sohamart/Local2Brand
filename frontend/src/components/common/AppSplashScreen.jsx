@@ -116,7 +116,7 @@ export default function AppSplashScreen() {
         if (elapsed > 3000) {
           setStatusText('Waking up server & applying configuration...');
         } else {
-          setStatusText('Loading site settings from backend...');
+            setStatusText('Loading site settings from backend...');
         }
       } else if (!isPastMinDuration) {
         setStatusText('Applying site settings...');
@@ -126,7 +126,7 @@ export default function AppSplashScreen() {
             ? 'Workspace Ready • Launching...'
             : isInstalledApp
             ? 'Launching App...'
-            : 'Welcome to LOCAL2BRAND'
+            : 'Welcome to WEBLETS'
         );
       }
     }, 30);
@@ -190,7 +190,7 @@ export default function AppSplashScreen() {
           ) : (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 text-slate-400 border border-white/10 backdrop-blur-md">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              <span>Official Studio</span>
+              <span>Official Weblets Studio</span>
             </span>
           )}
         </div>
@@ -203,22 +203,22 @@ export default function AppSplashScreen() {
       {/* 3. CENTER ARTISTIC LOGO & WELCOME BADGE */}
       <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-md my-auto space-y-6">
 
-        {/* ART MOVING 3D LOGO EMBLEM WITH MULTI-LAYER GLOW RINGS */}
-        <div className="relative group">
+        {/* ART MOVING 3D LOGO EMBLEM WITH MULTI-LAYER CIRCULAR GLOW RINGS */}
+        <div className="relative group flex items-center justify-center">
           {/* Outer Liquid Conic Aura Spinner */}
-          <div className="absolute -inset-4 sm:-inset-5 rounded-3xl sm:rounded-[32px] bg-gradient-to-r from-purple-600 via-cyan-400 to-pink-500 opacity-70 blur-xl animate-spin [animation-duration:6s]" />
+          <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-gradient-to-r from-purple-600 via-cyan-400 to-pink-500 opacity-75 blur-2xl animate-spin [animation-duration:5s]" />
 
-          {/* Reverse Orbiting Shimmer Ring */}
-          <div className="absolute -inset-2 rounded-2xl bg-gradient-to-tr from-amber-400/40 via-purple-500/40 to-cyan-400/40 opacity-80 blur-md animate-spin [animation-duration:10s] [animation-direction:reverse]" />
+          {/* Reverse Orbiting Neon Shimmer Ring */}
+          <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-amber-400/50 via-purple-500/50 to-cyan-400/50 opacity-90 blur-lg animate-spin [animation-duration:8s] [animation-direction:reverse]" />
 
-          {/* Glassmorphic Logo Shield */}
-          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(124,58,237,0.5)] border-2 border-white/20 bg-slate-900/90 backdrop-blur-2xl p-1 flex items-center justify-center transform transition-transform hover:scale-105 duration-300">
+          {/* Glowing Circular Glassmorphic Orb Shield */}
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-[0_0_60px_rgba(168,85,247,0.75)] ring-2 ring-purple-400/50 border border-white/40 bg-slate-950 flex items-center justify-center transform transition-transform hover:scale-105 duration-300">
             <img
-              src="/logo.jpg"
-              alt="LOCAL2BRAND Logo"
-              className="w-full h-full object-cover rounded-2xl"
+              src="/logo.png"
+              alt="WEBLETS Logo"
+              className="w-full h-full object-cover scale-110"
               onError={(e) => {
-                e.currentTarget.style.display = 'none';
+                e.currentTarget.src = '/logo.png';
               }}
             />
           </div>
@@ -238,18 +238,18 @@ export default function AppSplashScreen() {
 
             {/* Brand Title */}
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
-              LOCAL<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">2</span>BRAND
+              WEBLETS
             </h1>
 
             <p className="text-xs sm:text-sm font-medium text-slate-300/90 max-w-xs mx-auto leading-relaxed">
-              Official Inbuilt Web App • High-Speed 60FPS Companion
+              Official Inbuilt Web App • Lets make website together
             </p>
           </div>
         ) : isInstalledApp ? (
           <div className="space-y-2 animate-in fade-in duration-300">
             <div className="flex items-center justify-center gap-2">
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
-                LOCAL<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">2</span>BRAND
+                WEBLETS
               </h1>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-600/30 text-purple-300 border border-purple-400/40">
                 APP
@@ -257,23 +257,19 @@ export default function AppSplashScreen() {
             </div>
 
             <p className="text-xs sm:text-sm font-semibold tracking-widest uppercase text-slate-400">
-              Build Local. Think Global.
+              Lets make website together
             </p>
           </div>
         ) : (
           <div className="space-y-2 animate-in fade-in duration-300">
             <div className="flex items-center justify-center gap-2">
               <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
-                LOCAL<span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">2</span>BRAND
+                WEBLETS
               </h1>
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                <AshokaChakra size={11} />
-                <span>IN</span>
-              </span>
             </div>
 
             <p className="text-xs sm:text-sm font-semibold tracking-widest uppercase text-slate-400">
-              Build Local. Think Global.
+              Lets make website together
             </p>
           </div>
         )}

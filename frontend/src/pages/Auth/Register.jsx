@@ -74,7 +74,7 @@ export default function Register() {
 
   return (
     <>
-      <SEO title="Create Account — LOCAL2BRAND" description="Join LOCAL2BRAND to manage your digital projects, proposals, and dynamic website assets." />
+      <SEO title="Create Account — Weblets" description="Join Weblets to manage your digital projects, proposals, and dynamic website assets." />
 
       <div className="min-h-screen pt-28 pb-16 px-4 flex items-center justify-center relative">
         <div className="w-full max-w-md">

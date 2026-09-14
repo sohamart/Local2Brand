@@ -20,19 +20,21 @@ export default function PageTransition({ children }) {
       setIsTransitioning(true);
       setTransitionKey((k) => k + 1);
 
-      // 1. SWAP PAGE CONTENT WHEN DOORS ARE 100% CLOSED (420ms)
+      // 1. SWAP PAGE CONTENT WHEN DOORS ARE 100% CLOSED AND FIRMLY SHUT (280ms)
       const timerSwap = setTimeout(() => {
         setDisplayLocation(location);
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         if (window.lenis) {
           window.lenis.scrollTo(0, { immediate: true });
         }
+      }, 280);
 
-      }, 420);
-
-      // 2. COMPLETE TRANSITION & REMOVE OVERLAY AFTER DOORS FULLY OPEN (1150ms)
+      // 2. COMPLETE TRANSITION & DISMISS OVERLAY AFTER DOORS FULLY OPEN (1150ms)
       const timerEnd = setTimeout(() => {
         setIsTransitioning(false);
+        if (window.lenis) {
+          window.lenis.resize();
+        }
       }, 1150);
 
       return () => {
@@ -53,7 +55,7 @@ export default function PageTransition({ children }) {
       >
           {/* Left Shutter Door */}
           <div
-            className="absolute top-0 bottom-0 left-0 w-1/2 animate-auto-door-left-3d"
+            className="absolute top-0 bottom-0 left-0 w-[50.5%] animate-auto-door-left-3d"
             style={{
               background: isDark
                 ? 'linear-gradient(90deg, #030406 0%, #080b12 65%, #101624 100%)'
@@ -71,7 +73,7 @@ export default function PageTransition({ children }) {
 
           {/* Right Shutter Door */}
           <div
-            className="absolute top-0 bottom-0 right-0 w-1/2 animate-auto-door-right-3d"
+            className="absolute top-0 bottom-0 right-0 w-[50.5%] animate-auto-door-right-3d"
             style={{
               background: isDark
                 ? 'linear-gradient(270deg, #030406 0%, #080b12 65%, #101624 100%)'
@@ -98,47 +100,33 @@ export default function PageTransition({ children }) {
               }`}
             />
 
-            {/* Emblem Glass Pod */}
+            {/* Center Master Brand Glass Pod */}
             <div
               className={`relative z-10 flex flex-col items-center justify-center gap-2.5 p-4 sm:p-5 rounded-2xl shadow-2xl backdrop-blur-2xl border transition-all ${
                 isDark
-                  ? 'bg-[#080b12]/95 border-purple-500/60 shadow-[0_0_40px_rgba(121,40,202,0.4)] ring-1 ring-purple-500/30'
-                  : 'bg-white/95 border-slate-200/95 shadow-[0_0_40px_rgba(0,114,255,0.2)] ring-1 ring-blue-400/30'
+                  ? 'bg-[#080b12]/95 border-purple-500/60 shadow-[0_0_40px_rgba(168,85,247,0.4)] ring-1 ring-purple-500/30'
+                  : 'bg-white/95 border-purple-200/90 shadow-[0_0_40px_rgba(124,58,237,0.2)] ring-1 ring-purple-400/30'
               }`}
             >
               <div
                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shadow-lg shrink-0 border flex items-center justify-center ${
-                  isDark ? 'border-white/20 bg-slate-900 shadow-purple-500/25' : 'border-slate-200 bg-white shadow-blue-500/20'
+                  isDark ? 'border-white/20 bg-slate-900/95 shadow-purple-500/25' : 'border-slate-200 bg-white shadow-purple-500/20'
                 }`}
               >
                 <img
-                  src="/logo.jpg"
-                  alt="LOCAL2BRAND Logo"
-                  className="w-full h-full object-cover"
+                  src="/logo.png"
+                  alt="WEBLETS Logo"
+                  className="w-full h-full object-cover scale-105"
                 />
               </div>
 
-              <div className="flex flex-col items-center gap-0.5 text-center">
-                <div className="flex items-center gap-1">
-                  <span
-                    className={`text-xs sm:text-sm font-black tracking-tight leading-none ${
-                      isDark ? 'text-white' : 'text-slate-900'
-                    }`}
-                  >
-                    LOCAL<span className="l2b-gradient-text">2</span>BRAND
-                  </span>
-                  <span
-                    className={`inline-flex items-center gap-0.5 text-[7px] font-bold px-1.5 py-0.5 rounded border ${
-                      isDark
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                        : 'bg-amber-50 text-amber-900 border-amber-200'
-                    }`}
-                  >
-                    <AshokaChakra size={8} />
-                    <span>IN</span>
-                  </span>
-                </div>
-              </div>
+              <span
+                className={`text-xs sm:text-sm font-black tracking-wider leading-none uppercase ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
+                WEBLETS
+              </span>
             </div>
           </div>
         </div>

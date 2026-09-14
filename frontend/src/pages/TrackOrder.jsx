@@ -255,20 +255,19 @@ export default function TrackOrder() {
               </button>
 
               <Link to="/" className="flex items-center gap-2 group min-w-0">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-900 group-hover:scale-105 transition-transform shrink-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-900 group-hover:scale-105 transition-transform shrink-0 p-1 flex items-center justify-center">
                   <img
-                    src="/logo.jpg"
-                    alt="LOCAL2BRAND Logo"
-                    className="w-full h-full object-cover"
+                    src="/logo.png"
+                    alt="WEBLETS Logo"
+                    className="w-full h-full object-contain"
                     onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<div class="w-full h-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center font-black text-white text-xs sm:text-sm">L2B</div>';
+                      e.target.src = '/logo.png';
                     }}
                   />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="font-black text-xs sm:text-sm tracking-tight text-slate-900 dark:text-white truncate">
-                    LOCAL<span className="text-purple-600 dark:text-purple-400">2</span>BRAND
+                    WEBLETS
                   </span>
                   <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
                     Project Tracker
@@ -662,7 +661,7 @@ export default function TrackOrder() {
         {/* Minimal Standalone Footer */}
         <footer className="w-full py-4 text-center border-t border-slate-200 dark:border-slate-900 text-xs text-slate-500">
           <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span>&copy; {new Date().getFullYear()} LOCAL2BRAND Agency. High-Performance Digital Platforms.</span>
+            <span>&copy; {new Date().getFullYear()} Weblets. Lets make website together.</span>
             <div className="flex items-center gap-4 text-[11px]">
               <Link to="/contact" className="hover:text-purple-600 dark:hover:text-slate-300">Support</Link>
               <Link to="/pricing" className="hover:text-purple-600 dark:hover:text-slate-300">Pricing</Link>

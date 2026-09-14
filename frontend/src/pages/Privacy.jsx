@@ -13,7 +13,7 @@ export default function Privacy() {
       id: "overview",
       icon: Shield,
       title: "1. Privacy Commitment & Overview",
-      content: `At LOCAL2BRAND (operating at local2brand.cyou, also known as "Local to Brand" or "Local 2 Brand"), we respect your privacy and are committed to protecting your personal data. This Privacy Policy details how we collect, handle, process, and safeguard your personal information when you visit our website, submit custom design requirements, or subscribe to project notifications.`
+      content: `At WEBLETS (operating at weblets.bond, also known as "Weblets"), we respect your privacy and are committed to protecting your personal data. This Privacy Policy details how we collect, handle, process, and safeguard your personal information when you visit our website, submit custom design requirements, or subscribe to project notifications.`
     },
     {
       id: "data-collected",
@@ -39,7 +39,7 @@ export default function Privacy() {
       id: "notifications-push",
       icon: BellRing,
       title: "4. Web Push Notifications & OneSignal Engine",
-      content: `When you opt-in to browser push notifications on local2brand.cyou, we store a secure, randomized OneSignal device subscription identifier (Player ID). We never broadcast spam or sensitive data over public notification channels. Push alerts are utilized strictly for:
+      content: `When you opt-in to browser push notifications on weblets.bond, we store a secure, randomized OneSignal device subscription identifier (Player ID). We never broadcast spam or sensitive data over public notification channels. Push alerts are utilized strictly for:
       • Direct client web inbox alerts (e.g., "You have a message in your web inbox").
       • Important platform maintenance or major launch discount broadcasts.
       You may revoke or disable push permissions at any time directly through your browser's site settings.`
@@ -58,7 +58,7 @@ export default function Privacy() {
       • Request a copy of the personal information we hold about you.
       • Request correction of inaccurate or incomplete project records.
       • Request permanent deletion of your customer data from our records upon completed project delivery.
-      To exercise any of these rights, contact our privacy desk at ${settings.supportEmail || 'local2brand.contact@gmail.com'}.`
+      To exercise any of these rights, contact our privacy desk at ${settings.supportEmail || 'contact@weblets.bond'}.`
     },
     {
       id: "cookies",
@@ -71,9 +71,9 @@ export default function Privacy() {
   return (
     <div className="min-h-screen pt-28 pb-20 relative">
       <SEO
-        title="Privacy Policy — LOCAL2BRAND (Local To Brand)"
-        description="Learn how LOCAL2BRAND (local2brand.cyou) protects your personal data, web push privacy, and project information with enterprise-grade security."
-        keywords="local2brand privacy, local to brand privacy policy, local 2 brand data security, web push privacy, local2brand.cyou privacy standards"
+        title="Privacy Policy — WEBLETS"
+        description="Learn how WEBLETS (weblets.bond) protects your personal data, web push privacy, and project information with enterprise-grade security."
+        keywords="weblets privacy, weblets privacy policy, weblets data security, web push privacy, weblets.bond privacy standards"
       />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -103,7 +103,7 @@ export default function Privacy() {
                 Privacy Policy
               </h1>
               <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
-                Your trust is our highest priority. How we secure data on <span className="font-semibold text-purple-600 dark:text-purple-400">local2brand.cyou</span>.
+                Your trust is our highest priority. How we secure data on <span className="font-semibold text-purple-600 dark:text-purple-400">weblets.bond</span>.
               </p>
             </div>
 
@@ -155,7 +155,7 @@ export default function Privacy() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <a
-                href={`mailto:${settings.supportEmail || 'local2brand.contact@gmail.com'}`}
+                href={`mailto:${settings.supportEmail || 'contact@weblets.bond'}`}
                 className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-md"
               >
                 <Mail className="w-3.5 h-3.5" />

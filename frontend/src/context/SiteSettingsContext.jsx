@@ -11,6 +11,13 @@ export function SiteSettingsProvider({ children }) {
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
+          if (parsed.brandName === 'LOCAL2BRAND' || parsed.tagline === 'Build Local. Think Global.') {
+            parsed.brandName = 'WEBLETS';
+            parsed.domain = 'weblets.bond';
+            parsed.tagline = 'Lets make website together';
+            parsed.supportEmail = 'contact@weblets.bond';
+            localStorage.setItem('l2b_cached_settings', JSON.stringify(parsed));
+          }
           return {
             ...parsed,
             appConfig: {
@@ -33,29 +40,31 @@ export function SiteSettingsProvider({ children }) {
     }
 
     return {
-      brandName: staticFallback.brandName || 'LOCAL2BRAND',
-      domain: staticFallback.domain || 'local2brand.cyou',
-      tagline: staticFallback.tagline || 'Build Local. Think Global.',
-      supportEmail: staticFallback.email || 'local2brand.contact@gmail.com',
+      brandName: staticFallback.brandName || 'WEBLETS',
+      domain: staticFallback.domain || 'weblets.bond',
+      tagline: staticFallback.tagline || 'Lets make website together',
+      supportEmail: staticFallback.email || 'contact@weblets.bond',
       displayPhone: staticFallback.phone || '+91 87100 43923',
       turnaroundTime: staticFallback.turnaroundTime || '48 Hours',
       startingPriceUsd: staticFallback.startingPrice || '$399',
       startingPriceInr: staticFallback.startingPriceInr || '₹9,999',
+      logoLightUrl: '/logo.png',
+      logoDarkUrl: '/logo-dark.png',
       isMaintenanceMode: false,
       isComingSoonMode: false,
       maintenanceMessage: 'We are currently upgrading our platform. We will be back online shortly!',
       targetLaunchDate: '',
       socialLinks: {
-        instagram: 'https://instagram.com/local2brand',
-        instagramHandle: '@local2brand',
-        linkedin: 'https://linkedin.com/company/local2brand',
-        github: 'https://github.com/local2brand',
-        twitter: 'https://twitter.com/local2brand',
+        instagram: 'https://instagram.com/weblets.bond',
+        instagramHandle: '@weblets.bond',
+        linkedin: 'https://linkedin.com/company/weblets',
+        github: 'https://github.com/weblets',
+        twitter: 'https://twitter.com/weblets',
         whatsapp: 'https://wa.me/918710043923',
       },
       heroConfig: {
-        badge: '🇮🇳 India’s #1 Fast-Track Web Experience Engine',
-        title: 'Transform Your Local Business Into A Global Brand',
+        badge: '⚡ Modern High-Converting Web Experience Engine',
+        title: 'Lets Make Website Together — Fast, Modern & Scalable',
         subtitle: 'World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale.',
       },
       importantUpdates: {
@@ -91,10 +100,10 @@ export function SiteSettingsProvider({ children }) {
       },
       announcementBar: {
         enabled: false,
-        text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025',
+        text: '🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code WEBLETS20',
         link: '/pricing',
         badge: 'FLASH OFFER',
-        promoCode: 'INDIA2025',
+        promoCode: 'WEBLETS20',
         discountPercent: 20,
         btnText: 'Claim Offer',
       },
@@ -104,7 +113,7 @@ export function SiteSettingsProvider({ children }) {
         title: '🎡 Interactive Rewards & Launch Gifts',
         subtitle: 'Play our interactive launch game to win instant discounts, free domains, and launch vouchers!',
         btnText: 'Play & Win Prize',
-        rewardVoucher: 'INDIA2025',
+        rewardVoucher: 'WEBLETS20',
         rewardDiscount: 20,
         campaignVersion: 1,
         lastResetDate: new Date().toISOString(),
@@ -114,17 +123,17 @@ export function SiteSettingsProvider({ children }) {
         enabled: true,
         isComingSoon: false,
         showComingSoonPopup: false,
-        comingSoonTitle: 'LOCAL2BRAND Mobile App — Launching Soon',
+        comingSoonTitle: 'Weblets Mobile App — Launching Soon',
         comingSoonMessage: 'We are polishing our next-gen mobile application for Android & iOS. Register for early beta access!',
-        appName: 'LOCAL2BRAND Mobile',
-        appSubtitle: 'Build Local. Think Global. Supercharge Your Business On The Go.',
+        appName: 'Weblets Mobile',
+        appSubtitle: 'Lets make website together. Supercharge Your Business On The Go.',
         appDescription: 'Manage client orders, track engineering sprints in real-time, preview live demo templates, and receive instant WhatsApp push dispatches directly from your mobile device.',
         version: 'v2.4.0',
         fileSize: '24.8 MB',
         minAndroid: 'Android 8.0 & above',
         minIos: 'iOS 15.0 & above',
-        packageName: 'com.local2brand.app',
-        apkDownloadUrl: 'https://local2brand.com/downloads/local2brand-v2.4.0.apk',
+        packageName: 'com.weblets.app',
+        apkDownloadUrl: 'https://weblets.bond/downloads/weblets-v2.4.0.apk',
         playStoreUrl: '',
         appStoreUrl: '',
         indusStoreUrl: '',

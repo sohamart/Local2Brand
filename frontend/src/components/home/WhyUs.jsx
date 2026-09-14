@@ -61,7 +61,7 @@ export default function WhyUs() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
 
         <SectionHeading
-          badge="Why LOCAL2BRAND"
+          badge="Why Weblets"
           title="More Than a Website. A Digital Presence."
           subtitle="We combine senior-level UI/UX design with rock-solid frontend engineering to deliver websites that don't just exist—they convert."
         />

@@ -24,6 +24,7 @@ import {
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAuth } from '../../context/AuthContext';
 import { useOrderModal } from '../../context/OrderModalContext';
+import { useTheme } from '../../context/ThemeContext';
 import AshokaChakra from './AshokaChakra';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
@@ -102,10 +103,15 @@ export default function Navbar() {
   const moreDropdownTimerRef = useRef(null);
 
   const { settings } = useSiteSettings();
+  const { isDark } = useTheme();
   const { user, logout, isAdmin, openAuthModal } = useAuth();
   const { openOrderModal, openCallbackModal } = useOrderModal();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const activeLogoUrl = isDark
+    ? (settings?.logoDarkUrl || settings?.logoLightUrl || '/logo.png')
+    : (settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png');
 
   // Detect Installed Standalone Web App or Android App
   useEffect(() => {
@@ -444,22 +450,19 @@ export default function Navbar() {
             <Link
               to="/"
               className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer shrink-0"
-              aria-label="LOCAL2BRAND Home"
+              aria-label="Weblets Home"
             >
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm group-hover:scale-105 transition-transform shrink-0 border border-white/90 dark:border-slate-700 bg-white dark:bg-slate-900">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shadow-sm dark:shadow-[0_0_18px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 group-hover:scale-105 transition-transform shrink-0 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-0 flex items-center justify-center">
                 <img
-                  src="/logo.jpg"
-                  alt="LOCAL2BRAND Logo"
-                  className="w-full h-full object-cover"
+                  src={activeLogoUrl}
+                  alt={settings?.brandName || 'WEBLETS'}
+                  className="w-full h-full object-cover scale-110"
+                  onError={(e) => { e.currentTarget.src = '/logo.png'; }}
                 />
               </div>
               <div className="flex items-center gap-1 sm:gap-1.5">
                 <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 dark:text-white leading-none">
-                  LOCAL<span className="l2b-gradient-text">2</span>BRAND
-                </span>
-                <span className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-200/80 dark:border-amber-500/40">
-                  <AshokaChakra size={9} />
-                  <span>IN</span>
+                  {settings?.brandName || 'WEBLETS'}
                 </span>
               </div>
             </Link>
@@ -881,20 +884,17 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2 group cursor-pointer shrink-0"
             >
-              <div className="w-8 h-8 rounded-xl overflow-hidden shadow-xs border border-white/90 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
+              <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm dark:shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-0 flex items-center justify-center shrink-0">
                 <img
-                  src="/logo.jpg"
-                  alt="LOCAL2BRAND Logo"
-                  className="w-full h-full object-cover"
+                  src={activeLogoUrl}
+                  alt={settings?.brandName || 'WEBLETS'}
+                  className="w-full h-full object-cover scale-110"
+                  onError={(e) => { e.currentTarget.src = '/logo.png'; }}
                 />
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white leading-none">
-                  LOCAL<span className="l2b-gradient-text">2</span>BRAND
-                </span>
-                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-200/80 dark:border-amber-500/40">
-                  <AshokaChakra size={9} />
-                  <span>IN</span>
+                  {settings?.brandName || 'WEBLETS'}
                 </span>
               </div>
             </Link>

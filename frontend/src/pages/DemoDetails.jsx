@@ -142,7 +142,7 @@ export default function DemoDetails() {
     if (openCallbackModal) {
       openCallbackModal({ topic: `Questions regarding ${demo.title}` });
     } else {
-      const msg = `Hi LOCAL2BRAND! 👋 I have some questions regarding the "${demo.title}" template.`;
+      const msg = `Hi Weblets! 👋 I have some questions regarding the "${demo.title}" template.`;
       openWhatsAppChat(msg);
     }
   };

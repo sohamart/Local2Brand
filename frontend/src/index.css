@@ -218,15 +218,15 @@ body::-webkit-scrollbar {
   z-index: 999999;
 }
 
-/* 3D Dual Vault Doors: 1. Close (0-35%), 2. Page Swap Pause (35-60%), 3. Open (60-100%) */
+/* 3D Dual Vault Doors: 1. Close (0-30%), 2. Solid Closed Hold & Page Mount (30-68%), 3. Open & Reveal (68-100%) */
 @keyframes autoDoorLeft3D {
   0% {
     transform: translate3d(-100%, 0, 0) rotateY(-20deg);
   }
-  35% {
+  30% {
     transform: translate3d(0, 0, 0) rotateY(0deg);
   }
-  60% {
+  68% {
     transform: translate3d(0, 0, 0) rotateY(0deg);
   }
   100% {
@@ -238,10 +238,10 @@ body::-webkit-scrollbar {
   0% {
     transform: translate3d(100%, 0, 0) rotateY(20deg);
   }
-  35% {
+  30% {
     transform: translate3d(0, 0, 0) rotateY(0deg);
   }
-  60% {
+  68% {
     transform: translate3d(0, 0, 0) rotateY(0deg);
   }
   100% {
@@ -252,21 +252,21 @@ body::-webkit-scrollbar {
 @keyframes autoDoorEmblem3D {
   0% {
     opacity: 0;
-    transform: scale(0.85);
+    transform: scale(0.8);
   }
-  28% {
+  20% {
     opacity: 0;
     transform: scale(0.85);
   }
-  36% {
+  30% {
     opacity: 1;
     transform: scale(1);
   }
-  58% {
+  65% {
     opacity: 1;
     transform: scale(1);
   }
-  68% {
+  75% {
     opacity: 0;
     transform: scale(0.9);
   }
@@ -277,19 +277,19 @@ body::-webkit-scrollbar {
 }
 
 .animate-auto-door-left-3d {
-  animation: autoDoorLeft3D 1.15s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  animation: autoDoorLeft3D 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   transform-origin: left center;
   will-change: transform;
 }
 
 .animate-auto-door-right-3d {
-  animation: autoDoorRight3D 1.15s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  animation: autoDoorRight3D 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   transform-origin: right center;
   will-change: transform;
 }
 
 .animate-auto-door-emblem-3d {
-  animation: autoDoorEmblem3D 1.15s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+  animation: autoDoorEmblem3D 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: opacity, transform;
 }
 

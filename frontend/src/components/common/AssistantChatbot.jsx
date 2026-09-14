@@ -98,7 +98,7 @@ const getStoredMessages = (brandName, userKey = 'guest') => {
       role: 'assistant',
       content: `### 👋 Welcome to ${brandName || 'LOCAL2BRAND'} AI Assistant\n\nI am your dedicated digital solutions consultant. How can I help launch or grow your brand today?\n\n* **🚀 48-Hour Websites:** Ready templates starting from **₹9,999 / $399**\n* **📦 Live Sprint Tracker:** Type your **Order ID** (e.g. \`REQ-2026-XXXXX\`) for instant real-time progress\n* **🎁 20% Launch Discount:** Use promo code \`INDIA2025\`\n* **💎 Bespoke Builds:** Custom web apps, e-commerce & WhatsApp lead automation\n\nTap any quick topic below or type your inquiry!`,
       timestamp: new Date().toISOString(),
-      provider: 'L2B AI Engine',
+      provider: 'Weblets AI Engine',
     },
   ];
 };
@@ -769,15 +769,15 @@ export default function AssistantChatbot() {
     <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-[99999]">
       {/* Floating Launcher Button */}
       <div className="relative flex items-end justify-end">
-        {/* L2B AI Modern Frosted Glass Launcher with Adaptive Laser Border */}
+        {/* Weblets AI Modern Frosted Glass Launcher with Adaptive Laser Border */}
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2.5px] overflow-hidden flex items-center justify-center transition-all duration-300 transform active:scale-95 cursor-pointer relative group ${
             isOpen
               ? 'bg-slate-900 text-white shadow-xl'
-              : 'shadow-xl shadow-emerald-500/30 dark:shadow-white/20 hover:shadow-2xl hover:shadow-emerald-500/50 dark:hover:shadow-white/40 hover:scale-105'
+              : 'shadow-xl shadow-purple-500/30 dark:shadow-cyan-500/20 hover:shadow-2xl hover:shadow-purple-500/50 dark:hover:shadow-cyan-500/40 hover:scale-105'
           }`}
-          aria-label="Toggle L2B AI Assistant"
+          aria-label="Toggle Weblets AI Assistant"
         >
           {/* Rotating Laser Conic Border */}
           {!isOpen && (
@@ -796,9 +796,9 @@ export default function AssistantChatbot() {
                 {/* Direct Clean AI Sparkles Logo */}
                 <Sparkles className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-purple-600 dark:text-cyan-400 drop-shadow-xs group-hover:scale-110 transition-transform" />
 
-                {/* Crisp Modern L2B AI Text */}
-                <span className="font-black text-[9px] sm:text-[10px] tracking-widest uppercase text-purple-900 dark:text-cyan-300 leading-none mt-1 drop-shadow-2xs">
-                  L2B AI
+                {/* Crisp Modern Weblets AI Text */}
+                <span className="font-black text-[8px] sm:text-[9px] tracking-widest uppercase text-purple-900 dark:text-cyan-300 leading-none mt-1 drop-shadow-2xs">
+                  AI CHAT
                 </span>
               </>
             )}
@@ -822,13 +822,12 @@ export default function AssistantChatbot() {
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5">
-                    <span className="font-black">L2B AI</span>
+                    <span className="font-black">Weblets AI</span>
                     <span className="opacity-90">Assistant</span>
-                    <AshokaChakra size={12} />
                   </h3>
                   <span className="text-[10px] text-emerald-300 dark:text-cyan-300 font-bold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 dark:bg-cyan-400 animate-pulse" />
-                    <span>Online • Instant Intelligent Support</span>
+                    <span>Active Now • 24/7 Rapid Live Desk</span>
                   </span>
                 </div>
               </div>
@@ -1118,7 +1117,7 @@ export default function AssistantChatbot() {
                     <span className="w-2 h-2 rounded-full bg-pink-500 dark:bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }} />
                     <span className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-pink-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                     <span className="text-[10px] text-slate-600 dark:text-slate-300 font-medium ml-1.5">
-                      L2B AI is generating response...
+                      Weblets AI is generating response...
                     </span>
                   </div>
                 </div>
@@ -1204,7 +1203,7 @@ export default function AssistantChatbot() {
 
             <div className="flex items-center justify-between px-1 text-[10px] text-slate-400 dark:text-slate-500">
               <span>Press Enter ↵ to send</span>
-              <span className="font-mono font-bold text-purple-600 dark:text-cyan-400">L2B AI • Real-Time Desk</span>
+              <span className="font-mono font-bold text-purple-600 dark:text-cyan-400">Weblets AI • Real-Time Desk</span>
             </div>
           </div>
         </div>

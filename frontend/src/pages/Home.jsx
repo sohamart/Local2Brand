@@ -18,9 +18,9 @@ export default function Home() {
   return (
     <>
       <SEO 
-        title="LOCAL2BRAND (Local To Brand) — Build Local. Think Global. | #1 Fast-Track Web Experience Studio"
-        description="LOCAL2BRAND (Local To Brand / Local 2 Brand) builds digital experiences that turn ambitious local businesses into recognized global brands. 48-Hour delivery, bespoke design systems, 12+ live commercial demo templates, and direct WhatsApp lead generation."
-        keywords="local2brand, local to brand, local 2 brand, local2brand.cyou, Local2Brand India, fast website development, 48 hour website delivery, website design agency India, ecommerce website builder, restaurant website template, bespoke web agency"
+        title="Weblets — Lets make website together | Modern High-Performance Web Studio"
+        description="Weblets (weblets.bond) builds digital experiences that turn ambitious businesses into recognized global brands. 48-Hour delivery, bespoke design systems, 12+ live commercial demo templates, and direct WhatsApp lead generation."
+        keywords="weblets, weblets.bond, website development, fast website delivery, website design agency, ecommerce website builder, bespoke web agency, lets make website together"
       />
       
       <main>

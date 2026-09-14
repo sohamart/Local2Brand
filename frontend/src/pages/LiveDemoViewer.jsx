@@ -356,10 +356,10 @@ export default function LiveDemoViewer() {
   return (
     <div className="h-screen h-[100dvh] w-screen overflow-hidden bg-slate-100 dark:bg-[#06080e] text-slate-900 dark:text-slate-100 flex flex-col select-none transition-colors duration-200">
       <SEO
-        title={`${activeDemo.title || 'Live Website Demo'} — LOCAL2BRAND (Local To Brand)`}
-        description={activeDemo.description || `Test this live interactive ${activeDemo.category || 'commercial'} website demo by LOCAL2BRAND. 48-hour turnkey deployment with WhatsApp ordering.`}
-        keywords={`${activeDemo.category || 'website'} template, ${activeDemo.title || 'live demo'}, local2brand demo, local to brand templates, local 2 brand live demo, interactive website`}
-        image={activeDemo.heroImage || activeDemo.thumbnail || 'https://local2brand.cyou/logo.jpg'}
+        title={`${activeDemo.title || 'Live Website Demo'} — WEBLETS`}
+        description={activeDemo.description || `Test this live interactive ${activeDemo.category || 'commercial'} website demo by Weblets. 48-hour turnkey deployment with WhatsApp ordering.`}
+        keywords={`${activeDemo.category || 'website'} template, ${activeDemo.title || 'live demo'}, weblets demo, weblets templates, interactive website`}
+        image={activeDemo.heroImage || activeDemo.thumbnail || '/logo.png'}
       />
       
       {/* ========================================================================= */}
