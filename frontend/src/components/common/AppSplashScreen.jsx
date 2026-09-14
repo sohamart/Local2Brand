@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Zap, Smartphone, ChevronRight } from 'lucide-react';
-import AshokaChakra from './AshokaChakra';
-import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 export default function AppSplashScreen() {
-  const { loading: settingsLoading } = useSiteSettings();
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState('Initializing Studio...');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -67,59 +64,38 @@ export default function AppSplashScreen() {
   useEffect(() => {
     if (finishedRef.current) return;
 
-    const minDuration = isInstalledApp && isFirstAppLaunch ? 1400 : (isInstalledApp ? 1100 : 900);
+    // Smooth total animation duration (~900ms - 1200ms)
+    const totalDuration = isInstalledApp && isFirstAppLaunch ? 1300 : (isInstalledApp ? 1000 : 850);
+    const stepInterval = 20;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
-      const isPastMinDuration = elapsed >= minDuration;
-      // Allow up to 10s maximum before safety fallback kicks in
-      const isBackendReady = !settingsLoading || elapsed >= 10000;
+      const targetPercent = Math.min(100, Math.floor((elapsed / totalDuration) * 100));
 
       setProgress((prev) => {
         if (prev >= 100) return 100;
 
-        // While backend is loading, smoothly approach 88% and hold there
-        if (!isBackendReady) {
-          const targetCap = 88;
-          if (prev < targetCap) {
-            const increment = Math.max(1, Math.round((targetCap - prev) / 6));
-            return Math.min(prev + increment, targetCap);
-          }
-          return targetCap;
-        }
+        // Smooth increment towards target
+        const increment = Math.max(2, Math.round((targetPercent - prev) / 3));
+        const next = Math.min(100, Math.max(prev + increment, targetPercent));
 
-        // Backend is ready:
-        if (!isPastMinDuration) {
-          // Approach 95% while waiting for aesthetic minimum duration
-          const target = 95;
-          if (prev < target) {
-            const increment = Math.max(1, Math.round((target - prev) / 4));
-            return Math.min(prev + increment, target);
-          }
-          return prev;
-        }
-
-        // Both backend is ready and minimum animation duration is satisfied:
-        const next = prev + 5;
         if (next >= 100) {
           clearInterval(interval);
           finishedRef.current = true;
-          setTimeout(() => setIsLoaded(true), 150);
-          setTimeout(() => setIsRemoved(true), 600);
+          setTimeout(() => setIsLoaded(true), 120);
+          setTimeout(() => setIsRemoved(true), 500);
           return 100;
         }
         return next;
       });
 
-      // Update friendly real-time status label
-      if (!isBackendReady) {
-        if (elapsed > 3000) {
-          setStatusText('Waking up server & applying configuration...');
-        } else {
-            setStatusText('Loading site settings from backend...');
-        }
-      } else if (!isPastMinDuration) {
-        setStatusText('Applying site settings...');
+      // Dynamic informative status updates
+      if (targetPercent < 30) {
+        setStatusText('Initializing Studio...');
+      } else if (targetPercent < 60) {
+        setStatusText('Loading experience & visual assets...');
+      } else if (targetPercent < 90) {
+        setStatusText('Finalizing workspace...');
       } else {
         setStatusText(
           isInstalledApp && isFirstAppLaunch
@@ -129,14 +105,16 @@ export default function AppSplashScreen() {
             : 'Welcome to WEBLETS'
         );
       }
-    }, 30);
+    }, stepInterval);
 
     return () => clearInterval(interval);
-  }, [settingsLoading, isInstalledApp, isFirstAppLaunch]);
+  }, [isInstalledApp, isFirstAppLaunch]);
 
-  // Instant dismiss on click / tap only once backend settings have loaded
+  // Instant dismiss on click / tap anytime
   const handleSkip = () => {
-    if (settingsLoading) return;
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    setProgress(100);
     setIsLoaded(true);
     setTimeout(() => setIsRemoved(true), 250);
   };
@@ -148,9 +126,7 @@ export default function AppSplashScreen() {
       onClick={handleSkip}
       role="banner"
       aria-label="App Splash Screen"
-      className={`fixed inset-0 z-[2147483646] flex flex-col items-center justify-between select-none overflow-hidden bg-[#06080d] transition-all duration-500 ease-out ${
-        settingsLoading ? 'cursor-wait' : 'cursor-pointer'
-      } ${
+      className={`fixed inset-0 z-[2147483646] flex flex-col items-center justify-between select-none overflow-hidden bg-[#06080d] cursor-pointer transition-all duration-500 ease-out ${
         isLoaded ? 'opacity-0 scale-105 blur-sm pointer-events-none' : 'opacity-100 scale-100 blur-0'
       }`}
       style={{ willChange: 'opacity, transform' }}
@@ -296,18 +272,11 @@ export default function AppSplashScreen() {
 
       {/* 5. FOOTER & TAP TO SKIP HINT */}
       <div className="relative z-10 w-full pb-8 sm:pb-10 px-6 flex flex-col items-center space-y-3 text-center">
-        <div className="text-[11px] text-slate-500 hover:text-slate-400 transition-colors flex items-center gap-1">
-          {settingsLoading ? (
-            <span className="flex items-center gap-1.5 text-slate-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping" />
-              <span>Waiting for server settings...</span>
-            </span>
-          ) : (
-            <span className="flex items-center gap-1">
-              <span>Tap anywhere to continue</span>
-              <ChevronRight className="w-3 h-3" />
-            </span>
-          )}
+        <div className="text-[11px] text-slate-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer">
+          <span className="flex items-center gap-1">
+            <span>Tap anywhere to continue</span>
+            <ChevronRight className="w-3.5 h-3.5 text-purple-400" />
+          </span>
         </div>
 
         {/* Tricolor Cyber Accent Line */}

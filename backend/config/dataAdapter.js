@@ -416,12 +416,12 @@ export const dataStore = {
       try {
         const { User } = await import('../models/User.js');
         // 1. Direct index lookup (instant sub-millisecond)
-        let dbUser = await User.findOne({ email: cleanEmail }).select('+password +emailOtp +emailOtpExpires');
+        let dbUser = await User.findOne({ email: cleanEmail }).select('+password +emailOtp +emailOtpExpires +resetPasswordToken +resetPasswordExpire');
         if (dbUser) return dbUser;
 
         // 2. Escaped case-insensitive fallback if exact match wasn't found
         const escaped = cleanEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        dbUser = await User.findOne({ email: { $regex: new RegExp(`^${escaped}$`, 'i') } }).select('+password +emailOtp +emailOtpExpires');
+        dbUser = await User.findOne({ email: { $regex: new RegExp(`^${escaped}$`, 'i') } }).select('+password +emailOtp +emailOtpExpires +resetPasswordToken +resetPasswordExpire');
         if (dbUser) return dbUser;
       } catch (err) {
         console.warn('MongoDB findUserByEmail notice:', err.message);

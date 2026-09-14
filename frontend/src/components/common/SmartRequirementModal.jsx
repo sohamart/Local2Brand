@@ -1011,7 +1011,7 @@ export default function SmartRequirementModal() {
                         required
                         value={formData.clientInfo.mobile}
                         onChange={(e) => setFormData((prev) => ({ ...prev, clientInfo: { ...prev.clientInfo, mobile: e.target.value } }))}
-                        placeholder="9876543210"
+                        placeholder="91XXXXXXXXXX"
                         className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white font-bold font-mono"
                       />
                     </div>

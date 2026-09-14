@@ -19,7 +19,10 @@ import {
   Info,
   Layers,
   Smartphone,
-  CheckCircle2
+  CheckCircle2,
+  Briefcase,
+  ShieldCheck,
+  FileText
 } from 'lucide-react';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { useAuth } from '../../context/AuthContext';
@@ -43,6 +46,15 @@ const PRIMARY_NAV_LINKS = [
 // Secondary "More ▾" Links with rich icons & descriptions
 const MORE_NAV_LINKS = [
   {
+    label: 'Portfolio & Projects',
+    href: '/portfolio',
+    desc: 'Case studies, live websites & flagship transformations',
+    icon: Briefcase,
+    badge: 'Showcase',
+    badgeColor: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/80 border-purple-200 dark:border-purple-800',
+    iconBg: 'bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400'
+  },
+  {
     label: 'Download Mobile App',
     href: '/app',
     desc: 'Official Android APK & iOS Companion',
@@ -52,13 +64,13 @@ const MORE_NAV_LINKS = [
     iconBg: 'bg-amber-100 dark:bg-amber-950/80 text-amber-600 dark:text-amber-400'
   },
   {
-    label: 'Track Order',
+    label: 'Track Live Order',
     href: '/track-order',
     desc: 'Live engineering sprint & milestone roadmap',
     icon: Compass,
     badge: 'Live Sprint',
-    badgeColor: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/80 border-purple-200 dark:border-purple-800',
-    iconBg: 'bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400'
+    badgeColor: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 border-blue-200 dark:border-blue-800',
+    iconBg: 'bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400'
   },
   {
     label: 'About Weblets',
@@ -77,6 +89,24 @@ const MORE_NAV_LINKS = [
     badge: '24/7 Live',
     badgeColor: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 border-emerald-200 dark:border-emerald-800',
     iconBg: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400'
+  },
+  {
+    label: 'Privacy Policy',
+    href: '/privacy',
+    desc: 'Enterprise data privacy, security & cookie standards',
+    icon: ShieldCheck,
+    badge: 'Security',
+    badgeColor: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 border-emerald-200 dark:border-emerald-800',
+    iconBg: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400'
+  },
+  {
+    label: 'Terms & Conditions',
+    href: '/terms',
+    desc: 'Service agreements, SLAs & 100% code ownership',
+    icon: FileText,
+    badge: 'Legal',
+    badgeColor: 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800',
+    iconBg: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
   },
   {
     label: 'Start Custom Build',
@@ -452,11 +482,11 @@ export default function Navbar() {
               className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer shrink-0"
               aria-label="Weblets Home"
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shadow-sm dark:shadow-[0_0_18px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 group-hover:scale-105 transition-transform shrink-0 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-0 flex items-center justify-center">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shadow-sm dark:shadow-[0_0_18px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 group-hover:scale-105 transition-transform shrink-0 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-0 flex items-center justify-center relative">
                 <img
                   src={activeLogoUrl}
                   alt={settings?.brandName || 'WEBLETS'}
-                  className="w-full h-full object-cover scale-110"
+                  className="w-full h-full object-cover scale-135 object-center"
                   onError={(e) => { e.currentTarget.src = '/logo.png'; }}
                 />
               </div>
@@ -540,136 +570,185 @@ export default function Navbar() {
                   />
                 </button>
 
-                {/* MORE DROPDOWN FLOATING CARD */}
+                {/* MORE MEGA-DROPDOWN FLOATING CARD */}
                 {moreDropdownOpen && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-5.5 w-84 sm:w-88 z-[9999999] animate-in fade-in zoom-in-95 duration-150">
-                    <div className="glass-waterdrop-menu rounded-2xl p-2 sm:p-2.5 shadow-2xl relative overflow-hidden mt-1">
+                  <div
+                    data-lenis-prevent="true"
+                    className="absolute left-1/2 -translate-x-1/2 top-full pt-4 w-[760px] xl:w-[820px] z-[9999999] animate-in fade-in zoom-in-95 duration-200"
+                  >
+                    <div className="rounded-3xl p-5 sm:p-6 shadow-[0_30px_90px_rgba(0,0,0,0.85)] relative overflow-hidden bg-white/98 dark:bg-[#070b15] backdrop-blur-3xl border border-slate-200 dark:border-slate-800/90 text-slate-900 dark:text-white">
                       
-                      {/* Ambient Waterdrop Glow Aura */}
-                      <div className="pointer-events-none absolute -top-12 -left-12 w-36 h-36 bg-purple-500/15 dark:bg-purple-500/25 rounded-full blur-2xl" />
-                      <div className="pointer-events-none absolute -bottom-12 -right-12 w-36 h-36 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-2xl" />
-                      
-                      {/* Top Specular Gloss Reflection Line */}
-                      <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white dark:via-white/60 to-transparent pointer-events-none z-20" />
+                      {/* Ambient Moving Aurora Glow */}
+                      <div className="pointer-events-none absolute -top-20 -left-20 w-64 h-64 bg-purple-600/20 dark:bg-purple-600/30 rounded-full blur-3xl" />
+                      <div className="pointer-events-none absolute -bottom-20 -right-20 w-64 h-64 bg-cyan-500/20 dark:bg-cyan-500/25 rounded-full blur-3xl" />
+                      <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl" />
 
-                      {/* Header */}
-                      <div className="relative z-10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-400 flex items-center justify-between border-b border-slate-200/60 dark:border-white/10 mb-1.5">
-                        <span className="flex items-center gap-1.5">
-                          <Layers className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                          <span>Platform Modules</span>
-                        </span>
-                        <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200/60 dark:border-purple-800/60">
-                          Direct Access
-                        </span>
-                      </div>
+                      {/* Top Specular Gloss Line */}
+                      <div className="absolute top-0 left-8 right-8 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-purple-400/50 to-transparent pointer-events-none z-20" />
 
-                      {/* Items Container with Liquid Waterdrop Pill Indicator */}
-                      <div
-                        ref={moreListContainerRef}
-                        onMouseLeave={() => setHoveredMoreItem(null)}
-                        className="relative space-y-1"
-                      >
-                        {/* Dynamic Liquid Waterdrop Moving Pill Indicator */}
-                        <div
-                          className="waterdrop-item-pill waterdrop-item-glass absolute top-0 left-0 z-0 pointer-events-none"
-                          style={{
-                            transform: `translate3d(${morePillStyle.left}px, ${morePillStyle.top}px, 0)`,
-                            width: `${morePillStyle.width}px`,
-                            height: `${morePillStyle.height}px`,
-                            opacity: morePillStyle.opacity,
-                          }}
-                        >
-                          {/* Top gloss line on the moving liquid waterdrop pill */}
-                          <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white dark:via-white/70 to-transparent" />
+                      {/* Main Grid: 8 Cols Links + 4 Cols Featured Image Showcase */}
+                      <div className="grid grid-cols-12 gap-5 relative z-10">
+                        
+                        {/* LEFT SECTION (8 Columns): Categorized Grid */}
+                        <div className="col-span-8 space-y-3">
+                          
+                          {/* Top Header */}
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-200/50 dark:border-white/10">
+                            <div className="flex items-center gap-2">
+                              <span className="flex h-2 w-2 relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                              </span>
+                              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                                Explore Platform Hub
+                              </span>
+                            </div>
+                            <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50/80 dark:bg-purple-950/60 px-2 py-0.5 rounded-full border border-purple-200/60 dark:border-purple-800/60">
+                              8 Modules Active
+                            </span>
+                          </div>
+
+                          {/* 2-Column Links Grid with Dynamic Moving Liquid Waterdrop Pill */}
+                          <div
+                            ref={moreListContainerRef}
+                            onMouseLeave={() => setHoveredMoreItem(null)}
+                            className="grid grid-cols-2 gap-2 relative p-1 rounded-2xl"
+                          >
+                            {/* Dynamic Liquid Waterdrop Indicator Pill */}
+                            <div
+                              className="ios-liquid-pill ios-liquid-glass absolute top-0 left-0 rounded-2xl pointer-events-none z-0 border border-white/80 dark:border-white/20 shadow-md shadow-purple-500/10"
+                              style={{
+                                transform: `translate3d(${morePillStyle.left}px, ${morePillStyle.top}px, 0)`,
+                                width: `${morePillStyle.width}px`,
+                                height: `${morePillStyle.height}px`,
+                                opacity: morePillStyle.opacity,
+                              }}
+                            >
+                              <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white dark:via-white/70 to-transparent" />
+                            </div>
+
+                            {moreNavLinks.map((item) => {
+                              const Icon = item.icon;
+                              const isCurrent =
+                                location.pathname === item.href ||
+                                (item.href !== '/' && location.pathname.startsWith(item.href));
+
+                              return (
+                                <Link
+                                  key={item.label}
+                                  ref={(el) => (moreItemRefs.current[item.label] = el)}
+                                  to={item.href}
+                                  onMouseEnter={() => setHoveredMoreItem(item.label)}
+                                  onClick={() => setMoreDropdownOpen(false)}
+                                  className={`relative z-10 group flex items-start gap-2.5 p-2.5 rounded-2xl transition-all duration-200 ${
+                                    isCurrent
+                                      ? 'text-slate-950 dark:text-white font-bold'
+                                      : 'text-slate-700 dark:text-slate-200'
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-xs border border-white/60 dark:border-white/10 ${
+                                      item.iconBg
+                                    } group-hover:scale-105 group-hover:rotate-3`}
+                                  >
+                                    <Icon className="w-4 h-4" />
+                                  </div>
+
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-1">
+                                      <span className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                                        {item.label}
+                                      </span>
+                                      <ChevronRight className="w-3.5 h-3.5 text-purple-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all shrink-0" />
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 leading-tight">
+                                      {item.desc}
+                                    </p>
+                                  </div>
+                                </Link>
+                              );
+                            })}
+                          </div>
                         </div>
 
-                        {moreNavLinks.map((item) => {
-                          const Icon = item.icon;
-                          const isCurrent =
-                            location.pathname === item.href ||
-                            (item.href !== '/' && location.pathname.startsWith(item.href));
-                          const isHoveredItem = hoveredMoreItem === item.label;
+                        {/* RIGHT SECTION (4 Columns): Modern Liquid Glass Featured Showcase Card */}
+                        <div className="col-span-4 flex flex-col justify-between p-4 rounded-2xl bg-gradient-to-br from-purple-950/60 via-slate-900/80 to-slate-950 border border-purple-500/30 shadow-xl relative overflow-hidden group">
+                          
+                          {/* Inner Ambient Glow */}
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 rounded-full blur-2xl pointer-events-none" />
+                          <div className="absolute -bottom-8 -left-8 w-28 h-28 bg-cyan-500/20 rounded-full blur-2xl pointer-events-none" />
 
-                          return (
+                          {/* Top Visual Emblem & Badge */}
+                          <div className="relative z-10 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-950/90 border border-purple-400/40 p-0 flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform ring-2 ring-purple-500/30 shrink-0">
+                                <img
+                                  src="/logo.png"
+                                  alt="WEBLETS"
+                                  className="w-full h-full object-cover scale-135 object-center"
+                                  onError={(e) => { e.currentTarget.src = '/logo.png'; }}
+                                />
+                              </div>
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-400/40 backdrop-blur-md">
+                                <Sparkles className="w-3 h-3 text-amber-300 animate-spin [animation-duration:6s]" />
+                                <span>Featured</span>
+                              </span>
+                            </div>
+
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-black text-white tracking-tight leading-snug">
+                                Fast-Track 48-Hour Website Launch
+                              </h4>
+                              <p className="text-[11px] text-slate-300/85 leading-relaxed">
+                                Bespoke UI/UX design, sub-second performance, and instant lead capture for scaling brands.
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="relative z-10 space-y-2 pt-3">
                             <Link
-                              key={item.label}
-                              ref={(el) => (moreItemRefs.current[item.label] = el)}
-                              to={item.href}
+                              to="/get-started"
                               onClick={() => setMoreDropdownOpen(false)}
-                              onMouseEnter={() => setHoveredMoreItem(item.label)}
-                              className={`relative z-10 flex items-start gap-3 p-2.5 rounded-xl transition-all duration-200 group ${
-                                isCurrent && !hoveredMoreItem
-                                  ? 'border border-purple-300/80 dark:border-purple-600/70 bg-purple-50/70 dark:bg-purple-950/40 shadow-xs'
-                                  : 'border border-transparent'
-                              }`}
+                              className="w-full py-2.5 px-3 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                             >
-                              <div
-                                className={`relative w-8.5 h-8.5 rounded-xl flex items-center justify-center shrink-0 transition-all duration-200 shadow-sm border border-white/80 dark:border-white/10 ${
-                                  item.iconBg
-                                } ${isHoveredItem ? 'scale-110 rotate-3 shadow-md' : 'scale-100'}`}
-                              >
-                                <Icon className="w-4 h-4 transition-transform group-hover:scale-110" />
-                              </div>
-
-                              <div className="relative flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-1">
-                                  <span
-                                    className={`text-xs font-bold truncate transition-colors duration-200 ${
-                                      isCurrent
-                                        ? 'text-purple-700 dark:text-purple-300 font-extrabold'
-                                        : isHoveredItem
-                                        ? 'text-purple-600 dark:text-purple-400 font-bold'
-                                        : 'text-slate-800 dark:text-slate-100'
-                                    }`}
-                                  >
-                                    {item.label}
-                                  </span>
-                                  <div className="flex items-center gap-1.5 shrink-0">
-                                    {item.badge && (
-                                      <span
-                                        className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full border shadow-2xs ${item.badgeColor}`}
-                                      >
-                                        {item.badge}
-                                      </span>
-                                    )}
-                                    <ChevronRight
-                                      className={`w-3.5 h-3.5 text-purple-600 dark:text-purple-400 transition-all duration-200 ${
-                                        isHoveredItem
-                                          ? 'opacity-100 translate-x-0'
-                                          : 'opacity-0 -translate-x-1.5'
-                                      }`}
-                                    />
-                                  </div>
-                                </div>
-                                <p className="text-[10.5px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 truncate">
-                                  {item.desc}
-                                </p>
-                              </div>
+                              <span>Start Custom Project</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
                             </Link>
-                          );
-                        })}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMoreDropdownOpen(false);
+                                openCallbackModal({ topic: 'Direct Founder Strategy Call' });
+                              }}
+                              className="w-full py-2 px-3 rounded-xl text-[11px] font-bold text-purple-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                              <PhoneCall className="w-3 h-3 text-emerald-400" />
+                              <span>Instant Founder Call</span>
+                            </button>
+                          </div>
+
+                        </div>
+
                       </div>
 
-                      {/* Bottom Quick Call Consultation Banner */}
-                      <div className="pt-2 mt-1.5 border-t border-slate-200/60 dark:border-white/10 relative z-10">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setMoreDropdownOpen(false);
-                            openCallbackModal({ topic: 'Direct Founder Strategy Call' });
-                          }}
-                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/12 via-indigo-500/12 to-pink-500/12 hover:from-purple-500/22 hover:to-pink-500/22 border border-purple-200/80 dark:border-purple-700/60 text-xs font-bold text-purple-700 dark:text-purple-300 transition-all cursor-pointer group shadow-2xs hover:shadow-xs"
-                        >
-                          <span className="flex items-center gap-2">
-                            <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            <PhoneCall className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                            <span>Request Strategy Call</span>
+                      {/* BOTTOM STATUS TRUST BAR */}
+                      <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/10 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 relative z-10 px-1">
+                        <div className="flex items-center gap-4">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                            <span className="font-semibold text-slate-700 dark:text-slate-300">Live Engineering Desk Active</span>
                           </span>
-                          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 text-purple-600 dark:text-purple-400 transition-transform" />
-                        </button>
+                          <span className="hidden sm:inline">&bull;</span>
+                          <span className="hidden sm:inline">⚡ 48-Hour Rapid Sprints</span>
+                          <span className="hidden sm:inline">&bull;</span>
+                          <span className="hidden sm:inline">🔒 100% Code Ownership</span>
+                        </div>
+
+                        <div className="font-mono text-[10px] text-purple-600 dark:text-purple-400 font-bold">
+                          WEBLETS v2.4.0
+                        </div>
                       </div>
 
                     </div>
@@ -888,7 +967,7 @@ export default function Navbar() {
                 <img
                   src={activeLogoUrl}
                   alt={settings?.brandName || 'WEBLETS'}
-                  className="w-full h-full object-cover scale-110"
+                  className="w-full h-full object-cover scale-135 object-center"
                   onError={(e) => { e.currentTarget.src = '/logo.png'; }}
                 />
               </div>

@@ -2,16 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Phone, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
 
 export const COUNTRY_CODES = [
-  { code: 'IN', name: 'India', dialCode: '+91', flagCode: 'in', digits: 10, pattern: '^[6-9]\\d{9}$', placeholder: '98765 43210' },
-  { code: 'US', name: 'United States', dialCode: '+1', flagCode: 'us', digits: 10, pattern: '^\\d{10}$', placeholder: '202 555 0123' },
-  { code: 'GB', name: 'United Kingdom', dialCode: '+44', flagCode: 'gb', digits: 10, pattern: '^\\d{10,11}$', placeholder: '7911 123456' },
-  { code: 'AE', name: 'UAE', dialCode: '+971', flagCode: 'ae', digits: 9, pattern: '^\\d{9}$', placeholder: '50 123 4567' },
-  { code: 'BD', name: 'Bangladesh', dialCode: '+880', flagCode: 'bd', digits: 10, pattern: '^\\d{10}$', placeholder: '1712 345678' },
-  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', flagCode: 'sa', digits: 9, pattern: '^\\d{9}$', placeholder: '50 123 4567' },
-  { code: 'AU', name: 'Australia', dialCode: '+61', flagCode: 'au', digits: 9, pattern: '^\\d{9}$', placeholder: '412 345 678' },
-  { code: 'CA', name: 'Canada', dialCode: '+1', flagCode: 'ca', digits: 10, pattern: '^\\d{10}$', placeholder: '416 555 0123' },
-  { code: 'SG', name: 'Singapore', dialCode: '+65', flagCode: 'sg', digits: 8, pattern: '^\\d{8}$', placeholder: '8123 4567' },
-  { code: 'GLOBAL', name: 'International', dialCode: '+', flagCode: 'un', digits: null, pattern: '^\\d{7,15}$', placeholder: 'Phone Number' },
+  { code: 'IN', name: 'India', dialCode: '+91', flagCode: 'in', digits: 10, pattern: '^[6-9]\\d{9}$', placeholder: '91XXXXXXXXXX' },
+  { code: 'US', name: 'United States', dialCode: '+1', flagCode: 'us', digits: 10, pattern: '^\\d{10}$', placeholder: 'XXXXXXXXXX' },
+  { code: 'GB', name: 'United Kingdom', dialCode: '+44', flagCode: 'gb', digits: 10, pattern: '^\\d{10,11}$', placeholder: 'XXXXXXXXXX' },
+  { code: 'AE', name: 'UAE', dialCode: '+971', flagCode: 'ae', digits: 9, pattern: '^\\d{9}$', placeholder: 'XXXXXXXXX' },
+  { code: 'BD', name: 'Bangladesh', dialCode: '+880', flagCode: 'bd', digits: 10, pattern: '^\\d{10}$', placeholder: 'XXXXXXXXXX' },
+  { code: 'SA', name: 'Saudi Arabia', dialCode: '+966', flagCode: 'sa', digits: 9, pattern: '^\\d{9}$', placeholder: 'XXXXXXXXX' },
+  { code: 'AU', name: 'Australia', dialCode: '+61', flagCode: 'au', digits: 9, pattern: '^\\d{9}$', placeholder: 'XXXXXXXXX' },
+  { code: 'CA', name: 'Canada', dialCode: '+1', flagCode: 'ca', digits: 10, pattern: '^\\d{10}$', placeholder: 'XXXXXXXXXX' },
+  { code: 'SG', name: 'Singapore', dialCode: '+65', flagCode: 'sg', digits: 8, pattern: '^\\d{8}$', placeholder: 'XXXXXXXX' },
+  { code: 'GLOBAL', name: 'International', dialCode: '+', flagCode: 'un', digits: null, pattern: '^\\d{7,15}$', placeholder: 'XXXXXXXXXX' },
 ];
 
 export function validatePhoneNumber(rawNumber, countryCode = 'IN') {

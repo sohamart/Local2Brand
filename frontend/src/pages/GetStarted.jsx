@@ -2098,7 +2098,7 @@ export default function GetStarted() {
       if (!formData.whatsappNumber.trim()) {
         errors.whatsappNumber = 'WhatsApp Number is required *';
       } else if (cleanWhatsapp.length < 10) {
-        errors.whatsappNumber = 'Please enter a valid 10-digit WhatsApp Number (e.g. 9876543210) *';
+        errors.whatsappNumber = 'Please enter a valid 10-digit WhatsApp Number (e.g. 91XXXXXXXXXX) *';
       }
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -3171,7 +3171,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     <Phone className="absolute left-3.5 top-3.5 w-4 h-4 text-slate-400" />
                     <input
                       type="tel"
-                      placeholder="e.g. 9876543210"
+                      placeholder="91XXXXXXXXXX"
                       value={formData.mobileNumber}
                       onChange={e => setFormData({ ...formData, mobileNumber: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 transition-colors font-mono"
@@ -3189,7 +3189,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                     <MessageCircle className="absolute left-3.5 top-3.5 w-4 h-4 text-emerald-500" />
                     <input
                       type="tel"
-                      placeholder="e.g. 9876543210"
+                      placeholder="91XXXXXXXXXX"
                       value={formData.whatsappNumber}
                       onChange={e => setFormData({ ...formData, whatsappNumber: e.target.value })}
                       className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-purple-500 text-slate-900 dark:text-white text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-600 transition-colors font-mono"
@@ -5251,7 +5251,7 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                         </label>
                         <input
                           type="tel"
-                          placeholder="e.g. 9876543210 (or same as primary)"
+                          placeholder="91XXXXXXXXXX (or same as primary)"
                           value={formData.whatsappNumberForIntegration || formData.whatsappNumber || ''}
                           onChange={e => setFormData({ ...formData, whatsappNumberForIntegration: e.target.value })}
                           className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none"

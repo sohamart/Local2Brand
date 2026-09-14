@@ -357,7 +357,7 @@ export default function ProjectInquiryModal() {
                       type="tel"
                       value={authPhone}
                       onChange={(e) => setAuthPhone(e.target.value)}
-                      placeholder="9876543210"
+                      placeholder="91XXXXXXXXXX"
                       className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 text-slate-900 dark:text-white"
                     />
                   </div>
@@ -596,7 +596,7 @@ export default function ProjectInquiryModal() {
                           required
                           value={formData.phone}
                           onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
-                          placeholder="e.g. 9876543210"
+                          placeholder="91XXXXXXXXXX"
                           className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm focus:outline-purple-500 text-slate-900 dark:text-white"
                         />
                       </div>

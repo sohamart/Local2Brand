@@ -48,6 +48,7 @@ import NotFound from './pages/NotFound';
 // Auth Pages
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import ForgotPassword from './pages/Auth/ForgotPassword';
 
 // User Portal
 import UserDashboard from './pages/User/UserDashboard';
@@ -100,6 +101,8 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute, 
         <Route path="/download" element={<AppDownload />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/terms-and-conditions" element={<Terms />} />
+        <Route path="/terms-of-service" element={<Terms />} />
+        <Route path="/tos" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/privacy-policy" element={<Privacy />} />
 
@@ -117,6 +120,8 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute, 
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ForgotPassword />} />
 
         {/* Client Portal */}
         <Route path="/dashboard" element={<UserDashboard />} />

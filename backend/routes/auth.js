@@ -18,6 +18,8 @@ import {
   sendRewardEmail,
   requestEmailChangeOtp,
   verifyEmailChangeOtp,
+  forgotPassword,
+  resetPassword,
 } from '../controllers/authController.js';
 import { protect, adminOnly } from '../middleware/auth.js';
 
@@ -32,6 +34,8 @@ router.post('/logout', logoutUser);
 router.get('/logout', logoutUser);
 router.post('/send-otp', sendVerificationOtp);
 router.post('/verify-otp', verifyEmailOtp);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 // Authenticated user routes
 router.get('/me', protect, getMe);

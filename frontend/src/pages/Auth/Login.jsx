@@ -91,7 +91,7 @@ export default function Login() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com or 9876543210"
+                    placeholder="you@company.com or 91XXXXXXXXXX"
                     className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   />
                 </div>
@@ -103,6 +103,12 @@ export default function Login() {
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     Password
                   </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline"
+                  >
+                    Forgot Password?
+                  </Link>
                 </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
