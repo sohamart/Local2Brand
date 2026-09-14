@@ -836,13 +836,14 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
   const status = reqDoc.status || 'Updated';
   const formattedStatus = formatStatusTitle(status);
   const pdfUrl = reqDoc.drivePdfLink || reqDoc.pdfUrl || reqDoc.documentUrl || reqDoc.attachmentUrl;
+  const adminRecipients = getAdminRecipients();
+  const allRecipients = Array.from(new Set([clientEmail, ...adminRecipients].filter(Boolean)));
 
-  if (!clientEmail) {
-    console.warn(`sendRequirementStatusUpdateEmail notice: No client email found for ${reqId}`);
-    return { success: false, error: 'No client email provided' };
+  if (allRecipients.length === 0) {
+    return { success: false, error: 'No recipient email addresses found' };
   }
 
-  const subject = `Order Status Update: ${formattedStatus} - ${reqDoc.clientInfo?.businessName || 'Your Website'} (#${reqId})`;
+  const subject = `Order Status Update: ${formattedStatus} - ${reqDoc.clientInfo?.businessName || 'Website Order'} (#${reqId})`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -850,7 +851,7 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
         Hi ${clientName},
       </p>
       <p class="text-body" style="margin: 0 0 14px 0; color: #cbd5e1; line-height: 1.6;">
-        The development progress for your website order (<strong>${reqId}</strong>) has been updated:
+        The development progress for website order <strong>${reqId}</strong> (${reqDoc.clientInfo?.businessName || 'Project'}) has been updated:
       </p>
 
       <div class="bg-box border-theme" style="background-color: #131b2e; border: 1.5px solid #10b981; border-radius: 14px; padding: 18px 22px; margin: 16px 0; text-align: center; box-sizing: border-box;">
@@ -899,9 +900,6 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
     ctaUrl: `${clientUrl}/track-order?id=${reqId}`,
   });
 
-  const adminRecipients = getAdminRecipients();
-  const allRecipients = Array.from(new Set([clientEmail, ...adminRecipients].filter(Boolean)));
-
   return await sendEmail({
     to: allRecipients,
     subject,
@@ -920,8 +918,10 @@ export const sendOrderDeliveredEmail = async (reqDoc) => {
   const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
   const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
   const clientEmail = resolveClientEmail(reqDoc);
+  const adminRecipients = getAdminRecipients();
+  const allRecipients = Array.from(new Set([clientEmail, ...adminRecipients].filter(Boolean)));
 
-  if (!clientEmail) return { success: false };
+  if (allRecipients.length === 0) return { success: false };
 
   const subject = `🎉 Project Delivered: ${reqDoc.clientInfo?.businessName || 'Your Website'} (#${reqId}) - WEBLETS`;
 
@@ -947,7 +947,52 @@ export const sendOrderDeliveredEmail = async (reqDoc) => {
     ctaUrl: `${clientUrl}/track-order?id=${reqId}`,
   });
 
-  return await sendEmail({ to: clientEmail, subject, html, text: `Project ${reqId} has been delivered!` });
+  return await sendEmail({ to: allRecipients, subject, html, text: `Project ${reqId} has been delivered!` });
+};
+
+// ==========================================
+// 8b. Requirement Rejected / Cancelled Email
+// ==========================================
+export const sendRequirementRejectedEmail = async (reqDoc, reason = '') => {
+  const clientUrl = getClientUrl();
+  const reqId = reqDoc.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
+  const clientName = reqDoc.clientInfo?.ownerName || reqDoc.clientInfo?.contactPerson || 'Valued Client';
+  const clientEmail = resolveClientEmail(reqDoc);
+  const adminRecipients = getAdminRecipients();
+  const allRecipients = Array.from(new Set([clientEmail, ...adminRecipients].filter(Boolean)));
+
+  if (allRecipients.length === 0) return { success: false };
+
+  const subject = `Order Notice: Cancelled / Closed (#${reqId}) - WEBLETS`;
+  const contentHtml = `
+    <div style="margin: 10px 0 16px 0;">
+      <p class="text-title" style="margin: 0 0 12px 0; color: #ffffff; font-size: 15px; font-weight: 700;">
+        Hi ${clientName},
+      </p>
+      <p class="text-body" style="margin: 0 0 14px 0; color: #cbd5e1; line-height: 1.6;">
+        Your project submission (<strong>${reqId}</strong>) status has been updated to <strong>Cancelled / Closed</strong>.
+      </p>
+      ${reason ? `
+        <div class="bg-box" style="background-color: #2a1215; border: 1px solid #e11d48; border-radius: 12px; padding: 14px; margin: 14px 0; color: #fecdd3;">
+          <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #fb7185; margin-bottom: 4px;">Reason / Notes:</div>
+          <div style="font-size: 13px;">${reason}</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+
+  const html = wrapAgencyEmail({
+    preheader: `Order ${reqId} status update.`,
+    headerBadge: 'ORDER STATUS UPDATE',
+    title: `Order: Cancelled / Closed`,
+    subtitle: `Order ID: ${reqId}`,
+    orderId: reqId,
+    contentHtml,
+    ctaText: 'Visit Client Hub',
+    ctaUrl: `${clientUrl}/dashboard`,
+  });
+
+  return await sendEmail({ to: allRecipients, subject, html, text: `Order ${reqId} cancelled: ${reason}` });
 };
 
 // ==========================================
@@ -1384,20 +1429,6 @@ export const sendRequirementDeletionEmail = async (reqDoc, reason = '') => {
   return await sendEmail({ to: clientEmail, subject: `Order Archived: #${reqId} - WEBLETS`, html, text: `Order ${reqId} archived` });
 };
 
-export const sendRequirementRejectedEmail = async (reqDoc, reason = '') => {
-  const clientEmail = resolveClientEmail(reqDoc);
-  if (!clientEmail) return { success: false };
-  const reqId = reqDoc.requirementId || 'REQ';
-
-  const html = wrapAgencyEmail({
-    preheader: `Update regarding order ${reqId}.`,
-    headerBadge: 'ORDER UPDATE',
-    title: `Order ${reqId} Status`,
-    contentHtml: `<p style="color: #cbd5e1;">Your order ${reqId} could not be processed.${reason ? ` Reason: ${reason}` : ''}</p>`,
-  });
-
-  return await sendEmail({ to: clientEmail, subject: `Order Status: #${reqId} - WEBLETS`, html, text: `Order ${reqId} status update` });
-};
 
 export const sendAdminRequirementDeletionAlert = async (reqDoc, reason = '') => {
   const recipients = getAdminRecipients();

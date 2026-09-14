@@ -1,13 +1,14 @@
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
+import { sendEmail, wrapAgencyEmail, getAdminRecipients, getClientUrl } from '../utils/email.js';
 
 /**
- * Platform-Wide Unified In-App Mailbox Dispatcher
- * Manages user & admin notifications and in-app alerts
+ * Platform-Wide Unified In-App Mailbox & Real-Time Email Dispatcher
+ * Manages user & admin in-app notifications and automatically sends email alerts.
  */
 class NotificationDispatcher {
   /**
-   * Create an in-app notification record
+   * Create an in-app notification record and dispatch email
    */
   async dispatch({
     recipient = null,
@@ -27,9 +28,16 @@ class NotificationDispatcher {
     let notificationRecord = null;
 
     try {
-      // 1. Resolve Recipient ID if only email is provided
+      // 1. Resolve Recipient ID and Email
       let finalRecipient = recipient;
       let finalEmail = (recipientEmail || '').toLowerCase().trim();
+
+      if (!finalEmail && finalRecipient && recipientRole !== 'admin') {
+        try {
+          const uDoc = await User.findById(finalRecipient).select('email name');
+          if (uDoc?.email) finalEmail = uDoc.email.trim().toLowerCase();
+        } catch (e) {}
+      }
 
       if (!finalRecipient && finalEmail && recipientRole !== 'admin') {
         try {
@@ -39,20 +47,36 @@ class NotificationDispatcher {
       }
 
       // 2. Save In-App Notification in MongoDB
-      notificationRecord = await Notification.create({
-        recipient: finalRecipient || null,
-        recipientEmail: finalEmail,
+      try {
+        notificationRecord = await Notification.create({
+          recipient: finalRecipient || null,
+          recipientEmail: finalEmail,
+          recipientRole,
+          title: title.trim(),
+          message: message.trim(),
+          type,
+          category,
+          link: link || '/dashboard',
+          data: data || {},
+          emailHtml: emailHtml || '',
+          isRead: false,
+          priority,
+        });
+      } catch (dbErr) {
+        console.warn('Notification DB create notice:', dbErr.message);
+      }
+
+      // 3. Mirror In-App Alert via Email to Target Recipients
+      this.sendNotificationEmail({
         recipientRole,
-        title: title.trim(),
-        message: message.trim(),
-        type,
+        targetEmail: finalEmail,
+        title,
+        message,
         category,
-        link: link || '/dashboard',
-        data: data || {},
-        emailHtml: emailHtml || '',
-        isRead: false,
+        link,
+        emailHtml,
         priority,
-      });
+      }).catch((emailErr) => console.warn('Notification email dispatch notice:', emailErr.message));
 
       return {
         success: true,
@@ -65,6 +89,62 @@ class NotificationDispatcher {
         error: error.message || 'Error creating in-app notification',
       };
     }
+  }
+
+  /**
+   * Helper to format and send branded email for in-app notifications
+   */
+  async sendNotificationEmail({
+    recipientRole,
+    targetEmail,
+    title,
+    message,
+    category = 'Notification',
+    link = '',
+    emailHtml = '',
+    priority = 'normal',
+  }) {
+    const clientUrl = getClientUrl();
+    const resolvedLink = link.startsWith('http') ? link : `${clientUrl}${link.startsWith('/') ? link : `/${link}`}`;
+
+    let recipients = [];
+    if (recipientRole === 'admin') {
+      recipients = getAdminRecipients();
+    } else if (targetEmail && targetEmail.includes('@')) {
+      recipients = [targetEmail];
+    }
+
+    if (recipients.length === 0) return { success: false, reason: 'No recipients' };
+
+    const contentHtml = emailHtml || `
+      <div style="margin: 10px 0 16px 0;">
+        <p class="text-body" style="margin: 0 0 14px 0; color: #cbd5e1; line-height: 1.6; font-size: 14px;">
+          ${message}
+        </p>
+        <div class="bg-box border-theme" style="background-color: #131b2e; border: 1px solid #1e293b; border-radius: 12px; padding: 14px 16px; margin: 16px 0; box-sizing: border-box;">
+          <div style="font-size: 11px; color: #a855f7; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 4px;">Category: ${category}</div>
+          <div style="font-size: 13px; color: #ffffff; font-weight: 700;">${title}</div>
+        </div>
+      </div>
+    `;
+
+    const html = wrapAgencyEmail({
+      preheader: message.slice(0, 120),
+      headerBadge: category ? category.toUpperCase() : 'WEBLETS NOTIFICATION',
+      title: title,
+      subtitle: `Official Alert &bull; WEBLETS Studio`,
+      contentHtml,
+      ctaText: recipientRole === 'admin' ? 'Open Admin Panel' : 'View in Client Hub',
+      ctaUrl: resolvedLink || clientUrl,
+    });
+
+    return await sendEmail({
+      to: recipients,
+      subject: `[WEBLETS] ${title}`,
+      html,
+      text: `${title}\n\n${message}\n\nLink: ${resolvedLink}`,
+      priority: priority === 'high' ? 'high' : 'normal',
+    });
   }
 
   /**
