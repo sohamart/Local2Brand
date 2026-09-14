@@ -1,7 +1,6 @@
 import { Review } from '../models/Review.js';
 import mongoose from 'mongoose';
 import { readLocalStore, writeLocalStore } from '../config/store.js';
-import oneSignalBackend from '../services/oneSignalService.js';
 
 const DEFAULT_REVIEWS = [
   {

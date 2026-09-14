@@ -550,7 +550,7 @@ export default function AuthModal() {
 
             {/* Email Notice on Register */}
             {mode === 'register' && (
-              <div className="p-2.5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/20 dark:border-purple-500/30 text-xs">
+              <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 border border-purple-500/25 dark:border-purple-500/30 text-xs space-y-2">
                 <div className="flex items-start gap-2">
                   <div className="w-5 h-5 rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
                     <ShieldCheck className="w-3.5 h-3.5" />
@@ -563,9 +563,14 @@ export default function AuthModal() {
                       </span>
                     </div>
                     <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-snug">
-                      A <strong>6-digit verification code (OTP)</strong> will be sent to activate your account.
+                      A <strong>6-digit verification code (OTP)</strong> will be sent to activate your client account.
                     </p>
                   </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-[9.5px] text-amber-700 dark:text-amber-300/90 bg-amber-500/10 border border-amber-500/20 rounded-xl px-2.5 py-1">
+                  <AlertCircle className="w-3 h-3 text-amber-500 shrink-0" />
+                  <span><strong>Important:</strong> Due to security / technical routing, please check both your <strong>Inbox</strong> and <strong>Spam / Junk</strong> folder.</span>
                 </div>
               </div>
             )}
@@ -654,7 +659,7 @@ export default function AuthModal() {
 
             {/* OTP Input for verify_otp & forgot_reset */}
             {(mode === 'verify_otp' || mode === 'forgot_reset') && (
-              <div>
+              <div className="space-y-2">
                 <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-center">
                   6-Digit Verification Code (OTP) *
                 </label>
@@ -667,6 +672,15 @@ export default function AuthModal() {
                   placeholder="• • • • • •"
                   className="w-full text-center tracking-[8px] font-mono text-xl py-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 text-slate-900 dark:text-white"
                 />
+
+                {/* Modern Spam & Technical Routing Alert Card */}
+                <div className="p-2.5 rounded-xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-[10.5px] flex items-start gap-2">
+                  <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                  <div className="leading-snug">
+                    <strong>Can't find the code?</strong> Due to automated ISP technical filters, the email may sometimes arrive in your <strong>Spam / Junk folder</strong>. Please check both folders.
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between mt-1 text-[11px] text-slate-500">
                   <span>Didn't receive code?</span>
                   <button

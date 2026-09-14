@@ -24,7 +24,12 @@
     "phone": "+91 98765 43210",
     "company": "LOCAL2BRAND HQ",
     "status": "active",
-    "createdAt": "2026-08-31T06:57:02.503Z"
+    "createdAt": "2026-08-31T06:57:02.503Z",
+    "vipWhatsappEnabled": false,
+    "updatedAt": "2026-09-14T16:16:55.705Z",
+    "isEmailVerified": false,
+    "emailOtp": "314636",
+    "emailOtpExpires": "2026-09-14T16:30:54.098Z"
   },
   {
     "_id": "6a95d3798cd0de29be2399db",
@@ -83,7 +88,9 @@
     "company": "",
     "status": "active",
     "emailOtp": "836535",
-    "emailOtpExpires": "2026-09-05T09:19:25.194Z"
+    "emailOtpExpires": "2026-09-05T09:19:25.194Z",
+    "vipWhatsappEnabled": false,
+    "updatedAt": "2026-09-14T15:41:35.275Z"
   },
   {
     "_id": "6a9551f5ef178dc4ce9260cf",

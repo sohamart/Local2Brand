@@ -607,19 +607,13 @@ export default function AdminInbox() {
               </div>
 
               <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 space-y-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={broadcastForm.sendPush}
-                    onChange={(e) => setBroadcastForm({ ...broadcastForm, sendPush: e.target.checked })}
-                    className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500"
-                  />
+                <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-purple-900 dark:text-purple-200">
-                    Send OneSignal Web Push to All Subscribed Devices
+                    📢 In-App Mailbox Broadcast Alert
                   </span>
-                </label>
-                <p className="text-[11px] text-purple-700/80 dark:text-purple-300/80 pl-6">
-                  Will instantly trigger a browser push notification with sound on all active mobile &amp; desktop devices.
+                </div>
+                <p className="text-[11px] text-purple-700/80 dark:text-purple-300/80">
+                  This announcement will be instantly delivered to all client and admin dashboard inboxes.
                 </p>
               </div>
 

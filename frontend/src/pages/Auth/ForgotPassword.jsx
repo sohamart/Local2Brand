@@ -219,7 +219,16 @@ export default function ForgotPassword() {
                     placeholder="e.g. 123456"
                     className="w-full text-center tracking-[8px] font-mono text-xl py-2.5 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   />
-                  <div className="flex items-center justify-between mt-1 text-[11px] text-slate-500">
+
+                  {/* Modern Spam & Technical Routing Alert Card */}
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-[10.5px] flex items-start gap-2 mt-2">
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="leading-snug">
+                      <strong>Can't find the email?</strong> Due to automated ISP technical filters, please check your <strong>Spam / Junk folder</strong> and mark it as <em>"Not Spam"</em>.
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-2 text-[11px] text-slate-500">
                     <span>Didn't receive code?</span>
                     <button
                       type="button"

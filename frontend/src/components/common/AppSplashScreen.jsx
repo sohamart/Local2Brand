@@ -3,24 +3,26 @@ import { Sparkles, Zap, Smartphone, ChevronRight } from 'lucide-react';
 
 export default function AppSplashScreen() {
   const [progress, setProgress] = useState(0);
-  const [statusText, setStatusText] = useState('Initializing Studio...');
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [statusIndex, setStatusIndex] = useState(0);
+  const [isFadingOut, setIsFadingOut] = useState(false);
   const [isRemoved, setIsRemoved] = useState(false);
   const [isFirstAppLaunch, setIsFirstAppLaunch] = useState(false);
   const [isInstalledApp, setIsInstalledApp] = useState(false);
   const [isAndroidApp, setIsAndroidApp] = useState(false);
 
-  const startTimeRef = useRef(Date.now());
-  const finishedRef = useRef(false);
+  const reqRef = useRef(null);
+  const startTimeRef = useRef(null);
+  const isFinishedRef = useRef(false);
+
+  const statusMessages = [
+    'Initializing Studio Engine...',
+    'Loading High-Performance Assets...',
+    'Calibrating Liquid Visuals...',
+    'Welcome to WEBLETS'
+  ];
 
   useEffect(() => {
-    startTimeRef.current = Date.now();
-  }, []);
-
-  useEffect(() => {
-    // 1. Detect if currently running inside Installed Web App (Standalone PWA) or Android App
-    let isApp = false;
-    let isAndroid = false;
+    // Detect environment (PWA Standalone vs Android vs Web)
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const ua = (navigator.userAgent || '').toLowerCase();
@@ -28,95 +30,82 @@ export default function AppSplashScreen() {
       const isUaAndroid = ua.includes('; wv') || ua.includes('local2brand-android') || (ua.includes('android') && ua.includes('version/4.0'));
       const isAndroidBridge = !!(window.Android || window.AndroidBridge || window.Local2BrandAndroid);
 
-      if (isParamAndroid || isUaAndroid || isAndroidBridge) {
-        isAndroid = true;
-        isApp = true;
-      }
-
+      const isAndroid = Boolean(isParamAndroid || isUaAndroid || isAndroidBridge);
       const isParamApp = urlParams.get('mode') === 'app' || urlParams.get('source') === 'pwa';
       const isStandaloneMedia = window.matchMedia('(display-mode: standalone)').matches;
       const isIosStandalone = window.navigator.standalone === true;
+      const isApp = Boolean(isAndroid || isParamApp || isStandaloneMedia || isIosStandalone);
 
-      if (isParamApp || isStandaloneMedia || isIosStandalone) {
-        isApp = true;
-      }
+      setIsAndroidApp(isAndroid);
+      setIsInstalledApp(isApp);
+
+      try {
+        if (isApp) {
+          const hasOpenedApp = localStorage.getItem('l2b_installed_app_first_launch');
+          if (!hasOpenedApp) {
+            setIsFirstAppLaunch(true);
+            localStorage.setItem('l2b_installed_app_first_launch', 'true');
+          }
+        }
+      } catch (e) {}
     }
-    setIsAndroidApp(isAndroid);
-    setIsInstalledApp(isApp);
-
-    // 2. Check First Time App Opening (Distinct for Installed App vs Web)
-    try {
-      if (isApp) {
-        const hasOpenedApp = localStorage.getItem('l2b_installed_app_first_launch');
-        if (!hasOpenedApp) {
-          setIsFirstAppLaunch(true);
-          localStorage.setItem('l2b_installed_app_first_launch', 'true');
-        }
-      } else {
-        const hasVisitedWeb = sessionStorage.getItem('l2b_web_splash_shown');
-        if (!hasVisitedWeb) {
-          sessionStorage.setItem('l2b_web_splash_shown', 'true');
-        }
-      }
-    } catch (e) {}
   }, []);
 
+  // 60FPS / 120FPS ultra-smooth requestAnimationFrame precision timer
   useEffect(() => {
-    if (finishedRef.current) return;
+    // Ultra-snappy duration: 650ms for normal web, 850ms for installed app launch
+    const totalDuration = isInstalledApp && isFirstAppLaunch ? 900 : (isInstalledApp ? 750 : 620);
 
-    // Smooth total animation duration (~900ms - 1200ms)
-    const totalDuration = isInstalledApp && isFirstAppLaunch ? 1300 : (isInstalledApp ? 1000 : 850);
-    const stepInterval = 20;
+    const animate = (timestamp) => {
+      if (isFinishedRef.current) return;
+      if (!startTimeRef.current) startTimeRef.current = timestamp;
 
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTimeRef.current;
-      const targetPercent = Math.min(100, Math.floor((elapsed / totalDuration) * 100));
+      const elapsed = timestamp - startTimeRef.current;
+      const linearPct = Math.min(1, elapsed / totalDuration);
 
-      setProgress((prev) => {
-        if (prev >= 100) return 100;
+      // Smooth easeOutCubic curve for realistic responsive feel
+      const easedPct = 1 - Math.pow(1 - linearPct, 3);
+      const currentPct = Math.min(100, Math.round(easedPct * 100));
 
-        // Smooth increment towards target
-        const increment = Math.max(2, Math.round((targetPercent - prev) / 3));
-        const next = Math.min(100, Math.max(prev + increment, targetPercent));
+      setProgress(currentPct);
 
-        if (next >= 100) {
-          clearInterval(interval);
-          finishedRef.current = true;
-          setTimeout(() => setIsLoaded(true), 120);
-          setTimeout(() => setIsRemoved(true), 500);
-          return 100;
-        }
-        return next;
-      });
-
-      // Dynamic informative status updates
-      if (targetPercent < 30) {
-        setStatusText('Initializing Studio...');
-      } else if (targetPercent < 60) {
-        setStatusText('Loading experience & visual assets...');
-      } else if (targetPercent < 90) {
-        setStatusText('Finalizing workspace...');
+      // Status message stage update
+      if (currentPct < 30) {
+        setStatusIndex(0);
+      } else if (currentPct < 65) {
+        setStatusIndex(1);
+      } else if (currentPct < 90) {
+        setStatusIndex(2);
       } else {
-        setStatusText(
-          isInstalledApp && isFirstAppLaunch
-            ? 'Workspace Ready • Launching...'
-            : isInstalledApp
-            ? 'Launching App...'
-            : 'Welcome to WEBLETS'
-        );
+        setStatusIndex(3);
       }
-    }, stepInterval);
 
-    return () => clearInterval(interval);
+      if (linearPct < 1) {
+        reqRef.current = requestAnimationFrame(animate);
+      } else {
+        isFinishedRef.current = true;
+        setProgress(100);
+        // Gentle, slow, luxurious cinematic fade-out dissolve
+        setTimeout(() => setIsFadingOut(true), 120);
+        setTimeout(() => setIsRemoved(true), 750);
+      }
+    };
+
+    reqRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (reqRef.current) cancelAnimationFrame(reqRef.current);
+    };
   }, [isInstalledApp, isFirstAppLaunch]);
 
-  // Instant dismiss on click / tap anytime
+  // Instant skip on tap/click or keyboard press
   const handleSkip = () => {
-    if (finishedRef.current) return;
-    finishedRef.current = true;
+    if (isFinishedRef.current) return;
+    isFinishedRef.current = true;
+    if (reqRef.current) cancelAnimationFrame(reqRef.current);
     setProgress(100);
-    setIsLoaded(true);
-    setTimeout(() => setIsRemoved(true), 250);
+    setIsFadingOut(true);
+    setTimeout(() => setIsRemoved(true), 400);
   };
 
   if (isRemoved) return null;
@@ -126,73 +115,82 @@ export default function AppSplashScreen() {
       onClick={handleSkip}
       role="banner"
       aria-label="App Splash Screen"
-      className={`fixed inset-0 z-[2147483646] flex flex-col items-center justify-between select-none overflow-hidden bg-[#06080d] cursor-pointer transition-all duration-500 ease-out ${
-        isLoaded ? 'opacity-0 scale-105 blur-sm pointer-events-none' : 'opacity-100 scale-100 blur-0'
+      className={`fixed inset-0 z-[2147483646] flex flex-col items-center justify-between select-none overflow-hidden bg-[#030611] cursor-pointer transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        isFadingOut
+          ? 'opacity-0 scale-[1.03] blur-sm pointer-events-none'
+          : 'opacity-100 scale-100 blur-0'
       }`}
-      style={{ willChange: 'opacity, transform' }}
+      style={{ willChange: 'opacity, transform, filter' }}
     >
-      {/* 1. ARTISTIC MOVING LIQUID GLOW & AURORA BACKGROUND */}
+      {/* 1. CINEMATIC BACKGROUND GLOW & CYBER GRID */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Animated Moving Aurora Blobs */}
-        <div className="absolute -top-[20%] -left-[10%] w-[420px] sm:w-[600px] h-[420px] sm:h-[600px] rounded-full bg-gradient-to-br from-purple-600/35 via-indigo-600/25 to-transparent blur-[100px] animate-pulse [animation-duration:4s]" />
-        <div className="absolute -bottom-[20%] -right-[10%] w-[450px] sm:w-[650px] h-[450px] sm:h-[650px] rounded-full bg-gradient-to-tl from-cyan-500/30 via-fuchsia-600/20 to-transparent blur-[120px] animate-pulse [animation-duration:5s]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] sm:w-[480px] h-[300px] sm:h-[480px] rounded-full bg-gradient-to-tr from-amber-500/15 via-purple-600/20 to-pink-500/25 blur-[90px] animate-spin [animation-duration:12s]" />
+        {/* Top-left soft violet aura */}
+        <div className="absolute -top-[15%] -left-[10%] w-[380px] sm:w-[540px] h-[380px] sm:h-[540px] rounded-full bg-gradient-to-br from-purple-600/30 via-indigo-600/20 to-transparent blur-[110px] animate-pulse [animation-duration:3s]" />
+        
+        {/* Bottom-right cyan neon aura */}
+        <div className="absolute -bottom-[15%] -right-[10%] w-[400px] sm:w-[580px] h-[400px] sm:h-[580px] rounded-full bg-gradient-to-tl from-cyan-500/25 via-blue-600/20 to-transparent blur-[120px] animate-pulse [animation-duration:4s]" />
+        
+        {/* Center rotating jewel spotlight */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] sm:w-[420px] h-[280px] sm:h-[420px] rounded-full bg-gradient-to-tr from-cyan-500/15 via-purple-500/20 to-pink-500/15 blur-[90px] animate-spin [animation-duration:10s]" />
 
-        {/* Ambient Grid overlay */}
+        {/* Precision Cyber Matrix Grid */}
         <div
-          className="absolute inset-0 opacity-[0.08]"
+          className="absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage:
-              'linear-gradient(to right, rgba(255,255,255,0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.2) 1px, transparent 1px)',
-            backgroundSize: '36px 36px',
+              'linear-gradient(to right, rgba(255,255,255,0.25) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.25) 1px, transparent 1px)',
+            backgroundSize: '32px 32px',
             maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 80%)',
           }}
         />
       </div>
 
-      {/* 2. TOP STATUS / INSTALLED APP CHIP */}
-      <div className="relative z-10 w-full pt-8 sm:pt-10 px-6 flex items-center justify-between">
+      {/* 2. TOP STATUS BAR / PILL */}
+      <div className="relative z-10 w-full pt-7 sm:pt-9 px-6 max-w-5xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-2">
           {isAndroidApp ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.3)] animate-in fade-in duration-500">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 backdrop-blur-xl shadow-[0_0_20px_rgba(16,185,129,0.2)]">
               <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
               <span>Android App Active</span>
             </span>
           ) : isInstalledApp ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 backdrop-blur-md shadow-[0_0_15px_rgba(168,85,247,0.3)] animate-in fade-in duration-500">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30 backdrop-blur-xl shadow-[0_0_20px_rgba(168,85,247,0.25)]">
               <Smartphone className="w-3.5 h-3.5 text-purple-400" />
               <span>Installed Web App</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 text-slate-400 border border-white/10 backdrop-blur-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/[0.04] text-slate-300 border border-white/10 backdrop-blur-xl shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
+              </span>
               <span>Official Weblets Studio</span>
             </span>
           )}
         </div>
 
-        <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
+        <div className="text-[10px] uppercase font-mono font-bold tracking-widest text-slate-400 bg-white/[0.04] px-3 py-1 rounded-full border border-white/10 backdrop-blur-xl">
           v2.4.0
         </div>
       </div>
 
-      {/* 3. CENTER ARTISTIC LOGO & WELCOME BADGE */}
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-md my-auto space-y-6">
+      {/* 3. CENTER ULTRA-PREMIUM LOGO & HERO TYPOGRAPHY */}
+      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-sm sm:max-w-md my-auto space-y-6">
 
-        {/* ART MOVING 3D LOGO EMBLEM WITH MULTI-LAYER CIRCULAR GLOW RINGS */}
-        <div className="relative group flex items-center justify-center">
-          {/* Outer Liquid Conic Aura Spinner */}
-          <div className="absolute -inset-4 sm:-inset-6 rounded-full bg-gradient-to-r from-purple-600 via-cyan-400 to-pink-500 opacity-75 blur-2xl animate-spin [animation-duration:5s]" />
+        {/* 3D LOGO EMBLEM WITH LIQUID CONIC AURA RINGS (PERFECT ZOOM FIT) */}
+        <div className="relative flex items-center justify-center">
+          {/* Outer Breathing Liquid Conic Spinner */}
+          <div className="absolute -inset-3 sm:-inset-4 rounded-full bg-gradient-to-r from-cyan-400 via-purple-600 to-pink-500 opacity-80 blur-xl animate-spin [animation-duration:4s]" />
 
-          {/* Reverse Orbiting Neon Shimmer Ring */}
-          <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-amber-400/50 via-purple-500/50 to-cyan-400/50 opacity-90 blur-lg animate-spin [animation-duration:8s] [animation-direction:reverse]" />
+          {/* Reverse Orbiting Neon Glow */}
+          <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-purple-500/60 via-cyan-400/60 to-pink-400/60 opacity-90 blur-md animate-spin [animation-duration:6s] [animation-direction:reverse]" />
 
-          {/* Glowing Circular Glassmorphic Orb Shield */}
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-[0_0_60px_rgba(168,85,247,0.75)] ring-2 ring-purple-400/50 border border-white/40 bg-slate-950 flex items-center justify-center transform transition-transform hover:scale-105 duration-300">
+          {/* Glowing Circular Glass Capsule Frame - Perfect Edge-to-Edge Zoom Fit */}
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-[0_0_60px_rgba(6,182,212,0.45),0_0_35px_rgba(124,58,237,0.5)] ring-2 ring-white/40 border-2 border-white/50 bg-white flex items-center justify-center transform transition-transform duration-500 hover:scale-105">
             <img
               src="/logo.png"
               alt="WEBLETS Logo"
-              className="w-full h-full object-cover scale-110"
+              className="w-full h-full object-cover scale-[1.28] transform-gpu"
               onError={(e) => {
                 e.currentTarget.src = '/logo.png';
               }}
@@ -200,87 +198,64 @@ export default function AppSplashScreen() {
           </div>
         </div>
 
-        {/* SPECIAL WELCOME TO OUR APP FOR INSTALLED APP LAUNCH */}
-        {isInstalledApp && isFirstAppLaunch ? (
-          <div className="space-y-3 animate-in zoom-in-95 duration-500">
-            {/* Animated Welcome Ribbon */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-purple-600/30 border border-purple-400/60 shadow-[0_0_25px_rgba(168,85,247,0.4)] backdrop-blur-md">
-              <Sparkles className="w-4 h-4 text-amber-300 animate-spin [animation-duration:4s]" />
-              <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200">
+        {/* BRAND HEADLINE & SLOGAN */}
+        <div className="space-y-2">
+          {isInstalledApp && isFirstAppLaunch ? (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-purple-600/20 border border-purple-400/40 shadow-[0_0_20px_rgba(168,85,247,0.3)] backdrop-blur-md mb-1">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin [animation-duration:3s]" />
+              <span className="text-[11px] font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-pink-200">
                 Welcome To Our App
               </span>
-              <Sparkles className="w-4 h-4 text-purple-300 animate-pulse" />
             </div>
+          ) : null}
 
-            {/* Brand Title */}
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
-              WEBLETS
-            </h1>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-[0.2em] text-white leading-none">
+            WEBLETS
+          </h1>
 
-            <p className="text-xs sm:text-sm font-medium text-slate-300/90 max-w-xs mx-auto leading-relaxed">
-              Official Inbuilt Web App • Lets make website together
-            </p>
-          </div>
-        ) : isInstalledApp ? (
-          <div className="space-y-2 animate-in fade-in duration-300">
-            <div className="flex items-center justify-center gap-2">
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
-                WEBLETS
-              </h1>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-600/30 text-purple-300 border border-purple-400/40">
-                APP
-              </span>
-            </div>
+          <p className="text-[11px] sm:text-xs font-bold tracking-[0.25em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-slate-300 via-cyan-200 to-purple-200">
+            Lets make website together
+          </p>
+        </div>
 
-            <p className="text-xs sm:text-sm font-semibold tracking-widest uppercase text-slate-400">
-              Lets make website together
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-2 animate-in fade-in duration-300">
-            <div className="flex items-center justify-center gap-2">
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-none">
-                WEBLETS
-              </h1>
-            </div>
-
-            <p className="text-xs sm:text-sm font-semibold tracking-widest uppercase text-slate-400">
-              Lets make website together
-            </p>
-          </div>
-        )}
-
-        {/* 4. LIQUID NEON PROGRESS BAR & FAST STATUS */}
-        <div className="w-60 sm:w-72 space-y-2 pt-2">
-          <div className="h-1.5 w-full bg-slate-800/80 rounded-full overflow-hidden border border-white/10 p-0.5 shadow-inner backdrop-blur-md">
+        {/* 4. LIQUID NEON PROGRESS BAR & ACCURATE PERCENT */}
+        <div className="w-64 sm:w-80 space-y-2.5 pt-1">
+          {/* Glowing Track */}
+          <div className="relative h-2 w-full bg-slate-900/90 rounded-full overflow-hidden border border-white/15 p-0.5 shadow-[inset_0_1px_4px_rgba(0,0,0,0.8)] backdrop-blur-xl">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 transition-all duration-75 ease-out shadow-[0_0_12px_rgba(168,85,247,0.8)]"
+              className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 transition-all duration-75 ease-out shadow-[0_0_15px_rgba(6,182,212,0.8)] relative overflow-hidden"
               style={{ width: `${progress}%` }}
-            />
+            >
+              {/* Specular Light Reflection Glint */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-[shimmer_1.5s_infinite] -translate-x-full" />
+            </div>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
-            <span className="flex items-center gap-1.5 text-[11px] font-sans font-medium text-slate-300 truncate max-w-[190px] sm:max-w-[220px]">
-              <Zap className="w-3 h-3 text-purple-400 animate-pulse shrink-0" />
-              <span className="truncate">{statusText}</span>
+          {/* Dynamic Status + Percentage Row */}
+          <div className="flex items-center justify-between text-xs px-1">
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-slate-300 transition-all duration-200">
+              <Zap className="w-3.5 h-3.5 text-cyan-400 animate-pulse shrink-0" />
+              <span className="truncate max-w-[200px] sm:max-w-[240px]">
+                {statusMessages[statusIndex]}
+              </span>
             </span>
-            <span className="font-bold text-purple-400 font-mono">{progress}%</span>
+            <span className="font-mono font-bold text-cyan-400 text-xs tracking-tight">
+              {progress}%
+            </span>
           </div>
         </div>
 
       </div>
 
-      {/* 5. FOOTER & TAP TO SKIP HINT */}
-      <div className="relative z-10 w-full pb-8 sm:pb-10 px-6 flex flex-col items-center space-y-3 text-center">
-        <div className="text-[11px] text-slate-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer">
-          <span className="flex items-center gap-1">
-            <span>Tap anywhere to continue</span>
-            <ChevronRight className="w-3.5 h-3.5 text-purple-400" />
-          </span>
+      {/* 5. FOOTER & TAP TO CONTINUE HINT */}
+      <div className="relative z-10 w-full pb-7 sm:pb-9 px-6 flex flex-col items-center space-y-3 text-center">
+        <div className="text-[11px] text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer py-1">
+          <span className="tracking-wide">Tap anywhere to continue</span>
+          <ChevronRight className="w-3.5 h-3.5 text-cyan-400 animate-bounce" />
         </div>
 
-        {/* Tricolor Cyber Accent Line */}
-        <div className="w-32 h-[2px] rounded-full bg-gradient-to-r from-amber-500 via-blue-500 to-emerald-500 opacity-70" />
+        {/* Elegant Cyan-Purple Cyber Line */}
+        <div className="w-28 h-[2px] rounded-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
       </div>
     </div>
   );

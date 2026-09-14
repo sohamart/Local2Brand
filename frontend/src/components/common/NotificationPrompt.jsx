@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { BellRing, X, Sparkles, Check } from 'lucide-react';
-import useOneSignal from '../../hooks/useOneSignal';
+import { toast } from 'react-toastify';
 
 export default function NotificationPrompt() {
-  const { isSupported, permission, isSubscribed, isRequesting, requestPermission } = useOneSignal();
   const [isVisible, setIsVisible] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
-    if (!isSupported) return;
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    setIsSupported(true);
 
-    // Check if permission is already decided or subscribed
-    if (permission !== 'default' || isSubscribed) {
+    if (Notification.permission !== 'default') {
       setIsVisible(false);
       return;
     }
 
-    // Don't show if user dismissed recently (within 7 days)
     try {
       const dismissedTime = localStorage.getItem('l2b_push_prompt_dismissed');
       if (dismissedTime && (Date.now() - parseInt(dismissedTime, 10)) < 7 * 24 * 60 * 60 * 1000) {
@@ -24,40 +23,26 @@ export default function NotificationPrompt() {
       }
     } catch (e) {}
 
-    // Show prompt after 1200ms of page load
     const timer = setTimeout(() => {
       if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-        try {
-          const dismissedTime = localStorage.getItem('l2b_push_prompt_dismissed');
-          if (!dismissedTime || (Date.now() - parseInt(dismissedTime, 10)) > 7 * 24 * 60 * 60 * 1000) {
-            setIsVisible(true);
-          }
-        } catch (e) {
-          setIsVisible(true);
-        }
+        setIsVisible(true);
       }
-    }, 1200);
+    }, 2000);
 
     return () => clearTimeout(timer);
-  }, [isSupported, permission, isSubscribed]);
+  }, []);
 
   const handleAllow = async () => {
-    try {
-      // Safety auto-dismiss modal so it never hangs in requesting state
-      const promise = requestPermission();
-      // Wait up to 3s for user interaction, then close prompt regardless
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-      }, 3500);
-
-      const success = await promise;
-      clearTimeout(timer);
+    if (!('Notification' in window)) {
       setIsVisible(false);
+      return;
+    }
 
-      if (!success) {
-        try {
-          localStorage.setItem('l2b_push_prompt_dismissed', Date.now().toString());
-        } catch (e) {}
+    try {
+      const perm = await Notification.requestPermission();
+      setIsVisible(false);
+      if (perm === 'granted') {
+        toast.success('🎉 Notifications enabled! You will receive live project updates.');
       }
     } catch (err) {
       setIsVisible(false);
@@ -71,7 +56,7 @@ export default function NotificationPrompt() {
     } catch (e) {}
   };
 
-  if (!isVisible || !isSupported || permission !== 'default' || isSubscribed) {
+  if (!isVisible || !isSupported) {
     return null;
   }
 
@@ -98,48 +83,45 @@ export default function NotificationPrompt() {
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                LOCAL2BRAND &bull; Real-Time Order &amp; Launch Alerts
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                Real-time updates on orders & quotations
               </p>
             </div>
           </div>
 
           <button
-            type="button"
             onClick={handleDismiss}
-            className="p-1 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer"
-            aria-label="Dismiss prompt"
+            className="p-1 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Dismiss"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Body Text */}
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed relative z-10">
-          Get real-time browser alerts for project milestones, order quotes, launch previews, and WhatsApp direct inquiries even when tabs are closed.
+        {/* Message */}
+        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed relative z-10 pl-1">
+          Never miss an order milestone, engineering update, or direct founder message.
         </p>
 
-        {/* Action Buttons */}
+        {/* Actions */}
         <div className="flex items-center gap-2 pt-1 relative z-10">
           <button
             type="button"
             onClick={handleAllow}
-            disabled={isRequesting}
-            className="flex-1 py-2.5 px-4 rounded-xl text-xs font-black text-white l2b-gradient-bg shadow-glass-highlight hover:opacity-95 transition-all cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 disabled:opacity-60"
+            className="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/25 flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-98"
           >
-            <BellRing className="w-3.5 h-3.5" />
-            <span>{isRequesting ? 'Requesting...' : 'Allow Push Notifications'}</span>
+            <Check className="w-3.5 h-3.5 stroke-[3]" />
+            <span>Enable Alerts</span>
           </button>
 
           <button
             type="button"
             onClick={handleDismiss}
-            className="py-2.5 px-3 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+            className="py-2.5 px-4 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
             Later
           </button>
         </div>
-
       </div>
     </div>
   );

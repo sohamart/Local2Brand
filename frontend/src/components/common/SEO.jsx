@@ -47,10 +47,11 @@ export default function SEO({
     ? 'noindex, nofollow'
     : (robots || 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
 
-  // Ensure absolute image URL
-  const activeImage = image.startsWith('http')
-    ? image
-    : `${domain}${image.startsWith('/') ? '' : '/'}${image}`;
+  // Ensure absolute image URL safely
+  const rawImage = (typeof image === 'string' && image.trim()) ? image.trim() : (BRAND.logo || '/logo.png');
+  const activeImage = rawImage.startsWith('http')
+    ? rawImage
+    : `${domain}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`;
 
   useEffect(() => {
     // 1. Update Document Title
@@ -128,11 +129,12 @@ export default function SEO({
 
     if (Array.isArray(breadcrumbs) && breadcrumbs.length > 0) {
       breadcrumbs.forEach((bc, idx) => {
+        const bcUrl = String(bc.url || bc.path || bc.href || '/').trim();
         breadcrumbItems.push({
           '@type': 'ListItem',
           position: idx + 2,
-          name: bc.name,
-          item: bc.url.startsWith('http') ? bc.url : `${domain}${bc.url.startsWith('/') ? '' : '/'}${bc.url}`
+          name: bc.name || 'Page',
+          item: bcUrl.startsWith('http') ? bcUrl : `${domain}${bcUrl.startsWith('/') ? '' : '/'}${bcUrl}`
         });
       });
     } else {

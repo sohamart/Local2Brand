@@ -20,7 +20,6 @@ import {
   FileText
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import useOneSignal from '../../hooks/useOneSignal';
 import { useAuth } from '../../context/AuthContext';
 import notificationApi from '../../services/notificationApi';
 import NotificationDetailModal from './NotificationDetailModal';
@@ -45,7 +44,6 @@ const getCachedUnread = () => {
 
 export default function NotificationBell({ className = '' }) {
   const { user, isAdmin } = useAuth();
-  const { isSupported, permission, isSubscribed, isLoading: pushLoading, requestPermission, optIn, optOut } = useOneSignal();
   
   const [isOpen, setIsOpen] = useState(false);
   const [showPushSettings, setShowPushSettings] = useState(false);
@@ -420,41 +418,6 @@ export default function NotificationBell({ className = '' }) {
         )}
       </div>
 
-      {/* Push Settings Quick Toggle Section */}
-      {isSupported && (
-        <div className="border-t border-slate-200/80 dark:border-slate-800/80 px-3.5 py-2.5 bg-gradient-to-r from-purple-500/[0.06] via-indigo-500/[0.04] to-transparent dark:from-purple-950/40 dark:via-indigo-950/30 shrink-0 relative z-10">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-bold text-[11px]">
-              <div className="w-5 h-5 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-500/20">
-                <Sparkles className="w-3 h-3" />
-              </div>
-              <span>Web Push Instant Alerts</span>
-            </div>
-
-            {isSubscribed ? (
-              <span className="flex items-center gap-1 text-[10.5px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/25 shadow-xs">
-                <Check className="w-3 h-3 stroke-[3]" /> Active
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={async () => {
-                  if (permission === 'granted') {
-                    await optIn();
-                  } else {
-                    await requestPermission();
-                  }
-                }}
-                disabled={pushLoading}
-                className="px-3 py-1 rounded-full text-[10.5px] font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.4)] hover:opacity-95 cursor-pointer transition-all active:scale-95"
-              >
-                {pushLoading ? 'Enabling...' : 'Turn On'}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Footer "View All Inbox" */}
       <div className="p-2.5 bg-slate-50/90 dark:bg-slate-950/90 border-t border-slate-200/80 dark:border-slate-800/80 shrink-0 text-center relative z-10">
         <Link
@@ -480,8 +443,6 @@ export default function NotificationBell({ className = '' }) {
           className={`relative p-2.5 rounded-2xl transition-all duration-300 flex items-center justify-center cursor-pointer ${
             unreadCount > 0
               ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 hover:bg-purple-500/25 border border-purple-500/40 shadow-[0_0_15px_rgba(147,51,234,0.3)]'
-              : isSubscribed
-              ? 'bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:text-purple-600 border border-slate-200/80 dark:border-slate-700/60 shadow-xs'
               : 'bg-slate-100/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-purple-950/60 hover:text-purple-600 border border-slate-200/80 dark:border-slate-700/60 shadow-xs'
           }`}
           title={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications & Inbox'}
@@ -497,8 +458,6 @@ export default function NotificationBell({ className = '' }) {
             <span className="absolute -top-1.5 -right-1.5 min-w-[19px] h-[19px] px-1 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white text-[10px] font-black flex items-center justify-center shadow-[0_0_10px_rgba(147,51,234,0.6)] animate-pulse border border-white dark:border-slate-900">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
-          ) : isSubscribed ? (
-            <span className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" />
           ) : null}
         </button>
 

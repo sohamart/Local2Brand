@@ -2,7 +2,6 @@ import { dataStore, isDbConnected, ensureDb } from '../config/dataAdapter.js';
 import { sendEmail, getClientUrl, wrapAgencyEmail } from '../utils/email.js';
 import { getLiveTelemetryStats } from './telemetryController.js';
 import { fetchAllMergedRequirements } from './requirementController.js';
-import oneSignalBackend from '../services/oneSignalService.js';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Requirement from '../models/Requirement.js';
@@ -377,18 +376,7 @@ export const sendBroadcastEmail = async (req, res) => {
       }
     }
 
-    // Optional OneSignal Push Broadcast
-    if (req.body?.sendPush || req.body?.sendPushNotification) {
-      const cleanMessage = (messageHtml || '').replace(/<[^>]*>?/gm, '').replace(/\n+/g, ' ').trim().substring(0, 150);
-      oneSignalBackend.broadcastPushNotification({
-        title: heading || subject,
-        message: cleanMessage,
-        url: resolvedActionUrl,
-        bigPicture: emailBannerImg || req.body?.bigPicture || undefined,
-      }).catch((err) => {
-        console.warn('OneSignal broadcast mirror push notice:', err?.message || err);
-      });
-    }
+    // Notification broadcast recorded in mailbox
 
     return res.status(200).json({
       success: true,

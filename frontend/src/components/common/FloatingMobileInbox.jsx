@@ -18,7 +18,6 @@ import {
   Send
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import useOneSignal from '../../hooks/useOneSignal';
 import { useAuth } from '../../context/AuthContext';
 import notificationApi from '../../services/notificationApi';
 import NotificationDetailModal from './NotificationDetailModal';
@@ -43,7 +42,6 @@ const getCachedUnread = () => {
 
 export default function FloatingMobileInbox() {
   const { user, isAdmin } = useAuth();
-  const { isSupported, permission, isSubscribed, isLoading: pushLoading, requestPermission, optIn } = useOneSignal();
 
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(getCachedUnread);
@@ -445,41 +443,6 @@ export default function FloatingMobileInbox() {
                 })
               )}
             </div>
-
-            {/* Quick Web Push Alerts Opt-in Bar */}
-            {isSupported && (
-              <div className="border-t border-slate-100 dark:border-slate-800/80 px-3.5 py-2.5 bg-gradient-to-r from-purple-500/[0.05] via-indigo-500/[0.05] to-transparent dark:from-purple-950/30 dark:via-indigo-950/20 shrink-0 relative z-10">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-bold text-[11px]">
-                    <div className="w-5 h-5 rounded-lg bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                      <Sparkles className="w-3 h-3" />
-                    </div>
-                    <span>Push Notifications</span>
-                  </div>
-
-                  {isSubscribed ? (
-                    <span className="flex items-center gap-1 text-[10.5px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                      <Check className="w-3 h-3 stroke-[3]" /> Enabled
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (permission === 'granted') {
-                          await optIn();
-                        } else {
-                          await requestPermission();
-                        }
-                      }}
-                      disabled={pushLoading}
-                      className="px-3 py-1 rounded-full text-[10.5px] font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-[0_0_12px_rgba(147,51,234,0.35)] hover:opacity-95 cursor-pointer transition-all active:scale-95"
-                    >
-                      {pushLoading ? 'Activating...' : 'Enable Push'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Footer */}
             <div className="p-2.5 bg-slate-50/90 dark:bg-slate-950/90 border-t border-slate-100 dark:border-slate-800 shrink-0 text-center relative z-10">

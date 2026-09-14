@@ -17,6 +17,7 @@ import {
   ArrowRight,
   LogOut,
   Shield,
+  ShieldCheck,
   Layers,
   Check,
   CreditCard,
@@ -121,7 +122,7 @@ const getStageIndex = (status) => {
 export default function UserDashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user, logout, updateProfile, loading: authLoading, openAuthModal, isAdmin } = useAuth();
+  const { user, logout, updateProfile, loading: authLoading, openAuthModal, isAdmin, refreshUser } = useAuth();
   const { openOrderModal, openCallbackModal } = useOrderModal();
   const { settings } = useSiteSettings();
 
@@ -137,6 +138,7 @@ export default function UserDashboard() {
   });
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const isVipUser = Boolean(user?.vipWhatsappEnabled);
   const [submissionFilter, setSubmissionFilter] = useState('all'); // 'all' | 'in_progress' | 'completed' | 'cancelled'
   const [requirements, setRequirements] = useState([]);
   const [inquiries, setInquiries] = useState([]);
@@ -245,6 +247,7 @@ export default function UserDashboard() {
   const [isVerifyingEmailChangeOtp, setIsVerifyingEmailChangeOtp] = useState(false);
   const [emailChangeOtpSent, setEmailChangeOtpSent] = useState(false);
   const [emailChangeCooldown, setEmailChangeCooldown] = useState(0);
+  const [emailSpamAlertDismissed, setEmailSpamAlertDismissed] = useState(false);
 
   useEffect(() => {
     let timer;
@@ -369,12 +372,23 @@ export default function UserDashboard() {
       setProfileCompany(user.company || '');
       setAvatarUrl(user.avatar || '');
       fetchUserData(false);
+      if (refreshUser) refreshUser();
+
+      const onFocusSync = () => {
+        if (refreshUser) refreshUser();
+      };
+      window.addEventListener('focus', onFocusSync);
 
       // Smooth, gentle 30s background live auto-poll
       const pollTimer = setInterval(() => {
         fetchUserData(true);
+        if (refreshUser) refreshUser();
       }, 30000);
-      return () => clearInterval(pollTimer);
+
+      return () => {
+        clearInterval(pollTimer);
+        window.removeEventListener('focus', onFocusSync);
+      };
     } else if (!authLoading) {
       setLoading(false);
       setOrdersLoading(false);
@@ -793,7 +807,7 @@ export default function UserDashboard() {
         {/* Sidebar Footer Actions */}
         <div className="p-3 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40 space-y-2 shrink-0">
           {/* Direct WhatsApp Support (VIP Button if enabled by admin, "Not Provided" Tag if not) */}
-          {user?.vipWhatsappEnabled ? (
+          {isVipUser ? (
             <a
               href={settings?.whatsappNumber ? `https://wa.me/${settings.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello Weblets Founder Team! 👋 I am logged into my VIP Client Console (${user.email}). Requesting direct priority support.`)}` : 'https://wa.me/918710043923'}
               target="_blank"
@@ -924,6 +938,45 @@ export default function UserDashboard() {
         {/* Main Body Content Container */}
         <main className="flex-1 p-3.5 sm:p-6 md:p-8 space-y-6 max-w-7xl w-full mx-auto">
           
+          {/* Top Global Email Routing & Spam Filter Advisory Banner */}
+          {!emailSpamAlertDismissed && (
+            <div className="relative p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-slate-900/60 to-indigo-950/40 border border-purple-500/30 dark:border-purple-500/25 shadow-lg shadow-purple-500/5 backdrop-blur-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 border border-purple-400/30">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div className="space-y-0.5 min-w-0">
+                  <div className="font-bold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+                    <span>Email Notification & Technical Routing Notice</span>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-extrabold uppercase tracking-wider">
+                      Spam Folder Check
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Due to automated ISP technical filters, official proposals, milestone updates, and OTP codes may occasionally land in your <strong>Spam / Junk</strong> folder. Please check your Spam folder and mark emails from Weblets as <strong>"Not Spam"</strong> to ensure direct inbox delivery.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <a
+                  href="mailto:contact@weblets.bond"
+                  className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-[11px] font-bold text-purple-300 hover:text-white transition-colors flex items-center gap-1.5"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Whitelist Sender</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setEmailSpamAlertDismissed(true)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-colors cursor-pointer"
+                  title="Dismiss notice"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+          
           {/* ========================================================================= */}
           {/* TAB 1: PROFILE & ACCOUNT (FIRST AND PRIMARY VIEW) */}
           {/* ========================================================================= */}
@@ -980,11 +1033,21 @@ export default function UserDashboard() {
 
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                        <span className="inline-flex items-center gap-1 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 shadow-xs">
-                          <AshokaChakra size={9} /> VIP Client
-                        </span>
+                        {user?.role === 'admin' ? (
+                          <span className="inline-flex items-center gap-1 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 shadow-xs">
+                            <Sparkles className="w-3 h-3 text-purple-500" /> Master Admin
+                          </span>
+                        ) : isVipUser ? (
+                          <span className="inline-flex items-center gap-1 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 shadow-xs">
+                            <AshokaChakra size={9} /> VIP Client
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/30 shadow-xs">
+                            <User className="w-3 h-3 text-slate-500" /> Client Account
+                          </span>
+                        )}
 
-                        {user?.vipWhatsappEnabled && (
+                        {isVipUser && (
                           <span className="inline-flex items-center gap-1 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30">
                             <Sparkles className="w-3 h-3 text-emerald-500" /> VIP WhatsApp Hotline
                           </span>
@@ -1066,31 +1129,53 @@ export default function UserDashboard() {
                     </div>
 
                     {/* OTP Form */}
-                    <form onSubmit={handleVerifyOtp} className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <form onSubmit={handleVerifyOtp} className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
                       <input
                         type="text"
                         maxLength={6}
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
                         placeholder="6-Digit OTP"
-                        className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-600 text-sm font-mono font-bold tracking-widest text-center w-36 focus:outline-purple-500 text-slate-900 dark:text-white shadow-xs"
+                        className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/50 text-sm font-mono font-bold tracking-widest text-center w-36 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-slate-900 dark:text-white shadow-xs transition-all"
                       />
 
                       <button
                         type="submit"
                         disabled={isVerifyingOtp || otpCode.length < 6}
-                        className="px-4 py-2.5 rounded-xl text-xs font-bold text-white l2b-gradient-bg shadow-sm hover:opacity-95 disabled:opacity-50 cursor-pointer flex items-center gap-1.5 transition-all"
+                        className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 shadow-md shadow-purple-600/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5 transition-all duration-200 active:scale-95 select-none shrink-0"
                       >
-                        {isVerifyingOtp ? 'Verifying...' : 'Verify Code'}
+                        {isVerifyingOtp ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Verifying...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Verify Code</span>
+                          </>
+                        )}
                       </button>
 
                       <button
                         type="button"
                         onClick={handleSendVerificationOtp}
                         disabled={isSendingOtp || otpResendCooldown > 0}
-                        className="px-3.5 py-2.5 rounded-xl text-xs font-semibold bg-white/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 disabled:opacity-50 cursor-pointer transition-all shrink-0"
+                        className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800/90 hover:bg-purple-100/70 dark:hover:bg-slate-700 text-slate-700 dark:text-purple-300 border border-slate-300 dark:border-purple-500/30 hover:border-purple-400 dark:hover:border-purple-400/60 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all duration-200 shrink-0 flex items-center justify-center gap-1.5 active:scale-95 select-none"
                       >
-                        {isSendingOtp ? 'Sending...' : otpResendCooldown > 0 ? `Resend (${otpResendCooldown}s)` : 'Resend OTP ✉️'}
+                        {isSendingOtp ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Sending...</span>
+                          </>
+                        ) : otpResendCooldown > 0 ? (
+                          <span>Resend ({otpResendCooldown}s)</span>
+                        ) : (
+                          <>
+                            <Mail className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                            <span>Resend OTP</span>
+                          </>
+                        )}
                       </button>
                     </form>
                   </div>

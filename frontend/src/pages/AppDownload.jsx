@@ -82,7 +82,7 @@ export default function AppDownload() {
   const { settings } = useSiteSettings();
   const { user } = useAuth();
 
-  // Dynamic live App Configuration from SiteSettingsContext
+  // Dynamic live App Configuration from SiteSettingsContext (Enforced WEBLETS Branding)
   const appConfig = useMemo(() => {
     const defaultConf = {
       enabled: true,
@@ -113,10 +113,31 @@ export default function AppDownload() {
       features: [],
       changelog: [],
     };
-    return {
-      ...defaultConf,
-      ...(settings?.appConfig || {}),
-    };
+
+    const raw = settings?.appConfig || {};
+    const merged = { ...defaultConf, ...raw };
+
+    // Cleanse any leftover legacy naming from database
+    if (typeof merged.appName === 'string' && (merged.appName.includes('LOCAL2BRAND') || merged.appName.includes('Local2Brand'))) {
+      merged.appName = 'WEBLETS Web App';
+    }
+    if (typeof merged.appSubtitle === 'string' && (merged.appSubtitle.includes('LOCAL2BRAND') || merged.appSubtitle.includes('Local2Brand'))) {
+      merged.appSubtitle = 'Official Inbuilt Web App & Client Portal';
+    }
+    if (typeof merged.packageName === 'string') {
+      merged.packageName = merged.packageName.replace(/local2brand/gi, 'weblets');
+    }
+    if (typeof merged.androidPackageName === 'string') {
+      merged.androidPackageName = merged.androidPackageName.replace(/local2brand/gi, 'weblets');
+    }
+    if (typeof merged.appDescription === 'string') {
+      merged.appDescription = merged.appDescription.replace(/LOCAL2BRAND/gi, 'WEBLETS');
+    }
+    if (typeof merged.comingSoonTitle === 'string') {
+      merged.comingSoonTitle = merged.comingSoonTitle.replace(/LOCAL2BRAND/gi, 'WEBLETS');
+    }
+
+    return merged;
   }, [settings?.appConfig]);
 
   // Is PWA Web App Mode Active
@@ -287,11 +308,17 @@ export default function AppDownload() {
   // Normalized screenshots list showcasing the Web App
   const screenshots = useMemo(() => {
     if (Array.isArray(appConfig.screenshots) && appConfig.screenshots.length > 0) {
-      return appConfig.screenshots.map((s, idx) => ({
-        url: typeof s === 'string' ? s : (s.url || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80'),
-        title: typeof s === 'object' && s.title ? s.title : `Web App View #${idx + 1}`,
-        caption: typeof s === 'object' && s.caption ? s.caption : 'Interactive live workspace preview & client hub'
-      }));
+      const valid = appConfig.screenshots.filter((s) => {
+        const urlStr = typeof s === 'string' ? s : (s?.url || '');
+        return urlStr && !urlStr.includes('oqtmogsogmug0bx17lvj') && !urlStr.includes('ldwhzo3vqtnsyq9kluyk') && !urlStr.includes('ivprbp6uhgjftjkvgvfx');
+      });
+      if (valid.length > 0) {
+        return valid.map((s, idx) => ({
+          url: typeof s === 'string' ? s : (s.url || 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80'),
+          title: typeof s === 'object' && s.title ? s.title.replace(/LOCAL2BRAND/gi, 'WEBLETS') : `WEBLETS View #${idx + 1}`,
+          caption: typeof s === 'object' && s.caption ? s.caption.replace(/LOCAL2BRAND/gi, 'WEBLETS') : 'Interactive live workspace preview & client hub'
+        }));
+      }
     }
     return [
       {
@@ -561,8 +588,10 @@ export default function AppDownload() {
         <div className="fixed top-20 inset-x-3 sm:inset-x-auto sm:right-6 z-[999999] max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-4 rounded-3xl border-2 border-purple-500/80 shadow-[0_15px_40px_rgba(124,58,237,0.35)] animate-in slide-in-from-top-6 duration-300">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-purple-600 text-white flex items-center justify-center font-black text-lg shadow-md shrink-0 p-0.5 overflow-hidden">
-                <img src="/logo.png" alt="App Logo" className="w-full h-full object-contain rounded-xl" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-600 to-pink-500 p-[1.5px] shadow-md shrink-0 overflow-hidden">
+                <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
+                  <img src="/logo.png" alt="App Logo" className="w-full h-full object-cover scale-[1.7] transform-gpu" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                </div>
               </div>
               <div className="space-y-0.5">
                 <h4 className="font-extrabold text-sm text-slate-900 dark:text-white leading-tight">
@@ -653,11 +682,11 @@ export default function AppDownload() {
               
               <div className="space-y-3">
                 
-                {/* Mobile App Icon + Store Identity Header */}
+                {/* Mobile App Icon + Store Identity Header (Zoom-Fitted Apple-Grade App Icon) */}
                 <div className="flex items-center justify-center lg:justify-start gap-3.5 mb-2">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 p-0.5 shadow-lg shrink-0">
-                    <div className="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center overflow-hidden">
-                      <img src="/favicon.jpg" alt="App Icon" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-600 to-pink-500 p-[1.5px] shadow-[0_0_25px_rgba(124,58,237,0.35)] shrink-0">
+                    <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
+                      <img src="/logo.png" alt="WEBLETS App Icon" className="w-full h-full object-cover scale-[1.7] transform-gpu" onError={(e) => { e.currentTarget.src = '/logo.png'; }} />
                     </div>
                   </div>
                   <div className="text-left leading-tight">
@@ -725,7 +754,7 @@ export default function AppDownload() {
                 {isAndroidApp ? (
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 shadow-2xs font-mono">
                     <Smartphone className="w-3.5 h-3.5 text-emerald-500" />
-                    <span>{appConfig.androidPackageName || appConfig.packageName || 'com.local2brand.webapp'}</span>
+                    <span>{appConfig.androidPackageName || appConfig.packageName || 'com.weblets.webapp'}</span>
                   </div>
                 ) : isInsideInstalledApp ? (
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300 shadow-2xs">
@@ -954,7 +983,7 @@ export default function AppDownload() {
                   <div className="absolute top-0 inset-x-0 pt-6 pb-2.5 px-3.5 bg-gradient-to-b from-black/90 via-black/50 to-transparent flex items-center justify-between text-white text-[9px] z-20">
                     <div className="flex items-center gap-1 font-bold">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span className="truncate max-w-[110px]">{appConfig.appName || 'LOCAL2BRAND'}</span>
+                      <span className="truncate max-w-[110px]">{appConfig.appName || 'WEBLETS Web App'}</span>
                     </div>
                     <span className="text-[8px] font-mono opacity-80">{appConfig.version || 'v2.4.0'}</span>
                   </div>
@@ -1045,7 +1074,7 @@ export default function AppDownload() {
             <SectionHeading
               badge="Architecture"
               title="Next-Generation Inbuilt Web App"
-              subtitle="Explore what makes the LOCAL2BRAND platform ultra-fast and easy to use."
+              subtitle="Explore what makes the WEBLETS platform ultra-fast and easy to use."
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8">
@@ -1298,8 +1327,8 @@ export default function AppDownload() {
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
                 Scan with Phone Camera
               </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Point your phone camera to instantly open and install {appConfig.appName || 'LOCAL2BRAND Web App'}.
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Point your phone camera to instantly open and install {appConfig.appName || 'WEBLETS Web App'}.
               </p>
             </div>
 
@@ -1317,7 +1346,7 @@ export default function AppDownload() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <a
                 href={qrCodeImageUrl}
-                download={`${(appConfig.appName || 'LOCAL2BRAND').replace(/\s+/g, '_')}_QRCode.png`}
+                download={`${(appConfig.appName || 'WEBLETS').replace(/\s+/g, '_')}_QRCode.png`}
                 target="_blank"
                 rel="noreferrer"
                 className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -1462,7 +1491,7 @@ export default function AppDownload() {
                   <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-start gap-2.5">
                     <div className="w-5 h-5 rounded-md bg-emerald-600 text-white font-bold text-[11px] flex items-center justify-center shrink-0">3</div>
                     <p className="text-slate-700 dark:text-slate-300 text-[11px]">
-                      Tap <strong>&quot;Add&quot;</strong> in the top right. You can now launch LOCAL2BRAND directly from your iPhone home screen!
+                      Tap <strong>&quot;Add&quot;</strong> in the top right. You can now launch WEBLETS directly from your iPhone home screen!
                     </p>
                   </div>
                 </div>

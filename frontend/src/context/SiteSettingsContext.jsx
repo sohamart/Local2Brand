@@ -11,11 +11,16 @@ export function SiteSettingsProvider({ children }) {
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          if (parsed.brandName === 'LOCAL2BRAND' || parsed.tagline === 'Build Local. Think Global.') {
+          if (parsed.brandName === 'LOCAL2BRAND' || parsed.tagline === 'Build Local. Think Global.' || (parsed.appConfig?.appName && parsed.appConfig.appName.includes('LOCAL2BRAND'))) {
             parsed.brandName = 'WEBLETS';
             parsed.domain = 'weblets.bond';
             parsed.tagline = 'Lets make website together';
             parsed.supportEmail = 'contact@weblets.bond';
+            if (parsed.appConfig) {
+              parsed.appConfig.appName = 'WEBLETS Web App';
+              parsed.appConfig.appSubtitle = 'Official Inbuilt Web App & Client Portal';
+              parsed.appConfig.packageName = 'com.weblets.webapp';
+            }
             localStorage.setItem('l2b_cached_settings', JSON.stringify(parsed));
           }
           return {

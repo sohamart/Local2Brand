@@ -389,6 +389,7 @@ export const dataStore = {
             company: u.company || '',
             status: u.status || 'active',
             isEmailVerified: Boolean(u.isEmailVerified),
+            vipWhatsappEnabled: Boolean(u.vipWhatsappEnabled),
             createdAt: u.createdAt,
             updatedAt: u.updatedAt,
           }));
@@ -403,6 +404,7 @@ export const dataStore = {
       return {
         ...rest,
         isEmailVerified: Boolean(u.isEmailVerified),
+        vipWhatsappEnabled: Boolean(u.vipWhatsappEnabled),
       };
     });
   },

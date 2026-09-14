@@ -38,7 +38,7 @@ export const createCallback = async (req, res) => {
       user: validUserId,
     });
 
-    // Asynchronous email + In-App notification + OneSignal push
+    // Asynchronous email + In-App mailbox notification
     const callbackUserTarget = callback.user || validUserId || resolvedEmail;
 
     await Promise.allSettled([

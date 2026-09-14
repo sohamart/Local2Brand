@@ -330,7 +330,15 @@ export default function Register() {
                     className="w-full text-center tracking-[10px] font-mono text-2xl py-3 rounded-2xl bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-purple-600 focus:ring-2 focus:ring-purple-500/20 transition-all"
                   />
                   
-                  <div className="flex items-center justify-between mt-2 text-xs text-slate-500 px-1">
+                  {/* Modern Spam & Technical Routing Alert Card */}
+                  <div className="p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-xs flex items-start gap-2.5 mt-3">
+                    <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="leading-snug text-[11px]">
+                      <strong>Technical Notice:</strong> Due to automated ISP / security filters, the verification code may occasionally land in your <strong>Spam / Junk folder</strong>. Please check both your <strong>Inbox</strong> and <strong>Spam</strong>.
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-2.5 text-xs text-slate-500 px-1">
                     <span>Didn't get code?</span>
                     <button
                       type="button"

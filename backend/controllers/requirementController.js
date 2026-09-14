@@ -9,9 +9,7 @@ import {
   sendOrderDeliveredEmail,
   sendRequirementDeletionEmail,
   sendRequirementRejectedEmail,
-  sendAdminRequirementDeletionAlert
 } from '../utils/email.js';
-import oneSignalBackend from '../services/oneSignalService.js';
 import notificationDispatcher from '../services/notificationDispatcher.js';
 
 import mongoose from 'mongoose';

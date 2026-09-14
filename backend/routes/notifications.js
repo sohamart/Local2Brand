@@ -1,109 +1,32 @@
 import express from 'express';
-import oneSignalBackend from '../services/oneSignalService.js';
 import Notification from '../models/Notification.js';
 import { protect, optionalAuth } from '../middleware/auth.js';
 import { ensureDb, isDbConnected, dataStore } from '../config/dataAdapter.js';
 
 const router = express.Router();
 
-
 // ==========================================
-// 1. PUBLIC / HEALTH STATUS ROUTES
+// 1. PUBLIC / STATUS ROUTE
 // ==========================================
 
-// @desc    Check OneSignal Push service status
+// @desc    Check Notification service status
 // @route   GET /api/notifications/status
 // @access  Public
 router.get('/status', async (req, res) => {
-  const isConfigured = oneSignalBackend.isConfigured();
-  const { appId, apiKey } = oneSignalBackend.getCredentials();
-  const appDetails = isConfigured ? await oneSignalBackend.getAppDetails() : null;
-
   return res.status(200).json({
     success: true,
-    configured: isConfigured,
-    appIdConfigured: Boolean(appId),
-    apiKeyConfigured: Boolean(apiKey),
-    appIdPreview: appId ? `${appId.substring(0, 8)}...` : null,
-    totalSubscribers: appDetails?.totalSubscribedUsers ?? null,
-    messageablePlayers: appDetails?.messageablePlayers ?? null,
-    message: isConfigured
-      ? 'OneSignal Push Service is active and ready.'
-      : 'OneSignal Push Service is running in standby (configure ONESIGNAL_APP_ID & ONESIGNAL_REST_API_KEY to activate).',
+    configured: true,
+    service: 'In-App Web Mailbox Engine',
+    message: 'Weblets In-App Mailbox & Alert Service is active and ready.',
   });
 });
 
-// @desc    Send a test push notification (to specific user, admins, or broadcast)
-// @route   POST /api/notifications/test
-// @access  Public
-router.post('/test', async (req, res) => {
-  try {
-    const {
-      userId,
-      title = '🎉 LOCAL2BRAND Push Test',
-      message = 'Hello! Your browser push notifications are functioning smoothly.',
-      url,
-      bigPicture,
-      target = 'user', // 'user' | 'broadcast' | 'admin'
-    } = req.body || {};
-
-    if (!oneSignalBackend.isConfigured()) {
-      return res.status(200).json({
-        success: false,
-        configured: false,
-        message: 'OneSignal credentials (ONESIGNAL_APP_ID or ONESIGNAL_REST_API_KEY) are not set in .env yet.',
-      });
-    }
-
-    let result;
-    if (target === 'broadcast') {
-      result = await oneSignalBackend.broadcastPushNotification({
-        title,
-        message,
-        url,
-        bigPicture,
-      });
-    } else if (target === 'admin') {
-      result = await oneSignalBackend.sendNotificationToAdmins({
-        title,
-        message,
-        url,
-        bigPicture,
-      });
-    } else {
-      if (userId) {
-        result = await oneSignalBackend.sendNotificationToUser(userId, {
-          title,
-          message,
-          url,
-          bigPicture,
-        });
-      } else {
-        result = await oneSignalBackend.broadcastPushNotification({
-          title,
-          message,
-          url,
-          bigPicture,
-        });
-      }
-    }
-
-    return res.status(200).json(result);
-  } catch (error) {
-    console.error('Test notification route error:', error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Error triggering test push notification',
-    });
-  }
-});
-
-// @desc    Broadcast push notification to all subscribers or targeted segment & store in inboxes
+// @desc    Broadcast in-app notification to all subscribers / role
 // @route   POST /api/notifications/broadcast
 // @access  Public
 router.post('/broadcast', async (req, res) => {
   try {
-    const { title, message, url, bigPicture, segment, targetAudience = 'all', customUserIds } = req.body || {};
+    const { title, message, url, bigPicture, targetAudience = 'all' } = req.body || {};
 
     if (!title || !message) {
       return res.status(400).json({
@@ -112,111 +35,42 @@ router.post('/broadcast', async (req, res) => {
       });
     }
 
-    let result;
     let savedRecipientRole = 'all';
+    if (targetAudience === 'admins') savedRecipientRole = 'admin';
+    else if (targetAudience === 'clients') savedRecipientRole = 'user';
 
-    if (targetAudience === 'admins') {
-      savedRecipientRole = 'admin';
-      let adminIds = [];
-      try {
-        const userMod = await import('../models/User.js');
-        const User = userMod.User || userMod.default;
-        if (User && typeof User.find === 'function') {
-          const admins = await User.find({ role: 'admin' }).select('_id email');
-          adminIds = admins.map((a) => a._id.toString());
-        }
-      } catch (e) {}
+    const notif = await Notification.create({
+      recipient: null,
+      recipientRole: savedRecipientRole,
+      title: title.trim(),
+      message: message.trim(),
+      type: 'broadcast',
+      category: 'Announcement',
+      link: url || '/dashboard',
+      data: { bigPicture, targetAudience },
+      isRead: false,
+      priority: 'high',
+    });
 
-      result = await oneSignalBackend.sendNotificationToAdmins({
-        userIds: adminIds,
-        title,
-        message,
-        url,
-        bigPicture,
-      });
-    } else if (targetAudience === 'clients') {
-      savedRecipientRole = 'user';
-      let clientIds = [];
-      try {
-        const userMod = await import('../models/User.js');
-        const User = userMod.User || userMod.default;
-        if (User && typeof User.find === 'function') {
-          const clients = await User.find({ role: { $ne: 'admin' } }).select('_id email');
-          clientIds = clients.map((c) => c._id.toString());
-        }
-      } catch (e) {}
-
-      if (clientIds.length > 0) {
-        result = await oneSignalBackend.sendPushNotification({
-          userIds: clientIds,
-          title,
-          message,
-          url,
-          bigPicture,
-        });
-      } else {
-        result = await oneSignalBackend.sendPushNotification({
-          filters: [
-            { field: 'tag', key: 'role', relation: '!=', value: 'admin' },
-          ],
-          title,
-          message,
-          url,
-          bigPicture,
-        });
-      }
-    } else if (targetAudience === 'custom' && customUserIds) {
-      result = await oneSignalBackend.sendPushNotification({
-        userIds: customUserIds,
-        title,
-        message,
-        url,
-        bigPicture,
-      });
-    } else {
-      savedRecipientRole = 'all';
-      result = await oneSignalBackend.broadcastPushNotification({
-        title,
-        message,
-        url,
-        bigPicture,
-        segment: segment || 'Total Subscriptions',
-      });
-    }
-
-    // Also store broadcast in MongoDB Notification inbox for in-app display
-    try {
-      await Notification.create({
-        recipient: null,
-        recipientRole: savedRecipientRole,
-        title,
-        message,
-        type: 'broadcast',
-        category: 'Announcement',
-        link: url || '/dashboard',
-        data: { bigPicture, targetAudience },
-        isRead: false,
-        priority: 'high',
-      });
-    } catch (e) {
-      console.warn('Notice saving broadcast to MongoDB inbox:', e?.message || e);
-    }
-
-    return res.status(200).json(result);
+    return res.status(200).json({
+      success: true,
+      message: 'Broadcast notification delivered to user inboxes! 🚀',
+      notification: notif,
+    });
   } catch (error) {
-    console.error('Broadcast push error:', error);
+    console.error('Broadcast notification error:', error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Failed to dispatch broadcast push notification',
+      message: error.message || 'Failed to dispatch broadcast notification',
     });
   }
 });
 
 // ==========================================
-// 2. IN-APP INBOX & PERSONAL NOTIFICATIONS API
+// 2. IN-APP INBOX & NOTIFICATIONS API
 // ==========================================
 
-// @desc    Get Inbox Notifications for Authenticated User / Admin (or Guest Broadcasts)
+// @desc    Get Inbox Notifications for User / Admin
 // @route   GET /api/notifications/inbox
 // @access  Public / Optional Auth
 router.get('/inbox', optionalAuth, async (req, res) => {
@@ -224,7 +78,7 @@ router.get('/inbox', optionalAuth, async (req, res) => {
     await ensureDb().catch(() => {});
     const user = req.user;
 
-    const { page = 1, limit = 25, type, category, unreadOnly, search } = req.query;
+    const { page = 1, limit = 25, type, category } = req.query;
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 25));
     const skip = (pageNum - 1) * limitNum;
@@ -233,7 +87,6 @@ router.get('/inbox', optionalAuth, async (req, res) => {
     const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
 
     if (isDbConnected()) {
-      // Asynchronous non-blocking background cleanup for read items older than 3 days
       Notification.deleteMany({
         isRead: true,
         $or: [
@@ -242,12 +95,10 @@ router.get('/inbox', optionalAuth, async (req, res) => {
         ]
       }).catch(() => {});
 
-      // Scope query based on role or guest
       const conditions = [];
 
       if (user) {
         if (user.role === 'admin') {
-          // Admin sees: admin-targeted alerts, global broadcasts, alerts assigned to admin user, or sent to admin email
           conditions.push(
             { recipientRole: 'admin' },
             { recipientRole: 'all' },
@@ -255,7 +106,6 @@ router.get('/inbox', optionalAuth, async (req, res) => {
             { recipientEmail: user.email?.toLowerCase().trim() }
           );
         } else {
-          // Regular user sees: personal notifications (by user ID), personal notifications by email, or global broadcasts
           conditions.push(
             { recipient: user._id },
             { recipientRole: 'all' }
@@ -265,18 +115,14 @@ router.get('/inbox', optionalAuth, async (req, res) => {
           }
         }
       } else {
-        // Unauthenticated visitor sees global announcements & broadcasts
         conditions.push({ recipientRole: 'all' });
       }
 
       const andClauses = [];
-
-      // 1. Recipient Scope
       if (conditions.length > 0) {
         andClauses.push({ $or: conditions });
       }
 
-      // 2. Exclude read notifications older than 3 days (keep unread and recent read)
       andClauses.push({
         $or: [
           { isRead: false },
@@ -288,7 +134,6 @@ router.get('/inbox', optionalAuth, async (req, res) => {
         ]
       });
 
-      // 3. Category & Type filter
       if (category && category !== 'all') {
         andClauses.push({
           $or: [
@@ -300,100 +145,61 @@ router.get('/inbox', optionalAuth, async (req, res) => {
         andClauses.push({ type });
       }
 
-      // 4. Unread only
-      if (unreadOnly === 'true' || unreadOnly === true) {
-        andClauses.push({ isRead: false });
-      }
+      const finalQuery = andClauses.length > 0 ? { $and: andClauses } : {};
 
-      // 5. Search filter
-      if (search && typeof search === 'string' && search.trim()) {
-        const s = search.trim();
-        andClauses.push({
-          $or: [
-            { title: { $regex: s, $options: 'i' } },
-            { message: { $regex: s, $options: 'i' } },
-            { category: { $regex: s, $options: 'i' } },
-            { recipientEmail: { $regex: s, $options: 'i' } },
-          ],
-        });
-      }
-
-      const filter = andClauses.length > 0 ? { $and: andClauses } : {};
-
-      // Return full notification records immediately
       const [notifications, total, unreadCount] = await Promise.all([
-        Notification.find(filter)
-          .sort({ createdAt: -1 })
-          .skip(skip)
-          .limit(limitNum)
-          .lean(),
-        Notification.countDocuments(filter),
+        Notification.find(finalQuery).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+        Notification.countDocuments(finalQuery),
         Notification.countDocuments({
           $and: [
-            { $or: conditions },
+            conditions.length > 0 ? { $or: conditions } : {},
             { isRead: false }
           ]
-        }),
+        })
       ]);
-
-      const pages = Math.ceil(total / limitNum) || 1;
 
       return res.status(200).json({
         success: true,
         notifications,
-        total,
-        unreadCount,
-        page: pageNum,
-        pages,
         pagination: {
-          total,
-          pages,
           page: pageNum,
-          limit: limitNum
-        }
+          limit: limitNum,
+          total,
+          pages: Math.ceil(total / limitNum) || 1,
+        },
+        unreadCount,
       });
     }
 
-    // Fallback store if DB is initializing
-    const localNotifs = await dataStore.getNotifications(50);
+    // Fallback if local
     return res.status(200).json({
       success: true,
-      notifications: localNotifs,
-      total: localNotifs.length,
-      unreadCount: localNotifs.filter(n => !n.isRead).length,
-      page: 1,
-      pages: 1,
-      pagination: {
-        total: localNotifs.length,
-        pages: 1,
-        page: 1,
-        limit: limitNum
-      }
+      notifications: [],
+      pagination: { page: 1, limit: limitNum, total: 0, pages: 1 },
+      unreadCount: 0,
     });
   } catch (error) {
-    console.error('Fetch inbox error:', error);
-    const fallbackNotifs = await dataStore.getNotifications(25).catch(() => []);
-    return res.status(200).json({
-      success: true,
-      notifications: fallbackNotifs,
-      total: fallbackNotifs.length,
-      unreadCount: 0,
-      page: 1,
-      pages: 1,
-      pagination: { total: fallbackNotifs.length, pages: 1, page: 1, limit: 25 },
+    console.error('Fetch notifications error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch notifications',
     });
   }
 });
 
-// @desc    Get live unread count for fast polling / navbar badges
+// @desc    Get Unread Notification Count
 // @route   GET /api/notifications/unread-count
 // @access  Public / Optional Auth
 router.get('/unread-count', optionalAuth, async (req, res) => {
   try {
     await ensureDb().catch(() => {});
     const user = req.user;
-    const conditions = [];
 
+    if (!isDbConnected()) {
+      return res.status(200).json({ success: true, count: 0 });
+    }
+
+    const conditions = [];
     if (user) {
       if (user.role === 'admin') {
         conditions.push(
@@ -415,63 +221,30 @@ router.get('/unread-count', optionalAuth, async (req, res) => {
       conditions.push({ recipientRole: 'all' });
     }
 
-    if (isDbConnected()) {
-      const unreadCount = await Notification.countDocuments({
-        $and: [
-          { $or: conditions },
-          { isRead: false }
-        ]
-      });
-
-      return res.status(200).json({
-        success: true,
-        unreadCount,
-      });
-    }
-
-    const localNotifs = await dataStore.getNotifications(25).catch(() => []);
-    return res.status(200).json({
-      success: true,
-      unreadCount: localNotifs.filter(n => !n.isRead).length,
+    const count = await Notification.countDocuments({
+      $and: [
+        { $or: conditions },
+        { isRead: false }
+      ]
     });
-  } catch (error) {
-    return res.status(200).json({ success: true, unreadCount: 0 });
-  }
-});
-
-
-// @desc    Get a single notification with full details & HTML email replica
-// @route   GET /api/notifications/:id
-// @access  Private
-router.get('/:id', protect, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const notification = await Notification.findById(id).lean();
-
-    if (!notification) {
-      return res.status(404).json({ success: false, message: 'Notification not found' });
-    }
 
     return res.status(200).json({
       success: true,
-      notification,
+      count: count || 0,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to fetch notification details',
-    });
+    return res.status(200).json({ success: true, count: 0 });
   }
 });
 
-// @desc    Mark a single notification as read (auto expires 3 days after read)
+// @desc    Mark a notification as read
 // @route   PUT /api/notifications/:id/read
 // @access  Private
 router.put('/:id/read', protect, async (req, res) => {
   try {
     const { id } = req.params;
     const now = new Date();
-    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Auto delete 3 days after read
+    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
     const notification = await Notification.findByIdAndUpdate(
       id,
@@ -479,10 +252,6 @@ router.put('/:id/read', protect, async (req, res) => {
       { new: true }
     );
 
-    if (!notification) {
-      return res.status(404).json({ success: false, message: 'Notification not found' });
-    }
-
     return res.status(200).json({
       success: true,
       notification,
@@ -490,12 +259,12 @@ router.put('/:id/read', protect, async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Failed to mark notification as read',
+      message: error.message || 'Failed to update notification',
     });
   }
 });
 
-// @desc    Mark all notifications in scope as read (auto expires 3 days after read)
+// @desc    Mark all notifications as read
 // @route   PUT /api/notifications/read-all
 // @access  Private
 router.put('/read-all', protect, async (req, res) => {
@@ -521,7 +290,7 @@ router.put('/read-all', protect, async (req, res) => {
     }
 
     const now = new Date();
-    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // Auto delete 3 days after read
+    const expiresAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
     const result = await Notification.updateMany(
       { $or: conditions, isRead: false },
@@ -531,12 +300,12 @@ router.put('/read-all', protect, async (req, res) => {
     return res.status(200).json({
       success: true,
       modifiedCount: result.modifiedCount,
-      message: 'All notifications marked as read (will auto-archive in 3 days)',
+      message: 'All notifications marked as read',
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: error.message || 'Failed to mark all notifications as read',
+      message: error.message || 'Failed to mark notifications as read',
     });
   }
 });

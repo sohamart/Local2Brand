@@ -1,25 +1,50 @@
-import React from 'react';
-import { Bell, BellRing, BellOff, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
-import useOneSignal from '../../hooks/useOneSignal';
+import React, { useState, useEffect } from 'react';
+import { Bell, BellRing, BellOff, CheckCircle2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 export default function NotificationToggle({ className = '', showCard = true }) {
-  const { isSupported, permission, isSubscribed, isLoading, toggle, requestPermission } = useOneSignal();
+  const [permission, setPermission] = useState('default');
+  const [isSupported, setIsSupported] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setIsSupported(true);
+      setPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestPermission = async () => {
+    if (!('Notification' in window)) return;
+    try {
+      const perm = await Notification.requestPermission();
+      setPermission(perm);
+      if (perm === 'granted') {
+        toast.success('Browser alerts enabled successfully! 🔔');
+      } else if (perm === 'denied') {
+        toast.info('Notifications are blocked in your browser site settings.');
+      }
+    } catch (err) {
+      console.warn('Notification permission error:', err);
+    }
+  };
 
   if (!isSupported) {
     return null;
   }
 
+  const isGranted = permission === 'granted';
+
   const content = (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div className="flex items-start gap-3.5">
         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
-          isSubscribed
+          isGranted
             ? 'bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30'
             : permission === 'denied'
             ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30'
             : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
         }`}>
-          {isSubscribed ? (
+          {isGranted ? (
             <BellRing className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           ) : permission === 'denied' ? (
             <BellOff className="w-5 h-5 text-rose-500" />
@@ -31,9 +56,9 @@ export default function NotificationToggle({ className = '', showCard = true }) 
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-              Browser Push Notifications
+              Instant Browser Alerts
             </h4>
-            {isSubscribed ? (
+            {isGranted ? (
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Active
@@ -50,11 +75,11 @@ export default function NotificationToggle({ className = '', showCard = true }) 
           </div>
 
           <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md leading-relaxed">
-            {isSubscribed
-              ? 'You receive real-time push alerts for order updates, messages, and project delivery even when your browser tab is closed.'
+            {isGranted
+              ? 'Browser alerts are enabled. You receive instant notifications whenever an order status changes or a message arrives.'
               : permission === 'denied'
-              ? 'Notifications are blocked in your browser site settings. Click your browser URL lock icon to allow.'
-              : 'Enable desktop and mobile push notifications to get immediate alerts when your website order is updated.'}
+              ? 'Notifications are blocked in your browser site settings. Click your browser lock icon to allow.'
+              : 'Enable browser notifications to receive immediate order milestone updates and engineering notices.'}
           </p>
         </div>
       </div>
@@ -72,17 +97,16 @@ export default function NotificationToggle({ className = '', showCard = true }) 
         ) : (
           <button
             type="button"
-            onClick={toggle}
-            disabled={isLoading}
+            onClick={requestPermission}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
-              isSubscribed ? 'bg-purple-600' : 'bg-slate-300 dark:bg-slate-700'
+              isGranted ? 'bg-purple-600' : 'bg-slate-300 dark:bg-slate-700'
             }`}
             role="switch"
-            aria-checked={isSubscribed}
+            aria-checked={isGranted}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                isSubscribed ? 'translate-x-6' : 'translate-x-1'
+                isGranted ? 'translate-x-6' : 'translate-x-1'
               }`}
             />
           </button>

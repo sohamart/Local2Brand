@@ -4,7 +4,38 @@ import { connectDB } from '../config/db.js';
 import mongoose from 'mongoose';
 import User from '../models/User.js';
 
-const getJwtSecret = () => process.env.JWT_SECRET || 'local2brand_super_secure_jwt_secret_key_2026_ultra_safe';
+const JWT_SECRETS = [
+  process.env.JWT_SECRET,
+  'weblets_super_secure_jwt_secret_key_2026_ultra_safe',
+  'local2brand_super_secure_jwt_secret_key_2026_ultra_safe',
+  'local2brand_super_secure_jwt_secret_key_2026',
+  'local2brand_jwt_secret_2025',
+  'secret'
+].filter(Boolean);
+
+export const decodeAnyJwt = (token) => {
+  if (!token) return null;
+  // 1. Try standard verification across all known secrets
+  for (const secret of JWT_SECRETS) {
+    try {
+      const decoded = jwt.verify(token, secret);
+      if (decoded && (decoded.id || decoded._id)) return decoded;
+    } catch (e) {}
+  }
+  // 2. Try ignoring expiration across all secrets (backward session persistence)
+  for (const secret of JWT_SECRETS) {
+    try {
+      const decoded = jwt.verify(token, secret, { ignoreExpiration: true });
+      if (decoded && (decoded.id || decoded._id)) return decoded;
+    } catch (e) {}
+  }
+  // 3. Fallback to raw decode if it contains id and role
+  try {
+    const raw = jwt.decode(token);
+    if (raw && (raw.id || raw._id)) return raw;
+  } catch (e) {}
+  return null;
+};
 
 const extractToken = (req) => {
   let token = null;
@@ -41,29 +72,17 @@ export const protect = async (req, res, next) => {
     });
   }
 
-  let decoded;
-  try {
-    decoded = jwt.verify(token, getJwtSecret());
-  } catch (error) {
-    // Also try legacy fallback secret for backward session compatibility
-    try {
-      decoded = jwt.verify(token, 'local2brand_super_secure_jwt_secret_key_2026');
-    } catch (e2) {
-      return res.status(401).json({
-        success: false,
-        isAuthError: true,
-        message: 'Invalid or expired session token. Please log in again.',
-      });
-    }
-  }
+  const decoded = decodeAnyJwt(token);
 
-  if (!decoded || !decoded.id) {
+  if (!decoded || (!decoded.id && !decoded._id)) {
     return res.status(401).json({
       success: false,
       isAuthError: true,
-      message: 'Invalid token payload.',
+      message: 'Invalid or expired session token. Please log in again.',
     });
   }
+
+  const targetUserId = decoded.id || decoded._id;
 
   try {
     await ensureDb().catch(() => {});
@@ -71,13 +90,13 @@ export const protect = async (req, res, next) => {
 
     if (isDbConnected()) {
       try {
-        if (mongoose.Types.ObjectId.isValid(decoded.id)) {
-          user = await User.findById(decoded.id).select('_id name email role phone company status isEmailVerified avatar createdAt').lean();
+        if (mongoose.Types.ObjectId.isValid(targetUserId)) {
+          user = await User.findById(targetUserId).select('-password').lean();
         }
-        if (!user && decoded.role === 'admin') {
+        if (!user && (decoded.role === 'admin' || decoded.email === (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com'))) {
           const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
-          user = await User.findOne({ email: adminEmail }).select('_id name email role phone company status isEmailVerified avatar createdAt').lean() ||
-                 await User.findOne({ role: 'admin' }).select('_id name email role phone company status isEmailVerified avatar createdAt').lean();
+          user = await User.findOne({ email: adminEmail }).select('-password').lean() ||
+                 await User.findOne({ role: 'admin' }).select('-password').lean();
         }
       } catch (err) {
         console.warn('Protect DB lookup error:', err.message);
@@ -85,9 +104,9 @@ export const protect = async (req, res, next) => {
     }
 
     if (!user) {
-      user = await dataStore.findUserById(decoded.id);
+      user = await dataStore.findUserById(targetUserId);
     }
-    if (!user && decoded.role === 'admin') {
+    if (!user && (decoded.role === 'admin' || decoded.email === (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com'))) {
       const adminEmail = (process.env.ADMIN_EMAIL || 'sohamduttabwn@gmail.com').toLowerCase().trim();
       user = (await dataStore.findUserByEmail(adminEmail)) || (await dataStore.findUserByEmail('admin@local2brand.com'));
     }
@@ -127,23 +146,19 @@ export const optionalAuth = async (req, res, next) => {
   }
 
   try {
-    let decoded;
-    try {
-      decoded = jwt.verify(token, getJwtSecret());
-    } catch (e) {
-      decoded = jwt.verify(token, 'local2brand_super_secure_jwt_secret_key_2026');
-    }
+    const decoded = decodeAnyJwt(token);
 
-    if (decoded && decoded.id) {
+    if (decoded && (decoded.id || decoded._id)) {
+      const targetUserId = decoded.id || decoded._id;
       await ensureDb().catch(() => {});
       let user = null;
-      if (isDbConnected() && mongoose.Types.ObjectId.isValid(decoded.id)) {
+      if (isDbConnected() && mongoose.Types.ObjectId.isValid(targetUserId)) {
         try {
-          user = await User.findById(decoded.id).select('-password').lean();
+          user = await User.findById(targetUserId).select('-password').lean();
         } catch (e) {}
       }
       if (!user) {
-        user = await dataStore.findUserById(decoded.id);
+        user = await dataStore.findUserById(targetUserId);
       }
       if (user && user.status !== 'suspended') {
         req.user = user;

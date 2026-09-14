@@ -189,6 +189,9 @@ export default function AdminUsers() {
         if (inspectingUser && (inspectingUser._id === userId || inspectingUser.id === userId)) {
           setInspectingUser((prev) => ({ ...prev, vipWhatsappEnabled: res.user.vipWhatsappEnabled }));
         }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('l2b_user_updated', { detail: res.user }));
+        }
         toast.success(res.message || 'VIP WhatsApp Support status updated!');
       } else {
         fetchUsers(true);

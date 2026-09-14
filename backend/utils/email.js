@@ -38,35 +38,55 @@ let lastFallbackKey = '';
  * Creates or retrieves Google / Gmail App Password SMTP Transporter
  */
 const createTransporter = () => {
-  // Support EMAIL_USER / GMAIL_USER / SMTP_USER
-  const user = (process.env.EMAIL_USER || process.env.GMAIL_USER || process.env.SMTP_USER || '').trim();
-  const pass = (process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS || process.env.SMTP_PASS || '').trim();
-  const host = (process.env.EMAIL_HOST || 'smtp.gmail.com').trim();
-  const port = process.env.EMAIL_PORT || '465';
+  // Support EMAIL_USER / GMAIL_USER / SMTP_USER / RESEND_API_KEY
+  const resendApiKey = (process.env.RESEND_API_KEY || '').trim();
+  const user = (process.env.EMAIL_USER || process.env.GMAIL_USER || process.env.SMTP_USER || (resendApiKey ? 'resend' : '')).trim();
+  const pass = (process.env.EMAIL_PASS || process.env.GMAIL_APP_PASSWORD || process.env.GMAIL_PASS || process.env.SMTP_PASS || resendApiKey || '').trim();
+  let host = (process.env.EMAIL_HOST || '').trim();
+  let port = process.env.EMAIL_PORT || '465';
+
+  if (!host) {
+    if (resendApiKey || pass.startsWith('re_')) {
+      host = 'smtp.resend.com';
+      port = '465';
+    } else if (user.includes('@gmail.com')) {
+      host = 'smtp.gmail.com';
+      port = '465';
+    } else if (pass.startsWith('xkeysib-')) {
+      host = 'smtp-relay.brevo.com';
+      port = '587';
+    } else {
+      host = 'smtp.gmail.com';
+    }
+  }
 
   const currentKey = `${host}:${port}:${user}:${pass}`;
   if (cachedTransporter && lastTransporterKey === currentKey) {
     return cachedTransporter;
   }
 
-  if (user && pass && pass !== 'your_smtp_app_password' && pass !== 'your_16_digit_google_app_password') {
+  if (pass && pass !== 'your_smtp_app_password' && pass !== 'your_16_digit_google_app_password') {
     // If it's a Gmail account or smtp.gmail.com
-    if (host === 'smtp.gmail.com' || user.includes('@gmail.com')) {
+    if (host === 'smtp.gmail.com' && user.includes('@gmail.com')) {
       cachedTransporter = nodemailer.createTransport({
         service: 'gmail',
         auth: { user, pass },
         pool: true,
-        maxConnections: 1, // Single connection for anti-spam throttle
+        maxConnections: 1,
         maxMessages: 100,
       });
     } else {
+      const isPort465 = Number(port) === 465;
       cachedTransporter = nodemailer.createTransport({
         host,
         port: Number(port),
-        secure: Number(port) === 465,
-        auth: { user, pass },
+        secure: isPort465,
+        auth: {
+          user: user || (host.includes('resend') ? 'resend' : user),
+          pass,
+        },
         pool: true,
-        maxConnections: 1,
+        maxConnections: 2,
         tls: { rejectUnauthorized: false },
       });
     }
@@ -185,7 +205,8 @@ class EmailQueueManager {
   constructor() {
     this.queue = [];
     this.isProcessing = false;
-    this.delayMs = 1500; // 1.5 seconds inter-message throttle
+    this.delayMs = 1200; // 1.2s inter-message pace
+    this.hasLoggedAuthWarning = false;
   }
 
   enqueue(emailTask) {
@@ -205,16 +226,46 @@ class EmailQueueManager {
       const result = await this.sendSingleEmail(current);
       if (current.resolve) current.resolve(result);
     } catch (err) {
-      console.warn(`[EmailQueue] Error sending email to ${current.to}:`, err.message);
-      if (current.retries < 2) {
+      const isAuthError =
+        err.message?.includes('535') ||
+        err.message?.includes('BadCredentials') ||
+        err.message?.includes('Invalid login') ||
+        err.code === 'EAUTH';
+
+      if (isAuthError) {
+        if (!this.hasLoggedAuthWarning) {
+          this.hasLoggedAuthWarning = true;
+          console.error(`\n======================================================`);
+          console.error(`❌ [GMAIL SMTP AUTHENTICATION FAILED]`);
+          console.error(`Google rejected credentials: 535 BadCredentials`);
+          console.error(`👉 Action Required: Generate a fresh 16-character App Password at:`);
+          console.error(`   https://myaccount.google.com/apppasswords`);
+          console.error(`   and update EMAIL_PASS in backend/.env`);
+          console.error(`======================================================\n`);
+        }
+        const cleanPreview = current.text || htmlToPlainText(current.html);
+        console.log(`📧 [EMAIL NOT DELIVERED LIVE DUE TO BAD CREDENTIALS]`);
+        console.log(`   To: ${Array.isArray(current.to) ? current.to.join(', ') : current.to}`);
+        console.log(`   Subject: ${current.subject}`);
+        if (cleanPreview) {
+          console.log(`   Preview:\n${cleanPreview.slice(0, 200)}...\n`);
+        }
+        // Do NOT retry bad auth credentials (fast-fail)
+        if (current.resolve) {
+          current.resolve({
+            success: false,
+            isAuthError: true,
+            error: 'Gmail SMTP Authentication Failed: Invalid Google App Password in .env',
+          });
+        }
+      } else if (current.retries < 1) {
         current.retries += 1;
-        console.log(`[EmailQueue] Re-queuing failed email (Attempt ${current.retries}/2)...`);
+        console.warn(`[EmailQueue] Retrying email to ${current.to} (Attempt ${current.retries}/1)...`);
         this.queue.push(current);
       } else if (current.resolve) {
         current.resolve({ success: false, error: err.message });
       }
     } finally {
-      // Safe delay between messages before processing next email in line
       setTimeout(() => {
         this.isProcessing = false;
         this.processNext();
@@ -223,7 +274,7 @@ class EmailQueueManager {
   }
 
   async sendSingleEmail({ to, subject, html, text, headers = {} }) {
-    const rawUser = process.env.EMAIL_USER || process.env.GMAIL_USER || 'contact@weblets.bond';
+    const rawUser = (process.env.EMAIL_USER || process.env.GMAIL_USER || 'contact@weblets.bond').trim();
     const fromEmail = process.env.EMAIL_FROM || `"WEBLETS" <${rawUser}>`;
     const supportEmail = process.env.SUPPORT_EMAIL || 'contact@weblets.bond';
     const clientUrl = getClientUrl();
@@ -241,7 +292,6 @@ class EmailQueueManager {
       return { success: true, simulated: true };
     }
 
-    // Clean, natural transactional email headers without spam trigger flags
     const emailHeaders = {
       'X-Entity-Ref-ID': `WEBLETS-${Date.now()}`,
       'X-Auto-Response-Suppress': 'OOF, AutoReply',
@@ -253,7 +303,7 @@ class EmailQueueManager {
     try {
       const info = await transporter.sendMail({
         from: fromEmail,
-        replyTo: fromEmail, // Matching from address guarantees 100% SPF/DMARC alignment
+        replyTo: fromEmail,
         to: rawTo,
         subject,
         text: cleanText,
@@ -264,12 +314,12 @@ class EmailQueueManager {
       console.log(`✅ [EmailQueue] Sent successfully to ${rawTo} (MessageId: ${info.messageId})`);
       return { success: true, messageId: info.messageId };
     } catch (primaryErr) {
-      console.warn(`⚠️ [EmailQueue] Primary Gmail SMTP failed for ${rawTo}:`, primaryErr.message);
+      console.warn(`⚠️ [EmailQueue] Primary Gmail SMTP error for ${rawTo}:`, primaryErr.message);
 
       const fallbackTransporter = createFallbackTransporter();
       if (fallbackTransporter) {
         try {
-          const fallbackUser = process.env.FALLBACK_EMAIL_USER || process.env.FALLBACK_GMAIL_USER || supportEmail;
+          const fallbackUser = (process.env.FALLBACK_EMAIL_USER || process.env.FALLBACK_GMAIL_USER || supportEmail).trim();
           const fbInfo = await fallbackTransporter.sendMail({
             from: `"WEBLETS" <${fallbackUser}>`,
             replyTo: `"WEBLETS Support" <${supportEmail}>`,
@@ -307,12 +357,9 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
   const currentYear = new Date().getFullYear();
   const clientUrl = getClientUrl();
   const supportEmail = process.env.SUPPORT_EMAIL || 'contact@weblets.bond';
-  const logoImgUrl = clientUrl && !clientUrl.includes('localhost') && !clientUrl.includes('127.0.0.1')
-    ? `${clientUrl}/logo.png`
-    : 'https://weblets.bond/logo.png';
+  const logoImgUrl = 'https://res.cloudinary.com/tm2pwzjj/image/upload/v1789400789/weblets_assets/weblets_logo_official.jpg';
 
-  return `
-<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="UTF-8">
@@ -365,16 +412,14 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
   <div style="width: 100%; max-width: 560px; margin: 0 auto; box-sizing: border-box;">
     <div class="bg-card border-theme" style="background-color: #0d111c; border-radius: 20px; border: 1px solid #1e293b; overflow: hidden; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); box-sizing: border-box; width: 100%;">
       
-      {/* Top Aurora Accent Line */}
       <div style="height: 4px; width: 100%; background: linear-gradient(90deg, #7c3aed 0%, #06b6d4 50%, #ec4899 100%); line-height: 4px; font-size: 4px;">&nbsp;</div>
 
-      {/* Header */}
       <div class="bg-header border-theme" style="padding: 26px 24px 20px 24px; text-align: center; border-bottom: 1px solid #1e293b; background-color: #0d111c; box-sizing: border-box;">
         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto 12px auto; text-align: center;">
           <tr>
             <td align="center" style="vertical-align: middle;">
               <a href="${clientUrl}" target="_blank" style="text-decoration: none; display: inline-block;">
-                <img src="${logoImgUrl}" alt="WEBLETS" width="54" height="54" style="width: 54px; height: 54px; border-radius: 14px; display: block; margin: 0 auto; object-fit: cover; border: 1px solid #334155; box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);" />
+                <img src="${logoImgUrl}" alt="WEBLETS Logo" width="56" height="56" style="width: 56px; height: 56px; border-radius: 14px; display: block; margin: 0 auto; object-fit: cover; border: 1px solid #334155; box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);" />
               </a>
             </td>
           </tr>
@@ -399,7 +444,6 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
         ` : ''}
       </div>
 
-      {/* Title */}
       <div class="bg-card" style="padding: 22px 24px 8px 24px; background-color: #0d111c; box-sizing: border-box;">
         <h2 class="text-title" style="margin: 0 0 6px 0; font-size: 20px; font-weight: 800; color: #ffffff; line-height: 1.35;">
           ${title}
@@ -407,7 +451,6 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
         ${subtitle ? `<p class="text-muted" style="margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.5; font-weight: 500;">${subtitle}</p>` : ''}
       </div>
 
-      {/* Main Content */}
       <div class="bg-card text-body" style="padding: 6px 24px 28px 24px; font-size: 14px; line-height: 1.6; color: #cbd5e1; background-color: #0d111c; box-sizing: border-box;">
         ${contentHtml}
 
@@ -420,7 +463,6 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
         ` : ''}
       </div>
 
-      {/* Footer */}
       <div class="bg-footer border-theme" style="padding: 22px 20px; background-color: #06080d; border-top: 1px solid #1e293b; text-align: center; box-sizing: border-box;">
         <p class="text-muted" style="margin: 0 0 8px 0; font-size: 11px; color: #94a3b8; line-height: 1.5;">
           ${footerNote || 'This is an important verified notification regarding your Weblets account & web development services.'}
@@ -436,8 +478,7 @@ export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, conte
     </div>
   </div>
 </body>
-</html>
-  `;
+</html>`;
 };
 
 // Universal Helper to Resolve Actual Client Email across diverse schemas

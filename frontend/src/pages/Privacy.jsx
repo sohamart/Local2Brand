@@ -39,11 +39,9 @@ export default function Privacy() {
     {
       id: "notifications-push",
       icon: BellRing,
-      title: "4. Web Push Notifications & OneSignal Engine",
-      content: `When you opt-in to browser push notifications on weblets.bond, we store a secure, randomized OneSignal device subscription identifier (Player ID). We never broadcast spam or sensitive data over public notification channels. Push alerts are utilized strictly for:
-      • Direct client web inbox alerts (e.g., "You have a message in your web inbox").
-      • Important platform maintenance or major launch discount broadcasts.
-      You may revoke or disable push permissions at any time directly through your browser's site settings.`
+      title: "4. Platform Notifications & Web Mailbox",
+      content: `When you use weblets.bond, our platform delivers in-app mailbox notifications and transactional email updates regarding your orders, quotations, and account security. We never broadcast spam or sensitive data over public notification channels.
+      You can manage your notification preferences anytime directly from your client dashboard profile.`
     },
     {
       id: "security",

@@ -26,7 +26,6 @@ import {
 import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import { toast } from 'react-toastify';
-import { oneSignalService } from '../../services/oneSignal';
 import { uploadWithToast } from '../../utils/toastUpload';
 
 // ==========================================
@@ -462,26 +461,12 @@ export default function AdminBroadcast() {
             Mass Client Communication
           </h1>
           <p className="text-xs text-slate-500">
-            Send instant OneSignal browser push notifications and agency-grade HTML email broadcasts to all registered clients.
+            Send instant in-app mailbox announcements and agency-grade HTML email broadcasts to all registered clients.
           </p>
         </div>
 
         {/* Channels Tab Switcher */}
         <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 self-start sm:self-auto shadow-xs">
-          <button
-            type="button"
-            onClick={() => { setBroadcastMode('push'); setResult(null); }}
-            className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
-              broadcastMode === 'push'
-                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
-                : 'text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400'
-            }`}
-          >
-            <Bell className="w-4 h-4" />
-            <span>OneSignal Web Push</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          </button>
-
           <button
             type="button"
             onClick={() => { setBroadcastMode('email'); setResult(null); }}
@@ -493,11 +478,25 @@ export default function AdminBroadcast() {
           >
             <Mail className="w-4 h-4" />
             <span>Email Broadcast</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setBroadcastMode('push'); setResult(null); }}
+            className={`px-4 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer ${
+              broadcastMode === 'push'
+                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                : 'text-slate-600 dark:text-slate-300 hover:text-purple-600 dark:hover:text-purple-400'
+            }`}
+          >
+            <Bell className="w-4 h-4" />
+            <span>In-App Mailbox Alert</span>
           </button>
         </div>
       </div>
 
-      {/* OneSignal Live Connection Status Bar (Shown in Push mode) */}
+      {/* In-App Broadcast Status Bar */}
       {broadcastMode === 'push' && (
         <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-900/20 via-indigo-900/15 to-purple-900/20 border border-purple-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-3">
@@ -506,17 +505,11 @@ export default function AdminBroadcast() {
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-black text-slate-900 dark:text-white">OneSignal Web Push Gateway:</span>
+                <span className="text-xs font-black text-slate-900 dark:text-white">In-App Mailbox Broadcast Gateway:</span>
                 <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/40">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   Live &amp; Connected
                 </span>
-                {pushStatus?.totalSubscribers !== null && pushStatus?.totalSubscribers !== undefined && (
-                  <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full bg-purple-600 text-white shadow-md shadow-purple-600/30 ring-2 ring-purple-400/50 animate-in fade-in">
-                    <span>👥</span>
-                    <span>{pushStatus.totalSubscribers} Subscribed Devices</span>
-                  </span>
-                )}
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Pushes reach active desktop Chrome/Edge/Firefox and Android mobile screens even if browser tabs are closed.

@@ -16,17 +16,15 @@ function Root() {
       window.history.scrollRestoration = 'manual';
     }
 
-    // Ultra Silky 120Hz/144Hz ProMotion Smooth Scroll Engine with Mobile Touch Sync & Precision Inertia
+    // Ultra Silky 120Hz/144Hz ProMotion Smooth Scroll Engine with Desktop Wheel & Mobile Touch Inertia
     const lenis = new Lenis({
-      duration: 1.15, // Silky luxury feel with gradual momentum decay
+      duration: 1.2, // Silky luxury feel with gradual momentum decay
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential deceleration curve
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
       wheelMultiplier: 1.0, // Buttery smooth wheel steps
-      syncTouch: true, // Hardware-synced touch tracking on Mobile & Tablets
-      touchMultiplier: 1.8, // Responsive fluid drag velocity on touchscreens
-      touchInertiaMultiplier: 1.25,
+      touchMultiplier: 1.6, // Responsive fluid drag velocity on touchscreens
       infinite: false,
     });
 

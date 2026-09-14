@@ -1,14 +1,13 @@
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
-import oneSignalBackend from './oneSignalService.js';
 
 /**
- * Platform-Wide Unified Notification & Inbox Dispatcher
- * Synchronizes In-App Inbox Records with OneSignal Push Alerts
+ * Platform-Wide Unified In-App Mailbox Dispatcher
+ * Manages user & admin notifications and in-app alerts
  */
 class NotificationDispatcher {
   /**
-   * Create an in-app notification record and optionally trigger OneSignal push
+   * Create an in-app notification record
    */
   async dispatch({
     recipient = null,
@@ -22,14 +21,10 @@ class NotificationDispatcher {
     data = {},
     emailHtml = '',
     priority = 'normal',
-    sendPush = false, // Default to false: push is only sent for broadcast or generic web inbox message
-    customPushTitle = null,
-    customPushMessage = null,
   }) {
     if (!title || !message) return null;
 
     let notificationRecord = null;
-    let pushResult = null;
 
     try {
       // 1. Resolve Recipient ID if only email is provided
@@ -59,44 +54,9 @@ class NotificationDispatcher {
         priority,
       });
 
-      // 3. Dispatch OneSignal Push Notification ONLY if explicitly enabled
-      // Web push notifications are sanitized to preserve privacy (no sensitive emails or order details)
-      if (sendPush && oneSignalBackend.isConfigured()) {
-        const pushTitle = customPushTitle || 'LOCAL2BRAND Web Inbox';
-        const pushMessage = customPushMessage || 'You have a message in web inbox.';
-        const pushUrl = link || (recipientRole === 'admin' ? '/admin/inbox' : '/dashboard');
-
-        if (recipientRole === 'admin') {
-          pushResult = await oneSignalBackend.sendNotificationToAdmins({
-            title: pushTitle,
-            message: pushMessage,
-            url: pushUrl,
-            data: { notificationId: notificationRecord._id.toString(), type },
-          });
-        } else if (finalRecipient || finalEmail) {
-          pushResult = await oneSignalBackend.sendPushNotification({
-            userIds: finalRecipient ? [finalRecipient.toString()] : [],
-            emails: finalEmail ? [finalEmail] : [],
-            title: pushTitle,
-            message: pushMessage,
-            url: pushUrl,
-            data: { notificationId: notificationRecord._id.toString(), type },
-          });
-        } else {
-          // Broadcast to all subscribed devices
-          pushResult = await oneSignalBackend.broadcastPushNotification({
-            title: pushTitle,
-            message: pushMessage,
-            url: pushUrl,
-            data: { notificationId: notificationRecord._id.toString(), type },
-          });
-        }
-      }
-
       return {
         success: true,
         notification: notificationRecord,
-        pushResult,
       };
     } catch (error) {
       console.error('Notification dispatcher exception:', error);
@@ -119,11 +79,8 @@ class NotificationDispatcher {
     data = {},
     emailHtml = '',
     priority = 'high',
-    sendPush = false,
-    customPushTitle = null,
-    customPushMessage = null,
   }) {
-    return this.dispatch({
+    return await this.dispatch({
       recipient: null,
       recipientRole: 'admin',
       title,
@@ -134,32 +91,26 @@ class NotificationDispatcher {
       data,
       emailHtml,
       priority,
-      sendPush,
-      customPushTitle,
-      customPushMessage,
     });
   }
 
   /**
-   * Dispatch an alert targeted to a specific client user
+   * Dispatch an alert targeted directly to a specific user
    */
   async dispatchToUser({
-    userId,
+    userId = null,
     email = '',
     title,
     message,
-    type = 'order',
+    type = 'order_status',
     category = 'Order Update',
     link = '/dashboard',
     data = {},
     emailHtml = '',
     priority = 'normal',
-    sendPush = false,
-    customPushTitle = null,
-    customPushMessage = null,
   }) {
-    return this.dispatch({
-      recipient: userId || null,
+    return await this.dispatch({
+      recipient: userId,
       recipientEmail: email,
       recipientRole: 'user',
       title,
@@ -170,9 +121,6 @@ class NotificationDispatcher {
       data,
       emailHtml,
       priority,
-      sendPush,
-      customPushTitle,
-      customPushMessage,
     });
   }
 }
