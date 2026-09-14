@@ -38,6 +38,10 @@ let lastFallbackKey = '';
  * Creates or retrieves Google / Gmail App Password SMTP Transporter
  */
 const createTransporter = () => {
+  try {
+    dotenv.config({ override: true });
+  } catch (e) {}
+
   // Support EMAIL_USER / GMAIL_USER / SMTP_USER / RESEND_API_KEY
   const resendApiKey = (process.env.RESEND_API_KEY || '').trim();
   const user = (process.env.EMAIL_USER || process.env.GMAIL_USER || process.env.SMTP_USER || (resendApiKey ? 'resend' : '')).trim();
@@ -67,7 +71,7 @@ const createTransporter = () => {
 
   if (pass && pass !== 'your_smtp_app_password' && pass !== 'your_16_digit_google_app_password') {
     // If it's a Gmail account or smtp.gmail.com
-    if (host === 'smtp.gmail.com' && user.includes('@gmail.com')) {
+    if (host === 'smtp.gmail.com' || user.includes('@gmail.com')) {
       cachedTransporter = nodemailer.createTransport({
         service: 'gmail',
         auth: { user, pass },
@@ -274,8 +278,8 @@ class EmailQueueManager {
   }
 
   async sendSingleEmail({ to, subject, html, text, headers = {} }) {
-    const rawUser = (process.env.EMAIL_USER || process.env.GMAIL_USER || 'contact@weblets.bond').trim();
-    const fromEmail = process.env.EMAIL_FROM || `"WEBLETS" <${rawUser}>`;
+    const rawUser = (process.env.EMAIL_USER || process.env.GMAIL_USER || 'sohamduttabwn@gmail.com').trim();
+    let fromEmail = process.env.EMAIL_FROM || `"WEBLETS" <${rawUser}>`;
     const supportEmail = process.env.SUPPORT_EMAIL || 'contact@weblets.bond';
     const clientUrl = getClientUrl();
 

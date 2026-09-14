@@ -61,7 +61,7 @@
     "emailOtp": "",
     "emailOtpExpires": null,
     "isEmailVerified": true,
-    "updatedAt": "2026-09-05T09:26:20.343Z"
+    "updatedAt": "2026-09-14T16:39:46.274Z"
   },
   {
     "_id": "6a9bc23b958aa27bb9fec0b8",
@@ -90,7 +90,8 @@
     "emailOtp": "836535",
     "emailOtpExpires": "2026-09-05T09:19:25.194Z",
     "vipWhatsappEnabled": false,
-    "updatedAt": "2026-09-14T15:41:35.275Z"
+    "updatedAt": "2026-09-14T16:33:00.580Z",
+    "isEmailVerified": false
   },
   {
     "_id": "6a9551f5ef178dc4ce9260cf",
