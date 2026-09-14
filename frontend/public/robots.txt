@@ -1,6 +1,6 @@
 # ==============================================================================
-# LOCAL2BRAND — Production Robots.txt
-# Official Domain: https://local2brand.cyou
+# Weblets — Production Robots.txt
+# Official Domain: https://weblets.bond
 # ==============================================================================
 
 User-agent: *
@@ -25,5 +25,5 @@ User-agent: DuckDuckBot
 Allow: /
 
 # Host & XML Sitemaps
-Host: https://local2brand.cyou
-Sitemap: https://local2brand.cyou/sitemap.xml
+Host: https://weblets.bond
+Sitemap: https://weblets.bond/sitemap.xml

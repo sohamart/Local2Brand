@@ -32,6 +32,7 @@ import Home from './pages/Home';
 import Services from './pages/Services';
 import Pricing from './pages/Pricing';
 import Portfolio from './pages/Portfolio';
+import OurTeam from './pages/OurTeam';
 import Demos from './pages/Demos';
 import DemoDetails from './pages/DemoDetails';
 import About from './pages/About';
@@ -81,7 +82,9 @@ function TransitionRoutes({ isLivePreview, isAdminRoute, isStandaloneFormRoute, 
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
         <Route path="/pricing" element={<Pricing />} />
-        <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/team" element={<OurTeam />} />
+        <Route path="/our-team" element={<OurTeam />} />
+        <Route path="/portfolio" element={<OurTeam />} />
         <Route path="/demos" element={<Demos />} />
         <Route path="/demos/:slug" element={<LiveDemoViewer />} />
         <Route path="/demo/:slug" element={<LiveDemoViewer />} />

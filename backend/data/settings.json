@@ -1,10 +1,13 @@
 [
   {
     "_id": "6a955e52fbc06cc76d6648d3",
-    "brandName": "LOCAL2BRAND",
-    "domain": "local2brand.cyou",
-    "tagline": "Build Local. Think Global.",
-    "supportEmail": "local2brand.contact@gmail.com",
+    "brandName": "WEBLETS",
+    "domain": "weblets.bond",
+    "tagline": "Lets make website together",
+    "websiteStatus": "live",
+    "logoLightUrl": "/logo.png",
+    "logoDarkUrl": "/logo-dark.png",
+    "supportEmail": "contact@weblets.bond",
     "displayPhone": "+918710043923",
     "turnaroundTime": "48 Hours",
     "startingPriceUsd": "$399",
@@ -13,38 +16,38 @@
     "isComingSoonMode": false,
     "maintenanceMessage": "We are currently upgrading our platform. We will be back online shortly!",
     "socialLinks": {
-      "instagram": "https://instagram.com/local2brand",
-      "instagramHandle": "@local2brand",
-      "linkedin": "https://linkedin.com/company/local2brand",
-      "github": "https://github.com/local2brand",
-      "twitter": "https://twitter.com/local2brand"
+      "instagram": "https://instagram.com/weblets.bond",
+      "instagramHandle": "@weblets.bond",
+      "linkedin": "https://linkedin.com/company/weblets",
+      "github": "https://github.com/weblets",
+      "twitter": "https://twitter.com/weblets"
     },
     "heroConfig": {
-      "badge": "🇮🇳 India’s #1 Fast-Track Web Experience Engine",
-      "title": "Transform Your Local Business Into A Global Brand",
+      "badge": "⚡ Modern High-Converting Web Experience Engine",
+      "title": "Lets Make Website Together — Fast, Modern & Scalable",
       "subtitle": "World-class UI/UX design, sub-second performance, and instant lead capture for ambitious businesses ready to scale."
     },
     "announcementBar": {
       "enabled": false,
-      "text": "🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code INDIA2025",
+      "text": "🔥 Special Launch Offer: Get 20% OFF + Free SSL & Domain with code WEBLETS20",
       "badge": "FLASH OFFER",
       "link": "/pricing",
-      "promoCode": "INDIA2025",
+      "promoCode": "WEBLETS20",
       "discountPercent": 20,
       "btnText": "Claim Offer"
     },
     "bannerImage": "",
-    "updatedAt": "2026-09-08T07:57:55.027Z",
+    "updatedAt": "2026-09-14T08:00:00.000Z",
     "createdAt": "2026-08-31T10:58:26.575Z",
     "__v": 0,
     "updatedBy": "6a9551f5ef178dc4ce9260cf",
     "aiSettings": {
       "enabled": true,
-      "customInstructions": "Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code INDIA2025 for 20% discount. First check the role before match the name ",
-      "businessKnowledge": "LOCAL2BRAND builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.",
+      "customInstructions": "Be polite, friendly, and conversion-focused. Guide users towards booking a demo or requesting a callback. Recommend the promo code WEBLETS20 for 20% discount. First check the role before match the name.",
+      "businessKnowledge": "WEBLETS builds high-converting business websites in 48 hours. Ready demo templates start at ₹9,999 / $399. Bespoke custom builds are available for complex requirements.",
       "adminShowableDetails": {
-        "founderName": "Soham Dutta (Founder & Lead Architect) & Founding Team",
-        "founderCount": 2,
+        "founderName": "Soham Dutta, Sayantan, & Achinta",
+        "founderCount": 3,
         "showFoundersToAi": true,
         "founders": [
           {
@@ -59,22 +62,32 @@
           },
           {
             "name": "Sayantan Ghosh",
-            "role": "Co-Founder",
-            "bio": "Co-Founder & Operations Lead managing client success and platform development.",
+            "role": "Co-Founder & Technical Lead",
+            "bio": "Co-Founder & Technical Lead overseeing full-stack architecture and reliable systems.",
             "instagram": "https://instagram.com/sayantan_ghosh",
             "linkedin": "",
             "email": "sayantanghosh.bwn@gmail.com",
             "phone": "",
             "_id": "6a9bcf3b186d672012a28a13"
+          },
+          {
+            "name": "Achinta",
+            "role": "Co-Founder & Operations Lead",
+            "bio": "Co-Founder & Operations Lead managing seamless product delivery and client growth.",
+            "instagram": "",
+            "linkedin": "",
+            "email": "achinta@weblets.bond",
+            "phone": "",
+            "_id": "6a9bcf3b186d672012a28a14"
           }
         ],
         "contactPhone": "+918710043923",
-        "contactEmail": "local2brand.contact@gmail.com",
-        "officeLocation": "6RPM+P36, Rathtala Rd, Padmapukur, sitalatala, Bardhaman, West Bengal 713102",
+        "contactEmail": "contact@weblets.bond",
+        "officeLocation": "Kolkata & Burdwan, West Bengal, India",
         "workingHours": "Monday - Saturday: 10:00 AM - 8:00 PM IST",
         "whatsappSupport": "+918710043923",
-        "instagram": "https://instagram.com/local2brand",
-        "instagramHandle": "@local2brand"
+        "instagram": "https://instagram.com/weblets.bond",
+        "instagramHandle": "@weblets.bond"
       }
     },
     "demoCategories": [

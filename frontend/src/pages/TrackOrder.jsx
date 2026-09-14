@@ -20,7 +20,8 @@ import {
   Moon,
   ChevronRight,
   Zap,
-  Globe
+  Globe,
+  FolderArchive
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -224,7 +225,7 @@ export default function TrackOrder() {
   return (
     <>
       <SEO
-        title="Live Order Tracking & Project Roadmap — LOCAL2BRAND"
+        title="Live Order Tracking & Project Roadmap — WEBLETS"
         description="Track your real-time website project milestones, live sprint progress, architecture reviews, and delivery timeline."
       />
 
@@ -557,22 +558,58 @@ export default function TrackOrder() {
                   </div>
                 )}
 
-                {/* Quoted Price if set */}
-                {trackedOrder.quotedAmount && (
-                  <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-[10px] sm:text-[11px] font-bold text-emerald-800 dark:text-emerald-400 uppercase block">
-                        Official Quoted Investment
-                      </span>
-                      <strong className="text-sm sm:text-lg font-black text-emerald-700 dark:text-emerald-300">
-                        {trackedOrder.quotedAmount}
-                      </strong>
-                    </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700">
-                      Quotation Locked
+                {/* Deliverables & Assets Vault */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-purple-500/5 via-slate-50 to-indigo-500/5 dark:from-purple-950/40 dark:via-slate-900 dark:to-indigo-950/40 border border-purple-500/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+                      <FolderArchive className="w-4 h-4" />
+                      <span>Project Deliverables &amp; Asset Vault</span>
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
+                      Cloud Synced
                     </span>
                   </div>
-                )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    {/* Google Drive / Cloud Assets */}
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                      <div className="min-w-0 pr-2">
+                        <span className="font-bold text-slate-900 dark:text-white block">Google Drive Assets Link</span>
+                        <span className="text-[10px] text-slate-500 truncate block">
+                          {trackedOrder.driveLink || trackedOrder.assetVaultLink || 'Pending engineering upload'}
+                        </span>
+                      </div>
+                      {(trackedOrder.driveLink || trackedOrder.assetVaultLink) ? (
+                        <a
+                          href={trackedOrder.driveLink || trackedOrder.assetVaultLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] shrink-0 inline-flex items-center gap-1"
+                        >
+                          <span>Open</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-semibold text-slate-400">
+                          In Progress
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Official Quoted Amount */}
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-slate-900 dark:text-white block">Official Quoted Investment</span>
+                        <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                          {trackedOrder.quotedAmount || 'Pending Review'}
+                        </span>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                        {trackedOrder.quotedAmount ? 'Confirmed' : 'Assessing'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Quick Consultant Communication CTAs */}
                 <div className="pt-1 sm:pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">

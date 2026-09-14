@@ -4,6 +4,8 @@
  * into lightweight, crystal-clear WebP / JPEG images under 100-300 KB.
  */
 
+export const MAX_AVATAR_SIZE_MB = 25;
+
 /**
  * Optimizes an avatar photo specifically for user profiles.
  * Centers, resizes to max 600x600 px, compresses with 0.85 quality.
@@ -12,10 +14,17 @@
  * @param {Object} [options]
  * @param {number} [options.maxSize=600] - Max width/height in px
  * @param {number} [options.quality=0.85] - WebP/JPEG quality (0-1)
+ * @param {number} [options.maxSizeMB=25] - Max allowed file size in MB
  * @returns {Promise<{ file: File, previewUrl: string, originalSize: number, optimizedSize: number }>}
  */
 export const optimizeAvatarImage = async (file, options = {}) => {
-  const { maxSize = 600, quality = 0.85 } = options;
+  const { maxSize = 600, quality = 0.85, maxSizeMB = MAX_AVATAR_SIZE_MB } = options;
+
+  if (file && file.size > maxSizeMB * 1024 * 1024) {
+    const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
+    throw new Error(`File size is too large (${sizeInMB} MB). Maximum allowed size for profile photo is ${maxSizeMB} MB.`);
+  }
+
   return compressImage(file, {
     maxWidth: maxSize,
     maxHeight: maxSize,

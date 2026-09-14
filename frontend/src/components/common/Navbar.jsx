@@ -36,7 +36,7 @@ const PRIMARY_NAV_LINKS = [
   { label: 'Services', href: '/services' },
   { label: 'Templates', href: '/demos' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Portfolio', href: '/portfolio' },
+  { label: 'Our Team', href: '/team' },
 ];
 
 // Secondary "More ▾" Links with rich icons & descriptions
@@ -60,7 +60,7 @@ const MORE_NAV_LINKS = [
     iconBg: 'bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400'
   },
   {
-    label: 'About LOCAL2BRAND',
+    label: 'About Weblets',
     href: '/about',
     desc: 'Our mission, team & high-performance vision',
     icon: Sparkles,

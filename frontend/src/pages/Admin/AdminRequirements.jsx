@@ -432,13 +432,30 @@ export default function AdminRequirements() {
     return () => clearInterval(pollInterval);
   }, [statusFilter, search]);
 
-  const handleOpenDetail = (req) => {
+  const handleOpenDetail = async (req) => {
     setSelectedReq(req);
     setEditStatus(req.status || 'Submitted');
     setEditNotes(req.internalNotes || '');
     setEditQuotedAmount(req.quotedAmount || '');
     setEditDrivePdfLink(req.drivePdfLink || req.pdfUrl || '');
     setActiveInspectTab('all_steps');
+
+    try {
+      const targetId = req.requirementId || req._id || req.id;
+      if (targetId) {
+        const res = await api.get(`/requirements/${targetId}`);
+        const fullDoc = res?.requirement || res?.data?.requirement || res;
+        if (fullDoc && (fullDoc.requirementId || fullDoc._id)) {
+          setSelectedReq(fullDoc);
+          setEditStatus(fullDoc.status || req.status || 'Submitted');
+          setEditNotes(fullDoc.internalNotes || req.internalNotes || '');
+          setEditQuotedAmount(fullDoc.quotedAmount || req.quotedAmount || '');
+          setEditDrivePdfLink(fullDoc.drivePdfLink || fullDoc.pdfUrl || req.drivePdfLink || req.pdfUrl || '');
+        }
+      }
+    } catch (err) {
+      console.warn('Could not fetch full requirement doc:', err);
+    }
   };
 
   const handleCopyId = (id) => {

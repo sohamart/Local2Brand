@@ -58,7 +58,7 @@ import { useOrderModal } from '../../context/OrderModalContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import api from '../../services/api';
 import { uploadWithToast } from '../../utils/toastUpload';
-import { optimizeAvatarImage } from '../../utils/imageOptimizer';
+import { optimizeAvatarImage, MAX_AVATAR_SIZE_MB } from '../../utils/imageOptimizer';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import DashboardLoader from '../../components/common/DashboardLoader';
 import NotificationToggle from '../../components/common/NotificationToggle';
@@ -150,6 +150,7 @@ export default function UserDashboard() {
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [callbacksLoading, setCallbacksLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
 
   // Track Order state
   const [trackSearchId, setTrackSearchId] = useState(() => searchParams.get('track') || '');
@@ -321,11 +322,12 @@ export default function UserDashboard() {
     setIsRefreshing(true);
     try {
       const emailParam = user?.email ? `?email=${encodeURIComponent(user.email)}` : '';
-      const [reqsRes, leadsRes, cbRes, revsRes] = await Promise.all([
+      const [reqsRes, leadsRes, cbRes, revsRes, unreadRes] = await Promise.all([
         api.get(`/requirements/my${emailParam}`).catch(() => ({ requirements: [] })),
         api.get(`/queries/my${emailParam}`).catch(() => ({ leads: [] })),
         api.get(`/callbacks/my${emailParam}`).catch(() => ({ callbacks: [] })),
         api.get('/reviews/my').catch(() => ({ reviews: [] })),
+        notificationApi.getUnreadCount().catch(() => ({ count: 0 }))
       ]);
 
       const reqList = reqsRes?.requirements || [];
@@ -337,6 +339,7 @@ export default function UserDashboard() {
       if (leadsRes && leadsRes.success) setInquiries(leadList);
       if (cbRes && cbRes.success) setCallbacks(cbList);
       if (revsRes && revsRes.success) setUserReviews(revList);
+      if (unreadRes && typeof unreadRes.count === 'number') setUnreadAlertsCount(unreadRes.count);
       setLastSyncTime(new Date());
 
       // Seamlessly sync active tracked order with incoming data without flipping or resetting
@@ -456,6 +459,15 @@ export default function UserDashboard() {
     // Reset input value so selecting the same or new image always triggers cleanly
     e.target.value = '';
 
+    const MAX_LIMIT_MB = MAX_AVATAR_SIZE_MB || 25;
+    const selectedMB = Number((file.size / (1024 * 1024)).toFixed(1));
+
+    // Explicit Check: Reject files larger than max MB limit with clear notification
+    if (file.size > MAX_LIMIT_MB * 1024 * 1024) {
+      toast.error(`❌ File size is too large (${selectedMB} MB). Maximum allowed size for profile photo is ${MAX_LIMIT_MB} MB. Please upload an image under ${MAX_LIMIT_MB} MB.`);
+      return;
+    }
+
     setUploadingAvatar(true);
 
     let fileToUpload = file;
@@ -463,7 +475,11 @@ export default function UserDashboard() {
 
     try {
       // Step 1: Automatic client-side optimization (resizes, center-crops, compresses to < 150KB)
-      const optimization = await optimizeAvatarImage(file, { maxSize: 600, quality: 0.85 });
+      const optimization = await optimizeAvatarImage(file, { 
+        maxSize: 600, 
+        quality: 0.85,
+        maxSizeMB: MAX_LIMIT_MB,
+      });
       if (optimization?.file) {
         fileToUpload = optimization.file;
       }
@@ -472,13 +488,19 @@ export default function UserDashboard() {
         setAvatarUrl(localPreviewUrl); // Instant optimistic preview
       }
     } catch (optErr) {
-      console.warn('Image optimization notice, continuing with original file:', optErr);
+      console.warn('Image optimization notice:', optErr.message);
+      if (optErr.message && (optErr.message.includes('too large') || optErr.message.includes('size'))) {
+        toast.error(`❌ ${optErr.message}`);
+        setUploadingAvatar(false);
+        return;
+      }
     }
 
     try {
       // Step 2: Upload optimized image
       const uploadRes = await uploadWithToast({
         file: fileToUpload,
+        maxSizeMB: MAX_LIMIT_MB,
         title: 'Uploading Profile Photo...',
         successMessage: 'Profile photo updated! 📸',
       });
@@ -495,7 +517,11 @@ export default function UserDashboard() {
       }
     } catch (uploadErr) {
       console.error('Avatar upload error:', uploadErr);
-      toast.error(uploadErr.message || 'Failed to update avatar photo');
+      const isSizeError = uploadErr.message?.toLowerCase().includes('size') || uploadErr.message?.toLowerCase().includes('too large');
+      const errorMsg = isSizeError
+        ? `❌ File size is too large (${selectedMB} MB). Maximum allowed size for profile photo is ${MAX_LIMIT_MB} MB.`
+        : (uploadErr.message || 'Failed to update avatar photo');
+      toast.error(errorMsg);
       // Revert preview back to saved user avatar if upload failed
       setAvatarUrl(user?.avatar || '');
     } finally {
@@ -600,7 +626,7 @@ export default function UserDashboard() {
     { id: 'profile', label: 'Profile & Account', icon: User, badge: null, desc: 'Identity & Security' },
     { id: 'requirements', label: 'My Projects & Orders', icon: Layers, badge: requirements.length > 0 ? requirements.length : null, desc: 'Specifications & Progress' },
     { id: 'track', label: 'Live Order Tracker', icon: Compass, badge: activeOrdersCount > 0 ? `${activeOrdersCount} live` : null, desc: '6-Stage Live Stepper' },
-    { id: 'inbox', label: 'Inbox & Alerts', icon: Inbox, badge: null, desc: 'VIP Alerts & Email Messages' },
+    { id: 'inbox', label: 'Inbox & Alerts', icon: Inbox, badge: unreadAlertsCount > 0 ? `${unreadAlertsCount} new` : null, desc: 'VIP Alerts & Email Messages' },
     { id: 'inquiries', label: 'Project Inquiries', icon: FileText, badge: inquiries.length > 0 ? inquiries.length : null, desc: 'Custom Quote Requests' },
     { id: 'callbacks', label: 'Scheduled Callbacks', icon: PhoneCall, badge: callbacks.length > 0 ? callbacks.length : null, desc: 'VIP Phone Discussions' },
     { id: 'reviews', label: 'Reviews & Feedback', icon: Star, badge: userReviews.length > 0 ? userReviews.length : null, desc: 'Your Testimonials' },
@@ -609,7 +635,7 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-slate-100/70 dark:bg-[#07090e] text-slate-900 dark:text-slate-100 transition-colors duration-200">
       <SEO
-        title="Client Dashboard | Local2Brand"
+        title="Client Dashboard | WEBLETS"
         description="Access your projects, order roadmap, inbox, and account settings."
       />
 
@@ -983,6 +1009,14 @@ export default function UserDashboard() {
                       <p className="text-[11px] sm:text-xs md:text-sm text-slate-600 dark:text-slate-400 break-all leading-relaxed">
                         {user?.email} {user?.phone ? `• ${user.phone}` : ''} {user?.company ? `• ${user.company}` : ''}
                       </p>
+
+                      <div className="flex items-center gap-1.5 pt-1 text-[10.5px] font-medium text-slate-500 dark:text-slate-400">
+                        <span className="inline-flex items-center gap-1 text-purple-700 dark:text-purple-300 font-extrabold bg-purple-500/15 dark:bg-purple-500/25 px-2 py-0.5 rounded-lg border border-purple-500/30">
+                          📷 Size: &lt; 2MB (Max 5MB)
+                        </span>
+                        <span>•</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">JPG, PNG, WebP (Auto-Optimized)</span>
+                      </div>
                     </div>
                   </div>
 
@@ -1644,6 +1678,28 @@ export default function UserDashboard() {
                             />
                           </div>
                         </div>
+
+                        {/* Deliverables snippet if available */}
+                        {(req.driveLink || req.quotedAmount) && (
+                          <div className="pt-2 flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-purple-500/5 dark:bg-purple-950/30 border border-purple-500/20 text-xs">
+                            {req.driveLink && (
+                              <a
+                                href={req.driveLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 font-bold text-purple-600 dark:text-purple-400 hover:underline"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                                <span>Google Drive Asset Vault</span>
+                              </a>
+                            )}
+                            {req.quotedAmount && (
+                              <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+                                Quoted Investment: {req.quotedAmount}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

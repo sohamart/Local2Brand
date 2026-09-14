@@ -1,38 +1,32 @@
 {
   "id": "/",
-  "short_name": "LOCAL2BRAND",
-  "name": "LOCAL2BRAND — Web App",
-  "description": "LOCAL2BRAND Web App — Transform your local business into a global brand with sub-second speeds and 48-hour delivery.",
+  "short_name": "Weblets",
+  "name": "Weblets — Lets make website together",
+  "description": "Weblets Web App — Lets make website together. High-performance, modern bespoke web engineering, ultra-fast delivery, and custom digital experiences.",
   "start_url": "/?mode=app",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
   "background_color": "#07090e",
-  "theme_color": "#7c3aed",
+  "theme_color": "#8b5cf6",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/logo.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "/icon-192-maskable.png",
-      "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-512.png",
+      "src": "/logo.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "/icon-512-maskable.png",
+      "src": "/logo.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"

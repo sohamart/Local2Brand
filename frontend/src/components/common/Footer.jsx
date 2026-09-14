@@ -65,33 +65,29 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-4">
             <Link to="/" className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-2xl overflow-hidden shadow-md shadow-purple-500/20 border border-white dark:border-slate-700 bg-white dark:bg-slate-900">
-                <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                <img src="/logo.png" alt="Weblets Logo" className="w-full h-full object-cover" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
                   <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white leading-none">
-                    LOCAL<span className="l2b-gradient-text">2</span>BRAND
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-[9px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-900 dark:text-amber-300 border border-amber-200/80 dark:border-amber-500/40 px-1.5 py-0.5 rounded shadow-2xs">
-                    <AshokaChakra size={9} />
-                    <span>INDIA</span>
+                    {settings.brandName || 'Weblets'}
                   </span>
                 </div>
                 <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 tracking-wide mt-0.5">
-                  {settings.tagline}
+                  {settings.tagline || 'Lets make website together'}
                 </span>
               </div>
             </Link>
 
             <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed max-w-sm">
-              Empowering ambitious Indian & global businesses with high-speed, 48-hour turnarounds, bespoke conversion UI, and direct-to-database lead capture.
+              Empowering ambitious creators, businesses, and global brands with high-speed, 48-hour turnarounds, bespoke conversion UI, and full-stack engineering.
             </p>
 
             <div className="pt-2 text-xs text-slate-600 dark:text-slate-300 space-y-1.5">
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                <a href={`mailto:${settings.supportEmail}`} className="hover:text-purple-600 transition-colors">
-                  {settings.supportEmail}
+                <a href={`mailto:${settings.supportEmail || 'support@weblets.bond'}`} className="hover:text-purple-600 transition-colors">
+                  {settings.supportEmail || 'support@weblets.bond'}
                 </a>
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-1.5">
@@ -122,7 +118,7 @@ export default function Footer() {
               <li><Link to="/services" className="hover:text-purple-600">Fast-Track Websites</Link></li>
               <li><Link to="/services" className="hover:text-purple-600">E-Commerce Stores</Link></li>
               <li><Link to="/pricing" className="hover:text-purple-600">Pricing Packages</Link></li>
-              <li><Link to="/portfolio" className="hover:text-purple-600">Client Portfolio</Link></li>
+              <li><Link to="/team" className="hover:text-purple-600">Our Team</Link></li>
             </ul>
           </div>
 

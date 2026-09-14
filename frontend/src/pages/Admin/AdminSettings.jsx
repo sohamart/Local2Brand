@@ -40,7 +40,8 @@ import {
   Search,
   Filter,
   Send,
-  Copy
+  Copy,
+  Activity
 } from 'lucide-react';
 
 
@@ -216,6 +217,8 @@ export default function AdminSettings() {
 
   const [loading, setLoading] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [uploadingLogoLight, setUploadingLogoLight] = useState(false);
+  const [uploadingLogoDark, setUploadingLogoDark] = useState(false);
   const [uploadingApk, setUploadingApk] = useState(false);
   const [uploadingQr, setUploadingQr] = useState(false);
   const [uploadingScreenshot, setUploadingScreenshot] = useState(false);
@@ -561,6 +564,41 @@ export default function AdminSettings() {
     }
   };
 
+  const handleLogoUpload = async (e, type = 'light') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Logo file size must be under 10MB');
+      return;
+    }
+
+    if (type === 'light') setUploadingLogoLight(true);
+    else setUploadingLogoDark(true);
+
+    try {
+      const res = await uploadWithToast({
+        file,
+        title: `Uploading ${type === 'light' ? 'Light Mode' : 'Dark Mode'} Logo (${file.name})`,
+        successMessage: `${type === 'light' ? 'Light' : 'Dark'} Logo uploaded successfully! 🎨`
+      });
+      if (res && (res.url || res.urls?.[0])) {
+        const uploadedUrl = res.url || res.urls[0];
+        if (type === 'light') {
+          setFormData((prev) => ({ ...prev, logoLightUrl: uploadedUrl }));
+        } else {
+          setFormData((prev) => ({ ...prev, logoDarkUrl: uploadedUrl }));
+        }
+      }
+    } catch (err) {
+      console.error('Logo upload error:', err);
+    } finally {
+      if (type === 'light') setUploadingLogoLight(false);
+      else setUploadingLogoDark(false);
+      e.target.value = '';
+    }
+  };
+
   const handleAppConfigChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -874,6 +912,173 @@ export default function AdminSettings() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           
+          {/* Section 0: Operational Status & Brand Assets */}
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-900/10 via-slate-900/40 to-slate-900 border border-purple-500/30 shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-700/50">
+              <div>
+                <h2 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-purple-400 animate-pulse" />
+                  <span>Website Operational Status & Core Logos</span>
+                </h2>
+                <p className="text-xs text-slate-400 mt-1">Control public website availability and high-resolution brand assets</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400 font-semibold">Active State:</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                  (formData.maintenanceMode || formData.websiteStatus === 'maintenance')
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                    : formData.websiteStatus === 'coming_soon'
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40'
+                    : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                }`}>
+                  {(formData.maintenanceMode || formData.websiteStatus === 'maintenance') ? '🛠️ Maintenance Mode' : formData.websiteStatus === 'coming_soon' ? '🚧 Coming Soon' : '🟢 Live & Online'}
+                </span>
+              </div>
+            </div>
+
+            {/* 3-Way Mode Switcher */}
+            <div>
+              <label className="text-xs font-bold text-slate-300 block mb-2">Select Live Status Mode</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleChange('websiteStatus', 'live');
+                    handleChange('maintenanceMode', false);
+                  }}
+                  className={`p-4 rounded-xl text-left border transition-all ${
+                    (!formData.maintenanceMode && formData.websiteStatus !== 'maintenance' && formData.websiteStatus !== 'coming_soon')
+                      ? 'bg-emerald-950/40 border-emerald-500 text-emerald-200 shadow-lg shadow-emerald-500/10'
+                      : 'bg-slate-800/60 border-slate-700 hover:border-slate-600 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-black text-sm">
+                    <span>🟢</span>
+                    <span>Live & Online</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">Website is fully open to all public visitors & search engine indexers.</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleChange('websiteStatus', 'coming_soon');
+                    handleChange('maintenanceMode', false);
+                  }}
+                  className={`p-4 rounded-xl text-left border transition-all ${
+                    (formData.websiteStatus === 'coming_soon' && !formData.maintenanceMode)
+                      ? 'bg-blue-950/40 border-blue-500 text-blue-200 shadow-lg shadow-blue-500/10'
+                      : 'bg-slate-800/60 border-slate-700 hover:border-slate-600 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-black text-sm">
+                    <span>🚧</span>
+                    <span>Coming Soon</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">Show pre-launch countdown & lead capture landing page to visitors.</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleChange('websiteStatus', 'maintenance');
+                    handleChange('maintenanceMode', true);
+                  }}
+                  className={`p-4 rounded-xl text-left border transition-all ${
+                    (formData.maintenanceMode || formData.websiteStatus === 'maintenance')
+                      ? 'bg-amber-950/40 border-amber-500 text-amber-200 shadow-lg shadow-amber-500/10'
+                      : 'bg-slate-800/60 border-slate-700 hover:border-slate-600 text-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 font-black text-sm">
+                    <span>🛠️</span>
+                    <span>Maintenance Mode</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">Temporarily pause public traffic for architectural upgrades.</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Brand Logo Upload Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {/* Light Mode Logo */}
+              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-200">Light Mode Brand Logo</label>
+                  <span className="text-[10px] text-purple-400 font-semibold">Used on dark headers</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
+                    <img
+                      src={formData.logoLightUrl || '/logo.png'}
+                      alt="Light Logo Preview"
+                      className="w-full h-full object-contain"
+                      onError={(e) => { e.target.src = '/logo.png'; }}
+                    />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      placeholder="Logo URL (/logo.png)"
+                      value={formData.logoLightUrl}
+                      onChange={(e) => handleChange('logoLightUrl', e.target.value)}
+                      className="w-full p-2 text-xs rounded-lg bg-slate-900 border border-slate-700 text-slate-200 focus:outline-purple-500"
+                    />
+                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold cursor-pointer transition-all">
+                      {uploadingLogoLight ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                      <span>{uploadingLogoLight ? 'Uploading...' : 'Upload Light Logo'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleLogoUpload(e, 'light')}
+                        disabled={uploadingLogoLight}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dark Mode Logo */}
+              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-200">Dark Mode / Glow Logo</label>
+                  <span className="text-[10px] text-purple-400 font-semibold">Used on light & glow areas</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-16 h-16 rounded-xl bg-white border border-slate-300 flex items-center justify-center p-1.5 overflow-hidden shrink-0">
+                    <img
+                      src={formData.logoDarkUrl || '/logo-dark.png'}
+                      alt="Dark Logo Preview"
+                      className="w-full h-full object-contain"
+                      onError={(e) => { e.target.src = '/logo-dark.png'; }}
+                    />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      placeholder="Logo URL (/logo-dark.png)"
+                      value={formData.logoDarkUrl}
+                      onChange={(e) => handleChange('logoDarkUrl', e.target.value)}
+                      className="w-full p-2 text-xs rounded-lg bg-slate-900 border border-slate-700 text-slate-200 focus:outline-purple-500"
+                    />
+                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold cursor-pointer transition-all">
+                      {uploadingLogoDark ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                      <span>{uploadingLogoDark ? 'Uploading...' : 'Upload Dark Logo'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleLogoUpload(e, 'dark')}
+                        disabled={uploadingLogoDark}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Section 1: Core Branding & Identity */}
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
             <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-purple-600 flex items-center gap-2">

@@ -30,36 +30,54 @@ export default function About() {
   const { openOrderModal } = useOrderModal();
   const { settings } = useSiteSettings();
 
-  const founders = settings.aiSettings?.adminShowableDetails?.founders || [
-    {
-      name: 'Soham Dutta',
-      role: 'Founder & Lead Architect',
-      bio: 'Full-Stack Engineer & Product Designer leading high-performance digital systems.',
-      instagram: 'https://instagram.com/sohamart',
-      linkedin: '',
-      email: 'local2brand.contact@gmail.com',
-    },
-  ];
+  const founders = settings.aiSettings?.adminShowableDetails?.founders && settings.aiSettings.adminShowableDetails.founders.length > 0
+    ? settings.aiSettings.adminShowableDetails.founders
+    : [
+        {
+          name: 'Soham Dutta',
+          role: 'Lead Architect & Full-Stack Systems',
+          bio: 'Leading high-performance digital systems, reactive web engines, and automation pipelines.',
+          instagram: 'https://instagram.com/sohamart',
+          linkedin: 'https://linkedin.com/in/soham-dutta',
+          email: 'soham@weblets.bond',
+        },
+        {
+          name: 'Sayantan',
+          role: 'Technical Lead & Frontend Engineering',
+          bio: 'Engineering liquid-smooth interactive interfaces, responsive design, and glassmorphism styling.',
+          instagram: '',
+          linkedin: '',
+          email: 'sayantan@weblets.bond',
+        },
+        {
+          name: 'Achinta',
+          role: 'Operations & Product Delivery Lead',
+          bio: 'Orchestrating seamless client onboarding, rapid delivery pipelines, and quality execution.',
+          instagram: '',
+          linkedin: '',
+          email: 'achinta@weblets.bond',
+        },
+      ];
 
   return (
     <>
       <SEO
-        title="About Us — Build Local. Think Global."
-        description="Learn about LOCAL2BRAND. We bridge the gap between world-class engineering and local business growth."
+        title="About Us — Lets make website together | Weblets"
+        description="Learn about Weblets. We bridge the gap between world-class engineering and custom business growth."
       />
 
       <div className="page-header-offset pb-20">
 
         {/* About Hero Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
-            <AshokaChakra size={13} />
-            <span>🇮🇳 Indian Digital Agency Heritage</span>
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/40 text-purple-900 dark:text-purple-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
+            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+            <span>Digital Launch & Engineering Studio</span>
           </div>
           <SectionHeading
             badge="Our Philosophy"
-            title="Build Local. Think Global."
-            subtitle="We exist to give Indian entrepreneurs, creators, and businesses the same digital polish and technological edge enjoyed by global tech leaders."
+            title="Lets make website together."
+            subtitle="We exist to give entrepreneurs, creators, and businesses the same digital polish and technological edge enjoyed by global tech leaders."
           />
         </div>
 
@@ -68,21 +86,21 @@ export default function About() {
           <div className="glass-panel rounded-hero p-8 sm:p-12 lg:p-16 border border-white dark:border-slate-700/80 shadow-glass-lg grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative overflow-hidden">
 
             <div className="lg:col-span-7 space-y-6">
-              <span className="text-xs font-bold uppercase tracking-widest text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
-                <AshokaChakra size={12} />
-                <span>The Story Behind LOCAL2BRAND</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>The Story Behind Weblets</span>
               </span>
 
               <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug">
-                Great Indian businesses deserve world-class digital experiences.
+                Every business deserves a world-class digital flagship.
               </h2>
 
               <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed">
-                For years, local businesses were forced to choose between clunky, slow DIY website builders or overpriced agencies that took months to deliver lackluster results.
+                For years, business owners were forced to choose between clunky, slow DIY website builders or overpriced agencies that took months to deliver lackluster results.
               </p>
 
               <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-                We founded <strong>LOCAL2BRAND</strong> in India on a singular standard: combining Apple-inspired liquid glass aesthetics, sub-second PageSpeed performance, and a frictionless WhatsApp order system to launch client websites in 3 to 7 business days.
+                We founded <strong>Weblets</strong> on a singular standard: combining Apple-inspired liquid glass aesthetics, sub-second PageSpeed performance, and a frictionless order system to launch client websites in 3 to 7 business days.
               </p>
 
               {/* Core Values Bullets */}

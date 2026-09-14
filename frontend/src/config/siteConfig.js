@@ -1,13 +1,13 @@
 export const siteConfig = {
-  brandName: "LOCAL2BRAND",
-  domain: "local2brand.cyou",
-  tagline: "Build Local. Think Global.",
+  brandName: "Weblets",
+  domain: "weblets.bond",
+  tagline: "Lets make website together",
   
   // Default Brand Details (Managed live via Database & Admin Customization)
   whatsappNumber: "918710043923",
   displayWhatsApp: "+91 87100 43923",
   phone: "+91 87100 43923",
-  email: "local2brand.contact@gmail.com",
+  email: "contact@weblets.bond",
   
   turnaroundTime: "48 Hours",
   startingPrice: "$399",
@@ -18,12 +18,12 @@ export const siteConfig = {
 
   // Social Links
   socialLinks: {
-    instagram: "https://instagram.com/local2brand_official",
-    instagramHandle: "@local2brand_official",
+    instagram: "https://instagram.com/weblets_official",
+    instagramHandle: "@weblets_official",
     whatsapp: "https://wa.me/918710043923",
-    linkedin: "https://linkedin.com/company/local2brand",
-    github: "https://github.com/local2brand",
-    twitter: "https://twitter.com/local2brand"
+    linkedin: "https://linkedin.com/company/weblets",
+    github: "https://github.com/weblets",
+    twitter: "https://twitter.com/weblets"
   },
 
   // Primary Navigation Structure
@@ -33,7 +33,7 @@ export const siteConfig = {
     { label: "Services", href: "/services" },
     { label: "Pricing", href: "/pricing" },
     { label: "Track Order", href: "/track-order" },
-    { label: "Portfolio", href: "/portfolio" },
+    { label: "Our Team", href: "/team" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
     { label: "App", href: "/app" }
@@ -43,17 +43,17 @@ export const siteConfig = {
     enabled: true,
     isComingSoon: false,
     showComingSoonPopup: false,
-    comingSoonTitle: 'LOCAL2BRAND Mobile App — Launching Soon',
+    comingSoonTitle: 'Weblets Mobile App — Launching Soon',
     comingSoonMessage: 'We are polishing our next-gen mobile application for Android & iOS. Register for early beta access!',
-    appName: 'LOCAL2BRAND Mobile',
-    appSubtitle: 'Build Local. Think Global. Supercharge Your Business On The Go.',
+    appName: 'Weblets Mobile',
+    appSubtitle: 'Lets make website together. Supercharge Your Business On The Go.',
     appDescription: 'Manage client orders, track engineering sprints in real-time, preview live demo templates, and receive instant WhatsApp push dispatches directly from your mobile device.',
     version: 'v2.4.0',
     fileSize: '24.8 MB',
     minAndroid: 'Android 8.0 & above',
     minIos: 'iOS 15.0 & above',
-    packageName: 'com.local2brand.app',
-    apkDownloadUrl: 'https://local2brand.cyou/downloads/local2brand-v2.4.0.apk',
+    packageName: 'com.weblets.app',
+    apkDownloadUrl: 'https://weblets.bond/downloads/weblets-v2.4.0.apk',
     playStoreUrl: '',
     appStoreUrl: '',
     indusStoreUrl: '',

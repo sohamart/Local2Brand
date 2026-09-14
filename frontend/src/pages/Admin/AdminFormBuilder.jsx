@@ -114,6 +114,19 @@ function AdminFormBuilderContent() {
   const [stepTitle, setStepTitle] = useState('');
   const [stepSubtitle, setStepSubtitle] = useState('');
 
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    const isAnyModalOpen = questionModalOpen || categoryModalOpen || stepModalOpen;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [questionModalOpen, categoryModalOpen, stepModalOpen]);
+
   const fetchForms = async () => {
     try {
       setLoading(true);
@@ -1068,8 +1081,16 @@ function AdminFormBuilderContent() {
       {/* RICH QUESTION EDIT / ADD MODAL WITH DEFAULT SELECTED PICKER */}
       {/* ========================================================================= */}
       {questionModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-fade-in">
-          <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 border border-slate-200 dark:border-slate-800 max-h-[92vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-fade-in"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
+          <div 
+            className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 sm:p-7 space-y-5 border border-slate-200 dark:border-slate-800 max-h-[92vh] overflow-y-auto"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+          >
             
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -1351,8 +1372,16 @@ function AdminFormBuilderContent() {
 
       {/* CATEGORY MODAL */}
       {categoryModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800">
+        <div 
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
+          <div 
+            className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+          >
             <h3 className="text-base font-black text-slate-900 dark:text-white">
               {catEditing ? 'Edit Category' : 'Add New Category'}
             </h3>
@@ -1408,8 +1437,16 @@ function AdminFormBuilderContent() {
 
       {/* STEP MODAL */}
       {stepModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800">
+        <div 
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
+          <div 
+            className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-6 space-y-4 border border-slate-200 dark:border-slate-800"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+          >
             <h3 className="text-base font-black text-slate-900 dark:text-white">
               {stepEditing ? 'Edit Step' : 'Add Custom Step'}
             </h3>

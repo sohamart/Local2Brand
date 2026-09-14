@@ -21,6 +21,7 @@ export const uploadWithToast = async ({
   endpoint = '/upload',
   title = 'Uploading media...',
   successMessage,
+  maxSizeMB = 2024,
 }) => {
   const fileToUpload = file || (files && files[0]);
   const totalFiles = files?.length || 1;
@@ -34,6 +35,12 @@ export const uploadWithToast = async ({
     totalBytes = file.size || 0;
   }
   const totalMB = Math.max(0.1, Number((totalBytes / (1024 * 1024)).toFixed(1)));
+
+  if (totalMB > maxSizeMB) {
+    const sizeErr = `File size is too large (${totalMB} MB). Maximum allowed size is ${maxSizeMB} MB.`;
+    toast.error(`❌ ${sizeErr}`);
+    throw new Error(sizeErr);
+  }
 
   const formData = new FormData();
   if (files && files.length > 0) {

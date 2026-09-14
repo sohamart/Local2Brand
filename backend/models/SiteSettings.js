@@ -4,22 +4,35 @@ const siteSettingsSchema = new mongoose.Schema(
   {
     brandName: {
       type: String,
-      default: 'LOCAL2BRAND',
+      default: 'WEBLETS',
       trim: true,
     },
     domain: {
       type: String,
-      default: 'local2brand.com',
+      default: 'weblets.bond',
       trim: true,
     },
     tagline: {
       type: String,
-      default: 'Build Local. Think Global.',
+      default: 'Lets make website together',
       trim: true,
+    },
+    websiteStatus: {
+      type: String,
+      enum: ['live', 'coming_soon', 'maintenance'],
+      default: 'live',
+    },
+    logoLightUrl: {
+      type: String,
+      default: '/logo.png',
+    },
+    logoDarkUrl: {
+      type: String,
+      default: '/logo-dark.png',
     },
     supportEmail: {
       type: String,
-      default: 'local2brand.contact@gmail.com',
+      default: 'contact@weblets.bond',
       trim: true,
     },
     displayPhone: {

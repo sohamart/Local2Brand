@@ -68,7 +68,8 @@ import {
   Image as ImageIcon,
   Laptop,
   Smartphone,
-  Info
+  Info,
+  Download
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -1250,13 +1251,14 @@ export default function GetStarted() {
     otherRequirementsNotes: '',
 
     // Step 4: Design & Colors
-    visualStyle: '',
-    visualStyleOther: '',
-    colorTheme: '',
-    customColorCode: '#6366f1',
+    visualStyle: 'Modern', // Clean, Modern, Professional
+    colorMode: 'Light & Dark', // Light, Dark, Light & Dark
+    colorThemeChoice: 'Logo Preferable', // Logo Preferable, Select Colors, Company Opinion
+    primaryColor: '#7c3aed',
+    secondaryColor: '#3b82f6',
     customColorDesc: '',
 
-    // Step 5: Logo & Media Files (Supports rich image previews & base64)
+    // Step 5: Logo & Media Files (Conditional dropzones)
     hasLogo: '',
     hasPhotos: '',
     hasContent: '',
@@ -1277,25 +1279,31 @@ export default function GetStarted() {
     hostingPlan: 'Basic',
     hostingCustomDesc: '',
 
-    // Step 7: Backend & WhatsApp
-    backendRequirement: '',
+    // Step 7: Backend & WhatsApp (3 unified choices + child features)
+    backendChoice: 'Backend + Admin Panel + WhatsApp Integration', // 'Backend + Admin Panel' | 'WhatsApp Integration' | 'Backend + Admin Panel + WhatsApp Integration'
+    backendRequirement: 'Backend + Admin Panel',
     backendCustomDesc: '',
-    whatsappIntegration: '',
+    backendModules: ['Lead Capture & CRM', 'Authentication & Roles', 'Analytics & Reporting'],
+    whatsappIntegration: 'WhatsApp Order & Live Chat',
     whatsappNumberForIntegration: '',
     whatsappCountryCode: '+91',
     whatsappCustomDesc: '',
+    whatsappFeatures: ['Direct Chat Button', 'Automated Instant Push', 'Inquiry Routing'],
 
     // Step 8: Other Integrations
     otherIntegrations: [],
     customIntegrationText: '',
 
-    // Step 9: Final Details & Budget
-    budgetBracket: '',
+    // Step 9: Final Details & Negotiation Budget
+    budgetBracket: '₹10,000 – ₹25,000',
+    negotiateBudget: '',
     customBudget: '',
     expectedLaunchDate: '',
     additionalRequirements: '',
     anythingElse: ''
   }));
+
+  const [lowBudgetAlert, setLowBudgetAlert] = useState(null);
 
   // Dynamic Country Cultural Theme based on selected country (Transitions smoothly)
   const currentCountryTheme = useMemo(() => {
@@ -2675,6 +2683,81 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
 
   // Success Screen
   if (submissionSuccess) {
+    const handleCopyRequestId = () => {
+      if (submissionSuccess?.id) {
+        navigator.clipboard.writeText(submissionSuccess.id);
+        toast.success(`Request ID ${submissionSuccess.id} copied to clipboard!`);
+      }
+    };
+
+    const handleDownloadBlueprintPdf = () => {
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast.error('Please allow popups to generate Project Blueprint PDF.');
+        return;
+      }
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Weblets Project Blueprint - ${submissionSuccess?.id || 'Order'}</title>
+          <style>
+            body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #0f172a; padding: 40px; margin: 0; background: #fff; line-height: 1.5; }
+            .header { border-bottom: 3px solid #7c3aed; padding-bottom: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+            .logo { font-size: 28px; font-weight: 900; color: #7c3aed; letter-spacing: -0.5px; }
+            .badge { background: #f3e8ff; color: #7c3aed; font-size: 12px; font-weight: bold; padding: 6px 14px; border-radius: 999px; border: 1px solid #d8b4fe; }
+            .section-title { font-size: 13px; font-weight: 800; text-transform: uppercase; color: #6b21a8; margin-top: 24px; margin-bottom: 12px; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px; }
+            .item { background: #f8fafc; padding: 12px 14px; border-radius: 10px; border: 1px solid #e2e8f0; }
+            .label { color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
+            .val { font-weight: 700; color: #0f172a; }
+            .highlight { color: #059669; font-size: 16px; font-weight: 900; }
+            .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 11px; color: #64748b; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">WEBLETS</div>
+              <div style="font-size: 12px; color: #64748b; margin-top: 2px; font-weight: 600;">Lets make website together • weblets.bond</div>
+            </div>
+            <div class="badge">Official Blueprint • #${submissionSuccess?.id || 'N/A'}</div>
+          </div>
+
+          <div class="section-title">1. Client &amp; Brand Specifications</div>
+          <div class="grid">
+            <div class="item"><div class="label">Client Name</div><div class="val">${formData.fullName || 'N/A'}</div></div>
+            <div class="item"><div class="label">Brand / Business</div><div class="val">${formData.businessName || 'N/A'}</div></div>
+            <div class="item"><div class="label">Phone / WhatsApp</div><div class="val">${formData.whatsappNumber || formData.mobileNumber || 'N/A'}</div></div>
+            <div class="item"><div class="label">Email Address</div><div class="val">${formData.emailAddress || 'N/A'}</div></div>
+            <div class="item"><div class="label">Category</div><div class="val" style="text-transform: capitalize;">${formData.selectedCategory || 'Custom Website'}</div></div>
+            <div class="item"><div class="label">Location</div><div class="val">${formData.district || ''}, ${formData.state || ''} (${formData.country || 'India'})</div></div>
+          </div>
+
+          <div class="section-title">2. Architecture &amp; Design Direction</div>
+          <div class="grid">
+            <div class="item"><div class="label">Visual Style</div><div class="val">${formData.visualStyle || 'Modern'}</div></div>
+            <div class="item"><div class="label">Theme Mode</div><div class="val">${formData.colorMode || 'Light & Dark'}</div></div>
+            <div class="item"><div class="label">Color Palette Preference</div><div class="val">${formData.colorThemeChoice || 'Logo Preferable'} (${formData.primaryColor || '#7c3aed'} / ${formData.secondaryColor || '#3b82f6'})</div></div>
+            <div class="item"><div class="label">Domain Requirement</div><div class="val">${formData.domainStatus || 'N/A'} ${formData.domainName ? '(' + formData.domainName + ')' : ''}</div></div>
+            <div class="item"><div class="label">Backend &amp; WhatsApp</div><div class="val">${formData.backendChoice || formData.backendRequirement || 'Standard'}</div></div>
+            <div class="item"><div class="label">Commercial Investment</div><div class="val highlight">₹${(submissionSuccess?.totalApproxPrice || 0).toLocaleString('en-IN')}</div></div>
+          </div>
+
+          <div class="footer">
+            Generated automatically via Weblets Engine • Support: support@weblets.bond • Web: https://weblets.bond
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+        </html>
+      `;
+      printWindow.document.open();
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+    };
+
     return (
       <div className="min-h-screen py-16 px-4 flex items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
         <div className="max-w-xl w-full p-6 sm:p-10 rounded-3xl bg-white dark:bg-slate-900/90 border border-emerald-500/40 shadow-2xl backdrop-blur-2xl text-center relative overflow-hidden animate-in fade-in zoom-in duration-500">
@@ -2693,12 +2776,22 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
           </p>
 
           {/* Details Card */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 mb-5 text-left space-y-2 text-xs sm:text-sm">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 mb-5 text-left space-y-2.5 text-xs sm:text-sm">
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400">Order Tracking ID:</span>
-              <span className="font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-lg border border-amber-400/30">
-                {submissionSuccess.id}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-bold text-amber-600 dark:text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-lg border border-amber-400/30">
+                  {submissionSuccess.id}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyRequestId}
+                  className="p-1 rounded-md bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors"
+                  title="Copy Request ID"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-500 dark:text-slate-400">Website Type:</span>
@@ -2708,6 +2801,22 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
               <span className="text-slate-500 dark:text-slate-400">Estimated Investment:</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatPriceByCountry(submissionSuccess.totalApproxPrice, formData.country)}</span>
             </div>
+          </div>
+
+          {/* Download Blueprint Action Box */}
+          <div className="flex items-center justify-between p-3.5 mb-5 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-left">
+            <div>
+              <p className="text-xs font-bold text-purple-900 dark:text-purple-200">Project Blueprint Ready</p>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400">Download formatted PDF document with all submitted parameters</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadBlueprintPdf}
+              className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-md shadow-purple-600/30 cursor-pointer transition-all active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Blueprint PDF</span>
+            </button>
           </div>
 
           {/* Prominent Team Contact Confirmation Banner */}
@@ -4171,118 +4280,216 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
           {/* STEP 4: DESIGN & COLOR THEME */}
           {/* ==================================================== */}
           {currentStep === 4 && (
-            <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="space-y-7 animate-in fade-in duration-300">
               <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
                 <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                   Design &amp; Color Theme
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Choose visual branding, design personality and accent colors.
+                  Customize your website's visual atmosphere, display mode, and color identity.
                 </p>
               </div>
 
-              {/* Visual Style * */}
+              {/* 1. Visual Style (Clean, Modern, Professional) */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
-                  What kind of visual style do you prefer? <span className="text-red-500">*</span>
+                  1. Visual Style <span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    'Modern',
-                    'Minimal',
-                    'Premium',
-                    'Luxury',
-                    'Professional',
-                    'Creative',
-                    'Elegant',
-                    'Bold',
-                    'Simple',
-                    'Dark Mode',
-                    'Light Mode',
-                    'Other'
+                    {
+                      id: 'Clean',
+                      title: 'Clean',
+                      subtitle: 'Minimal & Breathable',
+                      desc: 'Crisp typography, balanced whitespace, uncluttered sections with elegant simplicity.',
+                      icon: '✨'
+                    },
+                    {
+                      id: 'Modern',
+                      title: 'Modern',
+                      subtitle: 'Vibrant & Interactive',
+                      desc: 'Smooth gradients, glassmorphism cards, micro-animations and contemporary tech aesthetics.',
+                      icon: '🚀'
+                    },
+                    {
+                      id: 'Professional',
+                      title: 'Professional',
+                      subtitle: 'Corporate & Trust-Building',
+                      desc: 'Authoritative typography, structured content layouts, trust metrics and executive look.',
+                      icon: '💼'
+                    }
                   ].map(st => (
                     <button
-                      key={st}
+                      key={st.id}
                       type="button"
-                      onClick={() => setFormData({ ...formData, visualStyle: st })}
-                      className={`p-3 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
-                        formData.visualStyle === st
-                          ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      onClick={() => setFormData({ ...formData, visualStyle: st.id })}
+                      className={`p-4 rounded-2xl text-left border transition-all cursor-pointer relative overflow-hidden group ${
+                        formData.visualStyle === st.id
+                          ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-500 shadow-md ring-2 ring-purple-500/20'
+                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700'
                       }`}
                     >
-                      {st}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-2xl">{st.icon}</span>
+                        {formData.visualStyle === st.id ? (
+                          <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">✓</div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border border-slate-300 dark:border-slate-700" />
+                        )}
+                      </div>
+                      <div className="font-black text-sm text-slate-900 dark:text-white">{st.title}</div>
+                      <div className="text-[11px] font-bold text-purple-600 dark:text-purple-400 mb-1">{st.subtitle}</div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{st.desc}</p>
                     </button>
                   ))}
                 </div>
-                {formData.visualStyle === 'Other' && (
-                  <input
-                    type="text"
-                    placeholder="Describe your preferred style *"
-                    value={formData.visualStyleOther}
-                    onChange={e => setFormData({ ...formData, visualStyleOther: e.target.value })}
-                    className="mt-2.5 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
-                  />
-                )}
                 {stepErrors.visualStyle && <p className="text-xs text-red-500 mt-1.5">{stepErrors.visualStyle}</p>}
-                {stepErrors.visualStyleOther && <p className="text-xs text-red-500 mt-1.5">{stepErrors.visualStyleOther}</p>}
               </div>
 
-              {/* Color Theme * */}
+              {/* 2. Mode Select (Light, Dark, Light & Dark) */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
-                  What color theme would you like? <span className="text-red-500">*</span>
+                  2. Mode Select <span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
-                    { id: 'Blue', color: '#3b82f6' },
-                    { id: 'Green', color: '#10b981' },
-                    { id: 'Red', color: '#ef4444' },
-                    { id: 'Purple', color: '#a855f7' },
-                    { id: 'Orange', color: '#f97316' },
-                    { id: 'Black & Gold', color: '#eab308' },
-                    { id: 'Dark Theme', color: '#0f172a' },
-                    { id: 'Light Clean', color: '#f8fafc' },
-                    { id: 'Custom', color: '#ec4899' }
+                    {
+                      id: 'Light',
+                      title: 'Light Mode',
+                      desc: 'Clean daylight aesthetic with soft contrast and bright background.',
+                      icon: '☀️'
+                    },
+                    {
+                      id: 'Dark',
+                      title: 'Dark Mode',
+                      desc: 'Sleek obsidian & navy dark palette with neon accents and high contrast.',
+                      icon: '🌙'
+                    },
+                    {
+                      id: 'Light & Dark',
+                      title: 'Light & Dark (Adaptive)',
+                      desc: 'Full dual theme support with smooth one-click toggle for your visitors.',
+                      icon: '🌓'
+                    }
+                  ].map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, colorMode: m.id })}
+                      className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex items-start gap-3 ${
+                        formData.colorMode === m.id
+                          ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-500 shadow-md ring-2 ring-purple-500/20'
+                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 hover:border-slate-400'
+                      }`}
+                    >
+                      <span className="text-2xl mt-0.5">{m.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-900 dark:text-white">{m.title}</span>
+                          {formData.colorMode === m.id && (
+                            <span className="text-purple-600 dark:text-purple-400 font-bold text-xs">✓</span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{m.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Color Theme Preference */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                  3. Color Theme Preference <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                  {[
+                    {
+                      id: 'Logo Preferable',
+                      title: 'Logo Preferable',
+                      desc: 'We automatically extract & balance the primary palette directly from your brand logo.',
+                      icon: '🎨'
+                    },
+                    {
+                      id: 'Select Colors',
+                      title: 'Select Colors',
+                      desc: 'Pick your exact custom Primary and Secondary brand colors with hex codes.',
+                      icon: '🎯'
+                    },
+                    {
+                      id: 'Company Opinion',
+                      title: 'Company Opinion',
+                      desc: 'Our lead UI/UX design team will curate the highest converting color scheme for you.',
+                      icon: '💡'
+                    }
                   ].map(c => (
                     <button
                       key={c.id}
                       type="button"
-                      onClick={() => setFormData({ ...formData, colorTheme: c.id })}
-                      className={`p-3 rounded-xl text-xs font-bold border flex items-center gap-2.5 transition-all cursor-pointer ${
-                        formData.colorTheme === c.id
-                          ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-md'
-                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      onClick={() => setFormData({ ...formData, colorThemeChoice: c.id, colorTheme: c.id })}
+                      className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer flex items-start gap-3 ${
+                        (formData.colorThemeChoice === c.id || formData.colorTheme === c.id)
+                          ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-500 shadow-md ring-2 ring-purple-500/20'
+                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 hover:border-slate-400'
                       }`}
                     >
-                      <span className="w-4 h-4 rounded-full border border-black/20 dark:border-white/20 shadow-xs shrink-0" style={{ backgroundColor: c.color }} />
-                      <span>{c.id}</span>
-                      {formData.colorTheme === c.id && <Check className="w-3.5 h-3.5 ml-auto text-purple-600 dark:text-purple-400" />}
+                      <span className="text-2xl mt-0.5">{c.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-xs text-slate-900 dark:text-white">{c.title}</span>
+                          {(formData.colorThemeChoice === c.id || formData.colorTheme === c.id) && (
+                            <span className="text-purple-600 dark:text-purple-400 font-bold text-xs">✓</span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{c.desc}</p>
+                      </div>
                     </button>
                   ))}
                 </div>
-                {formData.colorTheme === 'Custom' && (
-                  <div className="mt-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
-                    <input
-                      type="color"
-                      value={formData.customColorCode}
-                      onChange={e => setFormData({ ...formData, customColorCode: e.target.value })}
-                      className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Hex Code (e.g. #6366F1)"
-                      value={formData.customColorCode}
-                      onChange={e => setFormData({ ...formData, customColorCode: e.target.value })}
-                      className="w-32 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-mono"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Optional theme description..."
-                      value={formData.customColorDesc}
-                      onChange={e => setFormData({ ...formData, customColorDesc: e.target.value })}
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs"
-                    />
+
+                {/* If Select Colors is chosen, show Primary & Secondary Color Pickers */}
+                {formData.colorThemeChoice === 'Select Colors' && (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-4 animate-in fade-in duration-200">
+                    <p className="text-xs font-bold text-purple-700 dark:text-purple-300">Choose Primary &amp; Secondary Accent Colors:</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Primary Color */}
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={formData.primaryColor || '#7c3aed'}
+                          onChange={e => setFormData({ ...formData, primaryColor: e.target.value })}
+                          className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0"
+                        />
+                        <div className="flex-1">
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Primary Brand Color</label>
+                          <input
+                            type="text"
+                            value={formData.primaryColor || '#7c3aed'}
+                            onChange={e => setFormData({ ...formData, primaryColor: e.target.value })}
+                            className="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Secondary Color */}
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={formData.secondaryColor || '#3b82f6'}
+                          onChange={e => setFormData({ ...formData, secondaryColor: e.target.value })}
+                          className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0"
+                        />
+                        <div className="flex-1">
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Secondary Accent Color</label>
+                          <input
+                            type="text"
+                            value={formData.secondaryColor || '#3b82f6'}
+                            onChange={e => setFormData({ ...formData, secondaryColor: e.target.value })}
+                            className="w-full px-2 py-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
                 {stepErrors.colorTheme && <p className="text-xs text-red-500 mt-1.5">{stepErrors.colorTheme}</p>}
@@ -4372,113 +4579,145 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 </div>
               </div>
 
-              {/* RICH MEDIA UPLOAD CARDS WITH INSTANT THUMBNAIL PREVIEWS & LIVE CLOUD UPLOAD PROGRESS */}
+              {/* CONDITIONAL MEDIA UPLOADS BASED ON YES/NO SELECTIONS */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 
-                {/* Logo Upload Card */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                      <UploadCloud className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Upload Brand Logo (Optional)
-                    </label>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">PNG, JPG, SVG or WebP formats supported</p>
-                  </div>
-
-                  {isUploadingLogo ? (
-                    <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-600 flex flex-col items-center justify-center gap-2 text-center animate-pulse">
-                      <Loader2 className="w-6 h-6 text-purple-600 dark:text-purple-400 animate-spin" />
-                      <span className="text-xs font-bold text-purple-700 dark:text-purple-300">{uploadProgressText || 'Uploading Logo to Cloud...'}</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400">Please wait while image is being optimized</span>
+                {/* Logo Upload Card (Shown only if hasLogo === 'Yes') */}
+                {formData.hasLogo === 'Yes' ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-purple-500/40 dark:border-purple-500/40 flex flex-col justify-between animate-in fade-in duration-300 shadow-sm">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                        <UploadCloud className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Upload Brand Logo (Ready)
+                      </label>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">PNG, JPG, SVG or WebP formats supported</p>
                     </div>
-                  ) : formData.logoFile ? (
-                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <img
-                          src={formData.logoFile.dataUrl || formData.logoFile.url}
-                          alt="Logo Preview"
-                          className="w-10 h-10 object-contain rounded-lg bg-slate-100 dark:bg-slate-800 border p-1"
-                        />
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{formData.logoFile.name}</p>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] text-slate-400">{formData.logoFile.size}</span>
-                            {formData.logoFile.url?.startsWith('http') && (
-                              <span className="px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold">Cloud Synced</span>
-                            )}
+
+                    {isUploadingLogo ? (
+                      <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-600 flex flex-col items-center justify-center gap-2 text-center animate-pulse">
+                        <Loader2 className="w-6 h-6 text-purple-600 dark:text-purple-400 animate-spin" />
+                        <span className="text-xs font-bold text-purple-700 dark:text-purple-300">{uploadProgressText || 'Uploading Logo to Cloud...'}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">Please wait while image is being optimized</span>
+                      </div>
+                    ) : formData.logoFile ? (
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <img
+                            src={formData.logoFile.dataUrl || formData.logoFile.url}
+                            alt="Logo Preview"
+                            className="w-10 h-10 object-contain rounded-lg bg-slate-100 dark:bg-slate-800 border p-1"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{formData.logoFile.name}</p>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-slate-400">{formData.logoFile.size}</span>
+                              {formData.logoFile.url?.startsWith('http') && (
+                                <span className="px-1.5 py-0.2 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[9px] font-bold">Cloud Synced</span>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveLogo}
+                          className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
+                          title="Remove Logo"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={handleRemoveLogo}
-                        className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 cursor-pointer"
-                        title="Remove Logo"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-purple-500 cursor-pointer transition-colors text-center">
-                      <UploadCloud className="w-6 h-6 text-purple-500 mb-1" />
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Click to Browse Logo</span>
-                      <span className="text-[10px] text-slate-400">Max size 15MB</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={e => handleFileUpload(e, 'logo')}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-
-                {/* Multiple Business Photos Upload Card */}
-                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col justify-between">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
-                      <ImageIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Photos &amp; Catalog Media (Optional)
-                    </label>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Upload multiple food, shop or product photos</p>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-purple-300 dark:border-purple-800 hover:border-purple-500 cursor-pointer transition-colors text-center bg-purple-500/5">
+                        <UploadCloud className="w-6 h-6 text-purple-500 mb-1" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Click to Browse Logo</span>
+                        <span className="text-[10px] text-slate-400">Max size 15MB</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={e => handleFileUpload(e, 'logo')}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
                   </div>
-
-                  {isUploadingPhotos ? (
-                    <div className="p-3 mb-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-600 flex items-center justify-center gap-2 text-center animate-pulse">
-                      <Loader2 className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" />
-                      <span className="text-xs font-bold text-purple-700 dark:text-purple-300">{uploadProgressText || 'Uploading photos...'}</span>
+                ) : formData.hasLogo === 'No' ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0 font-bold">
+                      💡
                     </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-purple-500 cursor-pointer transition-colors text-center mb-2">
-                      <Plus className="w-5 h-5 text-purple-500 mb-0.5" />
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Add Business Photos</span>
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={e => handleFileUpload(e, 'photos')}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-
-                  {/* Thumbnail Grid */}
-                  {formData.photosFiles && formData.photosFiles.length > 0 && (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-32 overflow-y-auto p-1">
-                      {formData.photosFiles.map((photo, idx) => (
-                        <div key={idx} className="relative group rounded-lg overflow-hidden border aspect-square bg-slate-100 dark:bg-slate-900">
-                          <img src={photo.dataUrl || photo.url} alt={photo.name} className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => handleRemovePhoto(idx)}
-                            className="absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white opacity-90 hover:opacity-100 cursor-pointer shadow-sm"
-                            title="Delete"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">No Logo? We've got you covered</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Our designers will style a complimentary typography logo or design a custom vector brand icon for you.</p>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-center text-center p-4">
+                    <p className="text-xs text-slate-400">Select "Yes" above to upload your Brand Logo.</p>
+                  </div>
+                )}
+
+                {/* Multiple Business Photos Upload Card (Shown only if hasPhotos === 'Yes') */}
+                {formData.hasPhotos === 'Yes' ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-purple-500/40 dark:border-purple-500/40 flex flex-col justify-between animate-in fade-in duration-300 shadow-sm">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                        <ImageIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Photos &amp; Catalog Media (Ready)
+                      </label>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Upload your real business, shop or food photos</p>
+                    </div>
+
+                    {isUploadingPhotos ? (
+                      <div className="p-3 mb-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-300 dark:border-purple-600 flex items-center justify-center gap-2 text-center animate-pulse">
+                        <Loader2 className="w-4 h-4 text-purple-600 dark:text-purple-400 animate-spin" />
+                        <span className="text-xs font-bold text-purple-700 dark:text-purple-300">{uploadProgressText || 'Uploading photos...'}</span>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center p-3 rounded-xl border-2 border-dashed border-purple-300 dark:border-purple-800 hover:border-purple-500 cursor-pointer transition-colors text-center mb-2 bg-purple-500/5">
+                        <Plus className="w-5 h-5 text-purple-500 mb-0.5" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Add Business Photos</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={e => handleFileUpload(e, 'photos')}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+
+                    {/* Thumbnail Grid */}
+                    {formData.photosFiles && formData.photosFiles.length > 0 && (
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-32 overflow-y-auto p-1">
+                        {formData.photosFiles.map((photo, idx) => (
+                          <div key={idx} className="relative group rounded-lg overflow-hidden border aspect-square bg-slate-100 dark:bg-slate-900">
+                            <img src={photo.dataUrl || photo.url} alt={photo.name} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePhoto(idx)}
+                              className="absolute top-1 right-1 p-1 rounded-full bg-red-600 text-white opacity-90 hover:opacity-100 cursor-pointer shadow-sm"
+                              title="Delete"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : formData.hasPhotos === 'No' ? (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 font-bold">
+                      📸
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">Studio Stock Media Included</h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">We will curate premium, commercial-licensed 4K stock imagery tailored directly for your industry.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/30 border border-dashed border-slate-200 dark:border-slate-800 flex items-center justify-center text-center p-4">
+                    <p className="text-xs text-slate-400">Select "Yes" above to upload business media.</p>
+                  </div>
+                )}
               </div>
 
               {/* Reference Website & Additional Instructions */}
@@ -4790,91 +5029,147 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
           {/* STEP 7: BACKEND & WHATSAPP INTEGRATION */}
           {/* ==================================================== */}
           {currentStep === 7 && (
-            <div className="space-y-8 animate-in fade-in duration-300">
+            <div className="space-y-7 animate-in fade-in duration-300">
               <div className="border-b border-slate-200 dark:border-slate-800/80 pb-4">
                 <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                   Backend &amp; WhatsApp Integration
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Configure administrative content management and direct WhatsApp customer funnels.
+                  Choose your management architecture, administrative portal, and customer communication channels.
                 </p>
               </div>
 
-              {/* Backend / Admin Panel * */}
+              {/* 3 Core Unified Choices */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
-                  Do you need a Backend / Admin Panel? <span className="text-red-500">*</span>
+                  Select your Management &amp; Automation Architecture <span className="text-red-500">*</span>
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                   {[
-                    { id: 'No Backend Required', price: '₹0' },
-                    { id: 'Backend Required', price: '+₹2,999' },
-                    { id: 'Admin Panel Required', price: '+₹3,499' },
-                    { id: 'Backend + Admin Panel', price: '+₹4,999' },
-                    { id: 'Custom Backend Requirement', price: '+₹6,999' }
-                  ].map(b => (
+                    {
+                      id: 'Backend + Admin Panel',
+                      title: 'Backend + Admin Panel',
+                      badge: 'Content & CRM Control',
+                      desc: 'Full administrative panel to update pages, manage catalogs, view customer inquiries, and control site settings dynamically.',
+                      icon: '🎛️',
+                      price: '+₹4,999'
+                    },
+                    {
+                      id: 'WhatsApp Integration',
+                      title: 'WhatsApp Integration',
+                      badge: 'Instant Lead Conversion',
+                      desc: 'Direct WhatsApp communication channels, floating chat widgets, one-click catalog inquiries, and instant client connection.',
+                      icon: '💬',
+                      price: '+₹1,499'
+                    },
+                    {
+                      id: 'Backend + Admin Panel + WhatsApp Integration',
+                      title: 'Backend + Admin Panel + WhatsApp',
+                      badge: 'Complete Enterprise Stack (Recommended)',
+                      desc: 'Comprehensive cloud database, complete administrative control panel, and synchronized real-time WhatsApp customer funnels.',
+                      icon: '⚡',
+                      price: '+₹5,999'
+                    }
+                  ].map(opt => (
                     <button
-                      key={b.id}
+                      key={opt.id}
                       type="button"
-                      onClick={() => setFormData({ ...formData, backendRequirement: b.id })}
-                      className={`p-3.5 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
-                        formData.backendRequirement === b.id
-                          ? 'bg-purple-50 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white shadow-md'
-                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          backendChoice: opt.id,
+                          backendRequirement: opt.id.includes('Backend') ? 'Backend + Admin Panel' : 'No Backend Required',
+                          whatsappIntegration: opt.id.includes('WhatsApp') ? 'WhatsApp Order & Live Chat' : 'No WhatsApp Integration'
+                        });
+                      }}
+                      className={`p-4 rounded-2xl text-left border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                        formData.backendChoice === opt.id
+                          ? 'bg-purple-50 dark:bg-purple-900/30 border-purple-500 shadow-md ring-2 ring-purple-500/20'
+                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 hover:border-slate-400'
                       }`}
                     >
-                      <span>{b.id}</span>
-                      <span className="font-mono text-emerald-600 dark:text-emerald-400 text-[11px]">{b.price}</span>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-2xl">{opt.icon}</span>
+                          <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            {opt.price}
+                          </span>
+                        </div>
+                        <h4 className="font-black text-sm text-slate-900 dark:text-white mb-1">{opt.title}</h4>
+                        <div className="text-[10px] font-bold text-purple-600 dark:text-purple-400 mb-2">{opt.badge}</div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{opt.desc}</p>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                          {formData.backendChoice === opt.id ? 'Selected' : 'Click to Select'}
+                        </span>
+                        {formData.backendChoice === opt.id ? (
+                          <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs font-bold">✓</div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border border-slate-300 dark:border-slate-700" />
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
-                {formData.backendRequirement === 'Custom Backend Requirement' && (
-                  <textarea
-                    rows={2}
-                    placeholder="Please describe your backend requirement *"
-                    value={formData.backendCustomDesc}
-                    onChange={e => setFormData({ ...formData, backendCustomDesc: e.target.value })}
-                    className="mt-2.5 w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
-                  />
-                )}
-                {stepErrors.backendRequirement && <p className="text-xs text-red-500 mt-1.5">{stepErrors.backendRequirement}</p>}
-                {stepErrors.backendCustomDesc && <p className="text-xs text-red-500 mt-1.5">{stepErrors.backendCustomDesc}</p>}
               </div>
 
-              {/* WhatsApp Integration * */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
-                  Do you need WhatsApp Integration? <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {[
-                    'No WhatsApp Integration',
-                    'WhatsApp Chat Button',
-                    'WhatsApp Enquiry',
-                    'WhatsApp Order',
-                    'WhatsApp Booking',
-                    'Custom WhatsApp Integration'
-                  ].map(w => (
-                    <button
-                      key={w}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, whatsappIntegration: w })}
-                      className={`p-3.5 rounded-xl text-xs font-bold border flex items-center justify-between transition-all cursor-pointer ${
-                        formData.whatsappIntegration === w
-                          ? 'bg-emerald-50 dark:bg-emerald-950/50 border-emerald-500 text-emerald-900 dark:text-white shadow-md'
-                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
-                      }`}
-                    >
-                      <span>{w}</span>
-                      {formData.whatsappIntegration === w && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />}
-                    </button>
-                  ))}
-                </div>
-                {stepErrors.whatsappIntegration && <p className="text-xs text-red-500 mt-1.5">{stepErrors.whatsappIntegration}</p>}
+              {/* DYNAMIC CHILD SPECIFICATIONS BASED ON SELECTED ARCHITECTURE */}
+              <div className="space-y-5">
+                
+                {/* 1. Backend & Admin Panel Modules (If Backend is selected) */}
+                {(formData.backendChoice === 'Backend + Admin Panel' || formData.backendChoice === 'Backend + Admin Panel + WhatsApp Integration') && (
+                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-purple-500/30 space-y-4 animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-bold text-xs">
+                      <Server className="w-4 h-4" />
+                      <span>Admin Panel Features &amp; Modules</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                      {[
+                        'Product / Menu / Catalog Manager',
+                        'Customer Inquiries & Lead CRM',
+                        'Media Gallery & File Uploads',
+                        'Live Visitor Traffic & Analytics',
+                        'Multi-admin Role Access Control',
+                        'Custom Dynamic Database Tables'
+                      ].map(mod => {
+                        const isModSelected = (formData.backendModules || []).includes(mod);
+                        return (
+                          <button
+                            key={mod}
+                            type="button"
+                            onClick={() => {
+                              const curr = formData.backendModules || [];
+                              const next = curr.includes(mod) ? curr.filter(m => m !== mod) : [...curr, mod];
+                              setFormData({ ...formData, backendModules: next });
+                            }}
+                            className={`p-3 rounded-xl border text-left text-xs font-semibold flex items-center justify-between transition-all cursor-pointer ${
+                              isModSelected
+                                ? 'bg-purple-100 dark:bg-purple-900/50 border-purple-500 text-purple-900 dark:text-white'
+                                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
+                            }`}
+                          >
+                            <span>{mod}</span>
+                            <span className={`w-4 h-4 rounded-md border flex items-center justify-center text-[10px] ${
+                              isModSelected ? 'bg-purple-600 border-purple-500 text-white' : 'border-slate-300 dark:border-slate-700'
+                            }`}>
+                              {isModSelected && '✓'}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
-                {/* If WhatsApp Integration is chosen */}
-                {formData.whatsappIntegration && formData.whatsappIntegration !== 'No WhatsApp Integration' && (
-                  <div className="mt-3.5 p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
+                {/* 2. WhatsApp Integration Configuration (If WhatsApp is selected) */}
+                {(formData.backendChoice === 'WhatsApp Integration' || formData.backendChoice === 'Backend + Admin Panel + WhatsApp Integration') && (
+                  <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-emerald-500/30 space-y-4 animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
+                      <MessageCircle className="w-4 h-4" />
+                      <span>WhatsApp Business Channel Setup</span>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -4882,36 +5177,46 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                         </label>
                         <input
                           type="text"
-                          value={formData.whatsappCountryCode}
+                          value={formData.whatsappCountryCode || '+91'}
                           onChange={e => setFormData({ ...formData, whatsappCountryCode: e.target.value })}
-                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none font-mono"
+                          className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none font-mono"
                         />
                       </div>
                       <div className="sm:col-span-2">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          WhatsApp Number <span className="text-red-500">*</span>
+                          WhatsApp Number for Inquiries <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="tel"
-                          placeholder="e.g. 9876543210"
-                          value={formData.whatsappNumberForIntegration}
+                          placeholder="e.g. 9876543210 (or same as primary)"
+                          value={formData.whatsappNumberForIntegration || formData.whatsappNumber || ''}
                           onChange={e => setFormData({ ...formData, whatsappNumberForIntegration: e.target.value })}
-                          className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none"
+                          className="w-full px-3 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none"
                         />
                         {stepErrors.whatsappNumberForIntegration && (
                           <p className="text-xs text-red-500 mt-1">{stepErrors.whatsappNumberForIntegration}</p>
                         )}
                       </div>
                     </div>
-                    {formData.whatsappIntegration === 'Custom WhatsApp Integration' && (
-                      <textarea
-                        rows={2}
-                        placeholder="Describe your WhatsApp requirement *"
-                        value={formData.whatsappCustomDesc}
-                        onChange={e => setFormData({ ...formData, whatsappCustomDesc: e.target.value })}
-                        className="w-full p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs outline-none"
-                      />
-                    )}
+
+                    {/* WhatsApp Action Types */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-2">
+                        Included WhatsApp Automation Triggers:
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {[
+                          'Floating Quick Chat Widget',
+                          'Direct Order / Cart Dispatch',
+                          'Instant Form Inquiry Forwarding'
+                        ].map(trig => (
+                          <div key={trig} className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200">
+                            <span className="text-emerald-500">✓</span>
+                            <span>{trig}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -4992,43 +5297,83 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 </p>
               </div>
 
-              {/* Estimated Budget */}
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-2.5">
-                  1. Estimated Budget (Optional)
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  {[
-                    'Under ₹10,000',
-                    '₹10,000 – ₹25,000',
-                    '₹25,000 – ₹50,000',
-                    '₹50,000 – ₹1,00,000',
-                    'Above ₹1,00,000',
-                    'Custom Budget'
-                  ].map(b => (
-                    <button
-                      key={b}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, budgetBracket: b })}
-                      className={`p-3 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
-                        formData.budgetBracket === b
-                          ? 'bg-purple-600 border-purple-500 text-white shadow-md'
-                          : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
-                      }`}
-                    >
-                      {b}
-                    </button>
-                  ))}
+              {/* Estimated Budget & Target Budget Negotiation */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2.5">
+                    1. Estimated Budget Range
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {[
+                      'Under ₹10,000',
+                      '₹10,000 – ₹25,000',
+                      '₹25,000 – ₹50,000',
+                      '₹50,000 – ₹1,00,000',
+                      'Above ₹1,00,000',
+                      'Custom Target'
+                    ].map(b => (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, budgetBracket: b })}
+                        className={`p-3 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
+                          formData.budgetBracket === b
+                            ? 'bg-purple-600 border-purple-500 text-white shadow-md'
+                            : 'bg-slate-50 dark:bg-slate-950/80 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                        }`}
+                      >
+                        {b}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                {formData.budgetBracket === 'Custom Budget' && (
-                  <input
-                    type="text"
-                    placeholder="Enter your custom target budget in INR..."
-                    value={formData.customBudget}
-                    onChange={e => setFormData({ ...formData, customBudget: e.target.value })}
-                    className="mt-2.5 w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-sm outline-none"
-                  />
-                )}
+
+                {/* Target / Negotiate Budget Input with Live Threshold Warning */}
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Target / Negotiable Budget (Optional)
+                    </label>
+                    <span className="text-[10px] text-slate-500">
+                      Starting packages from ₹4,999 / $99
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">₹</span>
+                    <input
+                      type="number"
+                      placeholder="Enter your exact planned budget (e.g. 15000)"
+                      value={formData.negotiateBudget || ''}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setFormData({ ...formData, negotiateBudget: val, customBudget: val });
+                      }}
+                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm outline-none font-mono font-bold"
+                    />
+                  </div>
+
+                  {/* Low Budget Alert Modal / Banner */}
+                  {Boolean(formData.negotiateBudget && Number(formData.negotiateBudget) > 0 && Number(formData.negotiateBudget) < 4999) && (
+                    <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/40 text-left space-y-2 animate-in fade-in duration-200">
+                      <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-bold text-xs">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                        <span>Minimum Standard Package Notice (₹4,999)</span>
+                      </div>
+                      <p className="text-[11.5px] text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Our full-stack tailored website development packages start from <strong>₹4,999</strong> (including responsive UI, domain setup, hosting &amp; security). If you require an ultra-lightweight micro landing page, our lead architects can discuss customized options!
+                      </p>
+                      <a
+                        href="https://wa.me/919876543210?text=Hi%20Weblets%20Team%2C%20I%20would%20like%20to%20discuss%20a%20custom%20budget%20website%20project."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-sm transition-colors cursor-pointer"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>Chat with Founders on WhatsApp</span>
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Expected Launch Date */}
@@ -5309,8 +5654,13 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 {/* 3. Design & Colors */}
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                   <div>
-                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">3. Design Preferences</h5>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">Style: <span className="font-semibold text-slate-900 dark:text-white">{formData.visualStyle}</span> • Color: <span className="font-semibold text-slate-900 dark:text-white">{formData.colorTheme}</span></p>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">3. Design &amp; Aesthetic Identity</h5>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
+                      Style: <span className="font-semibold text-slate-900 dark:text-white">{formData.visualStyle}</span> • 
+                      Mode: <span className="font-semibold text-slate-900 dark:text-white">{formData.colorMode}</span> • 
+                      Color Theme: <span className="font-semibold text-slate-900 dark:text-white">{formData.colorThemeChoice || formData.colorTheme}</span>
+                      {formData.colorThemeChoice === 'Select Colors' ? ` (Primary: ${formData.primaryColor}, Secondary: ${formData.secondaryColor})` : ''}
+                    </p>
                   </div>
                   <button
                     onClick={() => setCurrentStep(4)}
@@ -5345,8 +5695,15 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
                 {/* 5. Backend & WhatsApp */}
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                   <div>
-                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">5. Backend &amp; WhatsApp</h5>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5">Backend: <span className="font-semibold text-slate-900 dark:text-white">{formData.backendRequirement}</span> • WhatsApp: <span className="font-semibold text-slate-900 dark:text-white">{formData.whatsappIntegration}</span></p>
+                    <h5 className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">5. Backend &amp; WhatsApp Architecture</h5>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5 font-semibold text-slate-900 dark:text-white">
+                      {formData.backendChoice || formData.backendRequirement}
+                    </p>
+                    {formData.whatsappNumberForIntegration && (
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        WhatsApp Contact: {formData.whatsappCountryCode || '+91'} {formData.whatsappNumberForIntegration}
+                      </p>
+                    )}
                   </div>
                   <button
                     onClick={() => setCurrentStep(7)}

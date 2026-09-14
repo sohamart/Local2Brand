@@ -326,6 +326,21 @@ export function AuthProvider({ children }) {
     });
   };
 
+  const refreshUser = async () => {
+    try {
+      const res = await api.get('/auth/me');
+      if (res && res.success && res.user) {
+        setUser(res.user);
+        safeSetCachedUser(res.user);
+        oneSignalService.syncUser(res.user);
+        return res.user;
+      }
+    } catch (err) {
+      console.warn('refreshUser error:', err.message);
+    }
+    return null;
+  };
+
   const isAdmin = user?.role === 'admin';
 
   return (
@@ -348,6 +363,7 @@ export function AuthProvider({ children }) {
         updateProfile,
         changePassword,
         updateUserSession,
+        refreshUser,
       }}
     >
       {children}
