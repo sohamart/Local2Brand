@@ -2,11 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Home, Sparkles } from 'lucide-react';
 import { SEO } from '../components/common/CommonUI';
+import { SEO_PAGES } from '../config/seoConfig';
 
 export default function NotFound() {
   return (
     <>
-      <SEO title="Page Not Found (404)" />
+      <SEO
+        title={SEO_PAGES.notFound.title}
+        description={SEO_PAGES.notFound.description}
+        canonical={SEO_PAGES.notFound.canonical}
+        noindex={true}
+        robots={SEO_PAGES.notFound.robots}
+      />
       <div className="min-h-[80vh] flex items-center justify-center px-4 pt-28 pb-16">
         <div className="glass-panel rounded-hero p-8 sm:p-14 border border-white dark:border-slate-700/80 shadow-floating text-center max-w-lg mx-auto">
           <div className="text-6xl sm:text-7xl font-black text-brand-600 dark:text-brand-400 font-mono mb-4">

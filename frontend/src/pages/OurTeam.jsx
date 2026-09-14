@@ -1,35 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Code, ShieldCheck, Zap, Sparkles, Mail, ArrowRight, ExternalLink, Cpu, Layers, Terminal, Rocket, CheckCircle2 } from 'lucide-react';
-import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
 import { useOrderModal } from '../context/OrderModalContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import FinalCTA from '../components/home/FinalCTA';
-
-const InstagramIcon = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
-  </svg>
-);
-
-const LinkedinIcon = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-    <rect width="4" height="12" x="2" y="9" />
-    <circle cx="4" cy="4" r="2" />
-  </svg>
-);
-
-const GithubIcon = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-  </svg>
-);
-
 import FounderCard from '../components/common/FounderCard';
+import { SEO_PAGES, BRAND } from '../config/seoConfig';
 
 export default function OurTeam() {
   const { openOrderModal } = useOrderModal();
@@ -81,11 +58,34 @@ export default function OurTeam() {
     ? settings.aiSettings.adminShowableDetails.founders
     : defaultFounders;
 
+  // Generate Person Schema for each team member
+  const teamSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: teamList.map((m, idx) => ({
+      '@type': 'Person',
+      position: idx + 1,
+      name: m.name,
+      jobTitle: m.role,
+      worksFor: {
+        '@type': 'Organization',
+        '@id': `${BRAND.domain}/#organization`,
+        name: BRAND.name
+      },
+      sameAs: [m.linkedin, m.instagram, m.github].filter(Boolean)
+    }))
+  };
+
   return (
     <>
       <SEO
-        title="Our Team — Meet the Engineers & Visionaries | Weblets"
-        description="Meet the core founders and architects at Weblets: Soham Dutta, Sayantan, and Achinta. Crafting world-class web experiences for ambitious brands."
+        title={SEO_PAGES.team.title}
+        description={SEO_PAGES.team.description}
+        canonical={SEO_PAGES.team.canonical}
+        schema={teamSchema}
+        breadcrumbs={[
+          { name: 'Our Team', url: '/team' }
+        ]}
       />
 
       <div className="page-header-offset pb-24">
@@ -97,7 +97,7 @@ export default function OurTeam() {
           </div>
           
           <h1 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-            Meet Our <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 bg-clip-text text-transparent">Engineering & Design</span> Team
+            Our Team — Meet the <span className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 bg-clip-text text-transparent">Founders &amp; Architects</span> Behind Weblets
           </h1>
 
           <p className="mt-4 text-base sm:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
@@ -123,9 +123,9 @@ export default function OurTeam() {
                   <Rocket className="w-3.5 h-3.5" />
                   <span>Our Promise</span>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-black text-white">
+                <h2 className="text-2xl sm:text-3xl font-black text-white">
                   We don't just deliver websites. We build your digital unfair advantage.
-                </h3>
+                </h2>
                 <p className="text-purple-100/90 text-sm sm:text-base leading-relaxed">
                   Every line of code is written for blistering speed, top-tier SEO discoverability, and delightful customer journeys. When you work with Weblets, you talk directly with the engineers crafting your project.
                 </p>

@@ -1,24 +1,46 @@
 # ==============================================================================
 # Weblets — Production Robots.txt
 # Official Domain: https://weblets.bond
+# Brand Slogan: Lets make website together
 # ==============================================================================
 
 User-agent: *
 Allow: /
+Allow: /assets/
+Allow: /logo.png
+Allow: /favicon.jpg
+Allow: /sitemap.xml
+Disallow: /admin
 Disallow: /admin/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /api
 Disallow: /api/
 
 User-agent: Googlebot
 Allow: /
+Allow: /assets/
+Disallow: /admin
 Disallow: /admin/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /api
 Disallow: /api/
 
 User-agent: Googlebot-Image
 Allow: /
+Allow: /assets/
+Allow: /logo.png
+Allow: /favicon.jpg
 
 User-agent: bingbot
 Allow: /
+Allow: /assets/
+Disallow: /admin
 Disallow: /admin/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /api
 Disallow: /api/
 
 User-agent: DuckDuckBot

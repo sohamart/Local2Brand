@@ -356,10 +356,16 @@ export default function LiveDemoViewer() {
   return (
     <div className="h-screen h-[100dvh] w-screen overflow-hidden bg-slate-100 dark:bg-[#06080e] text-slate-900 dark:text-slate-100 flex flex-col select-none transition-colors duration-200">
       <SEO
-        title={`${activeDemo.title || 'Live Website Demo'} — WEBLETS`}
+        title={`${activeDemo.title || 'Live Website Demo'} | Weblets`}
         description={activeDemo.description || `Test this live interactive ${activeDemo.category || 'commercial'} website demo by Weblets. 48-hour turnkey deployment with WhatsApp ordering.`}
         keywords={`${activeDemo.category || 'website'} template, ${activeDemo.title || 'live demo'}, weblets demo, weblets templates, interactive website`}
         image={activeDemo.heroImage || activeDemo.thumbnail || '/logo.png'}
+        canonical={`https://weblets.bond/demos/${activeDemo.slug || cleanId}`}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Live Demos', path: '/demos' },
+          { name: activeDemo.title || 'Template', path: `/demos/${activeDemo.slug || cleanId}` }
+        ]}
       />
       
       {/* ========================================================================= */}

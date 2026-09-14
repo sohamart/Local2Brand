@@ -8,14 +8,15 @@ import {
   Code2,
   Check,
   ArrowRight,
-  Clock
+  Clock,
+  Sparkles
 } from 'lucide-react';
-import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
 import { agencyServices } from '../data/services';
 import { useOrderModal } from '../context/OrderModalContext';
 import FinalCTA from '../components/home/FinalCTA';
 import AshokaChakra from '../components/common/AshokaChakra';
+import { SEO_PAGES, BRAND } from '../config/seoConfig';
 import api from '../services/api';
 
 const serviceImages = {
@@ -76,26 +77,63 @@ export default function Services() {
     fetchServices();
   }, []);
 
+  // Generate Service Schema for Rich Results
+  const servicesSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: servicesList.map((srv, idx) => ({
+      '@type': 'Service',
+      position: idx + 1,
+      name: srv.title,
+      description: srv.description,
+      provider: {
+        '@type': 'Organization',
+        '@id': `${BRAND.domain}/#organization`,
+        name: BRAND.name
+      },
+      offers: {
+        '@type': 'Offer',
+        price: srv.startingPriceInr ? srv.startingPriceInr.replace(/[^0-9]/g, '') : '9999',
+        priceCurrency: 'INR'
+      }
+    }))
+  };
+
   return (
     <>
       <SEO
-        title="Web Development & Digital Growth Services — Weblets"
-        description="Explore our high-performance website development services. 48-hour delivery, custom WhatsApp pipelines, SEO dominance, and bespoke SaaS builds."
+        title={SEO_PAGES.services.title}
+        description={SEO_PAGES.services.description}
+        canonical={SEO_PAGES.services.canonical}
+        schema={servicesSchema}
+        breadcrumbs={[
+          { name: 'Services', url: '/services' }
+        ]}
       />
 
       <div className="page-header-offset pb-20">
 
-        {/* Page Hero Header */}
+        {/* Page Hero Header with Single Semantic H1 */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
             <AshokaChakra size={13} />
             <span>🇮🇳 Indian Craft • Global Reach</span>
           </div>
-          <SectionHeading
-            badge="Tailored Engineering"
-            title="Everything You Need to Dominate Your Market Online."
-            subtitle="We design high-converting digital storefronts and bespoke brand assets tailored for ambitious Indian and international businesses."
-          />
+          
+          <div className="space-y-3 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-brand-50/80 dark:bg-brand-950/80 border border-brand-200/70 dark:border-brand-500/30 text-brand-700 dark:text-brand-300 text-xs font-semibold uppercase tracking-wider shadow-sm mx-auto">
+              <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+              <span>Tailored Engineering</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+              Web Development &amp; Digital Growth Services
+            </h1>
+
+            <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed pt-1">
+              Everything you need to dominate your market online. High-converting digital storefronts and bespoke brand assets tailored for ambitious businesses.
+            </p>
+          </div>
         </div>
 
         {/* Services In-Depth List */}
@@ -106,7 +144,7 @@ export default function Services() {
             const imgUrl = serviceImages[service.id] || serviceImages['business-websites'];
 
             return (
-              <div
+              <article
                 key={service.id}
                 id={service.id}
                 className="glass-panel rounded-3xl sm:rounded-hero p-5 sm:p-10 lg:p-14 border border-white dark:border-slate-700/80 shadow-floating relative overflow-hidden"
@@ -123,9 +161,9 @@ export default function Services() {
                         <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
                           Solution Tier 0{index + 1}
                         </span>
-                        <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                        <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                           {service.title}
-                        </h3>
+                        </h2>
                       </div>
                     </div>
 
@@ -139,9 +177,9 @@ export default function Services() {
 
                     {/* Features List */}
                     <div className="space-y-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <h4 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2 sm:mb-3">
+                      <h3 className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white mb-2 sm:mb-3">
                         Key Deliverables Included:
-                      </h4>
+                      </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
                         {service.features.map((feat, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
@@ -192,7 +230,7 @@ export default function Services() {
                     <div className="relative rounded-card overflow-hidden shadow-lg aspect-[16/11] bg-slate-100 dark:bg-slate-950 group border border-white dark:border-slate-800">
                       <img
                         src={imgUrl}
-                        alt={service.title}
+                        alt={`${service.title} - Weblets Service Showcase`}
                         className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700 ease-out"
                         loading="lazy"
                       />
@@ -210,7 +248,7 @@ export default function Services() {
 
                 {/* Subtle bottom tricolor accent */}
                 <div className="absolute bottom-0 left-6 right-6 h-[2px] rounded-full bg-gradient-to-r from-amber-500/50 via-blue-500/30 to-emerald-500/50" />
-              </div>
+              </article>
             );
           })}
         </div>

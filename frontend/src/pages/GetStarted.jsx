@@ -87,6 +87,7 @@ import BackgroundCountryArt from '../components/common/BackgroundCountryArt';
 import SearchableCombobox from '../components/common/SearchableCombobox';
 import { detectUserLiveLocation, detectCountryFromTimezone } from '../utils/geoDetector';
 import { uploadWithToast } from '../utils/toastUpload';
+import { SEO } from '../components/common/CommonUI';
 
 // Multilingual dictionary
 const TRANSLATIONS = {
@@ -2837,7 +2838,16 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
   }
 
   return (
-    <div className={`min-h-screen bg-slate-50 dark:bg-[#080B11] text-slate-900 dark:text-slate-100 flex flex-col selection:bg-purple-600 selection:text-white pb-32 transition-all duration-700 relative overflow-x-hidden`}>
+    <>
+      <SEO
+        title="Get Started — Fast-Track Website Requirement Builder | Weblets"
+        description="Launch your project with our interactive 3-minute website requirement builder. Select your niche, features, and receive an instant blueprint proposal."
+        canonical="https://weblets.bond/get-started"
+        breadcrumbs={[
+          { name: 'Get Started', url: '/get-started' }
+        ]}
+      />
+      <div className={`min-h-screen bg-slate-50 dark:bg-[#080B11] text-slate-900 dark:text-slate-100 flex flex-col selection:bg-purple-600 selection:text-white pb-32 transition-all duration-700 relative overflow-x-hidden`}>
       
       {/* Subtle Atmospheric Looping Country Video with Smooth Gradient Vignette */}
       <BackgroundCountryArt country={formData.country || 'India'} />
@@ -6221,5 +6231,6 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
       )}
 
     </div>
+    </>
   );
 }

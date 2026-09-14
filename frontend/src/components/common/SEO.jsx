@@ -1,47 +1,64 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { BRAND, DEFAULT_KEYWORDS } from '../../config/seoConfig';
 
 /**
- * Enterprise Dynamic SEO & OpenGraph Component
- * Generates dynamic page titles, descriptions, keyword variations (local2brand / local to brand / local 2 brand),
- * OpenGraph / Twitter Cards for social sharing (WhatsApp/Facebook/Twitter/LinkedIn previews),
- * Canonical tags, and BreadcrumbList JSON-LD structured schemas.
+ * Enterprise Production-Ready SEO Component for Weblets
+ * 
+ * Responsibilities:
+ * 1. Updates <title> with natural branding hierarchy (e.g., "Page Title | Weblets")
+ * 2. Injects meta descriptions, keywords, author, and search engine directives (robots)
+ * 3. Injects self-referencing canonical URL <link rel="canonical">
+ * 4. Manages full Open Graph and Twitter Card preview tags (for WhatsApp, Facebook, LinkedIn, X)
+ * 5. Dynamically injects linked Schema.org JSON-LD graph (BreadcrumbList, WebPage, and custom Schemas)
+ * 6. Supports Google Search Console & Bing verification tokens via props or env vars
  */
 export default function SEO({
   title,
   description,
   keywords,
-  image = 'https://weblets.bond/logo.png',
+  canonical,
+  image = BRAND.logo,
   type = 'website',
-  schema
+  robots,
+  noindex = false,
+  schema,
+  breadcrumbs,
+  author = 'Weblets (Soham Dutta, Sayantan & Achinta)'
 }) {
   const location = useLocation();
-  const domain = 'https://weblets.bond';
-  const canonicalUrl = `${domain}${location.pathname === '/' ? '' : location.pathname}`;
+  const domain = BRAND.domain;
+  
+  // Calculate canonical URL
+  const canonicalUrl = canonical || `${domain}${location.pathname === '/' ? '' : location.pathname}`;
 
-  const brandKeywords = 'weblets, weblets.bond, Weblets Agency, Weblets Studio, fast website builder, 48 hour website development, ecommerce store builder, high converting web design agency, restaurant website, cafe website, salon website, real estate website, custom web development, lets make website together';
+  // Process title: ensure brand inclusion without duplicate brand naming
+  const defaultTitle = 'Weblets | Modern Web Development & Digital Engineering Studio';
+  let activeTitle = defaultTitle;
+  if (title) {
+    activeTitle = title.toLowerCase().includes('weblets')
+      ? title
+      : `${title} | Weblets`;
+  }
 
-  const defaultTitle = 'Weblets — Lets make website together | Modern Web Studio';
-  const defaultDesc = 'Weblets (weblets.bond) crafts digital experiences that scale ambitious businesses into recognized global brands. 48-Hour delivery, bespoke conversion UI, 12+ live commercial demo templates, and direct WhatsApp lead capture.';
+  const activeDesc = description || BRAND.description;
+  const activeKeywords = keywords ? `${keywords}, ${DEFAULT_KEYWORDS}` : DEFAULT_KEYWORDS;
+  const activeRobots = noindex 
+    ? 'noindex, nofollow'
+    : (robots || 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
 
-  const activeTitle = title 
-    ? (title.toLowerCase().includes('weblets') 
-        ? title 
-        : `${title} | Weblets`)
-    : defaultTitle;
-    
-  const activeDesc = description || defaultDesc;
-  const activeKeywords = keywords ? `${keywords}, ${brandKeywords}` : brandKeywords;
-
-  // Ensure absolute image URL for perfect preview cards on WhatsApp, Facebook, iMessage, Twitter
-  const activeImage = image.startsWith('http') ? image : `${domain}${image.startsWith('/') ? '' : '/'}${image}`;
+  // Ensure absolute image URL
+  const activeImage = image.startsWith('http')
+    ? image
+    : `${domain}${image.startsWith('/') ? '' : '/'}${image}`;
 
   useEffect(() => {
     // 1. Update Document Title
     document.title = activeTitle;
 
-    // Helper function for meta tags
+    // Helper function to create or update meta tags
     const setMetaTag = (attrName, attrVal, content) => {
+      if (!content) return;
       let element = document.querySelector(`meta[${attrName}="${attrVal}"]`);
       if (!element) {
         element = document.createElement('meta');
@@ -54,10 +71,21 @@ export default function SEO({
     // 2. Standard Search Meta Tags
     setMetaTag('name', 'description', activeDesc);
     setMetaTag('name', 'keywords', activeKeywords);
-    setMetaTag('name', 'robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
-    setMetaTag('name', 'author', 'Weblets (Soham Dutta, Sayantan & Achinta)');
-    setMetaTag('name', 'publisher', 'Weblets');
-    setMetaTag('name', 'application-name', 'Weblets');
+    setMetaTag('name', 'robots', activeRobots);
+    setMetaTag('name', 'googlebot', activeRobots);
+    setMetaTag('name', 'author', author);
+    setMetaTag('name', 'publisher', BRAND.name);
+    setMetaTag('name', 'application-name', BRAND.name);
+
+    // Optional Search Engine Verification Tags (from Vite env vars)
+    const googleVerification = import.meta.env?.VITE_GOOGLE_SITE_VERIFICATION;
+    if (googleVerification) {
+      setMetaTag('name', 'google-site-verification', googleVerification);
+    }
+    const bingVerification = import.meta.env?.VITE_BING_SITE_VERIFICATION;
+    if (bingVerification) {
+      setMetaTag('name', 'msvalidate.01', bingVerification);
+    }
 
     // 3. OpenGraph / Facebook / WhatsApp / LinkedIn Preview
     setMetaTag('property', 'og:site_name', 'Weblets — Lets make website together');
@@ -67,11 +95,11 @@ export default function SEO({
     setMetaTag('property', 'og:type', type);
     setMetaTag('property', 'og:image', activeImage);
     setMetaTag('property', 'og:image:secure_url', activeImage);
-    setMetaTag('property', 'og:image:alt', `${activeTitle} - Weblets`);
+    setMetaTag('property', 'og:image:alt', `${activeTitle}`);
     setMetaTag('property', 'og:image:type', activeImage.endsWith('.png') ? 'image/png' : 'image/jpeg');
-    setMetaTag('property', 'og:locale', 'en_US');
+    setMetaTag('property', 'og:locale', 'en_IN');
 
-    // 4. Twitter / X Card
+    // 4. Twitter / X Cards
     setMetaTag('name', 'twitter:card', 'summary_large_image');
     setMetaTag('name', 'twitter:title', activeTitle);
     setMetaTag('name', 'twitter:description', activeDesc);
@@ -88,9 +116,8 @@ export default function SEO({
     }
     canonicalLink.setAttribute('href', canonicalUrl);
 
-    // 6. Dynamic Breadcrumb & WebPage Schema injection
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    const breadcrumbListItems = [
+    // 6. Dynamic Breadcrumb & WebPage Schema Generation
+    const breadcrumbItems = [
       {
         '@type': 'ListItem',
         position: 1,
@@ -99,25 +126,37 @@ export default function SEO({
       }
     ];
 
-    let currentPath = domain;
-    pathSegments.forEach((segment, idx) => {
-      currentPath += `/${segment}`;
-      const formattedName = segment
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      breadcrumbListItems.push({
-        '@type': 'ListItem',
-        position: idx + 2,
-        name: formattedName,
-        item: currentPath
+    if (Array.isArray(breadcrumbs) && breadcrumbs.length > 0) {
+      breadcrumbs.forEach((bc, idx) => {
+        breadcrumbItems.push({
+          '@type': 'ListItem',
+          position: idx + 2,
+          name: bc.name,
+          item: bc.url.startsWith('http') ? bc.url : `${domain}${bc.url.startsWith('/') ? '' : '/'}${bc.url}`
+        });
       });
-    });
+    } else {
+      const pathSegments = location.pathname.split('/').filter(Boolean);
+      let currentPath = domain;
+      pathSegments.forEach((segment, idx) => {
+        currentPath += `/${segment}`;
+        const formattedName = segment
+          .split('-')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        breadcrumbItems.push({
+          '@type': 'ListItem',
+          position: idx + 2,
+          name: formattedName,
+          item: currentPath
+        });
+      });
+    }
 
     const breadcrumbSchema = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: breadcrumbListItems
+      itemListElement: breadcrumbItems
     };
 
     const webPageSchema = {
@@ -128,13 +167,17 @@ export default function SEO({
       url: canonicalUrl,
       isPartOf: {
         '@type': 'WebSite',
-        name: 'LOCAL2BRAND',
-        alternateName: ['Local to Brand', 'Local 2 Brand', 'Local2Brand'],
+        '@id': `${domain}/#website`,
+        name: BRAND.name,
         url: domain
+      },
+      about: {
+        '@type': 'Organization',
+        '@id': `${domain}/#organization`
       }
     };
 
-    // Inject or update route dynamic schema script
+    // Inject or update dynamic schema script element
     let routeSchemaScript = document.getElementById('route-seo-schema');
     if (!routeSchemaScript) {
       routeSchemaScript = document.createElement('script');
@@ -142,14 +185,31 @@ export default function SEO({
       routeSchemaScript.type = 'application/ld+json';
       document.head.appendChild(routeSchemaScript);
     }
-    
-    const combinedSchemas = schema 
-      ? [breadcrumbSchema, webPageSchema, schema] 
-      : [breadcrumbSchema, webPageSchema];
 
-    routeSchemaScript.textContent = JSON.stringify(combinedSchemas);
+    const schemasToInject = [breadcrumbSchema, webPageSchema];
+    if (schema) {
+      if (Array.isArray(schema)) {
+        schemasToInject.push(...schema);
+      } else {
+        schemasToInject.push(schema);
+      }
+    }
 
-  }, [activeTitle, activeDesc, activeKeywords, canonicalUrl, activeImage, type, schema, location.pathname]);
+    routeSchemaScript.textContent = JSON.stringify(schemasToInject);
+  }, [
+    activeTitle,
+    activeDesc,
+    activeKeywords,
+    activeRobots,
+    canonicalUrl,
+    activeImage,
+    type,
+    schema,
+    breadcrumbs,
+    author,
+    location.pathname,
+    domain
+  ]);
 
   return null;
 }

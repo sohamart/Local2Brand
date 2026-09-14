@@ -10,7 +10,7 @@ export const testimonials = [
     business: "Komorebi Rooftop Dining",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop",
     rating: 5,
-    quote: "LOCAL2BRAND took our dining concept and created a website that looks like it belongs in Tokyo or New York. The direct WhatsApp reservation system alone increased our weekend bookings by over 200%. Incredible turnaround time."
+    quote: "Weblets took our dining concept and created a website that looks like it belongs in Tokyo or New York. The direct WhatsApp reservation system alone increased our weekend bookings by over 200%. Incredible turnaround time."
   },
   {
     id: "review-2",

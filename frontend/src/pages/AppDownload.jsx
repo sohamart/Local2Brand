@@ -46,6 +46,7 @@ import { toast } from 'react-toastify';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/common/SEO';
+import { SEO_PAGES } from '../config/seoConfig';
 import SectionHeading from '../components/common/SectionHeading';
 import AshokaChakra from '../components/common/AshokaChakra';
 import api from '../services/api';
@@ -545,9 +546,14 @@ export default function AppDownload() {
         title={
           isInsideInstalledApp
             ? `WEBLETS Web App — Installed & Active (${appConfig.version || 'v2.4.0'})`
-            : `Install ${appConfig.appName || 'WEBLETS Web App'} (${appConfig.version || 'v2.4.0 PWA'})`
+            : SEO_PAGES.appDownload.title
         }
-        description={appConfig.appDescription || 'Install official Inbuilt Web App with 1-tap home screen access and zero storage overhead.'}
+        description={appConfig.appDescription || SEO_PAGES.appDownload.description}
+        canonical={SEO_PAGES.appDownload.canonical}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Mobile App', path: '/app' }
+        ]}
       />
 
       {/* TOP FLOATING INBUILT INSTALL NOTIFICATION POPUP (Only shown in browser when not yet in standalone app) */}
@@ -672,7 +678,7 @@ export default function AppDownload() {
                       </span>
                     )}
                     <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-0.5">
-                      {appConfig.appName || 'LOCAL2BRAND Web App'}
+                      {appConfig.appName || 'WEBLETS Web App'}
                     </h2>
                     <span className="text-[11px] text-slate-500 dark:text-slate-400">
                       {appConfig.version || 'v2.4.0'} • {isAndroidApp ? (appConfig.androidPackageName || appConfig.packageName || 'Android App') : isInsideInstalledApp ? 'Standalone App Workspace' : 'Official Client Companion'}
@@ -684,12 +690,12 @@ export default function AppDownload() {
                 {isAndroidApp ? (
                   <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
                     Thanks For Downloading!{' '}
-                    <span className="l2b-gradient-text block sm:inline">LOCAL2BRAND Android App.</span>
+                    <span className="l2b-gradient-text block sm:inline">WEBLETS Android App.</span>
                   </h1>
                 ) : isInsideInstalledApp ? (
                   <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
                     Thanks For Downloading!{' '}
-                    <span className="l2b-gradient-text block sm:inline">LOCAL2BRAND App.</span>
+                    <span className="l2b-gradient-text block sm:inline">WEBLETS App.</span>
                   </h1>
                 ) : (
                   <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
@@ -701,11 +707,11 @@ export default function AppDownload() {
                 {/* Subtitle */}
                 {isAndroidApp ? (
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
-                    You have successfully opened the official LOCAL2BRAND Android application ({appConfig.androidPackageName || appConfig.packageName || 'com.local2brand.webapp'}). Enjoy ultra-fast 60-120FPS native fluidity, real-time sprint radar tracking, 50+ interactive template previews, and direct lead developer consultations.
+                    You have successfully opened the official WEBLETS Android application ({appConfig.androidPackageName || appConfig.packageName || 'com.weblets.webapp'}). Enjoy ultra-fast 60-120FPS native fluidity, real-time sprint radar tracking, 50+ interactive template previews, and direct lead developer consultations.
                   </p>
                 ) : isInsideInstalledApp ? (
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">
-                    You have successfully opened the official LOCAL2BRAND Web App workspace! Enjoy instant 60FPS fluid navigation, live sprint radar tracking, 50+ interactive demo previews, and direct lead developer consultations with zero device storage footprint.
+                    You have successfully opened the official WEBLETS Web App workspace! Enjoy instant 60FPS fluid navigation, live sprint radar tracking, 50+ interactive demo previews, and direct lead developer consultations with zero device storage footprint.
                   </p>
                 ) : (
                   <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto lg:mx-0 font-normal">

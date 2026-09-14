@@ -66,26 +66,72 @@ export default function Pricing() {
     ? settings.pricingPlans
     : defaultPricingPlans;
 
+  const pricingFaqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'How long does a website take to build and launch?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Ready-made template customizations are delivered within 48 to 72 hours. For bespoke professional projects, typical delivery is between 5 to 7 business days.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Are there any hidden renewal fees or platform lock-ins?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Zero hidden fees. You get 100% full source code ownership. Domain and hosting can be connected to your existing accounts for free or configured through optional turnkey addons.'
+        }
+      },
+      {
+        '@type': 'Question',
+        name: 'Do you provide revisions during the development process?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes! All packages include revision rounds and 14 to 60 days of post-launch hyper-care support.'
+        }
+      }
+    ]
+  };
+
   return (
     <>
       <SEO
-        title="Pricing Plans — Transparent Website Packages & Turnkey Addons"
-        description="Explore our transparent fixed-price website packages and turnkey domain & hosting options. Starter, Professional, and Custom tiers with 3 - 7 days delivery."
+        title="Website Development Packages & Pricing | Weblets"
+        description="Transparent fixed-price website packages from ₹4,999 ($149). Zero hidden fees, GST invoicing, 48-hour delivery, and turnkey hosting options."
+        canonical="https://weblets.bond/pricing"
+        schema={pricingFaqSchema}
+        breadcrumbs={[
+          { name: 'Pricing', url: '/pricing' }
+        ]}
       />
 
       <div className="page-header-offset pb-20">
 
-        {/* Page Hero Header */}
+        {/* Page Hero Header with Single Semantic H1 */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
             <AshokaChakra size={13} />
             <span>🇮🇳 GST Invoicing • Dual Currency INR (₹) / USD ($)</span>
           </div>
-          <SectionHeading
-            badge="Predictable Investment"
-            title="Transparent Pricing. Zero Hidden Fees."
-            subtitle="Choose fixed-price one-time delivery packages or explore our upcoming monthly care retainers with instant WhatsApp booking."
-          />
+
+          <div className="space-y-3 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-brand-50/80 dark:bg-brand-950/80 border border-brand-200/70 dark:border-brand-500/30 text-brand-700 dark:text-brand-300 text-xs font-semibold uppercase tracking-wider shadow-sm mx-auto">
+              <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+              <span>Predictable Investment</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+              Transparent Website Development Packages &amp; Pricing
+            </h1>
+
+            <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed pt-1">
+              Choose fixed-price one-time delivery packages or explore our upcoming monthly care retainers with instant WhatsApp booking.
+            </p>
+          </div>
 
           {/* Pricing Toggle Controls (One-Time vs Subscription & Currency) */}
           <div className="mt-8 flex flex-col items-center justify-center gap-4">

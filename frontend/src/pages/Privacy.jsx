@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Lock, Eye, BellRing, Database, UserCheck, ArrowLeft, Mail, Clock, CheckCircle2 } from 'lucide-react';
 import SEO from '../components/common/SEO';
+import { SEO_PAGES } from '../config/seoConfig';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 
 export default function Privacy() {
@@ -71,9 +72,13 @@ export default function Privacy() {
   return (
     <div className="min-h-screen pt-28 pb-20 relative">
       <SEO
-        title="Privacy Policy — WEBLETS"
-        description="Learn how WEBLETS (weblets.bond) protects your personal data, web push privacy, and project information with enterprise-grade security."
-        keywords="weblets privacy, weblets privacy policy, weblets data security, web push privacy, weblets.bond privacy standards"
+        title={SEO_PAGES.privacy.title}
+        description={SEO_PAGES.privacy.description}
+        canonical={SEO_PAGES.privacy.canonical}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Privacy Policy', path: '/privacy' }
+        ]}
       />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

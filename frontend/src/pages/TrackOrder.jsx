@@ -30,6 +30,7 @@ import { useOrderModal } from '../context/OrderModalContext';
 import api from '../services/api';
 import AshokaChakra from '../components/common/AshokaChakra';
 import { SEO } from '../components/common/CommonUI';
+import { SEO_PAGES } from '../config/seoConfig';
 
 const STATUS_BADGES = {
   'Draft': 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700',
@@ -225,8 +226,13 @@ export default function TrackOrder() {
   return (
     <>
       <SEO
-        title="Live Order Tracking & Project Roadmap — WEBLETS"
-        description="Track your real-time website project milestones, live sprint progress, architecture reviews, and delivery timeline."
+        title={SEO_PAGES.trackOrder.title}
+        description={SEO_PAGES.trackOrder.description}
+        canonical={SEO_PAGES.trackOrder.canonical}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Track Order', path: '/track-order' }
+        ]}
       />
 
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col selection:bg-purple-600 selection:text-white relative overflow-x-hidden font-sans transition-colors duration-300">

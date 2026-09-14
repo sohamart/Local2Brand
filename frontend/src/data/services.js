@@ -1,5 +1,5 @@
 /**
- * Agency Services Dataset for LOCAL2BRAND
+ * Agency Services Dataset for Weblets
  */
 
 export const agencyServices = [

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, ShieldCheck, Clock, CheckCircle2, AlertCircle, ArrowLeft, Mail, Phone, ExternalLink } from 'lucide-react';
 import SEO from '../components/common/SEO';
+import { SEO_PAGES } from '../config/seoConfig';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import AshokaChakra from '../components/common/AshokaChakra';
 
@@ -55,9 +56,13 @@ export default function Terms() {
   return (
     <div className="min-h-screen pt-28 pb-20 relative">
       <SEO
-        title="Terms and Conditions — WEBLETS"
-        description="Review the official Terms of Service and Client Agreement for WEBLETS (weblets.bond). Transparent SLAs, code ownership rights, and 48-hour delivery policies."
-        keywords="weblets terms, weblets terms of service, weblets client agreement, website development contract, weblets.bond policies"
+        title={SEO_PAGES.terms.title}
+        description={SEO_PAGES.terms.description}
+        canonical={SEO_PAGES.terms.canonical}
+        breadcrumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Terms and Conditions', path: '/terms' }
+        ]}
       />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

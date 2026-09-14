@@ -82,25 +82,62 @@ export default function Contact() {
     }
   };
 
+  const contactSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    name: 'Contact Weblets | Start Your Web Project',
+    description: 'Get in touch with Weblets. Request an instant 15-minute phone callback, submit project requirements, or connect directly with our engineering team.',
+    url: 'https://weblets.bond/contact',
+    mainEntity: {
+      '@type': 'Organization',
+      '@id': 'https://weblets.bond/#organization',
+      name: 'Weblets',
+      telephone: '+918710043923',
+      email: 'contact@weblets.bond',
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: '+918710043923',
+        contactType: 'customer service',
+        availableLanguage: ['English', 'Hindi', 'Bengali'],
+        areaServed: 'Worldwide'
+      }
+    }
+  };
+
   return (
     <>
       <SEO
-        title="Contact Us — Direct Project Inquiry & Consultation"
-        description="Get in touch with Weblets. Submit your project requirements or request an instant callback from our founders."
+        title="Contact Weblets | Start Your Web Project"
+        description="Get in touch with Weblets. Request an instant 15-minute phone callback, submit project requirements, or connect directly with our engineering team."
+        canonical="https://weblets.bond/contact"
+        schema={contactSchema}
+        breadcrumbs={[
+          { name: 'Contact Us', url: '/contact' }
+        ]}
       />
 
       <div className="page-header-offset pb-20">
         
-        {/* Page Hero Header */}
+        {/* Page Hero Header with Single Semantic H1 */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/40 text-purple-900 dark:text-purple-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
             <span>⚡ Direct Founders Line • 24/7 Rapid Live Support</span>
           </div>
-          <SectionHeading
-            badge="Direct Communication"
-            title="Let's Build Something Great."
-            subtitle="Ready to transform your digital presence? Send us your project details or schedule a direct consultation call."
-          />
+
+          <div className="space-y-3 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-brand-50/80 dark:bg-brand-950/80 border border-brand-200/70 dark:border-brand-500/30 text-brand-700 dark:text-brand-300 text-xs font-semibold uppercase tracking-wider shadow-sm mx-auto">
+              <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+              <span>Direct Communication</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+              Contact Weblets — Start Your Website Project
+            </h1>
+
+            <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed pt-1">
+              Ready to transform your digital presence? Send us your project details or schedule a direct consultation call.
+            </p>
+          </div>
         </div>
 
         {/* Contact Layout Grid */}

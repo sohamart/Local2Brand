@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, TrendingUp, Sparkles, ArrowRight } from 'lucide-react';
-import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
 import { portfolioProjects, projectCategories } from '../data/projects';
 import { useOrderModal } from '../context/OrderModalContext';
 import FinalCTA from '../components/home/FinalCTA';
 import AshokaChakra from '../components/common/AshokaChakra';
+import { SEO_PAGES, BRAND } from '../config/seoConfig';
 
 export default function Portfolio() {
   const [activeCategory, setActiveCategory] = useState('All');
@@ -16,26 +16,64 @@ export default function Portfolio() {
     ? portfolioProjects
     : portfolioProjects.filter((p) => p.category === activeCategory);
 
+  const portfolioSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: SEO_PAGES.portfolio.title,
+    description: SEO_PAGES.portfolio.description,
+    url: SEO_PAGES.portfolio.canonical,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: portfolioProjects.map((proj, idx) => ({
+        '@type': 'CreativeWork',
+        position: idx + 1,
+        name: proj.title,
+        description: proj.description,
+        image: proj.image,
+        creator: {
+          '@type': 'Organization',
+          '@id': `${BRAND.domain}/#organization`,
+          name: BRAND.name
+        }
+      }))
+    }
+  };
+
   return (
     <>
       <SEO
-        title="Portfolio & Case Studies — Proven Digital Transformations"
-        description="Explore our portfolio of high-converting websites, digital rebrands, and bespoke web platforms engineered for ambitious businesses."
+        title={SEO_PAGES.portfolio.title}
+        description={SEO_PAGES.portfolio.description}
+        canonical={SEO_PAGES.portfolio.canonical}
+        schema={portfolioSchema}
+        breadcrumbs={[
+          { name: 'Portfolio', url: '/portfolio' }
+        ]}
       />
 
       <div className="page-header-offset pb-20">
 
-        {/* Page Header */}
+        {/* Page Header with Single Semantic H1 */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/70 border border-amber-200/80 dark:border-amber-500/40 text-amber-900 dark:text-amber-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
             <AshokaChakra size={13} />
-            <span>🇮🇳 Indian & Global Success Stories</span>
+            <span>🇮🇳 Indian &amp; Global Success Stories</span>
           </div>
-          <SectionHeading
-            badge="Selected Works"
-            title="Work That Speaks for Your Brand."
-            subtitle="Explore our gallery of delivered projects, case studies, and digital transformations that turned local businesses into industry leaders."
-          />
+          
+          <div className="space-y-3 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-brand-50/80 dark:bg-brand-950/80 border border-brand-200/70 dark:border-brand-500/30 text-brand-700 dark:text-brand-300 text-xs font-semibold uppercase tracking-wider shadow-sm mx-auto">
+              <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+              <span>Selected Works</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+              Projects &amp; Portfolio — Digital Transformations by Weblets
+            </h1>
+
+            <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed pt-1">
+              Explore our gallery of delivered projects, case studies, and digital transformations that turned local businesses into industry leaders.
+            </p>
+          </div>
 
           {/* Category Filter Pills */}
           <div className="mt-8 sm:mt-10 flex items-center justify-start sm:justify-center overflow-x-auto pb-3 no-scrollbar gap-1.5 sm:gap-2">
@@ -62,7 +100,7 @@ export default function Portfolio() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 sm:mt-14">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
             {filteredProjects.map((project) => (
-              <div
+              <article
                 key={project.id}
                 className="glass-panel rounded-card sm:rounded-hero p-5 sm:p-8 border border-white dark:border-slate-700/80 shadow-glass hover:shadow-glass-lg transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
               >
@@ -71,7 +109,7 @@ export default function Portfolio() {
                   <div className="relative rounded-xl sm:rounded-2xl overflow-hidden aspect-[16/10] bg-slate-100 dark:bg-slate-950 mb-6 group border border-white dark:border-slate-800">
                     <img
                       src={project.image}
-                      alt={project.title}
+                      alt={`${project.title} - ${project.category} project by Weblets`}
                       className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-500"
                       loading="lazy"
                     />
@@ -82,9 +120,9 @@ export default function Portfolio() {
 
                   {/* Title & Tagline */}
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                       {project.title}
-                    </h3>
+                    </h2>
                     <span className="text-xs font-medium text-slate-400">
                       {project.year}
                     </span>
@@ -135,7 +173,7 @@ export default function Portfolio() {
 
                 {/* Subtle bottom tricolor accent */}
                 <div className="absolute bottom-0 left-6 right-6 h-[1.5px] bg-gradient-to-r from-amber-400/40 via-blue-400/30 to-emerald-400/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
+              </article>
             ))}
           </div>
         </div>

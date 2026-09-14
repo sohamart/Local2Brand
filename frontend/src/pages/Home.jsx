@@ -13,14 +13,63 @@ import PricingPreview from '../components/home/PricingPreview';
 import FAQSection from '../components/home/FAQSection';
 import FinalCTA from '../components/home/FinalCTA';
 import { SEO } from '../components/common/CommonUI';
+import { SEO_PAGES, BRAND } from '../config/seoConfig';
+import { agencyFaqs } from '../data/faqs';
 
 export default function Home() {
+  // Generate FAQ schema for homepage
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: agencyFaqs.slice(0, 6).map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer
+      }
+    }))
+  };
+
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfessionalService',
+    '@id': `${BRAND.domain}/#organization`,
+    name: BRAND.name,
+    legalName: BRAND.legalName,
+    alternateName: BRAND.alternateNames,
+    url: BRAND.domain,
+    logo: BRAND.logo,
+    image: BRAND.logo,
+    description: BRAND.description,
+    priceRange: BRAND.priceRange,
+    telephone: BRAND.phone,
+    email: BRAND.email,
+    address: {
+      '@type': 'PostalAddress',
+      ...BRAND.address
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: BRAND.geo.latitude,
+      longitude: BRAND.geo.longitude
+    },
+    sameAs: BRAND.socials,
+    founder: BRAND.founders.map((f) => ({
+      '@type': 'Person',
+      name: f.name,
+      jobTitle: f.jobTitle,
+      url: f.url
+    }))
+  };
+
   return (
     <>
       <SEO 
-        title="Weblets — Lets make website together | Modern High-Performance Web Studio"
-        description="Weblets (weblets.bond) builds digital experiences that turn ambitious businesses into recognized global brands. 48-Hour delivery, bespoke design systems, 12+ live commercial demo templates, and direct WhatsApp lead generation."
-        keywords="weblets, weblets.bond, website development, fast website delivery, website design agency, ecommerce website builder, bespoke web agency, lets make website together"
+        title={SEO_PAGES.home.title}
+        description={SEO_PAGES.home.description}
+        canonical={SEO_PAGES.home.canonical}
+        schema={[organizationSchema, faqSchema]}
       />
       
       <main>
@@ -33,34 +82,34 @@ export default function Home() {
         {/* 3. Trust / Metrics Section */}
         <TrustMetrics />
 
-        {/* 3. Services Section */}
+        {/* 4. Services Section */}
         <ServicesOverview />
 
-        {/* 4. Featured Work Section */}
+        {/* 5. Featured Work Section */}
         <FeaturedWork />
 
-        {/* 5. Demo Showcase Section */}
+        {/* 6. Demo Showcase Section */}
         <DemoShowcase />
 
-        {/* 6. Process Section */}
+        {/* 7. Process Section */}
         <ProcessTimeline />
 
-        {/* 7. Dedicated Real-Time Order & Sprint Tracker */}
+        {/* 8. Dedicated Real-Time Order & Sprint Tracker */}
         <HomeTrackOrderSection />
 
-        {/* 8. Why LOCAL2BRAND Section */}
+        {/* 9. Why Weblets Section */}
         <WhyUs />
 
-        {/* 9. Testimonials Section */}
+        {/* 10. Testimonials Section */}
         <Testimonials />
 
-        {/* 10. Pricing Section */}
+        {/* 11. Pricing Section */}
         <PricingPreview />
 
-        {/* 11. FAQ Section */}
+        {/* 12. FAQ Section */}
         <FAQSection />
 
-        {/* 12. Final CTA Section */}
+        {/* 13. Final CTA Section */}
         <FinalCTA />
       </main>
     </>

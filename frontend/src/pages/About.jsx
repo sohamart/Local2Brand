@@ -1,31 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Globe2, ShieldCheck, Zap, Heart, CheckCircle2, ArrowRight, Mail, Users } from 'lucide-react';
-import SectionHeading from '../components/common/SectionHeading';
 import { SEO } from '../components/common/CommonUI';
-import { siteConfig } from '../config/siteConfig';
+import { SEO_PAGES, BRAND } from '../config/seoConfig';
 import ProcessTimeline from '../components/home/ProcessTimeline';
 import FinalCTA from '../components/home/FinalCTA';
 import { useOrderModal } from '../context/OrderModalContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import AshokaChakra from '../components/common/AshokaChakra';
 import FounderCard from '../components/common/FounderCard';
-
-const InstagramIcon = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
-  </svg>
-);
-
-const LinkedinIcon = ({ className = 'w-4 h-4' }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-    <rect width="4" height="12" x="2" y="9" />
-    <circle cx="4" cy="4" r="2" />
-  </svg>
-);
 
 export default function About() {
   const { openOrderModal } = useOrderModal();
@@ -40,7 +23,7 @@ export default function About() {
           bio: 'Leading high-performance digital systems, reactive web engines, and automation pipelines.',
           instagram: 'https://instagram.com/sohamart',
           linkedin: 'https://linkedin.com/in/soham-dutta',
-          email: 'soham@weblets.bond',
+          email: 'contact@weblets.bond',
         },
         {
           name: 'Sayantan',
@@ -48,7 +31,7 @@ export default function About() {
           bio: 'Engineering liquid-smooth interactive interfaces, responsive design, and glassmorphism styling.',
           instagram: '',
           linkedin: '',
-          email: 'sayantan@weblets.bond',
+          email: 'contact@weblets.bond',
         },
         {
           name: 'Achinta',
@@ -56,30 +39,64 @@ export default function About() {
           bio: 'Orchestrating seamless client onboarding, rapid delivery pipelines, and quality execution.',
           instagram: '',
           linkedin: '',
-          email: 'achinta@weblets.bond',
+          email: 'contact@weblets.bond',
         },
       ];
+
+  const aboutSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: SEO_PAGES.about.title,
+    description: SEO_PAGES.about.description,
+    url: SEO_PAGES.about.canonical,
+    mainEntity: {
+      '@type': 'Organization',
+      '@id': `${BRAND.domain}/#organization`,
+      name: BRAND.name,
+      description: BRAND.description,
+      founder: BRAND.founders.map((f) => ({
+        '@type': 'Person',
+        name: f.name,
+        jobTitle: f.jobTitle
+      }))
+    }
+  };
 
   return (
     <>
       <SEO
-        title="About Us — Lets make website together | Weblets"
-        description="Learn about Weblets. We bridge the gap between world-class engineering and custom business growth."
+        title={SEO_PAGES.about.title}
+        description={SEO_PAGES.about.description}
+        canonical={SEO_PAGES.about.canonical}
+        schema={aboutSchema}
+        breadcrumbs={[
+          { name: 'About Us', url: '/about' }
+        ]}
       />
 
       <div className="page-header-offset pb-20">
 
-        {/* About Hero Header */}
+        {/* About Hero Header with Single Semantic H1 */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/40 text-purple-900 dark:text-purple-300 text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-            <span>Digital Launch & Engineering Studio</span>
+            <span>Digital Launch &amp; Engineering Studio</span>
           </div>
-          <SectionHeading
-            badge="Our Philosophy"
-            title="Lets make website together."
-            subtitle="We exist to give entrepreneurs, creators, and businesses the same digital polish and technological edge enjoyed by global tech leaders."
-          />
+          
+          <div className="space-y-3 max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-brand-50/80 dark:bg-brand-950/80 border border-brand-200/70 dark:border-brand-500/30 text-brand-700 dark:text-brand-300 text-xs font-semibold uppercase tracking-wider shadow-sm mx-auto">
+              <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+              <span>Our Philosophy</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+              About Weblets — Lets make website together
+            </h1>
+
+            <p className="text-slate-600 dark:text-slate-300 text-base sm:text-lg leading-relaxed pt-1">
+              We exist to give entrepreneurs, creators, and businesses the same digital polish and technological edge enjoyed by global tech leaders.
+            </p>
+          </div>
         </div>
 
         {/* Narrative & Mission Glass Grid */}
@@ -112,7 +129,7 @@ export default function About() {
                 </div>
                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
                   <CheckCircle2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  <span>GST & Dual Currency Ready</span>
+                  <span>GST &amp; Dual Currency Ready</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-200">
                   <CheckCircle2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -142,7 +159,7 @@ export default function About() {
               <div className="relative rounded-card overflow-hidden shadow-floating border border-white dark:border-slate-800 aspect-[4/5] bg-slate-100 dark:bg-slate-950 group">
                 <img
                   src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1200&auto=format&fit=crop"
-                  alt="LOCAL2BRAND Digital Agency Studio Team"
+                  alt="Weblets Digital Studio Engineering Team"
                   className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex flex-col justify-end p-8 text-white">
@@ -167,10 +184,10 @@ export default function About() {
             <div className="text-center mb-10">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-950/70 border border-purple-200/80 dark:border-purple-500/40 text-purple-700 dark:text-purple-300 text-xs font-bold uppercase tracking-wider mb-2">
                 <Users className="w-3.5 h-3.5" />
-                <span>Leadership & Visionaries</span>
+                <span>Leadership &amp; Visionaries</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-                Meet the Founders & Architects
+                Meet the Founders &amp; Architects
               </h2>
               <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1 max-w-xl mx-auto">
                 Direct access to the engineers and designers building your digital flagships.
