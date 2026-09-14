@@ -151,13 +151,16 @@ export const getAdminRecipients = () => {
   const adminAlertEmail = (process.env.ADMIN_ALERT_EMAIL || '').trim();
   const brandEmail = (process.env.BRAND_EMAIL || '').trim();
   const supportEmail = (process.env.SUPPORT_EMAIL || '').trim();
+  const emailUser = (process.env.EMAIL_USER || '').trim();
 
   const rawList = [
     adminEmail,
     adminAlertEmail,
     brandEmail,
     supportEmail,
+    emailUser,
     'sohamduttabwn@gmail.com',
+    'admin@local2brand.com',
     'contact@weblets.bond',
   ];
 
@@ -896,8 +899,11 @@ export const sendRequirementStatusUpdateEmail = async (reqDoc) => {
     ctaUrl: `${clientUrl}/track-order?id=${reqId}`,
   });
 
+  const adminRecipients = getAdminRecipients();
+  const allRecipients = Array.from(new Set([clientEmail, ...adminRecipients].filter(Boolean)));
+
   return await sendEmail({
-    to: clientEmail,
+    to: allRecipients,
     subject,
     html,
     text: `Your order ${reqId} status is now ${formattedStatus}`,
@@ -1012,10 +1018,12 @@ export const sendAdminCallbackAlert = async (callback) => {
 
 export const sendCallbackStatusUpdateEmail = async (callback, newStatus = '', customNotes = '') => {
   const clientEmail = resolveClientEmail(callback);
-  if (!clientEmail) return { success: false };
+  const adminRecipients = getAdminRecipients();
+  const allRecipients = Array.from(new Set([clientEmail, ...adminRecipients].filter(Boolean)));
+  if (allRecipients.length === 0) return { success: false };
 
   const formattedStatus = formatStatusTitle(newStatus || callback.status);
-  const subject = `Callback Update: ${formattedStatus} - WEBLETS`;
+  const subject = `Callback Update: ${formattedStatus} - ${callback.name || 'Client'} (${callback.phone || ''}) - WEBLETS`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -1023,21 +1031,23 @@ export const sendCallbackStatusUpdateEmail = async (callback, newStatus = '', cu
         Hi ${callback.name || 'Valued Client'},
       </p>
       <p class="text-body" style="margin: 0 0 14px 0; color: #cbd5e1; line-height: 1.6;">
-        Your callback request status has been updated to: <strong>${formattedStatus}</strong>.
+        The callback request for <strong>${callback.name}</strong> (${callback.phone}) has been updated to: <strong>${formattedStatus}</strong>.
       </p>
       ${customNotes ? `<p style="color: #94a3b8; font-size: 13px; font-style: italic;">Notes: ${customNotes}</p>` : ''}
     </div>
   `;
 
   const html = wrapAgencyEmail({
-    preheader: `Your callback request status is now ${formattedStatus}.`,
+    preheader: `Callback request status is now ${formattedStatus}.`,
     headerBadge: 'CALLBACK STATUS UPDATE',
     title: `Callback Status: ${formattedStatus}`,
-    subtitle: `Status updated for your request.`,
+    subtitle: `${callback.name} &bull; ${callback.phone}`,
     contentHtml,
+    ctaText: 'Open Callbacks',
+    ctaUrl: `${getClientUrl()}/admin/callbacks`,
   });
 
-  return await sendEmail({ to: clientEmail, subject, html, text: `Callback status: ${formattedStatus}` });
+  return await sendEmail({ to: allRecipients, subject, html, text: `Callback status: ${formattedStatus}` });
 };
 
 export const sendCallbackResolutionEmail = async (callback) => {
@@ -1106,10 +1116,12 @@ export const sendAdminNewLeadAlert = async (lead) => {
 
 export const sendLeadStatusUpdateEmail = async (lead) => {
   const clientEmail = resolveClientEmail(lead);
-  if (!clientEmail) return { success: false };
+  const adminRecipients = getAdminRecipients();
+  const allRecipients = Array.from(new Set([clientEmail, ...adminRecipients].filter(Boolean)));
+  if (allRecipients.length === 0) return { success: false };
 
   const formattedStatus = formatStatusTitle(lead.status || 'Updated');
-  const subject = `Inquiry Update: ${formattedStatus} - WEBLETS`;
+  const subject = `Inquiry Update: ${formattedStatus} - ${lead.name || 'Client'} - WEBLETS`;
 
   const contentHtml = `
     <div style="margin: 10px 0 16px 0;">
@@ -1117,7 +1129,7 @@ export const sendLeadStatusUpdateEmail = async (lead) => {
         Hi ${lead.name || 'Valued Client'},
       </p>
       <p class="text-body" style="margin: 0 0 14px 0; color: #cbd5e1; line-height: 1.6;">
-        Your inquiry regarding <strong>${lead.subject || 'Website Inquiry'}</strong> has been marked as <strong>${formattedStatus}</strong>.
+        The inquiry regarding <strong>${lead.subject || 'Website Inquiry'}</strong> has been marked as <strong>${formattedStatus}</strong>.
       </p>
     </div>
   `;
@@ -1127,9 +1139,11 @@ export const sendLeadStatusUpdateEmail = async (lead) => {
     headerBadge: 'INQUIRY UPDATE',
     title: `Status: ${formattedStatus}`,
     contentHtml,
+    ctaText: 'View in Admin',
+    ctaUrl: `${getClientUrl()}/admin/queries`,
   });
 
-  return await sendEmail({ to: clientEmail, subject, html, text: `Inquiry update: ${formattedStatus}` });
+  return await sendEmail({ to: allRecipients, subject, html, text: `Inquiry update: ${formattedStatus}` });
 };
 
 export const sendContactFormConfirmationEmail = sendLeadConfirmationEmail;
