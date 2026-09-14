@@ -26,8 +26,8 @@
     "status": "active",
     "createdAt": "2026-08-31T06:57:02.503Z",
     "vipWhatsappEnabled": false,
-    "updatedAt": "2026-09-14T16:16:55.705Z",
-    "isEmailVerified": false,
+    "updatedAt": "2026-09-14T16:54:31.035Z",
+    "isEmailVerified": true,
     "emailOtp": "314636",
     "emailOtpExpires": "2026-09-14T16:30:54.098Z"
   },
