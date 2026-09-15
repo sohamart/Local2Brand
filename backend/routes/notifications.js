@@ -98,20 +98,33 @@ router.get('/inbox', optionalAuth, async (req, res) => {
       const conditions = [];
 
       if (user) {
+        const uId = user._id || user.id;
+        const uEmail = user.email ? user.email.toLowerCase().trim() : '';
+
         if (user.role === 'admin') {
           conditions.push(
             { recipientRole: 'admin' },
             { recipientRole: 'all' },
-            { recipient: user._id },
-            { recipientEmail: user.email?.toLowerCase().trim() }
+            { recipient: uId },
+            { recipient: String(uId) }
           );
+          if (uEmail) {
+            conditions.push(
+              { recipientEmail: uEmail },
+              { recipientEmail: new RegExp(`^${uEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+            );
+          }
         } else {
           conditions.push(
-            { recipient: user._id },
+            { recipient: uId },
+            { recipient: String(uId) },
             { recipientRole: 'all' }
           );
-          if (user.email) {
-            conditions.push({ recipientEmail: user.email.toLowerCase().trim() });
+          if (uEmail) {
+            conditions.push(
+              { recipientEmail: uEmail },
+              { recipientEmail: new RegExp(`^${uEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+            );
           }
         }
       } else {

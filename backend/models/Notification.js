@@ -29,7 +29,6 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['lead', 'callback', 'requirement', 'order', 'user', 'status', 'broadcast', 'system'],
       default: 'system',
     },
     category: {

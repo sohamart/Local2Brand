@@ -150,8 +150,8 @@ export const getAdminRecipients = () => {
   const adminEmail = (process.env.ADMIN_EMAIL || '').trim();
   const adminAlertEmail = (process.env.ADMIN_ALERT_EMAIL || '').trim();
   const brandEmail = (process.env.BRAND_EMAIL || '').trim();
-  const supportEmail = (process.env.SUPPORT_EMAIL || '').trim();
-  const emailUser = (process.env.EMAIL_USER || '').trim();
+  const supportEmail = (process.env.SUPPORT_EMAIL || 'support@weblets.bond').trim();
+  const emailUser = (process.env.EMAIL_USER || process.env.GMAIL_USER || '').trim();
 
   const rawList = [
     adminEmail,
@@ -160,15 +160,18 @@ export const getAdminRecipients = () => {
     supportEmail,
     emailUser,
     'sohamduttabwn@gmail.com',
-    'admin@local2brand.com',
-    'contact@weblets.bond',
   ];
 
   const validSet = new Set();
   for (const item of rawList) {
     if (item && typeof item === 'string') {
       const clean = item.trim().toLowerCase();
-      if (clean.includes('@') && !clean.includes('example.com')) {
+      if (
+        clean.includes('@') &&
+        !clean.includes('example.com') &&
+        !clean.includes('contact@weblets.bond') &&
+        !clean.includes('admin@local2brand.com')
+      ) {
         validSet.add(clean);
       }
     }
@@ -283,7 +286,7 @@ class EmailQueueManager {
   async sendSingleEmail({ to, subject, html, text, headers = {} }) {
     const rawUser = (process.env.EMAIL_USER || process.env.GMAIL_USER || 'sohamduttabwn@gmail.com').trim();
     let fromEmail = process.env.EMAIL_FROM || `"WEBLETS" <${rawUser}>`;
-    const supportEmail = process.env.SUPPORT_EMAIL || 'contact@weblets.bond';
+    const supportEmail = process.env.SUPPORT_EMAIL || 'support@weblets.bond';
     const clientUrl = getClientUrl();
 
     const cleanText = text || htmlToPlainText(html);
@@ -363,7 +366,7 @@ export const sendEmail = async ({ to, subject, html, text, priority = 'high', is
 export const wrapAgencyEmail = ({ preheader, headerBadge, title, subtitle, contentHtml, ctaText, ctaUrl, footerNote, orderId }) => {
   const currentYear = new Date().getFullYear();
   const clientUrl = getClientUrl();
-  const supportEmail = process.env.SUPPORT_EMAIL || 'contact@weblets.bond';
+  const supportEmail = process.env.SUPPORT_EMAIL || 'support@weblets.bond';
   const logoImgUrl = 'https://res.cloudinary.com/tm2pwzjj/image/upload/v1789400789/weblets_assets/weblets_logo_official.jpg';
 
   return `<!DOCTYPE html>

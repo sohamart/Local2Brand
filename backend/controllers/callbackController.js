@@ -38,31 +38,37 @@ export const createCallback = async (req, res) => {
       user: validUserId,
     });
 
-    // Asynchronous email + In-App mailbox notification
+    // Asynchronous background email + In-App mailbox notification (Non-blocking for instant UI response)
     const callbackUserTarget = callback.user || validUserId || resolvedEmail;
 
-    await Promise.allSettled([
-      sendAdminCallbackAlert(callback),
-      callback.email ? sendCallbackConfirmationEmail(callback) : Promise.resolve(),
-      notificationDispatcher.dispatchToAdmin({
-        title: '📞 New Callback Request',
-        message: `${callback.name} requested a call: ${callback.phone} (${callback.preferredTime})`,
-        type: 'callback',
-        category: 'Callback Request',
-        link: '/admin/callbacks',
-        data: { callbackId: callback._id || callback.id, name: callback.name, phone: callback.phone, topic: callback.topic }
-      }),
-      callbackUserTarget ? notificationDispatcher.dispatchToUser({
-        userId: callback.user || validUserId,
-        email: resolvedEmail,
-        title: '📞 Callback Request Confirmed',
-        message: `Hi ${callback.name}, our specialist will call you at ${callback.phone} (${callback.preferredTime}).`,
-        type: 'callback',
-        category: 'Callback Confirmed',
-        link: '/dashboard',
-        data: { callbackId: callback._id || callback.id, phone: callback.phone, preferredTime: callback.preferredTime }
-      }) : Promise.resolve(),
-    ]);
+    setImmediate(async () => {
+      try {
+        await Promise.allSettled([
+          sendAdminCallbackAlert(callback),
+          callback.email ? sendCallbackConfirmationEmail(callback) : Promise.resolve(),
+          notificationDispatcher.dispatchToAdmin({
+            title: '📞 New Callback Request',
+            message: `${callback.name} requested a call: ${callback.phone} (${callback.preferredTime})`,
+            type: 'callback',
+            category: 'Callback Request',
+            link: '/admin/callbacks',
+            data: { callbackId: callback._id || callback.id, name: callback.name, phone: callback.phone, topic: callback.topic }
+          }),
+          callbackUserTarget ? notificationDispatcher.dispatchToUser({
+            userId: callback.user || validUserId,
+            email: resolvedEmail,
+            title: '📞 Callback Request Confirmed',
+            message: `Hi ${callback.name}, our specialist will call you at ${callback.phone} (${callback.preferredTime}).`,
+            type: 'callback',
+            category: 'Callback Confirmed',
+            link: '/dashboard',
+            data: { callbackId: callback._id || callback.id, phone: callback.phone, preferredTime: callback.preferredTime }
+          }) : Promise.resolve(),
+        ]);
+      } catch (err) {
+        console.warn('Background callback notification dispatch error:', err.message);
+      }
+    });
 
     return res.status(201).json({
       success: true,

@@ -65,33 +65,39 @@ export const createQueryLead = async (req, res) => {
       ipAddress: req.ip || '',
     });
 
-    // Await delivery of all push notifications & in-app alerts & emails
+    // Asynchronous background delivery of notifications & emails (Non-blocking for instant UI response)
     const targetUser = lead.userId || lead.user?._id || lead.user || lead.email;
 
-    await Promise.allSettled([
-      sendAdminNewLeadAlert(lead),
-      (lead.industry === 'Direct Contact Form' || lead.websiteType?.includes('Contact Form'))
-        ? sendContactFormConfirmationEmail(lead)
-        : sendLeadConfirmationEmail(lead),
-      notificationDispatcher.dispatchToAdmin({
-        title: '💼 New Proposal Inquiry',
-        message: `${lead.name} requested quote for ${lead.businessName || lead.websiteType} (${lead.budget})`,
-        type: 'lead',
-        category: 'Project Proposal',
-        link: '/admin/leads',
-        data: { leadId: lead._id || lead.id, name: lead.name, email: lead.email, websiteType: lead.websiteType, budget: lead.budget }
-      }),
-      targetUser ? notificationDispatcher.dispatchToUser({
-        userId: validUserId,
-        email: lead.email,
-        title: '💼 Project Inquiry Received',
-        message: `Hi ${lead.name}, we received your inquiry for ${lead.websiteType}. Our team is reviewing your requirements!`,
-        type: 'lead',
-        category: 'Inquiry Confirmed',
-        link: '/dashboard',
-        data: { leadId: lead._id || lead.id, websiteType: lead.websiteType }
-      }) : Promise.resolve(),
-    ]);
+    setImmediate(async () => {
+      try {
+        await Promise.allSettled([
+          sendAdminNewLeadAlert(lead),
+          (lead.industry === 'Direct Contact Form' || lead.websiteType?.includes('Contact Form'))
+            ? sendContactFormConfirmationEmail(lead)
+            : sendLeadConfirmationEmail(lead),
+          notificationDispatcher.dispatchToAdmin({
+            title: '💼 New Proposal Inquiry',
+            message: `${lead.name} requested quote for ${lead.businessName || lead.websiteType} (${lead.budget})`,
+            type: 'lead',
+            category: 'Project Proposal',
+            link: '/admin/leads',
+            data: { leadId: lead._id || lead.id, name: lead.name, email: lead.email, websiteType: lead.websiteType, budget: lead.budget }
+          }),
+          targetUser ? notificationDispatcher.dispatchToUser({
+            userId: validUserId,
+            email: lead.email,
+            title: '💼 Project Inquiry Received',
+            message: `Hi ${lead.name}, we received your inquiry for ${lead.websiteType}. Our team is reviewing your requirements!`,
+            type: 'lead',
+            category: 'Inquiry Confirmed',
+            link: '/dashboard',
+            data: { leadId: lead._id || lead.id, websiteType: lead.websiteType }
+          }) : Promise.resolve(),
+        ]);
+      } catch (dispatchErr) {
+        console.warn('Background lead notification dispatch error:', dispatchErr.message);
+      }
+    });
 
     return res.status(201).json({
       success: true,
