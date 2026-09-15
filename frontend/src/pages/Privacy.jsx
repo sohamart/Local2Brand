@@ -64,6 +64,17 @@ export default function Privacy() {
       icon: Shield,
       title: "7. Cookies & Local Browser Storage",
       content: `We use minimal essential local storage and cookie tokens to store your visual theme preferences (dark/light mode), active session tokens for client portal access, and admin authentication states. We do not utilize invasive cross-site tracking cookies.`
+    },
+    {
+      id: "google-oauth",
+      icon: Lock,
+      title: "8. Google User Data & OAuth Authentication Policy",
+      content: `When you sign in to Weblets using Google Sign-In ('Continue with Google'):
+      • Data Accessed: We only request and access non-sensitive basic identity information, specifically your name, primary email address, and avatar image (via Google openid, email, and profile scopes).
+      • Data Purpose: This data is strictly used to verify your identity, auto-fill your client contact details for project delivery, and authenticate your customer dashboard sessions.
+      • Storage & Protection: Your Google profile data is stored securely in our encrypted database with standard role-based access controls.
+      • No Third-Party Sharing: We never sell, rent, lease, or transfer your Google user data to third-party advertisers, data aggregators, or external AI models.
+      • Data Deletion: You can request immediate removal of your account and associated Google profile data at any time by emailing our privacy desk at ${settings.supportEmail || 'contact@weblets.bond'}.`
     }
   ];
 
