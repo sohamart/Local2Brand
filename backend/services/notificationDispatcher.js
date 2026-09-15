@@ -22,6 +22,7 @@ class NotificationDispatcher {
     data = {},
     emailHtml = '',
     priority = 'normal',
+    sendMirrorEmail = false, // Set to false by default to prevent duplicate emails alongside official dedicated mailers
   }) {
     if (!title || !message) return null;
 
@@ -66,17 +67,19 @@ class NotificationDispatcher {
         console.warn('Notification DB create notice:', dbErr.message);
       }
 
-      // 3. Mirror In-App Alert via Email to Target Recipients
-      this.sendNotificationEmail({
-        recipientRole,
-        targetEmail: finalEmail,
-        title,
-        message,
-        category,
-        link,
-        emailHtml,
-        priority,
-      }).catch((emailErr) => console.warn('Notification email dispatch notice:', emailErr.message));
+      // 3. Mirror In-App Alert via Email only if explicitly requested (prevents double emails)
+      if (sendMirrorEmail) {
+        this.sendNotificationEmail({
+          recipientRole,
+          targetEmail: finalEmail,
+          title,
+          message,
+          category,
+          link,
+          emailHtml,
+          priority,
+        }).catch((emailErr) => console.warn('Notification email dispatch notice:', emailErr.message));
+      }
 
       return {
         success: true,
@@ -159,6 +162,7 @@ class NotificationDispatcher {
     data = {},
     emailHtml = '',
     priority = 'high',
+    sendMirrorEmail = false,
   }) {
     return await this.dispatch({
       recipient: null,
@@ -171,6 +175,7 @@ class NotificationDispatcher {
       data,
       emailHtml,
       priority,
+      sendMirrorEmail,
     });
   }
 
@@ -188,6 +193,7 @@ class NotificationDispatcher {
     data = {},
     emailHtml = '',
     priority = 'normal',
+    sendMirrorEmail = false,
   }) {
     return await this.dispatch({
       recipient: userId,
@@ -201,6 +207,7 @@ class NotificationDispatcher {
       data,
       emailHtml,
       priority,
+      sendMirrorEmail,
     });
   }
 }
