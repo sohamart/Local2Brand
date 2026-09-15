@@ -36,14 +36,11 @@ export default function GoogleLoginButton({
   const [loading, setLoading] = useState(false);
   const hiddenGsiRef = useRef(null);
 
-  const googleClientId =
-    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-    '1084224796030-v9q3gq9q4kq8j5c4u7k1p2b3a4z5x6y7.apps.googleusercontent.com';
+  const DEFAULT_CLIENT_ID = '848526172933-rqi332t4023asnv0q7am2kvpo0bv9lap.apps.googleusercontent.com';
+  const rawClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const googleClientId = (rawClientId ? String(rawClientId).trim().replace(/^["']|["']$/g, '') : '') || DEFAULT_CLIENT_ID;
 
-  const isConfigured = Boolean(
-    import.meta.env.VITE_GOOGLE_CLIENT_ID &&
-    !import.meta.env.VITE_GOOGLE_CLIENT_ID.includes('1084224796030')
-  );
+  const isConfigured = Boolean(googleClientId && googleClientId.length > 20);
 
   useEffect(() => {
     // Dynamically inject Google Identity Services script if not already present
