@@ -38,7 +38,12 @@ export default function GoogleLoginButton({
 
   const googleClientId =
     import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-    '1084224796030-v9q3gq9q4kq8j5c4u7k1p2b3a4z5x6y7.apps.googleusercontent.com'; // Standard placeholder
+    '1084224796030-v9q3gq9q4kq8j5c4u7k1p2b3a4z5x6y7.apps.googleusercontent.com';
+
+  const isConfigured = Boolean(
+    import.meta.env.VITE_GOOGLE_CLIENT_ID &&
+    !import.meta.env.VITE_GOOGLE_CLIENT_ID.includes('1084224796030')
+  );
 
   useEffect(() => {
     // Dynamically inject Google Identity Services script if not already present
@@ -108,7 +113,12 @@ export default function GoogleLoginButton({
   const handleCustomGoogleClick = async () => {
     if (loading || isLoggingIn || disabled) return;
 
-    // Check if Google GSI is available on window
+    if (!isConfigured) {
+      toast.error('Google Client ID is missing or invalid. Please check VITE_GOOGLE_CLIENT_ID.');
+      console.error('Google OAuth Error: VITE_GOOGLE_CLIENT_ID environment variable is missing or placeholder.');
+      return;
+    }
+
     if (window.google?.accounts?.id) {
       try {
         setLoading(true);
