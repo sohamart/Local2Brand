@@ -33,12 +33,12 @@ export default function SEO({
   const canonicalUrl = canonical || `${domain}${location.pathname === '/' ? '' : location.pathname}`;
 
   // Process title: ensure brand inclusion without duplicate brand naming
-  const defaultTitle = 'Weblets | Modern Web Development & Digital Engineering Studio';
+  const defaultTitle = 'weblets agency - lets make website together';
   let activeTitle = defaultTitle;
   if (title) {
     activeTitle = title.toLowerCase().includes('weblets')
       ? title
-      : `${title} | Weblets`;
+      : `${title} | weblets agency`;
   }
 
   const activeDesc = description || BRAND.description;
@@ -89,7 +89,7 @@ export default function SEO({
     }
 
     // 3. OpenGraph / Facebook / WhatsApp / LinkedIn Preview
-    setMetaTag('property', 'og:site_name', 'Weblets — Lets make website together');
+    setMetaTag('property', 'og:site_name', 'weblets agency - lets make website together');
     setMetaTag('property', 'og:title', activeTitle);
     setMetaTag('property', 'og:description', activeDesc);
     setMetaTag('property', 'og:url', canonicalUrl);

@@ -1,0 +1,27 @@
+# weblets agency - lets make website together
+> Premier web design and full-stack development agency specializing in bespoke high-converting websites, e-commerce stores, responsive commercial niche templates, and express 48-hour delivery.
+
+## About Weblets Agency
+- **Brand Name**: weblets agency
+- **Slogan**: lets make website together
+- **Official Domain**: https://weblets.bond
+- **Founders**: Soham Dutta (Lead Architect), Sayantan (Technical Lead), Achinta (Operations Lead)
+- **HQ**: Kolkata & Bangalore, India (Serving Global Clients: India, US, UK, Canada, Australia, UAE, Europe)
+- **Services**:
+  - Custom UI/UX Web Design & Figma Prototyping
+  - Full-Stack Web Development (React, Node.js, Express, MongoDB)
+  - Commercial Niche Demos (Restaurants, Salons, Gyms, Real Estate, Clinics, E-commerce, LMS)
+  - WhatsApp Order & Catalog Integration
+  - Superfast 48-Hour Turnaround & Live Milestone Sprint Tracking
+
+## Key Links
+- Home: https://weblets.bond/
+- Website Demos & Templates: https://weblets.bond/demos
+- Services & Solutions: https://weblets.bond/services
+- Pricing Packages: https://weblets.bond/pricing
+- Client Portfolio & Case Studies: https://weblets.bond/portfolio
+- Team & Founders: https://weblets.bond/team
+- Track Live Order Sprint: https://weblets.bond/track-order
+- Contact Agency: https://weblets.bond/contact
+- Privacy Policy: https://weblets.bond/privacy
+- Terms & Conditions: https://weblets.bond/terms

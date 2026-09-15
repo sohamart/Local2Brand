@@ -54,6 +54,30 @@ export default function Home() {
       latitude: BRAND.geo.latitude,
       longitude: BRAND.geo.longitude
     },
+    slogan: 'lets make website together',
+    areaServed: [
+      { '@type': 'Country', name: 'India' },
+      { '@type': 'Country', name: 'United States' },
+      { '@type': 'Country', name: 'United Kingdom' },
+      { '@type': 'Country', name: 'Canada' },
+      { '@type': 'Country', name: 'Australia' },
+      { '@type': 'Country', name: 'United Arab Emirates' }
+    ],
+    knowsAbout: [
+      'Bespoke Web Development',
+      'UI/UX Design',
+      'Custom E-Commerce Stores',
+      'React & Node.js Engineering',
+      'High-Converting Landing Pages',
+      'WhatsApp Order Automation'
+    ],
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.98',
+      reviewCount: '128',
+      bestRating: '5',
+      worstRating: '1'
+    },
     sameAs: BRAND.socials,
     founder: BRAND.founders.map((f) => ({
       '@type': 'Person',

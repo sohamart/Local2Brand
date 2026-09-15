@@ -8,12 +8,12 @@
  */
 
 export const BRAND = {
-  name: 'Weblets',
-  legalName: 'Weblets',
-  alternateNames: ['Weblets Bond', 'weblets.bond', 'Weblets Studio', 'Weblets Agency'],
+  name: 'weblets agency',
+  legalName: 'weblets agency - lets make website together',
+  alternateNames: ['weblets', 'weblets agency', 'Weblets', 'Weblets Agency', 'weblets.bond', 'lets make website together'],
   domain: 'https://weblets.bond',
-  tagline: 'Lets make website together',
-  description: 'Weblets crafts high-converting bespoke websites, e-commerce stores, responsive commercial templates, and WhatsApp lead funnels with 48-hour to 7-day express delivery.',
+  tagline: 'lets make website together',
+  description: 'weblets agency - lets make website together. High-converting bespoke websites, e-commerce stores, responsive commercial templates, and WhatsApp lead funnels with 48-hour to 7-day express delivery.',
   logo: 'https://weblets.bond/logo.png',
   logoDark: 'https://weblets.bond/logo-dark.png',
   favicon: 'https://weblets.bond/favicon.png',
@@ -60,14 +60,15 @@ export const BRAND = {
 };
 
 export const DEFAULT_KEYWORDS = [
-  'Weblets',
+  'weblets agency',
+  'weblets',
+  'lets make website together',
   'weblets.bond',
-  'Weblets web development',
-  'Weblets website',
-  'Weblets web design',
-  'Weblets software',
-  'Weblets MERN development',
-  'Lets make website together',
+  'weblets agency website',
+  'weblets web development',
+  'weblets website design',
+  'weblets software',
+  'weblets MERN development',
   'bespoke web development',
   'fast website agency',
   'ecommerce website',
@@ -80,8 +81,8 @@ export const DEFAULT_KEYWORDS = [
 
 export const SEO_PAGES = {
   home: {
-    title: 'Weblets | Modern Web Development & Digital Engineering Studio',
-    description: 'Weblets (weblets.bond) — Lets make website together. High-performance bespoke websites, e-commerce stores, responsive commercial templates, and WhatsApp lead funnels with 48h delivery.',
+    title: 'weblets agency - lets make website together',
+    description: 'weblets agency - lets make website together. High-performance bespoke websites, e-commerce stores, responsive commercial templates, and WhatsApp lead funnels with 48h delivery.',
     canonical: 'https://weblets.bond/',
     h1: 'We Build Websites That Turn Your Vision Into A Global Brand.',
     ogType: 'website',
