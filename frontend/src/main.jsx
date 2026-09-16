@@ -16,16 +16,17 @@ function Root() {
       window.history.scrollRestoration = 'manual';
     }
 
-    // Ultra Silky 120Hz/144Hz ProMotion Smooth Scroll Engine
+    // Supreme Awwwards & Apple ProMotion Grade Smooth Scroll Engine (Studio Freight Lenis)
     const lenis = new Lenis({
-      duration: 0.85, // Snappy, punchy, zero-drag 144Hz response
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential decay curve
+      duration: 1.2, // Luxurious, buttery-smooth floating momentum
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential deceleration curve
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 1.0, // Buttery smooth wheel steps
-      touchMultiplier: 1.0, // 1:1 responsive touch tracking without artificial dragging
-      syncTouch: false, // Let mobile touch use hardware-accelerated momentum
+      wheelMultiplier: 1.0, // Buttery smooth wheel travel
+      touchMultiplier: 1.0, // Responsive 1:1 mobile touch
+      syncTouch: false, // Pure hardware-accelerated momentum
+      autoResize: true,
       infinite: false,
     });
 

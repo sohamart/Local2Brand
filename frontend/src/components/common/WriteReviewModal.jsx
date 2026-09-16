@@ -126,6 +126,7 @@ export default function WriteReviewModal({
   const modalContent = (
     <div
       className="fixed inset-0 z-[2147483640] flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-2xl animate-fade-in overflow-y-auto"
+      data-lenis-prevent="true"
       onClick={onClose}
     >
       <div

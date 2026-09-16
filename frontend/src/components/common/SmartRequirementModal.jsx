@@ -633,7 +633,7 @@ export default function SmartRequirementModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-2 sm:p-4 overflow-y-auto bg-slate-950/85 backdrop-blur-2xl animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-2 sm:p-4 overflow-y-auto bg-slate-950/85 backdrop-blur-2xl animate-in fade-in duration-200" data-lenis-prevent="true">
       
       {/* Animated Gradient Glow Border Frame */}
       <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-3xl shadow-[0_0_60px_rgba(168,85,247,0.25)] border-2 border-purple-500/40 dark:border-purple-500/30 overflow-hidden my-auto max-h-[94vh] flex flex-col">
