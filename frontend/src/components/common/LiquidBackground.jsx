@@ -24,15 +24,15 @@ export default function LiquidBackground() {
       radius: isTouchDevice ? 130 : 170,
     };
 
-    // Crisp grid node spacing (responsive: 50px on mobile, 58px on desktop)
-    const spacing = isTouchDevice ? 50 : 58;
+    // Crisp grid node spacing (responsive: 64px on mobile, 58px on desktop)
+    const spacing = isTouchDevice ? 64 : 58;
     let cols = Math.ceil(width / spacing) + 2;
     let rows = Math.ceil(height / spacing) + 2;
     let nodes = [];
 
     // Slow, serene glowing energy streams (ONLY active in Dark Mode)
     const lightStreams = [];
-    const maxStreams = isTouchDevice ? 4 : 8;
+    const maxStreams = isTouchDevice ? 3 : 6;
 
     class LightStream {
       constructor() {
@@ -226,6 +226,11 @@ export default function LiquidBackground() {
     window.addEventListener('orientationchange', handleResize);
 
     const render = () => {
+      if (document.hidden) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
       ctx.clearRect(0, 0, width, height);
       const isDark = document.documentElement.classList.contains('dark');
 

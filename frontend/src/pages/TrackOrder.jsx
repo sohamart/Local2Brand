@@ -263,11 +263,11 @@ export default function TrackOrder() {
               </button>
 
               <Link to="/" className="flex items-center gap-2 group min-w-0">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-900 group-hover:scale-105 transition-transform shrink-0 p-1 flex items-center justify-center">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden shadow-sm ring-2 ring-purple-500/30 border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-900 group-hover:scale-105 transition-transform shrink-0 p-0.5 flex items-center justify-center">
                   <img
                     src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'}
                     alt={`${settings?.brandName || 'WEBLETS'} Logo`}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain scale-110 transform-gpu"
                     onError={(e) => {
                       e.currentTarget.src = '/logo.png';
                     }}

@@ -52,24 +52,24 @@ export default function FounderCard({ founder, index = 0 }) {
         {/* Top Header: Avatar + Badge */}
         <div className="flex items-center justify-between mb-6">
           {photoUrl ? (
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shadow-lg ring-4 ring-slate-200 dark:ring-white/10 group-hover:ring-purple-500/40 transition-all shrink-0 bg-slate-100 dark:bg-slate-800">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden shadow-xl ring-2 ring-purple-500/30 group-hover:ring-purple-500/70 group-hover:shadow-purple-500/20 transition-all shrink-0 bg-slate-100 dark:bg-slate-800 relative">
               <img
                 src={photoUrl}
                 alt={founder.name || 'Founder Photo'}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full bg-gradient-to-tr ${gradient} text-white flex items-center justify-center font-black text-2xl">${initials}</div>`;
+                  e.currentTarget.parentElement.innerHTML = `<div class="w-full h-full bg-gradient-to-tr ${gradient} text-white flex items-center justify-center font-black text-2xl shadow-inner">${initials}</div>`;
                 }}
               />
             </div>
           ) : (
-            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr ${gradient} text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-lg ring-4 ring-slate-200 dark:ring-white/10 group-hover:ring-purple-500/40 transition-all shrink-0`}>
+            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr ${gradient} text-white flex items-center justify-center font-black text-2xl sm:text-3xl shadow-xl ring-2 ring-white/20 dark:ring-white/10 group-hover:ring-purple-500/50 group-hover:scale-105 transition-all shrink-0`}>
               {initials}
             </div>
           )}
 
-          <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-purple-50 dark:bg-white/5 border border-purple-200/80 dark:border-white/10 text-purple-700 dark:text-purple-300">
+          <span className="px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-black uppercase tracking-wider bg-purple-50 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 text-purple-700 dark:text-purple-300 shadow-2xs">
             {badgeText}
           </span>
         </div>

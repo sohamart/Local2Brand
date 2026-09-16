@@ -168,11 +168,11 @@ export default function AdminLayout() {
         {/* Top Logo */}
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/40 bg-slate-950 border border-white/90 dark:border-slate-700 p-1 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/40 bg-slate-950 border border-white/90 dark:border-slate-700 p-0.5 flex items-center justify-center shrink-0">
               <img
                 src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'}
                 alt={settings?.brandName || 'Logo'}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain scale-110 transform-gpu"
                 onError={(e) => {
                   e.currentTarget.src = '/logo.png';
                 }}

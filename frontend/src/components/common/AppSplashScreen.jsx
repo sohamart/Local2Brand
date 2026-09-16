@@ -191,12 +191,12 @@ export default function AppSplashScreen() {
           {/* Reverse Orbiting Neon Glow */}
           <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-purple-500/60 via-cyan-400/60 to-pink-400/60 opacity-90 blur-md animate-spin [animation-duration:6s] [animation-direction:reverse]" />
 
-          {/* Glowing Circular Glass Capsule Frame - Perfect Edge-to-Edge Zoom Fit */}
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-[0_0_60px_rgba(6,182,212,0.45),0_0_35px_rgba(124,58,237,0.5)] ring-2 ring-white/40 border-2 border-white/50 bg-white flex items-center justify-center p-2.5 transform transition-transform duration-500 hover:scale-105">
+          {/* Glowing Circular Glass Capsule Frame - Seamless Liquid Fit */}
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-[0_0_60px_rgba(6,182,212,0.45),0_0_35px_rgba(124,58,237,0.5)] ring-2 ring-purple-400/40 border border-white/20 bg-slate-950/80 backdrop-blur-2xl flex items-center justify-center p-2.5 transform transition-transform duration-500 hover:scale-105">
             <img
               src={activeLogo}
               alt={`${brandName} Logo`}
-              className="w-full h-full object-contain transform-gpu"
+              className="w-full h-full object-contain transform-gpu scale-105"
               onError={(e) => {
                 e.currentTarget.src = '/logo.png';
               }}

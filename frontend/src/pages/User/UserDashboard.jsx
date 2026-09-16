@@ -675,11 +675,11 @@ export default function UserDashboard() {
         {/* Top Logo & Portal Brand Tag */}
         <div className="p-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/30">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/40 border border-white/90 dark:border-slate-700 bg-slate-950 p-1 flex items-center justify-center shrink-0">
+            <div className="w-9 h-9 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/40 border border-white/90 dark:border-slate-700 bg-slate-950 p-0.5 flex items-center justify-center shrink-0">
               <img
                 src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'}
                 alt={settings?.brandName || 'Logo'}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain scale-110 transform-gpu"
                 onError={(e) => {
                   e.currentTarget.src = '/logo.png';
                 }}

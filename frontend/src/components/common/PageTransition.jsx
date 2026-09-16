@@ -27,22 +27,22 @@ export default function PageTransition({ children }) {
       setIsTransitioning(true);
       setTransitionKey((k) => k + 1);
 
-      // 1. SWAP PAGE CONTENT WHEN DOORS ARE 100% CLOSED AND FIRMLY SHUT (280ms)
+      // 1. SWAP PAGE CONTENT WHEN DOORS ARE 100% CLOSED (190ms)
       const timerSwap = setTimeout(() => {
         setDisplayLocation(location);
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         if (window.lenis) {
           window.lenis.scrollTo(0, { immediate: true });
         }
-      }, 280);
+      }, 190);
 
-      // 2. COMPLETE TRANSITION & DISMISS OVERLAY AFTER DOORS FULLY OPEN (1150ms)
+      // 2. COMPLETE TRANSITION & DISMISS OVERLAY AFTER DOORS FULLY OPEN (720ms)
       const timerEnd = setTimeout(() => {
         setIsTransitioning(false);
         if (window.lenis) {
           window.lenis.resize();
         }
-      }, 1150);
+      }, 720);
 
       return () => {
         clearTimeout(timerSwap);
@@ -57,89 +57,75 @@ export default function PageTransition({ children }) {
     const overlayContent = (
       <div
         key={transitionKey}
-        className="fixed inset-0 z-[2147483647] pointer-events-none overflow-hidden [perspective:1400px]"
+        className="fixed inset-0 z-[2147483647] pointer-events-none overflow-hidden"
+        style={{ contain: 'strict' }}
         aria-hidden="true"
       >
-          {/* Left Shutter Door */}
+        {/* Left Vault Shutter Door (Pure GPU 2D Translate) */}
+        <div
+          className="absolute top-0 bottom-0 left-0 w-[50.5%] animate-auto-door-left-3d"
+          style={{
+            backgroundColor: isDark ? '#060812' : '#f8fafc',
+            borderRight: isDark ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)',
+          }}
+        >
+          {/* Neon Light Blade */}
+          <div className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-transparent via-purple-500 to-pink-500 shadow-[0_0_12px_#a855f7]" />
+        </div>
+
+        {/* Right Vault Shutter Door (Pure GPU 2D Translate) */}
+        <div
+          className="absolute top-0 bottom-0 right-0 w-[50.5%] animate-auto-door-right-3d"
+          style={{
+            backgroundColor: isDark ? '#060812' : '#f8fafc',
+            borderLeft: isDark ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)',
+          }}
+        >
+          {/* Neon Light Blade */}
+          <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-transparent via-cyan-400 to-purple-500 shadow-[0_0_12px_#06b6d4]" />
+        </div>
+
+        {/* Center Master Brand Holographic Emblem */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none animate-auto-door-emblem-3d">
+          {/* Master Liquid Glass Pod */}
           <div
-            className="absolute top-0 bottom-0 left-0 w-[50.5%] animate-auto-door-left-3d"
-            style={{
-              background: isDark
-                ? 'linear-gradient(90deg, #030406 0%, #080b12 65%, #101624 100%)'
-                : 'linear-gradient(90deg, #ffffff 0%, #f1f5f9 65%, #e2e8f0 100%)',
-              borderRight: isDark
-                ? '2px solid rgba(168, 85, 247, 0.6)'
-                : '2px solid rgba(0, 114, 255, 0.5)',
-              boxShadow: isDark
-                ? 'inset -12px 0 35px rgba(0,0,0,0.95), 8px 0 30px rgba(121,40,202,0.35)'
-                : 'inset -12px 0 35px rgba(255,255,255,0.95), 8px 0 30px rgba(0,114,255,0.2)',
-            }}
+            className={`relative z-10 flex flex-col items-center justify-center p-5 sm:p-6 rounded-3xl shadow-2xl border transition-all ${
+              isDark
+                ? 'bg-[#080b18]/95 border-purple-500/40 shadow-[0_0_50px_rgba(168,85,247,0.35)]'
+                : 'bg-white/95 border-purple-200/90 shadow-[0_0_40px_rgba(99,102,241,0.25)]'
+            }`}
           >
-            <div className={`absolute inset-y-0 right-14 w-[1px] ${isDark ? 'bg-white/10' : 'bg-slate-300/50'}`} />
-          </div>
+            {/* Logo Display */}
+            <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 flex items-center justify-center p-1.5 relative">
+              <img
+                src={activeLogo}
+                alt={`${brandName} Logo`}
+                className="w-full h-full object-contain drop-shadow-[0_6px_18px_rgba(168,85,247,0.55)]"
+                onError={(e) => {
+                  e.currentTarget.src = '/logo.png';
+                }}
+              />
+            </div>
 
-          {/* Right Shutter Door */}
-          <div
-            className="absolute top-0 bottom-0 right-0 w-[50.5%] animate-auto-door-right-3d"
-            style={{
-              background: isDark
-                ? 'linear-gradient(270deg, #030406 0%, #080b12 65%, #101624 100%)'
-                : 'linear-gradient(270deg, #ffffff 0%, #f1f5f9 65%, #e2e8f0 100%)',
-              borderLeft: isDark
-                ? '2px solid rgba(168, 85, 247, 0.6)'
-                : '2px solid rgba(0, 114, 255, 0.5)',
-              boxShadow: isDark
-                ? 'inset 12px 0 35px rgba(0,0,0,0.95), -8px 0 30px rgba(121,40,202,0.35)'
-                : 'inset 12px 0 35px rgba(255,255,255,0.95), -8px 0 30px rgba(0,114,255,0.2)',
-            }}
-          >
-            <div className={`absolute inset-y-0 left-14 w-[1px] ${isDark ? 'bg-white/10' : 'bg-slate-300/50'}`} />
-          </div>
-
-          {/* Center 3D Master Brand Emblem */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none animate-auto-door-emblem-3d">
-            {/* Center Laser Beam */}
+            {/* Seamless Brand Typography Pill */}
             <div
-              className={`absolute top-0 bottom-0 w-[2px] ${
+              className={`mt-3 px-3.5 py-1 rounded-full flex items-center gap-2 border shadow-sm ${
                 isDark
-                  ? 'bg-gradient-to-b from-purple-500 via-pink-500 to-amber-500 shadow-[0_0_20px_rgba(236,72,153,0.9)]'
-                  : 'bg-gradient-to-b from-cyan-400 via-blue-500 to-purple-500 shadow-[0_0_20px_rgba(59,130,246,0.9)]'
-              }`}
-            />
-
-            {/* Center Master Brand Glass Pod */}
-            <div
-              className={`relative z-10 flex flex-col items-center justify-center gap-2.5 p-4 sm:p-5 rounded-2xl shadow-2xl backdrop-blur-2xl border transition-all ${
-                isDark
-                  ? 'bg-[#080b12]/95 border-purple-500/60 shadow-[0_0_40px_rgba(168,85,247,0.4)] ring-1 ring-purple-500/30'
-                  : 'bg-white/95 border-purple-200/90 shadow-[0_0_40px_rgba(124,58,237,0.2)] ring-1 ring-purple-400/30'
+                  ? 'bg-white/[0.08] border-white/10 text-white'
+                  : 'bg-slate-100 border-slate-200 text-slate-900'
               }`}
             >
-              <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shadow-lg shrink-0 border flex items-center justify-center p-1.5 ${
-                  isDark ? 'border-white/20 bg-slate-900/95 shadow-purple-500/25' : 'border-slate-200 bg-white shadow-purple-500/20'
-                }`}
-              >
-                <img
-                  src={activeLogo}
-                  alt={`${brandName} Logo`}
-                  className="w-full h-full object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = '/logo.png';
-                  }}
-                />
-              </div>
-
-              <span
-                className={`text-xs sm:text-sm font-black tracking-wider leading-none uppercase ${
-                  isDark ? 'text-white' : 'text-slate-900'
-                }`}
-              >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+              </span>
+              <span className="text-[11px] sm:text-xs font-black tracking-[0.3em] uppercase bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
                 {brandName}
               </span>
             </div>
           </div>
         </div>
+      </div>
     );
 
     return createPortal(overlayContent, document.body);

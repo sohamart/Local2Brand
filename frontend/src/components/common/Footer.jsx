@@ -70,8 +70,8 @@ export default function Footer() {
           
           <div className="lg:col-span-2 space-y-4">
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden shadow-md dark:shadow-[0_0_22px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-1 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <img src={activeLogoUrl} alt={settings?.brandName || 'WEBLETS'} className="w-full h-full object-contain object-center" onError={(e) => { e.currentTarget.src = '/logo.png'; }} />
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden shadow-md dark:shadow-[0_0_22px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-0.5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <img src={activeLogoUrl} alt={settings?.brandName || 'WEBLETS'} className="w-full h-full object-contain object-center scale-110 transform-gpu" onError={(e) => { e.currentTarget.src = '/logo.png'; }} />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">

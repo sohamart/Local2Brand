@@ -329,11 +329,11 @@ export default function AuthModal() {
           {/* Top Brand & Live Badge */}
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-900/90 border border-purple-400/40 p-1 flex items-center justify-center shadow-md shadow-purple-500/25 ring-2 ring-purple-500/30 shrink-0">
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-900 border border-purple-400/40 p-0.5 flex items-center justify-center shadow-md shadow-purple-500/25 ring-2 ring-purple-500/30 shrink-0">
                 <img
                   src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'}
                   alt={settings?.brandName || 'WEBLETS'}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain scale-110 transform-gpu"
                   onError={(e) => { e.currentTarget.src = '/logo.png'; }}
                 />
               </div>

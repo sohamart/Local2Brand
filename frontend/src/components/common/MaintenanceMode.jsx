@@ -165,11 +165,11 @@ export default function MaintenanceMode({ onBypassSuccess }) {
       <header className="w-full max-w-6xl mx-auto flex items-center justify-between py-2 sm:py-4 gap-2 relative z-20 shrink-0">
         {/* Brand Logo */}
         <div className="flex items-center gap-2 sm:gap-2.5">
-          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/20 border border-white/80 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden shadow-md shadow-purple-500/20 ring-2 ring-purple-500/30 border border-white/80 dark:border-slate-700 bg-white dark:bg-slate-900 p-0.5 flex items-center justify-center shrink-0">
             <img
               src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'}
               alt={`${settings?.brandName || 'WEBLETS'} Logo`}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain scale-110 transform-gpu"
               onError={(e) => {
                 e.currentTarget.src = '/logo.png';
               }}
