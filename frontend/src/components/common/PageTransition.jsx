@@ -27,22 +27,22 @@ export default function PageTransition({ children }) {
       setIsTransitioning(true);
       setTransitionKey((k) => k + 1);
 
-      // 1. SWAP PAGE CONTENT WHEN DOORS ARE 100% CLOSED (190ms)
+      // 1. SWAP PAGE CONTENT WHEN DOORS ARE 100% CLOSED (360ms)
       const timerSwap = setTimeout(() => {
         setDisplayLocation(location);
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         if (window.lenis) {
           window.lenis.scrollTo(0, { immediate: true });
         }
-      }, 190);
+      }, 360);
 
-      // 2. COMPLETE TRANSITION & DISMISS OVERLAY AFTER DOORS FULLY OPEN (720ms)
+      // 2. COMPLETE TRANSITION & DISMISS OVERLAY AFTER DOORS FULLY OPEN (1250ms)
       const timerEnd = setTimeout(() => {
         setIsTransitioning(false);
         if (window.lenis) {
           window.lenis.resize();
         }
-      }, 720);
+      }, 1250);
 
       return () => {
         clearTimeout(timerSwap);
