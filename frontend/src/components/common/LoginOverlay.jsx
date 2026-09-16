@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Sparkles, CheckCircle2, Lock, ArrowRight, Zap } from 'lucide-react';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 import AshokaChakra from './AshokaChakra';
 
 export default function LoginOverlay({ isOpen, user = null }) {
+  const { settings } = useSiteSettings();
   const [progress, setProgress] = useState(0);
   const [stepText, setStepText] = useState('Verifying credentials & workspace...');
   const [isSuccess, setIsSuccess] = useState(false);
+  const brandName = settings?.brandName || 'WEBLETS';
 
   useEffect(() => {
     if (!isOpen) {
@@ -71,7 +74,7 @@ export default function LoginOverlay({ isOpen, user = null }) {
         <div className="space-y-1.5 w-full">
           <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 text-[11px] font-extrabold uppercase tracking-wider">
             <AshokaChakra size={11} />
-            <span>LOCAL2BRAND Fast Gateway</span>
+            <span>{brandName} Fast Gateway</span>
           </div>
 
           <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">

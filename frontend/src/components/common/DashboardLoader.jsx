@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 export default function DashboardLoader({
   title = 'Loading...',
@@ -6,6 +7,9 @@ export default function DashboardLoader({
   role = 'client'
 }) {
   const isAdmin = role === 'admin';
+  const { settings } = useSiteSettings();
+  const activeLogo = settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png';
+  const brandName = settings?.brandName || 'WEBLETS';
 
   return (
     <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-200">
@@ -18,13 +22,13 @@ export default function DashboardLoader({
         } rounded-full animate-spin`} />
         
         {/* Small Brand Logo in center (Glowing Circular Orb) */}
-        <div className="absolute inset-0 m-auto w-9 h-9 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-1 ring-purple-400/30 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-1.5 flex items-center justify-center">
+        <div className="absolute inset-0 m-auto w-9 h-9 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-1 ring-purple-400/30 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-1 flex items-center justify-center">
           <img
-            src="/logo.png"
-            alt="WEBLETS"
+            src={activeLogo}
+            alt={brandName}
             className="w-full h-full object-contain"
             onError={(e) => {
-              e.target.src = '/logo.png';
+              e.currentTarget.src = '/logo.png';
             }}
           />
         </div>

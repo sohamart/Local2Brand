@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 import AshokaChakra from './AshokaChakra';
 
 const PageTransitionContext = createContext({ displayLocation: null });
@@ -9,10 +10,16 @@ export const usePageTransition = () => useContext(PageTransitionContext);
 
 export default function PageTransition({ children }) {
   const location = useLocation();
+  const { settings } = useSiteSettings();
   const [displayLocation, setDisplayLocation] = useState(location);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionKey, setTransitionKey] = useState(0);
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+
+  const activeLogo = isDark
+    ? (settings?.logoDarkUrl || settings?.logoLightUrl || '/logo.png')
+    : (settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png');
+  const brandName = settings?.brandName || 'WEBLETS';
 
   useEffect(() => {
     // When path changes, trigger cinematic door close -> swap page -> door open sequence
@@ -109,14 +116,17 @@ export default function PageTransition({ children }) {
               }`}
             >
               <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shadow-lg shrink-0 border flex items-center justify-center ${
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden shadow-lg shrink-0 border flex items-center justify-center p-1.5 ${
                   isDark ? 'border-white/20 bg-slate-900/95 shadow-purple-500/25' : 'border-slate-200 bg-white shadow-purple-500/20'
                 }`}
               >
                 <img
-                  src="/logo.png"
-                  alt="WEBLETS Logo"
-                  className="w-full h-full object-cover scale-105"
+                  src={activeLogo}
+                  alt={`${brandName} Logo`}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = '/logo.png';
+                  }}
                 />
               </div>
 
@@ -125,7 +135,7 @@ export default function PageTransition({ children }) {
                   isDark ? 'text-white' : 'text-slate-900'
                 }`}
               >
-                WEBLETS
+                {brandName}
               </span>
             </div>
           </div>

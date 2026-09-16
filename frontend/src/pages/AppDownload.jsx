@@ -589,8 +589,8 @@ export default function AppDownload() {
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-600 to-pink-500 p-[1.5px] shadow-md shrink-0 overflow-hidden">
-                <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
-                  <img src="/logo.png" alt="App Logo" className="w-full h-full object-cover scale-[1.7] transform-gpu" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center p-1 overflow-hidden">
+                  <img src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'} alt="App Logo" className="w-full h-full object-contain transform-gpu" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                 </div>
               </div>
               <div className="space-y-0.5">
@@ -685,8 +685,8 @@ export default function AppDownload() {
                 {/* Mobile App Icon + Store Identity Header (Zoom-Fitted Apple-Grade App Icon) */}
                 <div className="flex items-center justify-center lg:justify-start gap-3.5 mb-2">
                   <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-600 to-pink-500 p-[1.5px] shadow-[0_0_25px_rgba(124,58,237,0.35)] shrink-0">
-                    <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center overflow-hidden">
-                      <img src="/logo.png" alt="WEBLETS App Icon" className="w-full h-full object-cover scale-[1.7] transform-gpu" onError={(e) => { e.currentTarget.src = '/logo.png'; }} />
+                    <div className="w-full h-full rounded-[14px] bg-white flex items-center justify-center p-1.5 overflow-hidden">
+                      <img src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'} alt={`${settings?.brandName || 'WEBLETS'} App Icon`} className="w-full h-full object-contain transform-gpu" onError={(e) => { e.currentTarget.src = '/logo.png'; }} />
                     </div>
                   </div>
                   <div className="text-left leading-tight">

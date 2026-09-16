@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Zap, Smartphone, ChevronRight } from 'lucide-react';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 export default function AppSplashScreen() {
+  const { settings } = useSiteSettings();
   const [progress, setProgress] = useState(0);
   const [statusIndex, setStatusIndex] = useState(0);
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -14,11 +16,15 @@ export default function AppSplashScreen() {
   const startTimeRef = useRef(null);
   const isFinishedRef = useRef(false);
 
+  const brandName = settings?.brandName || 'WEBLETS';
+  const tagline = settings?.tagline || 'Lets make website together';
+  const activeLogo = settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png';
+
   const statusMessages = [
     'Initializing Studio Engine...',
     'Loading High-Performance Assets...',
     'Calibrating Liquid Visuals...',
-    'Welcome to WEBLETS'
+    `Welcome to ${brandName}`
   ];
 
   useEffect(() => {
@@ -186,11 +192,11 @@ export default function AppSplashScreen() {
           <div className="absolute -inset-1.5 rounded-full bg-gradient-to-tr from-purple-500/60 via-cyan-400/60 to-pink-400/60 opacity-90 blur-md animate-spin [animation-duration:6s] [animation-direction:reverse]" />
 
           {/* Glowing Circular Glass Capsule Frame - Perfect Edge-to-Edge Zoom Fit */}
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-[0_0_60px_rgba(6,182,212,0.45),0_0_35px_rgba(124,58,237,0.5)] ring-2 ring-white/40 border-2 border-white/50 bg-white flex items-center justify-center transform transition-transform duration-500 hover:scale-105">
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-[0_0_60px_rgba(6,182,212,0.45),0_0_35px_rgba(124,58,237,0.5)] ring-2 ring-white/40 border-2 border-white/50 bg-white flex items-center justify-center p-2.5 transform transition-transform duration-500 hover:scale-105">
             <img
-              src="/logo.png"
-              alt="WEBLETS Logo"
-              className="w-full h-full object-cover scale-[1.28] transform-gpu"
+              src={activeLogo}
+              alt={`${brandName} Logo`}
+              className="w-full h-full object-contain transform-gpu"
               onError={(e) => {
                 e.currentTarget.src = '/logo.png';
               }}
@@ -210,11 +216,11 @@ export default function AppSplashScreen() {
           ) : null}
 
           <h1 className="text-3xl sm:text-4xl font-black tracking-[0.2em] text-white leading-none">
-            WEBLETS
+            {brandName}
           </h1>
 
           <p className="text-[11px] sm:text-xs font-bold tracking-[0.25em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-slate-300 via-cyan-200 to-purple-200">
-            Lets make website together
+            {tagline}
           </p>
         </div>
 

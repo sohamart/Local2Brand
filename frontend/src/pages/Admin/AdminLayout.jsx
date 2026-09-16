@@ -168,12 +168,19 @@ export default function AdminLayout() {
         {/* Top Logo */}
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/40 bg-slate-950 border border-white/90 dark:border-slate-700 p-0 flex items-center justify-center shrink-0">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-cover scale-135 object-center" />
+            <div className="w-8 h-8 rounded-full overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/40 bg-slate-950 border border-white/90 dark:border-slate-700 p-1 flex items-center justify-center shrink-0">
+              <img
+                src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'}
+                alt={settings?.brandName || 'Logo'}
+                className="w-full h-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.src = '/logo.png';
+                }}
+              />
             </div>
             <div>
               <span className="font-black text-sm tracking-tight text-slate-900 dark:text-white leading-none">
-                WEBLETS
+                {settings?.brandName || 'WEBLETS'}
               </span>
               <span className="block text-[10px] font-bold uppercase tracking-widest text-purple-600 dark:text-purple-400">
                 Master Admin

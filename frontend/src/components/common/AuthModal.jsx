@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 import api from '../../services/api';
 import PhoneInputWithCountry, { validatePhoneNumber } from './PhoneInputWithCountry';
 import PasswordStrengthMeter, { calculatePasswordStrength } from './PasswordStrengthMeter';
@@ -88,6 +89,7 @@ const AUTH_SHOWCASE_SLIDES = [
 
 export default function AuthModal() {
   const { isAuthModalOpen, closeAuthModal, authSuccessCallback, login, register } = useAuth();
+  const { settings } = useSiteSettings();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register' | 'verify_otp' | 'forgot_email' | 'forgot_reset'
@@ -327,17 +329,21 @@ export default function AuthModal() {
           {/* Top Brand & Live Badge */}
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-900/90 border border-purple-400/40 p-0 flex items-center justify-center shadow-md shadow-purple-500/25 ring-2 ring-purple-500/30 shrink-0">
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-900/90 border border-purple-400/40 p-1 flex items-center justify-center shadow-md shadow-purple-500/25 ring-2 ring-purple-500/30 shrink-0">
                 <img
-                  src="/logo.png"
-                  alt="WEBLETS"
-                  className="w-full h-full object-cover scale-135 object-center"
+                  src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'}
+                  alt={settings?.brandName || 'WEBLETS'}
+                  className="w-full h-full object-contain"
                   onError={(e) => { e.currentTarget.src = '/logo.png'; }}
                 />
               </div>
               <div>
-                <span className="text-xs font-black tracking-tight text-white block">WEBLETS</span>
-                <span className="text-[9px] text-purple-300/80 block font-medium">lets make website together</span>
+                <span className="text-xs font-black tracking-tight text-white block">
+                  {settings?.brandName || 'WEBLETS'}
+                </span>
+                <span className="text-[9px] text-purple-300/80 block font-medium">
+                  {settings?.tagline || 'lets make website together'}
+                </span>
               </div>
             </div>
 

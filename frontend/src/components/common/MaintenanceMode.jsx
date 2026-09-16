@@ -167,19 +167,22 @@ export default function MaintenanceMode({ onBypassSuccess }) {
         <div className="flex items-center gap-2 sm:gap-2.5">
           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden shadow-md shadow-purple-500/20 border border-white/80 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center shrink-0">
             <img
-              src="/logo.png"
-              alt="WEBLETS Logo"
+              src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'}
+              alt={`${settings?.brandName || 'WEBLETS'} Logo`}
               className="w-full h-full object-contain"
+              onError={(e) => {
+                e.currentTarget.src = '/logo.png';
+              }}
             />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-1 sm:gap-1.5">
               <span className="font-extrabold text-sm sm:text-base lg:text-lg tracking-tight text-slate-900 dark:text-white leading-none">
-                WEBLETS
+                {settings?.brandName || 'WEBLETS'}
               </span>
             </div>
             <span className="text-[8px] sm:text-[9px] font-semibold text-slate-500 dark:text-slate-400 tracking-wider uppercase mt-0.5 truncate max-w-[130px] sm:max-w-none">
-              Lets make website together
+              {settings?.tagline || 'Lets make website together'}
             </span>
           </div>
         </div>

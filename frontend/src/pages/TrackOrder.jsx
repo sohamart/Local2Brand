@@ -28,6 +28,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useOrderModal } from '../context/OrderModalContext';
 import api from '../services/api';
+import { useSiteSettings } from '../context/SiteSettingsContext';
 import AshokaChakra from '../components/common/AshokaChakra';
 import { SEO } from '../components/common/CommonUI';
 import { SEO_PAGES } from '../config/seoConfig';
@@ -87,6 +88,7 @@ export default function TrackOrder() {
   const [searchParams, setSearchParams] = useSearchParams();
   const params = useParams();
   const navigate = useNavigate();
+  const { settings } = useSiteSettings();
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { openOrderModal, openCallbackModal } = useOrderModal();
@@ -263,17 +265,17 @@ export default function TrackOrder() {
               <Link to="/" className="flex items-center gap-2 group min-w-0">
                 <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm border border-slate-200/90 dark:border-slate-700 bg-white dark:bg-slate-900 group-hover:scale-105 transition-transform shrink-0 p-1 flex items-center justify-center">
                   <img
-                    src="/logo.png"
-                    alt="WEBLETS Logo"
+                    src={settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png'}
+                    alt={`${settings?.brandName || 'WEBLETS'} Logo`}
                     className="w-full h-full object-contain"
                     onError={(e) => {
-                      e.target.src = '/logo.png';
+                      e.currentTarget.src = '/logo.png';
                     }}
                   />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="font-black text-xs sm:text-sm tracking-tight text-slate-900 dark:text-white truncate">
-                    WEBLETS
+                    {settings?.brandName || 'WEBLETS'}
                   </span>
                   <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
                     Project Tracker

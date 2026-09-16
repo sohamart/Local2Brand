@@ -45,6 +45,7 @@ import api from '../../services/api';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import { toast } from 'react-toastify';
 import DashboardLoader from '../../components/common/DashboardLoader';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 const STATUS_COLORS = {
   'Draft': 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300',
@@ -370,6 +371,8 @@ export const getAllRequirementPhotos = (req) => {
 };
 
 export default function AdminRequirements() {
+  const { settings } = useSiteSettings();
+  const brandName = settings?.brandName || 'WEBLETS';
   const [requirements, setRequirements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -1618,7 +1621,7 @@ export default function AdminRequirements() {
 
                 <div className="flex items-center gap-1.5">
                   <a
-                    href={`https://wa.me/${selectedReq.clientInfo?.mobile?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${selectedReq.clientInfo?.ownerName || 'Client'}, this is the LOCAL2BRAND Engineering Desk regarding your website order ${selectedReq.requirementId}.`)}`}
+                    href={`https://wa.me/${selectedReq.clientInfo?.mobile?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${selectedReq.clientInfo?.ownerName || 'Client'}, this is the ${brandName} Engineering Desk regarding your website order ${selectedReq.requirementId}.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-emerald-600 text-white font-bold text-[11px] sm:text-xs hover:bg-emerald-500 flex items-center gap-1.5 shadow-xs transition-colors"

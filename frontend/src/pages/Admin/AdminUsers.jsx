@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { toast } from 'react-toastify';
 import { SEO } from '../../components/common/CommonUI';
 import DashboardLoader from '../../components/common/DashboardLoader';
@@ -37,6 +38,8 @@ import AshokaChakra from '../../components/common/AshokaChakra';
 
 export default function AdminUsers() {
   const { user: currentUser } = useAuth();
+  const { settings } = useSiteSettings();
+  const brandName = settings?.brandName || 'WEBLETS';
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -612,7 +615,7 @@ export default function AdminUsers() {
 
                         {u.phone && (
                           <a
-                            href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi ${u.name || 'there'}! 👋 This is from LOCAL2BRAND Admin Team.`)}`}
+                            href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi ${u.name || 'there'}! 👋 This is from ${brandName} Admin Team.`)}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-2.5 py-1 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 font-bold text-[10px] flex items-center gap-1 shrink-0 transition-colors"
@@ -866,7 +869,7 @@ export default function AdminUsers() {
                     {/* Quick WhatsApp Chat */}
                     {u.phone && (
                       <a
-                        href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi ${u.name || 'there'}! 👋 This is from LOCAL2BRAND Admin Team.`)}`}
+                        href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`Hi ${u.name || 'there'}! 👋 This is from ${brandName} Admin Team.`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-400 cursor-pointer transition-colors"
@@ -1200,7 +1203,7 @@ export default function AdminUsers() {
                 <div className="flex flex-col gap-2 pt-2">
                   {inspectingUser.phone && (
                     <a
-                      href={`https://wa.me/${inspectingUser.phone.replace(/[^0-9]/g, '').length === 10 ? '91' + inspectingUser.phone.replace(/[^0-9]/g, '') : inspectingUser.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inspectingUser.name || 'there'}! 👋 This is from LOCAL2BRAND Admin Team regarding your account/website requirements.`)}`}
+                      href={`https://wa.me/${inspectingUser.phone.replace(/[^0-9]/g, '').length === 10 ? '91' + inspectingUser.phone.replace(/[^0-9]/g, '') : inspectingUser.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hi ${inspectingUser.name || 'there'}! 👋 This is from ${brandName} Admin Team regarding your account/website requirements.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer"

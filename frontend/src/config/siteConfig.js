@@ -13,6 +13,9 @@ export const siteConfig = {
   startingPrice: "$399",
   startingPriceInr: "₹9,999",
 
+  logoLightUrl: "/logo.png",
+  logoDarkUrl: "/logo-dark.png",
+
   isMaintenanceMode: false,
   isComingSoonMode: false,
 

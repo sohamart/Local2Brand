@@ -482,11 +482,11 @@ export default function Navbar() {
               className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer shrink-0"
               aria-label="Weblets Home"
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shadow-sm dark:shadow-[0_0_18px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 group-hover:scale-105 transition-transform shrink-0 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-0 flex items-center justify-center relative">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden shadow-sm dark:shadow-[0_0_18px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 group-hover:scale-105 transition-transform shrink-0 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-1 flex items-center justify-center relative">
                 <img
                   src={activeLogoUrl}
                   alt={settings?.brandName || 'WEBLETS'}
-                  className="w-full h-full object-cover scale-135 object-center"
+                  className="w-full h-full object-contain object-center"
                   onError={(e) => { e.currentTarget.src = '/logo.png'; }}
                 />
               </div>
@@ -681,11 +681,11 @@ export default function Navbar() {
                           {/* Top Visual Emblem & Badge */}
                           <div className="relative z-10 space-y-3">
                             <div className="flex items-center justify-between">
-                              <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-950/90 border border-purple-400/40 p-0 flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform ring-2 ring-purple-500/30 shrink-0">
+                              <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-950/90 border border-purple-400/40 p-1 flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform ring-2 ring-purple-500/30 shrink-0">
                                 <img
-                                  src="/logo.png"
-                                  alt="WEBLETS"
-                                  className="w-full h-full object-cover scale-135 object-center"
+                                  src={activeLogoUrl}
+                                  alt={settings?.brandName || 'WEBLETS'}
+                                  className="w-full h-full object-contain object-center"
                                   onError={(e) => { e.currentTarget.src = '/logo.png'; }}
                                 />
                               </div>
@@ -963,11 +963,11 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-2 group cursor-pointer shrink-0"
             >
-              <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm dark:shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-0 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm dark:shadow-[0_0_15px_rgba(168,85,247,0.4)] ring-2 ring-purple-500/30 dark:ring-purple-500/40 border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-950 p-1 flex items-center justify-center shrink-0">
                 <img
                   src={activeLogoUrl}
                   alt={settings?.brandName || 'WEBLETS'}
-                  className="w-full h-full object-cover scale-135 object-center"
+                  className="w-full h-full object-contain object-center"
                   onError={(e) => { e.currentTarget.src = '/logo.png'; }}
                 />
               </div>

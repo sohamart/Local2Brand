@@ -4,8 +4,11 @@ import api from '../../services/api';
 import { SEO } from '../../components/common/CommonUI';
 import { toast } from 'react-toastify';
 import DashboardLoader from '../../components/common/DashboardLoader';
+import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 export default function AdminCallbacks() {
+  const { settings } = useSiteSettings();
+  const brandName = settings?.brandName || 'WEBLETS';
   const [callbacks, setCallbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -335,7 +338,7 @@ export default function AdminCallbacks() {
                         <span>Call Now</span>
                       </a>
                       <a
-                        href={`https://wa.me/${cleanPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${cb.name}, this is LOCAL2BRAND following up on your website callback request.`)}`}
+                        href={`https://wa.me/${cleanPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${cb.name}, this is ${brandName} following up on your website callback request.`)}`}
                         target="_blank"
                         rel="noreferrer"
                         className="py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-xs"
