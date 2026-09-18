@@ -87,7 +87,10 @@ export const handleChatMessage = async (req, res) => {
       console.warn('Chat context (demos) notice:', e.message);
     }
 
-    // Construct safe showable user profile
+    // Construct safe showable user profile with strict verified role check
+    const isVerifiedUser = Boolean(req.user);
+    const isVerifiedAdmin = Boolean(req.user && (req.user.role === 'admin' || req.user.role === 'superadmin'));
+
     const currentUser = req.user
       ? {
           name: req.user.name || '',
@@ -95,6 +98,8 @@ export const handleChatMessage = async (req, res) => {
           phone: req.user.phone || '',
           company: req.user.company || '',
           role: req.user.role || 'user',
+          isAdmin: isVerifiedAdmin,
+          isVerified: true,
         }
       : (req.body.userContext && (req.body.userContext.email || req.body.userContext.name))
       ? {
@@ -102,7 +107,9 @@ export const handleChatMessage = async (req, res) => {
           email: req.body.userContext.email || '',
           phone: req.body.userContext.phone || '',
           company: req.body.userContext.company || '',
-          role: req.body.userContext.role || 'user',
+          role: 'user', // unauthenticated context cannot self-elevate
+          isAdmin: false,
+          isVerified: false,
         }
       : null;
 

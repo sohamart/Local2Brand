@@ -888,10 +888,31 @@ export default function AdminSettings() {
       localStorage.removeItem('l2b_admin_bypass_expiry');
     }
 
+    // Prepare founders payload ensuring skills are saved as string array
+    const preparedFounders = (formData.aiSettings?.adminShowableDetails?.founders || []).map((f) => ({
+      ...f,
+      skills: Array.isArray(f.skills)
+        ? f.skills
+        : (typeof f.skills === 'string'
+            ? f.skills.split(',').map((s) => s.trim()).filter(Boolean)
+            : [])
+    }));
+
+    const payload = {
+      ...formData,
+      aiSettings: {
+        ...(formData.aiSettings || {}),
+        adminShowableDetails: {
+          ...(formData.aiSettings?.adminShowableDetails || {}),
+          founders: preparedFounders,
+        },
+      },
+    };
+
     try {
-      const res = await api.put('/settings', formData);
+      const res = await api.put('/settings', payload);
       if (res && (res.success || res.settings)) {
-        const newSettings = res.settings || formData;
+        const newSettings = res.settings || payload;
         setSuccessMessage('Site customizations updated & synced live across the frontend!');
         updateLocalSettingsState(newSettings);
         refreshSettings();
@@ -909,7 +930,7 @@ export default function AdminSettings() {
       }
     } catch (err) {
       console.warn('Backend update notice, applying instant local sync:', err.message);
-      updateLocalSettingsState(formData);
+      updateLocalSettingsState(payload);
       refreshSettings();
       setSuccessMessage('Site customizations updated locally and synced live!');
       setSavedRecently(true);
@@ -1559,11 +1580,8 @@ export default function AdminSettings() {
                           <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Skills & Specialties (Comma Separated)</label>
                           <input
                             type="text"
-                            value={Array.isArray(founder.skills) ? founder.skills.join(', ') : (founder.skills || '')}
-                            onChange={(e) => {
-                              const arr = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                              handleFounderFieldChange(fIdx, 'skills', arr);
-                            }}
+                            value={Array.isArray(founder.skills) ? founder.skills.join(', ') : (founder.skills ?? '')}
+                            onChange={(e) => handleFounderFieldChange(fIdx, 'skills', e.target.value)}
                             placeholder="e.g. React / Vite, Node.js & MongoDB, Cloud Architecture, System Design"
                             className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-purple-500 font-semibold"
                           />
