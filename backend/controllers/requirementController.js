@@ -376,7 +376,6 @@ export const getMyRequirements = async (req, res) => {
 
       if (orConditions.length > 0) {
         requirements = await Requirement.find({ $or: orConditions })
-          .select('-fullFormData -answers -images -uploadedImages -logoFile -photosFiles -aiExecutiveSummary')
           .sort({ createdAt: -1 })
           .lean();
       }
@@ -384,7 +383,6 @@ export const getMyRequirements = async (req, res) => {
       // If admin user has no personal orders, provide recent system orders for convenience
       if (requirements.length === 0 && req.user?.role === 'admin') {
         requirements = await Requirement.find()
-          .select('-fullFormData -answers -images -uploadedImages -logoFile -photosFiles -aiExecutiveSummary')
           .sort({ createdAt: -1 })
           .limit(25)
           .lean();
@@ -684,12 +682,20 @@ export const updateRequirementStatus = async (req, res) => {
       updatePayload.rejectedAt = new Date();
     }
 
+    const cleanId = String(id || '').trim();
     let updated = null;
     await ensureDb().catch(() => {});
     if (isDbConnected()) {
       try {
+        const query = {
+          $or: [
+            { requirementId: cleanId },
+            { requirementId: new RegExp(`^${cleanId}$`, 'i') },
+            ...(mongoose.Types.ObjectId.isValid(cleanId) ? [{ _id: cleanId }] : [])
+          ]
+        };
         updated = await Requirement.findOneAndUpdate(
-          { $or: [{ requirementId: id }, ...(mongoose.Types.ObjectId.isValid(id) ? [{ _id: id }] : [])] },
+          query,
           { $set: updatePayload },
           { new: true }
         ).populate('user');
@@ -699,16 +705,27 @@ export const updateRequirementStatus = async (req, res) => {
     }
 
     // Always mirror update in dataStore
-    const localUpdated = dataStore.update('requirements', id, { ...updatePayload, updatedAt: new Date().toISOString() });
-    if (!updated) {
-      updated = localUpdated;
-    }
+    try {
+      const allReqs = dataStore.read('requirements') || [];
+      const existing = allReqs.find((r) => r.requirementId?.toLowerCase() === cleanId.toLowerCase() || r.requirementId === cleanId || r._id?.toString() === cleanId);
+      if (existing) {
+        const localDoc = dataStore.update('requirements', existing._id, { ...updatePayload, updatedAt: new Date().toISOString() });
+        if (!updated) {
+          updated = localDoc;
+        }
+      } else {
+        const localUpdated = dataStore.update('requirements', cleanId, { ...updatePayload, updatedAt: new Date().toISOString() });
+        if (!updated && localUpdated) {
+          updated = localUpdated;
+        }
+      }
+    } catch (e) {}
 
     if (!updated) {
       return res.status(200).json({
         success: true,
         message: `Status updated to ${status}`,
-        requirement: { id, status, rejectionReason: finalRejectionReason }
+        requirement: { id: cleanId, status, ...updatePayload, rejectionReason: finalRejectionReason }
       });
     }
 

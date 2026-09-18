@@ -340,15 +340,64 @@ export default function UserDashboard() {
       totalPrice: req.totalApproxPrice || (req.quotedAmount ? parseInt(String(req.quotedAmount).replace(/\D/g, '')) || 9999 : 9999),
       requirementId: req.requirementId,
       additionalRequirements: req.additionalNotes || req.answers?.additionalNotes || '',
+      quotedAmount: req.quotedAmount || '',
+      internalNotes: req.internalNotes || req.statusNotes || '',
+      drivePdfLink: req.drivePdfLink || req.pdfUrl || req.documentUrl || '',
+      driveLink: req.driveLink || req.assetVaultLink || '',
+      status: req.status || 'Submitted',
+      timeline: req.timeline || '',
+      budget: req.budget || '',
+      adminPanelType: req.adminPanelType || '',
+      ...req,
+      ...(req.fullFormData || {}),
+      ...(req.answers || {}),
     };
     triggerDownloadBlueprintPdf({
       formData: combined,
       submissionSuccess: {
         id: req.requirementId,
+        requirementId: req.requirementId,
         totalApproxPrice: combined.totalPrice,
+        quotedAmount: req.quotedAmount,
+        internalNotes: req.internalNotes || req.statusNotes,
+        drivePdfLink: req.drivePdfLink || req.pdfUrl || req.documentUrl,
+        driveLink: req.driveLink || req.assetVaultLink,
+        status: req.status,
+        answers: req.answers,
+        fullFormData: req.fullFormData,
+        ...req,
       },
       settings,
     });
+  };
+
+  const handleOpenSpecs = async (req) => {
+    if (!req) return;
+    setViewingReqSpec(req);
+    try {
+      const id = req.requirementId || req._id;
+      if (id) {
+        const res = await api.get(`/requirements/${id}`);
+        if (res && res.success && res.requirement) {
+          setViewingReqSpec(res.requirement);
+          setRequirements((prev) =>
+            prev.map((r) =>
+              (r.requirementId === res.requirement.requirementId || r._id === res.requirement._id)
+                ? { ...r, ...res.requirement }
+                : r
+            )
+          );
+          setTrackedOrder((curr) => {
+            if (curr && (curr.requirementId === res.requirement.requirementId || curr._id === res.requirement._id)) {
+              return res.requirement;
+            }
+            return curr;
+          });
+        }
+      }
+    } catch (e) {
+      // silent fallback
+    }
   };
 
   const fetchUserData = useCallback(async (silent = false) => {
@@ -1643,7 +1692,7 @@ export default function UserDashboard() {
 
                           <button
                             type="button"
-                            onClick={() => setViewingReqSpec(req)}
+                            onClick={() => handleOpenSpecs(req)}
                             className="py-2 px-3 rounded-xl text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1 cursor-pointer"
                           >
                             <FileText className="w-3.5 h-3.5" />
@@ -1766,7 +1815,7 @@ export default function UserDashboard() {
 
                             <button
                               type="button"
-                              onClick={() => setViewingReqSpec(req)}
+                              onClick={() => handleOpenSpecs(req)}
                               className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 cursor-pointer"
                             >
                               <FileText className="w-3.5 h-3.5" />
@@ -2027,7 +2076,7 @@ export default function UserDashboard() {
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => setViewingReqSpec(trackedOrder)}
+                          onClick={() => handleOpenSpecs(trackedOrder)}
                           className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer"
                         >
                           <FileText className="w-3.5 h-3.5" />
@@ -2080,6 +2129,89 @@ export default function UserDashboard() {
                             </div>
                           );
                         })}
+                      </div>
+                    </div>
+
+                    {/* Scope & Quoted Investment Overview */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center pt-2">
+                      <div className="p-3 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800">
+                        <span className="text-[10px] text-purple-700 dark:text-purple-300 font-bold block">Budget Tier</span>
+                        <span className="font-extrabold text-xs text-purple-900 dark:text-purple-200">{trackedOrder.budget || 'Custom Scope'}</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                        <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold block">Quoted Price</span>
+                        <span className="font-extrabold text-xs text-emerald-900 dark:text-emerald-200">
+                          {trackedOrder.quotedAmount || (trackedOrder.totalApproxPrice ? `₹${Number(trackedOrder.totalApproxPrice).toLocaleString('en-IN')}` : 'Pending Review')}
+                        </span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
+                        <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold block">Timeline</span>
+                        <span className="font-extrabold text-xs text-blue-900 dark:text-blue-200">{trackedOrder.timeline || 'Express Sprint'}</span>
+                      </div>
+                      <div className="p-3 rounded-2xl bg-pink-50/70 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-800">
+                        <span className="text-[10px] text-pink-700 dark:text-pink-300 font-bold block">CMS Type</span>
+                        <span className="font-extrabold text-xs text-pink-900 dark:text-pink-200 truncate block">{trackedOrder.adminPanelType || 'Dynamic'}</span>
+                      </div>
+                    </div>
+
+                    {/* Engineering Team Status Dispatch Note */}
+                    {(trackedOrder.internalNotes || trackedOrder.statusNotes) && (
+                      <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 space-y-1.5 animate-in fade-in">
+                        <strong className="text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5 text-xs font-bold">
+                          <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                          <span>Engineering Team Status Dispatch:</span>
+                        </strong>
+                        <p className="text-indigo-950 dark:text-indigo-200 leading-relaxed font-medium text-xs">
+                          {trackedOrder.internalNotes || trackedOrder.statusNotes}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Deliverables & PDF Documents Vault */}
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                          Project Documents &amp; Deliverables
+                        </span>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Official architectural specifications, quotations &amp; cloud storage
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {(trackedOrder.drivePdfLink || trackedOrder.pdfUrl || trackedOrder.documentUrl) && (
+                          <a
+                            href={trackedOrder.drivePdfLink || trackedOrder.pdfUrl || trackedOrder.documentUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-xs transition-all"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Quotation / Deliverables PDF</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+
+                        {(trackedOrder.driveLink || trackedOrder.assetVaultLink) && (
+                          <a
+                            href={trackedOrder.driveLink || trackedOrder.assetVaultLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-800 transition-all"
+                          >
+                            <Globe className="w-3.5 h-3.5" />
+                            <span>Drive Asset Vault</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadBlueprint(trackedOrder)}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                          <span>Download Blueprint PDF</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -2446,6 +2578,57 @@ export default function UserDashboard() {
                   </button>
                 </div>
               </div>
+
+              {/* Submitted Project Specifications & Question-Answers */}
+              {(() => {
+                const combinedAnswers = {
+                  ...(viewingReqSpec.answers || {}),
+                  ...(viewingReqSpec.fullFormData || {})
+                };
+                const entries = Object.entries(combinedAnswers).filter(([k, v]) => {
+                  if (!v) return false;
+                  if (['clientInfo', 'images', 'uploadedImages', '_id', 'requirementId', '__v'].includes(k)) return false;
+                  if (typeof v === 'object' && Object.keys(v).length === 0) return false;
+                  return true;
+                });
+
+                if (entries.length === 0) return null;
+
+                const formatLabel = (key) => {
+                  return key
+                    .replace(/([A-Z])/g, ' $1')
+                    .replace(/^./, (str) => str.toUpperCase())
+                    .trim();
+                };
+
+                const formatVal = (val) => {
+                  if (Array.isArray(val)) return val.join(', ');
+                  if (typeof val === 'object') return JSON.stringify(val);
+                  return String(val);
+                };
+
+                return (
+                  <div className="space-y-3 p-4 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                        Submitted Questionnaire &amp; Design Choices ({entries.length})
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {entries.map(([k, v], idx) => (
+                        <div key={idx} className="p-2.5 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/70 dark:border-slate-800">
+                          <span className="text-[10px] text-slate-400 font-bold block mb-0.5">
+                            {formatLabel(k)}
+                          </span>
+                          <strong className="text-slate-800 dark:text-slate-200 text-xs break-words">
+                            {formatVal(v)}
+                          </strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Uploaded Images Gallery */}
               {(viewingReqSpec.images?.length > 0 || viewingReqSpec.uploadedImages?.length > 0) && (
