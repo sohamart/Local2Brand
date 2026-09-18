@@ -187,14 +187,14 @@ export function SiteSettingsProvider({ children }) {
           ? {
               ...prev.importantUpdates,
               ...incomingSettings.importantUpdates,
-              enabled: incomingSettings.importantUpdates.enabled !== false,
+              enabled: Boolean(incomingSettings.importantUpdates.enabled),
             }
           : prev.importantUpdates,
         luckyWheel: incomingSettings.luckyWheel
           ? {
               ...prev.luckyWheel,
               ...incomingSettings.luckyWheel,
-              enabled: incomingSettings.luckyWheel.enabled !== false,
+              enabled: Boolean(incomingSettings.luckyWheel.enabled),
             }
           : prev.luckyWheel,
         appConfig: incomingSettings.appConfig
@@ -253,16 +253,16 @@ export function SiteSettingsProvider({ children }) {
     while (attempts < maxAttempts && !success) {
       try {
         attempts++;
-        const res = await api.get('/settings', { timeout: 8000 });
-        if (res && res.success && res.settings) {
-          applySettings(res.settings, true);
+        const res = await api.get('/settings', { timeout: 6000 });
+        if (res && (res.success || res.settings)) {
+          applySettings(res.settings || res, true);
           success = true;
           break;
         }
       } catch (err) {
-        console.warn(`[SiteSettings] Attempt ${attempts}/${maxAttempts} failed:`, err?.message || err);
+        console.warn(`[SiteSettings] Attempt ${attempts}/${maxAttempts} notice:`, err?.message || err);
         if (attempts < maxAttempts) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
       }
     }

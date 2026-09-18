@@ -3,7 +3,7 @@ import { Sparkles, Zap, Smartphone, ChevronRight } from 'lucide-react';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 
 export default function AppSplashScreen() {
-  const { settings } = useSiteSettings();
+  const { settings, loading: settingsLoading } = useSiteSettings();
   const [progress, setProgress] = useState(0);
   const [statusIndex, setStatusIndex] = useState(0);
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -14,15 +14,17 @@ export default function AppSplashScreen() {
 
   const reqRef = useRef(null);
   const startTimeRef = useRef(null);
+  const finishStartTimeRef = useRef(null);
   const isFinishedRef = useRef(false);
+  const progressRef = useRef(0);
 
   const brandName = settings?.brandName || 'WEBLETS';
   const tagline = settings?.tagline || 'Lets make website together';
   const activeLogo = settings?.logoLightUrl || settings?.logoDarkUrl || '/logo.png';
 
   const statusMessages = [
-    'Initializing Studio Engine...',
-    'Loading High-Performance Assets...',
+    'Connecting to Cloud Engine...',
+    'Synchronizing Live Settings & Themes...',
     'Calibrating Liquid Visuals...',
     `Welcome to ${brandName}`
   ];
@@ -57,43 +59,55 @@ export default function AppSplashScreen() {
     }
   }, []);
 
-  // 60FPS / 120FPS ultra-smooth requestAnimationFrame precision timer
+  // Synchronized loading controller: Holds until settings are confirmed from backend
   useEffect(() => {
-    // Ultra-snappy duration: 650ms for normal web, 850ms for installed app launch
-    const totalDuration = isInstalledApp && isFirstAppLaunch ? 900 : (isInstalledApp ? 750 : 620);
+    const minDisplayTime = isInstalledApp && isFirstAppLaunch ? 700 : 500;
+    const maxSafetyTimeout = 3800; // Never block forever if network drops
 
     const animate = (timestamp) => {
       if (isFinishedRef.current) return;
       if (!startTimeRef.current) startTimeRef.current = timestamp;
 
       const elapsed = timestamp - startTimeRef.current;
-      const linearPct = Math.min(1, elapsed / totalDuration);
+      const isReadyToComplete = (!settingsLoading && elapsed >= minDisplayTime) || elapsed >= maxSafetyTimeout;
 
-      // Smooth easeOutCubic curve for realistic responsive feel
-      const easedPct = 1 - Math.pow(1 - linearPct, 3);
-      const currentPct = Math.min(100, Math.round(easedPct * 100));
+      if (!isReadyToComplete) {
+        // While waiting for backend settings, smoothly glide up towards ~88%
+        const simulatedPhase = Math.min(1, elapsed / 1800);
+        const currentSimulated = Math.min(88, Math.round((1 - Math.pow(1 - simulatedPhase, 2)) * 88));
+        progressRef.current = Math.max(progressRef.current, currentSimulated);
+        setProgress(progressRef.current);
 
-      setProgress(currentPct);
+        if (progressRef.current < 35) {
+          setStatusIndex(0);
+        } else if (progressRef.current < 70) {
+          setStatusIndex(1);
+        } else {
+          setStatusIndex(2);
+        }
 
-      // Status message stage update
-      if (currentPct < 30) {
-        setStatusIndex(0);
-      } else if (currentPct < 65) {
-        setStatusIndex(1);
-      } else if (currentPct < 90) {
-        setStatusIndex(2);
-      } else {
-        setStatusIndex(3);
-      }
-
-      if (linearPct < 1) {
         reqRef.current = requestAnimationFrame(animate);
       } else {
-        isFinishedRef.current = true;
-        setProgress(100);
-        // Gentle, slow, luxurious cinematic fade-out dissolve
-        setTimeout(() => setIsFadingOut(true), 120);
-        setTimeout(() => setIsRemoved(true), 750);
+        // Backend settings loaded! Swiftly finish from current position to 100%
+        if (!finishStartTimeRef.current) finishStartTimeRef.current = timestamp;
+        const finishElapsed = timestamp - finishStartTimeRef.current;
+        const finishDuration = 220; // Fast smooth snap to 100%
+        const finishPct = Math.min(1, finishElapsed / finishDuration);
+
+        const startFrom = progressRef.current;
+        const finalVal = Math.min(100, Math.round(startFrom + (100 - startFrom) * finishPct));
+        progressRef.current = finalVal;
+        setProgress(finalVal);
+        setStatusIndex(3);
+
+        if (finishPct < 1) {
+          reqRef.current = requestAnimationFrame(animate);
+        } else {
+          isFinishedRef.current = true;
+          setProgress(100);
+          setTimeout(() => setIsFadingOut(true), 100);
+          setTimeout(() => setIsRemoved(true), 750);
+        }
       }
     };
 
@@ -102,7 +116,7 @@ export default function AppSplashScreen() {
     return () => {
       if (reqRef.current) cancelAnimationFrame(reqRef.current);
     };
-  }, [isInstalledApp, isFirstAppLaunch]);
+  }, [settingsLoading, isInstalledApp, isFirstAppLaunch]);
 
   // Instant skip on tap/click or keyboard press
   const handleSkip = () => {
@@ -110,6 +124,7 @@ export default function AppSplashScreen() {
     isFinishedRef.current = true;
     if (reqRef.current) cancelAnimationFrame(reqRef.current);
     setProgress(100);
+    setStatusIndex(3);
     setIsFadingOut(true);
     setTimeout(() => setIsRemoved(true), 400);
   };
