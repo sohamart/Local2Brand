@@ -1,10 +1,11 @@
 /**
  * WEBLETS / LOCAL2BRAND Official Corporate Project Blueprint PDF Generator
- * Generates an executive, ultra-modern, high-density architecture blueprint document with:
- * - Stunning modern dark-aesthetic UI preview + razor-sharp crisp print export
+ * Generates an executive, clean, ultra-modern corporate architecture blueprint document:
+ * - Professional clean white executive design (no heavy dark-mode ink blocks)
+ * - Seamless natural page flow with no empty gaps on Page 1 (tr-level pagination)
  * - Official Website Verified Badge & Cryptographic Security Stamp
- * - Comprehensive client profile, design tokens, hosting, and CMS specs
- * - Full client questionnaire parameters & submitted answers
+ * - High-density structured cards for client credentials, tech stack, and scope
+ * - Comprehensive client submitted questionnaire table
  * - Quoted investment, engineering dispatch notes, and Google Drive deliverables links
  * - Enterprise NDA confidentiality seal and corporate sign-off
  */
@@ -27,14 +28,14 @@ export function generateProjectBlueprintHtml({
   const fullLogoUrl = logoUrl.startsWith('http') ? logoUrl : `${window.location.origin}${logoUrl.startsWith('/') ? '' : '/'}${logoUrl}`;
 
   const trackingId = submissionSuccess?.id || formData?.requirementId || `REQ-${Date.now().toString().slice(-6)}`;
-  const timestamp = new Date().toLocaleString('en-US', {
-    dateStyle: 'full',
-    timeStyle: 'short',
-  });
   const issueDate = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
+  });
+  const issueTime = new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
   });
 
   const currencySymbol = formData?.country === 'India' || !formData?.country ? '₹' : '$';
@@ -228,7 +229,7 @@ export function generateProjectBlueprintHtml({
 
     @page {
       size: A4 portrait;
-      margin: 8mm 10mm 10mm 10mm;
+      margin: 10mm 12mm 12mm 12mm;
     }
 
     * {
@@ -240,7 +241,7 @@ export function generateProjectBlueprintHtml({
     body {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #0f172a;
-      background: #090d16;
+      background: #f1f5f9;
       margin: 0;
       padding: 0;
       font-size: 11px;
@@ -248,39 +249,39 @@ export function generateProjectBlueprintHtml({
     }
 
     .canvas-wrapper {
-      max-width: 860px;
+      max-width: 820px;
       margin: 0 auto;
-      padding: 20px 24px 30px;
+      padding: 24px 28px;
       background: #ffffff;
-      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
       position: relative;
     }
 
     /* Top Floating Action Bar */
     .no-print-bar {
-      background: #0f172a;
-      color: #ffffff;
-      padding: 12px 20px;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 9999;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      border-bottom: 1px solid #e2e8f0;
     }
 
     .print-btn {
-      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+      background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
       color: #ffffff;
       border: none;
       font-weight: 800;
       font-size: 12px;
-      padding: 8px 18px;
-      border-radius: 10px;
+      padding: 7px 16px;
+      border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(124,58,237,0.4);
+      box-shadow: 0 3px 10px rgba(124,58,237,0.3);
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -288,146 +289,121 @@ export function generateProjectBlueprintHtml({
     }
 
     .print-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(124,58,237,0.6);
+      opacity: 0.95;
     }
 
-    /* Header Hero with Verification Stamp */
-    .hero-header {
-      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #31104b 100%);
-      border-radius: 16px;
-      padding: 20px 24px;
-      color: #ffffff;
+    /* Executive Clean Header (Corporate White + Purple Accent) */
+    .header-box {
+      border: 1.5px solid #e2e8f0;
+      border-top: 4.5px solid #7c3aed;
+      border-radius: 12px;
+      padding: 16px 20px;
+      background: #fbfbfe;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid rgba(168, 85, 247, 0.3);
+      margin-bottom: 14px;
+      page-break-inside: avoid;
     }
 
-    .hero-header::before {
-      content: '';
-      position: absolute;
-      top: -50px;
-      right: -50px;
-      width: 160px;
-      height: 160px;
-      background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .hero-brand {
+    .header-brand {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
 
-    .hero-logo {
-      width: 56px;
-      height: 56px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1.5px solid rgba(255, 255, 255, 0.2);
-      padding: 6px;
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      padding: 4px;
       object-fit: contain;
     }
 
-    .hero-title h1 {
+    .brand-title h1 {
       font-family: 'Outfit', sans-serif;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 900;
-      letter-spacing: -0.5px;
+      letter-spacing: -0.4px;
       margin: 0;
-      line-height: 1;
-      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+      color: #0f172a;
     }
 
-    .hero-tagline {
-      font-size: 10px;
-      font-weight: 800;
-      color: #a855f7;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-top: 3px;
-    }
-
-    .hero-contact {
+    .brand-tagline {
       font-size: 9.5px;
-      color: #94a3b8;
-      margin-top: 4px;
+      font-weight: 800;
+      color: #7c3aed;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-top: 2px;
+    }
+
+    .brand-contact {
+      font-size: 9px;
+      color: #64748b;
+      margin-top: 3px;
       line-height: 1.35;
     }
 
-    .hero-stamp-zone {
+    .header-badge-zone {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 6px;
+      gap: 4px;
     }
 
-    /* Modern Verified Badge */
-    .verified-seal-pill {
+    /* Official Website Verified Pill */
+    .verified-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(16, 185, 129, 0.15);
+      gap: 5px;
+      background: #ecfdf5;
       border: 1.5px solid #10b981;
-      color: #34d399;
-      font-size: 10px;
+      color: #047857;
+      font-size: 9.5px;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      padding: 4px 12px;
+      letter-spacing: 0.6px;
+      padding: 3px 10px;
       border-radius: 999px;
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
-    }
-
-    .verified-seal-pill .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
-      animation: pulse 2s infinite;
     }
 
     .tracking-code {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 800;
-      color: #f8fafc;
-      letter-spacing: 0.5px;
+      color: #0f172a;
+      letter-spacing: 0.3px;
     }
 
     .meta-sub {
       font-size: 9px;
-      color: #cbd5e1;
+      color: #64748b;
     }
 
-    /* Section Headers */
+    /* Section Headings */
     .section-head {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 12px;
-      background: linear-gradient(90deg, #f3e8ff 0%, #ede9fe 100%);
-      border-left: 4px solid #7c3aed;
-      border-radius: 0 8px 8px 0;
-      margin-top: 14px;
-      margin-bottom: 8px;
+      padding: 5px 10px;
+      background: #f5f3ff;
+      border-left: 3.5px solid #7c3aed;
+      border-radius: 0 6px 6px 0;
+      margin-top: 12px;
+      margin-bottom: 6px;
       page-break-after: avoid;
     }
 
     .section-head .title {
       font-family: 'Outfit', sans-serif;
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
       color: #4c1d95;
       display: flex;
       align-items: center;
@@ -435,209 +411,196 @@ export function generateProjectBlueprintHtml({
     }
 
     .section-head .badge {
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 800;
       color: #7c3aed;
       background: #ffffff;
-      padding: 2px 8px;
+      padding: 2px 7px;
       border-radius: 999px;
       border: 1px solid #ddd6fe;
     }
 
-    /* High Density Grid Layouts */
+    /* Grid Layouts */
     .grid-2 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 7px;
-      page-break-inside: avoid;
+      gap: 6px;
     }
 
     .grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 7px;
-      page-break-inside: avoid;
+      gap: 6px;
     }
 
     .grid-4 {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 7px;
-      page-break-inside: avoid;
+      gap: 6px;
     }
 
-    /* Modular Card Components */
+    /* Modular Cards */
     .spec-card {
       background: #f8fafc;
-      border: 1.2px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 8px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 7px;
+      padding: 6px 9px;
       page-break-inside: avoid;
-      position: relative;
     }
 
     .spec-card .label {
       font-size: 8.5px;
       font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       color: #64748b;
       margin-bottom: 2px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
     }
 
     .spec-card .val {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 700;
       color: #0f172a;
       word-break: break-word;
-      line-height: 1.35;
+      line-height: 1.3;
     }
 
     .spec-card.highlight {
-      background: #f5f3ff;
-      border-color: #c4b5fd;
+      background: #faf5ff;
+      border-color: #d8b4fe;
     }
 
     .spec-card.highlight .val {
-      color: #581c87;
+      color: #6b21a8;
       font-weight: 800;
     }
 
     .tag-pill {
       display: inline-block;
-      background: #ede9fe;
-      color: #5b21b6;
-      border: 1px solid #ddd6fe;
-      font-size: 9px;
+      background: #f3e8ff;
+      color: #6b21a8;
+      border: 1px solid #e9d5ff;
+      font-size: 8.5px;
       font-weight: 800;
-      padding: 2px 7px;
-      border-radius: 5px;
+      padding: 2px 6px;
+      border-radius: 4px;
       margin-right: 4px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
 
-    /* Commercial Investment Banner */
-    .investment-banner {
-      background: linear-gradient(135deg, #042f2e 0%, #064e3b 100%);
-      border: 1.5px solid #059669;
-      border-radius: 12px;
-      padding: 12px 16px;
-      color: #ffffff;
+    /* Commercial Investment Banner (Crisp Clean Green) */
+    .investment-box {
+      background: #ecfdf5;
+      border: 1.5px solid #a7f3d0;
+      border-radius: 9px;
+      padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 10px;
-      box-shadow: 0 4px 15px rgba(5, 150, 105, 0.15);
+      margin-top: 8px;
       page-break-inside: avoid;
     }
 
-    .investment-banner .title-wrap .sub {
-      font-size: 9px;
-      color: #a7f3d0;
-      font-weight: 700;
+    .investment-box .title {
+      font-size: 8.5px;
+      color: #047857;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
     }
 
-    .investment-banner .price-num {
+    .investment-box .price {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 900;
-      color: #34d399;
-      line-height: 1.1;
-      margin-top: 2px;
+      color: #065f46;
+      margin-top: 1px;
     }
 
-    .investment-banner .speed-badge {
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.3);
-      padding: 5px 12px;
-      border-radius: 8px;
-      font-size: 10px;
+    .investment-box .speed-tag {
+      background: #ffffff;
+      border: 1px solid #a7f3d0;
+      color: #047857;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 9.5px;
       font-weight: 800;
       text-align: right;
     }
 
     /* Engineering Dispatch Box */
-    .dispatch-banner {
+    .dispatch-box {
       background: #eef2ff;
-      border: 1.5px solid #818cf8;
-      border-radius: 10px;
-      padding: 10px 14px;
-      margin-top: 8px;
+      border: 1.5px solid #c7d2fe;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-top: 6px;
       page-break-inside: avoid;
     }
 
-    .dispatch-banner .header {
+    .dispatch-box .dispatch-title {
       color: #3730a3;
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 3px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      letter-spacing: 0.4px;
+      margin-bottom: 2px;
     }
 
-    .dispatch-banner .content {
-      font-size: 10.5px;
+    .dispatch-box .dispatch-body {
+      font-size: 10px;
       color: #1e1b4b;
       font-weight: 600;
-      line-height: 1.45;
+      line-height: 1.4;
     }
 
     /* Deliverables & Drive Box */
-    .deliverables-banner {
+    .deliverables-box {
       background: #faf5ff;
-      border: 1.5px solid #c084fc;
-      border-radius: 10px;
-      padding: 10px 14px;
-      margin-top: 8px;
+      border: 1.5px solid #d8b4fe;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-top: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       page-break-inside: avoid;
     }
 
-    .deliverables-banner .title {
-      font-size: 11px;
+    .deliverables-box .title {
+      font-size: 10px;
       font-weight: 900;
       color: #581c87;
     }
 
-    .deliverables-banner .subtitle {
-      font-size: 9px;
+    .deliverables-box .subtitle {
+      font-size: 8.5px;
       color: #7e22ce;
-      margin-top: 2px;
     }
 
-    .deliverables-banner .action-btn {
+    .deliverables-box a {
       background: #7c3aed;
       color: #ffffff;
       text-decoration: none;
       font-weight: 800;
-      font-size: 10px;
-      padding: 5px 12px;
-      border-radius: 7px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      box-shadow: 0 2px 8px rgba(124,58,237,0.3);
+      font-size: 9.5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
     }
 
-    /* Question & Answer Table */
+    /* Question & Answer Table - Page break per row only to prevent blank space! */
     .qa-table {
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      border: 1.2px solid #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      border-radius: 7px;
       overflow: hidden;
-      margin-top: 6px;
+      margin-top: 4px;
+    }
+
+    .qa-table tr {
       page-break-inside: avoid;
     }
 
@@ -650,8 +613,8 @@ export function generateProjectBlueprintHtml({
     }
 
     .qa-table td {
-      padding: 6px 10px;
-      font-size: 10px;
+      padding: 5px 9px;
+      font-size: 9.5px;
       border-bottom: 1px solid #f1f5f9;
       vertical-align: top;
     }
@@ -665,7 +628,7 @@ export function generateProjectBlueprintHtml({
       font-weight: 800;
       color: #475569;
       border-right: 1px solid #e2e8f0;
-      background: rgba(241, 245, 249, 0.4);
+      background: rgba(248, 250, 252, 0.6);
     }
 
     .qa-table td.a-col {
@@ -674,24 +637,24 @@ export function generateProjectBlueprintHtml({
       color: #0f172a;
     }
 
-    /* Official Stamp & Certificate Box */
+    /* Certificate & Legal Stamp Box */
     .certificate-zone {
       display: grid;
-      grid-template-columns: 1.6fr 1fr;
-      gap: 12px;
-      margin-top: 14px;
-      padding-top: 12px;
+      grid-template-columns: 1.7fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+      padding-top: 10px;
       border-top: 1.5px dashed #cbd5e1;
       page-break-inside: avoid;
     }
 
     .legal-notice {
-      font-size: 8.5px;
+      font-size: 8px;
       color: #64748b;
-      line-height: 1.4;
+      line-height: 1.35;
       background: #f8fafc;
-      padding: 8px 10px;
-      border-radius: 8px;
+      padding: 7px 9px;
+      border-radius: 6px;
       border: 1px solid #e2e8f0;
     }
 
@@ -702,10 +665,10 @@ export function generateProjectBlueprintHtml({
     }
 
     .security-stamp-card {
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      border: 1.5px solid #cbd5e1;
-      border-radius: 8px;
-      padding: 8px 10px;
+      background: #faf5ff;
+      border: 1.5px solid #d8b4fe;
+      border-radius: 6px;
+      padding: 7px 9px;
       text-align: center;
       display: flex;
       flex-direction: column;
@@ -714,35 +677,34 @@ export function generateProjectBlueprintHtml({
     }
 
     .security-stamp-card .seal-title {
-      font-size: 8.5px;
+      font-size: 8px;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: #475569;
+      letter-spacing: 0.5px;
+      color: #6b21a8;
     }
 
     .security-stamp-card .seal-badge {
       display: inline-block;
-      margin-top: 4px;
-      padding: 3px 8px;
-      background: #0f172a;
-      color: #38bdf8;
+      margin-top: 3px;
+      padding: 2px 7px;
+      background: #6b21a8;
+      color: #ffffff;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 800;
       border-radius: 4px;
-      letter-spacing: 0.5px;
     }
 
     /* Footer */
     .blueprint-footer {
-      margin-top: 14px;
-      border-top: 2px solid #7c3aed;
-      padding-top: 8px;
+      margin-top: 12px;
+      border-top: 1.5px solid #7c3aed;
+      padding-top: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 8.5px;
+      font-size: 8px;
       color: #64748b;
       page-break-inside: avoid;
     }
@@ -761,6 +723,7 @@ export function generateProjectBlueprintHtml({
       .canvas-wrapper {
         box-shadow: none !important;
         padding: 0 !important;
+        max-width: 100% !important;
       }
     }
   </style>
@@ -768,23 +731,23 @@ export function generateProjectBlueprintHtml({
 <body>
   <!-- Top Floating Controls for User Preview -->
   <div class="no-print-bar">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <span style="font-size: 15px;">🛡️</span>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 14px;">📄</span>
       <div>
-        <div style="font-size: 12.5px; font-weight: 800; letter-spacing: -0.2px;">
-          ${brandName} Enterprise Architecture Blueprint • <span style="color: #a855f7;">#${trackingId}</span>
+        <div style="font-size: 12px; font-weight: 800;">
+          ${brandName} Project Blueprint • <span style="color: #7c3aed;">#${trackingId}</span>
         </div>
-        <div style="font-size: 9.5px; color: #94a3b8;">
+        <div style="font-size: 9px; color: #64748b;">
           Official Verified Digital Engineering Specification Document
         </div>
       </div>
     </div>
-    <div style="display: flex; gap: 8px;">
+    <div style="display: flex; gap: 6px;">
       <button class="print-btn" onclick="window.print()">
         <span>🖨️</span>
         <span>Save / Print PDF</span>
       </button>
-      <button class="print-btn" style="background: #334155; box-shadow: none;" onclick="window.close()">
+      <button class="print-btn" style="background: #e2e8f0; color: #334155; box-shadow: none;" onclick="window.close()">
         <span>✕</span>
         <span>Close</span>
       </button>
@@ -792,36 +755,36 @@ export function generateProjectBlueprintHtml({
   </div>
 
   <div class="canvas-wrapper">
-    <!-- 1. Executive Modern Header with Verified Stamp -->
-    <div class="hero-header">
-      <div class="hero-brand">
+    <!-- 1. Executive Corporate Header with Verified Pill -->
+    <div class="header-box">
+      <div class="header-brand">
         <img
           src="${fullLogoUrl}"
           alt="${brandName} Logo"
-          class="hero-logo"
+          class="brand-logo"
           onerror="this.style.display='none'"
         />
-        <div class="hero-title">
+        <div class="brand-title">
           <h1>${brandName}</h1>
-          <div class="hero-tagline">${tagline}</div>
-          <div class="hero-contact">
+          <div class="brand-tagline">${tagline}</div>
+          <div class="brand-contact">
             🌐 ${domain} • ✉️ ${supportEmail}<br />
             📞 ${phone} • 📱 WhatsApp: ${whatsapp} • 📍 HQ: ${officeLocation}
           </div>
         </div>
       </div>
 
-      <div class="hero-stamp-zone">
-        <div class="verified-seal-pill">
-          <span class="dot"></span>
+      <div class="header-badge-zone">
+        <div class="verified-pill">
+          <span>✓</span>
           <span>WEBSITE VERIFIED SPEC</span>
         </div>
         <div class="tracking-code">#${trackingId}</div>
-        <div class="meta-sub">Issued: ${issueDate} • Status: <strong style="color: #38bdf8;">${status}</strong></div>
+        <div class="meta-sub">Issued: ${issueDate}, ${issueTime} • Status: <strong style="color: #7c3aed;">${status}</strong></div>
       </div>
     </div>
 
-    <!-- 2. Section 1: Client & Authorized Enterprise Profile -->
+    <!-- 2. Section 1: Client & Stakeholder Credentials -->
     <div class="section-head">
       <div class="title">
         <span>01.</span>
@@ -852,11 +815,11 @@ export function generateProjectBlueprintHtml({
       </div>
       <div class="spec-card">
         <div class="label">Digital Footprint / Existing URL</div>
-        <div class="val" style="font-size: 10px;">${socialStr}</div>
+        <div class="val" style="font-size: 9.5px;">${socialStr}</div>
       </div>
     </div>
 
-    <!-- 3. Section 2: Architecture Scope & Technology Stack -->
+    <!-- 3. Section 2: Architecture Scope & Tech Stack -->
     <div class="section-head">
       <div class="title">
         <span>02.</span>
@@ -926,7 +889,7 @@ export function generateProjectBlueprintHtml({
     </table>
     ` : ''}
 
-    <!-- 5. Section 4: Creative UI/UX Direction & Design Tokens -->
+    <!-- 5. Section 4: UI/UX Design Tokens & Creative Direction -->
     <div class="section-head">
       <div class="title">
         <span>04.</span>
@@ -937,19 +900,19 @@ export function generateProjectBlueprintHtml({
     <div class="grid-3">
       <div class="spec-card">
         <div class="label">Visual Aesthetic Direction</div>
-        <div class="val">${formData.visualStyle || formData.answers?.designStyle || 'Liquid Glassmorphic & Modern Dark'}</div>
+        <div class="val">${formData.visualStyle || formData.answers?.designStyle || 'Modern Glassmorphic'}</div>
       </div>
       <div class="spec-card">
         <div class="label">Color Scheme &amp; Theme Mode</div>
-        <div class="val">${formData.colorMode || formData.answers?.colorMode || 'Adaptive Dual Light & Dark Modes'}</div>
+        <div class="val">${formData.colorMode || formData.answers?.colorMode || 'Adaptive Dual Light & Dark'}</div>
       </div>
       <div class="spec-card">
         <div class="label">Brand Color Accents</div>
-        <div class="val" style="display: flex; align-items: center; gap: 6px;">
-          <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${formData.primaryColor || '#7c3aed'}; border: 1.5px solid #cbd5e1;"></span>
+        <div class="val" style="display: flex; align-items: center; gap: 5px;">
+          <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${formData.primaryColor || '#7c3aed'}; border: 1px solid #cbd5e1;"></span>
           <span>${formData.primaryColor || '#7c3aed'}</span>
           <span style="color: #cbd5e1;">|</span>
-          <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: ${formData.secondaryColor || '#06b6d4'}; border: 1.5px solid #cbd5e1;"></span>
+          <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${formData.secondaryColor || '#06b6d4'}; border: 1px solid #cbd5e1;"></span>
           <span>${formData.secondaryColor || '#06b6d4'}</span>
         </div>
       </div>
@@ -990,7 +953,7 @@ export function generateProjectBlueprintHtml({
       </div>
     </div>
 
-    <!-- 7. Section 6: Commercial Quota & Sprint Timeline -->
+    <!-- 7. Section 6: Commercial Investment & Sprint Delivery -->
     <div class="section-head">
       <div class="title">
         <span>06.</span>
@@ -999,39 +962,32 @@ export function generateProjectBlueprintHtml({
       <div class="badge">Certified Quota</div>
     </div>
     
-    <div class="investment-banner">
-      <div class="title-wrap">
-        <div class="sub">
+    <div class="investment-box">
+      <div>
+        <div class="title">
           ${quotedAmount ? 'Official Quoted Project Investment' : 'Estimated Scope Baseline'}
         </div>
-        <div class="price-num">
+        <div class="price">
           ${quotedAmount || formattedPrice}
         </div>
       </div>
-      <div class="speed-badge">
-        <div style="font-size: 11.5px; font-weight: 900; color: #a7f3d0;">
-          ⚡ ${formData.expectedLaunchDate || formData.timeline || '48 - 72 Hours Rapid Sprint'}
-        </div>
-        <div style="font-size: 9px; opacity: 0.85; margin-top: 2px;">
-          Includes SSL + Free Deployment + 24/7 VIP Support
-        </div>
+      <div class="speed-tag">
+        <div>⚡ ${formData.expectedLaunchDate || formData.timeline || '48 - 72 Hours Rapid Sprint'}</div>
+        <div style="font-size: 8px; color: #047857; margin-top: 1px;">Includes Free SSL + Deployment</div>
       </div>
     </div>
 
     <!-- Admin Engineering Status Dispatch Note (If Present) -->
     ${internalNotes ? `
-    <div class="dispatch-banner">
-      <div class="header">
-        <span>⚡</span>
-        <span>Engineering Team Status Dispatch &amp; Technical Directives:</span>
-      </div>
-      <div class="content">${internalNotes}</div>
+    <div class="dispatch-box">
+      <div class="dispatch-title">⚡ Engineering Team Status Dispatch &amp; Technical Directives:</div>
+      <div class="dispatch-body">${internalNotes}</div>
     </div>
     ` : ''}
 
     <!-- Admin Attached Quotation PDF & Drive Assets Vault (If Present) -->
     ${(drivePdfLink || driveLink) ? `
-    <div class="deliverables-banner">
+    <div class="deliverables-box">
       <div>
         <div class="title">Official Project Deliverables &amp; Google Drive Workspace</div>
         <div class="subtitle">
@@ -1039,8 +995,8 @@ export function generateProjectBlueprintHtml({
         </div>
       </div>
       <div style="display: flex; gap: 6px;">
-        ${drivePdfLink ? `<a href="${drivePdfLink}" target="_blank" class="action-btn">View Quotation PDF &rarr;</a>` : ''}
-        ${driveLink ? `<a href="${driveLink}" target="_blank" class="action-btn" style="background: #4f46e5;">Open Drive Vault &rarr;</a>` : ''}
+        ${drivePdfLink ? `<a href="${drivePdfLink}" target="_blank">View Quotation PDF &rarr;</a>` : ''}
+        ${driveLink ? `<a href="${driveLink}" target="_blank" style="background: #4f46e5;">Open Drive Vault &rarr;</a>` : ''}
       </div>
     </div>
     ` : ''}
@@ -1054,7 +1010,7 @@ export function generateProjectBlueprintHtml({
       </div>
     </div>
     <div class="spec-card" style="margin-top: 4px;">
-      <div class="val" style="font-weight: 500; font-size: 10px; line-height: 1.5;">
+      <div class="val" style="font-weight: 500; font-size: 9.5px; line-height: 1.4;">
         ${[formData.additionalRequirements, formData.designInstructions, formData.referenceWebsites ? `Reference URL: ${formData.referenceWebsites}` : ''].filter(Boolean).join(' • ')}
       </div>
     </div>
@@ -1069,7 +1025,7 @@ export function generateProjectBlueprintHtml({
       <div class="security-stamp-card">
         <div class="seal-title">Engineering Desk Verification</div>
         <div class="seal-badge">VERIFIED &bull; WEBLETS CORE</div>
-        <div style="font-size: 8px; color: #64748b; margin-top: 3px;">Lead Architect Desk &bull; Sprint 2026.4</div>
+        <div style="font-size: 7.5px; color: #6b21a8; margin-top: 2px;">Lead Architect Desk &bull; Sprint 2026.4</div>
       </div>
     </div>
 
@@ -1079,7 +1035,7 @@ export function generateProjectBlueprintHtml({
         <strong>${brandName} Digital Engineering Systems</strong> • Web: https://${domain} • Email: ${supportEmail}
       </div>
       <div>
-        Doc ID: <code style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #7c3aed;">${trackingId}</code> • Official Multi-Page Blueprint
+        Doc ID: <code style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #7c3aed;">${trackingId}</code> • Official Architecture Blueprint
       </div>
     </div>
   </div>
@@ -1088,7 +1044,7 @@ export function generateProjectBlueprintHtml({
     window.onload = function() {
       setTimeout(function() {
         window.print();
-      }, 450);
+      }, 400);
     };
   </script>
 </body>
