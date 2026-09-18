@@ -60,6 +60,7 @@ import { useSiteSettings } from '../../context/SiteSettingsContext';
 import api from '../../services/api';
 import { uploadWithToast } from '../../utils/toastUpload';
 import { optimizeAvatarImage, MAX_AVATAR_SIZE_MB } from '../../utils/imageOptimizer';
+import { triggerDownloadBlueprintPdf } from '../../utils/blueprintPdfGenerator';
 import AshokaChakra from '../../components/common/AshokaChakra';
 import DashboardLoader from '../../components/common/DashboardLoader';
 import NotificationToggle from '../../components/common/NotificationToggle';
@@ -316,6 +317,38 @@ export default function UserDashboard() {
     } finally {
       setIsVerifyingEmailChangeOtp(false);
     }
+  };
+
+  const handleDownloadBlueprint = (req) => {
+    if (!req) return;
+    const combined = {
+      fullName: req.clientInfo?.ownerName || req.fullName || '',
+      businessName: req.clientInfo?.businessName || req.businessName || '',
+      mobileNumber: req.clientInfo?.mobile || req.mobileNumber || '',
+      whatsappNumber: req.clientInfo?.whatsapp || req.whatsappNumber || '',
+      emailAddress: req.clientInfo?.email || req.emailAddress || user?.email || '',
+      country: req.country || 'India',
+      selectedCategory: req.category || req.websiteType || 'Custom Website',
+      appliedTemplateName: req.templateName || req.selectedDemo || '',
+      visualStyle: req.answers?.designStyle || req.visualStyle || 'Modern Glassmorphic',
+      colorMode: req.answers?.colorMode || 'Adaptive Light & Dark',
+      primaryColor: req.answers?.preferredColors || '#7c3aed',
+      domainStatus: req.answers?.domainStatus || req.domainStatus || 'Managed Registration',
+      backendChoice: req.answers?.adminPanelType || req.backendChoice || 'Full Dynamic Admin Panel',
+      whatsappIntegration: req.answers?.whatsappOptions || req.whatsappIntegration || 'Direct Lead Capture Funnel',
+      expectedLaunchDate: req.timeline || '48-72h Express Sprint',
+      totalPrice: req.totalApproxPrice || (req.quotedAmount ? parseInt(String(req.quotedAmount).replace(/\D/g, '')) || 9999 : 9999),
+      requirementId: req.requirementId,
+      additionalRequirements: req.additionalNotes || req.answers?.additionalNotes || '',
+    };
+    triggerDownloadBlueprintPdf({
+      formData: combined,
+      submissionSuccess: {
+        id: req.requirementId,
+        totalApproxPrice: combined.totalPrice,
+      },
+      settings,
+    });
   };
 
   const fetchUserData = useCallback(async (silent = false) => {
@@ -1770,27 +1803,73 @@ export default function UserDashboard() {
                           </div>
                         </div>
 
-                        {/* Deliverables snippet if available */}
-                        {(req.driveLink || req.quotedAmount) && (
-                          <div className="pt-2 flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-purple-500/5 dark:bg-purple-950/30 border border-purple-500/20 text-xs">
-                            {req.driveLink && (
-                              <a
-                                href={req.driveLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 font-bold text-purple-600 dark:text-purple-400 hover:underline"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                                <span>Google Drive Asset Vault</span>
-                              </a>
-                            )}
-                            {req.quotedAmount && (
-                              <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
-                                Quoted Investment: {req.quotedAmount}
-                              </span>
-                            )}
+                        {/* Engineering & Status Dispatch Note from Admin */}
+                        {(req.internalNotes || req.statusNotes) && (
+                          <div className="p-3.5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-xs space-y-1 animate-in fade-in">
+                            <strong className="text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5 text-xs font-bold">
+                              <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                              <span>Engineering Team Status Dispatch:</span>
+                            </strong>
+                            <p className="text-indigo-950 dark:text-indigo-200 font-medium leading-relaxed text-[11px] sm:text-xs">
+                              {req.internalNotes || req.statusNotes}
+                            </p>
                           </div>
                         )}
+
+                        {/* Deliverables & PDF Attachments Bar */}
+                        <div className="pt-2 flex flex-wrap items-center justify-between gap-2.5 p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-purple-500/5 via-slate-50 to-indigo-500/5 dark:from-purple-950/30 dark:via-slate-900/60 dark:to-indigo-950/30 border border-purple-500/20 text-xs">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {/* Attached PDF Document Link (From Admin) */}
+                            {(req.drivePdfLink || req.pdfUrl || req.documentUrl) && (
+                              <a
+                                href={req.drivePdfLink || req.pdfUrl || req.documentUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 font-bold text-white bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-xl shadow-xs transition-all cursor-pointer"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                                <span>Project PDF Document</span>
+                                <ExternalLink className="w-3 h-3 ml-0.5" />
+                              </a>
+                            )}
+
+                            {/* Google Drive Asset Vault (From Admin) */}
+                            {(req.driveLink || req.assetVaultLink) && (
+                              <a
+                                href={req.driveLink || req.assetVaultLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-800 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                              >
+                                <Globe className="w-3.5 h-3.5" />
+                                <span>Drive Asset Vault</span>
+                                <ExternalLink className="w-3 h-3 ml-0.5" />
+                              </a>
+                            )}
+
+                            {/* Official Blueprint PDF Generator */}
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadBlueprint(req)}
+                              className="inline-flex items-center gap-1.5 font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                            >
+                              <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                              <span>Official Blueprint PDF</span>
+                            </button>
+                          </div>
+
+                          {/* Quoted Price Badge */}
+                          {(req.quotedAmount || req.totalApproxPrice) && (
+                            <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 px-3 py-1.5 rounded-xl">
+                              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase">
+                                Quoted Price:
+                              </span>
+                              <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">
+                                {req.quotedAmount || `₹${Number(req.totalApproxPrice).toLocaleString('en-IN')}`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -2293,16 +2372,18 @@ export default function UserDashboard() {
               {/* Scope & Delivery */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                 <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800">
-                  <span className="text-[10px] text-purple-700 dark:text-purple-300 font-bold block">Budget</span>
+                  <span className="text-[10px] text-purple-700 dark:text-purple-300 font-bold block">Budget Tier</span>
                   <span className="font-extrabold text-xs text-purple-900 dark:text-purple-200">{viewingReqSpec.budget}</span>
                 </div>
                 <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold block">Timeline</span>
-                  <span className="font-extrabold text-xs text-emerald-900 dark:text-emerald-200">{viewingReqSpec.timeline}</span>
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold block">Quoted Price</span>
+                  <span className="font-extrabold text-xs text-emerald-900 dark:text-emerald-200">
+                    {viewingReqSpec.quotedAmount || (viewingReqSpec.totalApproxPrice ? `₹${Number(viewingReqSpec.totalApproxPrice).toLocaleString('en-IN')}` : 'Pending Review')}
+                  </span>
                 </div>
                 <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800">
-                  <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold block">Pages</span>
-                  <span className="font-extrabold text-xs text-blue-900 dark:text-blue-200">{viewingReqSpec.selectedPages?.length || 0} Included</span>
+                  <span className="text-[10px] text-blue-700 dark:text-blue-300 font-bold block">Timeline</span>
+                  <span className="font-extrabold text-xs text-blue-900 dark:text-blue-200">{viewingReqSpec.timeline}</span>
                 </div>
                 <div className="p-3 rounded-xl bg-pink-50/70 dark:bg-pink-950/40 border border-pink-200 dark:border-pink-800">
                   <span className="text-[10px] text-pink-700 dark:text-pink-300 font-bold block">CMS Type</span>
@@ -2310,10 +2391,66 @@ export default function UserDashboard() {
                 </div>
               </div>
 
+              {/* Engineering Team Status Dispatch Note */}
+              {(viewingReqSpec.internalNotes || viewingReqSpec.statusNotes) && (
+                <div className="p-3.5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 space-y-1">
+                  <strong className="text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5 text-xs font-bold">
+                    <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                    <span>Engineering Team Status Dispatch:</span>
+                  </strong>
+                  <p className="text-indigo-950 dark:text-indigo-200 leading-relaxed font-medium text-xs">
+                    {viewingReqSpec.internalNotes || viewingReqSpec.statusNotes}
+                  </p>
+                </div>
+              )}
+
+              {/* Deliverables & PDF Documents Vault */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                  Project Documents &amp; Deliverables
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {(viewingReqSpec.drivePdfLink || viewingReqSpec.pdfUrl || viewingReqSpec.documentUrl) && (
+                    <a
+                      href={viewingReqSpec.drivePdfLink || viewingReqSpec.pdfUrl || viewingReqSpec.documentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-xs transition-all"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Quotation / Deliverables PDF</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+
+                  {(viewingReqSpec.driveLink || viewingReqSpec.assetVaultLink) && (
+                    <a
+                      href={viewingReqSpec.driveLink || viewingReqSpec.assetVaultLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-800 transition-all"
+                    >
+                      <Globe className="w-3.5 h-3.5" />
+                      <span>Drive Asset Vault</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadBlueprint(viewingReqSpec)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <span>Download Blueprint PDF</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Uploaded Images Gallery */}
               {(viewingReqSpec.images?.length > 0 || viewingReqSpec.uploadedImages?.length > 0) && (
                 <div>
-                  <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2">Attached Assets & References:</h4>
+                  <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-2">Attached Assets &amp; References:</h4>
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {(viewingReqSpec.images || viewingReqSpec.uploadedImages || []).map((img, i) => (
                       <a key={i} href={img} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 aspect-video hover:opacity-90">

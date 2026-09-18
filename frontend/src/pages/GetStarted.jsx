@@ -88,6 +88,7 @@ import SearchableCombobox from '../components/common/SearchableCombobox';
 import { detectUserLiveLocation, detectCountryFromTimezone } from '../utils/geoDetector';
 import { uploadWithToast } from '../utils/toastUpload';
 import { SEO } from '../components/common/CommonUI';
+import { triggerDownloadBlueprintPdf } from '../utils/blueprintPdfGenerator';
 
 // Multilingual dictionary
 const TRANSLATIONS = {
@@ -2674,71 +2675,11 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
     };
 
     const handleDownloadBlueprintPdf = () => {
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        toast.error('Please allow popups to generate Project Blueprint PDF.');
-        return;
-      }
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Weblets Project Blueprint - ${submissionSuccess?.id || 'Order'}</title>
-          <style>
-            body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #0f172a; padding: 40px; margin: 0; background: #fff; line-height: 1.5; }
-            .header { border-bottom: 3px solid #7c3aed; padding-bottom: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
-            .logo { font-size: 28px; font-weight: 900; color: #7c3aed; letter-spacing: -0.5px; }
-            .badge { background: #f3e8ff; color: #7c3aed; font-size: 12px; font-weight: bold; padding: 6px 14px; border-radius: 999px; border: 1px solid #d8b4fe; }
-            .section-title { font-size: 13px; font-weight: 800; text-transform: uppercase; color: #6b21a8; margin-top: 24px; margin-bottom: 12px; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
-            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 13px; }
-            .item { background: #f8fafc; padding: 12px 14px; border-radius: 10px; border: 1px solid #e2e8f0; }
-            .label { color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; }
-            .val { font-weight: 700; color: #0f172a; }
-            .highlight { color: #059669; font-size: 16px; font-weight: 900; }
-            .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 16px; font-size: 11px; color: #64748b; text-align: center; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div>
-              <div class="logo">WEBLETS</div>
-              <div style="font-size: 12px; color: #64748b; margin-top: 2px; font-weight: 600;">Lets make website together • weblets.bond</div>
-            </div>
-            <div class="badge">Official Blueprint • #${submissionSuccess?.id || 'N/A'}</div>
-          </div>
-
-          <div class="section-title">1. Client &amp; Brand Specifications</div>
-          <div class="grid">
-            <div class="item"><div class="label">Client Name</div><div class="val">${formData.fullName || 'N/A'}</div></div>
-            <div class="item"><div class="label">Brand / Business</div><div class="val">${formData.businessName || 'N/A'}</div></div>
-            <div class="item"><div class="label">Phone / WhatsApp</div><div class="val">${formData.whatsappNumber || formData.mobileNumber || 'N/A'}</div></div>
-            <div class="item"><div class="label">Email Address</div><div class="val">${formData.emailAddress || 'N/A'}</div></div>
-            <div class="item"><div class="label">Category</div><div class="val" style="text-transform: capitalize;">${formData.selectedCategory || 'Custom Website'}</div></div>
-            <div class="item"><div class="label">Location</div><div class="val">${formData.district || ''}, ${formData.state || ''} (${formData.country || 'India'})</div></div>
-          </div>
-
-          <div class="section-title">2. Architecture &amp; Design Direction</div>
-          <div class="grid">
-            <div class="item"><div class="label">Visual Style</div><div class="val">${formData.visualStyle || 'Modern'}</div></div>
-            <div class="item"><div class="label">Theme Mode</div><div class="val">${formData.colorMode || 'Light & Dark'}</div></div>
-            <div class="item"><div class="label">Color Palette Preference</div><div class="val">${formData.colorThemeChoice || 'Logo Preferable'} (${formData.primaryColor || '#7c3aed'} / ${formData.secondaryColor || '#3b82f6'})</div></div>
-            <div class="item"><div class="label">Domain Requirement</div><div class="val">${formData.domainStatus || 'N/A'} ${formData.domainName ? '(' + formData.domainName + ')' : ''}</div></div>
-            <div class="item"><div class="label">Backend &amp; WhatsApp</div><div class="val">${formData.backendChoice || formData.backendRequirement || 'Standard'}</div></div>
-            <div class="item"><div class="label">Commercial Investment</div><div class="val highlight">₹${(submissionSuccess?.totalApproxPrice || 0).toLocaleString('en-IN')}</div></div>
-          </div>
-
-          <div class="footer">
-            Generated automatically via Weblets Engine • Support: support@weblets.bond • Web: https://weblets.bond
-          </div>
-          <script>
-            window.onload = function() { window.print(); }
-          </script>
-        </body>
-        </html>
-      `;
-      printWindow.document.open();
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
+      triggerDownloadBlueprintPdf({
+        formData,
+        submissionSuccess,
+        settings,
+      });
     };
 
     return (

@@ -21,7 +21,8 @@ import {
   ChevronRight,
   Zap,
   Globe,
-  FolderArchive
+  FolderArchive,
+  Download
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +30,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useOrderModal } from '../context/OrderModalContext';
 import api from '../services/api';
 import { useSiteSettings } from '../context/SiteSettingsContext';
+import { triggerDownloadBlueprintPdf } from '../utils/blueprintPdfGenerator';
 import AshokaChakra from '../components/common/AshokaChakra';
 import { SEO } from '../components/common/CommonUI';
 import { SEO_PAGES } from '../config/seoConfig';
@@ -553,14 +555,14 @@ export default function TrackOrder() {
                 </div>
 
                 {/* Admin / Engineer Status Notes */}
-                {trackedOrder.internalNotes && (
+                {(trackedOrder.internalNotes || trackedOrder.statusNotes) && (
                   <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-xs space-y-1 animate-in fade-in">
                     <strong className="text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5 text-xs font-bold">
                       <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
                       <span>Engineering Team Status Dispatch:</span>
                     </strong>
                     <p className="text-indigo-950 dark:text-indigo-200 leading-relaxed font-medium text-[11px] sm:text-xs">
-                      {trackedOrder.internalNotes}
+                      {trackedOrder.internalNotes || trackedOrder.statusNotes}
                     </p>
                   </div>
                 )}
@@ -577,13 +579,85 @@ export default function TrackOrder() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    {/* Project Blueprint Document */}
+                    <div className="p-3 rounded-xl bg-purple-50/50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex items-center justify-between">
+                      <div className="min-w-0 pr-2">
+                        <span className="font-bold text-slate-900 dark:text-white block">Official Blueprint</span>
+                        <span className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold block truncate">
+                          Architecture PDF
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const combined = {
+                            fullName: trackedOrder.clientInfo?.ownerName || trackedOrder.fullName || '',
+                            businessName: trackedOrder.clientInfo?.businessName || trackedOrder.businessName || '',
+                            mobileNumber: trackedOrder.clientInfo?.mobile || trackedOrder.mobileNumber || '',
+                            whatsappNumber: trackedOrder.clientInfo?.whatsapp || trackedOrder.whatsappNumber || '',
+                            emailAddress: trackedOrder.clientInfo?.email || trackedOrder.emailAddress || '',
+                            country: trackedOrder.country || 'India',
+                            selectedCategory: trackedOrder.category || trackedOrder.websiteType || 'Custom Website',
+                            appliedTemplateName: trackedOrder.templateName || trackedOrder.selectedDemo || '',
+                            visualStyle: trackedOrder.answers?.designStyle || trackedOrder.visualStyle || 'Modern Glassmorphic',
+                            colorMode: trackedOrder.answers?.colorMode || 'Adaptive Light & Dark',
+                            primaryColor: trackedOrder.answers?.preferredColors || '#7c3aed',
+                            domainStatus: trackedOrder.answers?.domainStatus || trackedOrder.domainStatus || 'Managed Registration',
+                            backendChoice: trackedOrder.answers?.adminPanelType || trackedOrder.backendChoice || 'Full Dynamic Admin Panel',
+                            whatsappIntegration: trackedOrder.answers?.whatsappOptions || trackedOrder.whatsappIntegration || 'Direct Lead Capture Funnel',
+                            expectedLaunchDate: trackedOrder.timeline || '48-72h Express Sprint',
+                            totalPrice: trackedOrder.totalApproxPrice || (trackedOrder.quotedAmount ? parseInt(String(trackedOrder.quotedAmount).replace(/\D/g, '')) || 9999 : 9999),
+                            requirementId: trackedOrder.requirementId,
+                            additionalRequirements: trackedOrder.additionalNotes || trackedOrder.answers?.additionalNotes || '',
+                          };
+                          triggerDownloadBlueprintPdf({
+                            formData: combined,
+                            submissionSuccess: {
+                              id: trackedOrder.requirementId,
+                              totalApproxPrice: combined.totalPrice,
+                            },
+                            settings,
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] shrink-0 inline-flex items-center gap-1 shadow-xs cursor-pointer"
+                      >
+                        <Download className="w-3 h-3" />
+                        <span>PDF</span>
+                      </button>
+                    </div>
+
+                    {/* Attached Quotation / Deliverables PDF from Admin */}
+                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                      <div className="min-w-0 pr-2">
+                        <span className="font-bold text-slate-900 dark:text-white block">Project PDF Doc</span>
+                        <span className="text-[10px] text-slate-500 truncate block">
+                          {(trackedOrder.drivePdfLink || trackedOrder.pdfUrl || trackedOrder.documentUrl) ? 'Admin Attached PDF' : 'Pending upload'}
+                        </span>
+                      </div>
+                      {(trackedOrder.drivePdfLink || trackedOrder.pdfUrl || trackedOrder.documentUrl) ? (
+                        <a
+                          href={trackedOrder.drivePdfLink || trackedOrder.pdfUrl || trackedOrder.documentUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] shrink-0 inline-flex items-center gap-1 shadow-xs"
+                        >
+                          <FileText className="w-3 h-3" />
+                          <span>View</span>
+                        </a>
+                      ) : (
+                        <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-semibold text-slate-400">
+                          Pending
+                        </span>
+                      )}
+                    </div>
+
                     {/* Google Drive / Cloud Assets */}
                     <div className="p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <div className="min-w-0 pr-2">
-                        <span className="font-bold text-slate-900 dark:text-white block">Google Drive Assets Link</span>
+                        <span className="font-bold text-slate-900 dark:text-white block">Drive Asset Vault</span>
                         <span className="text-[10px] text-slate-500 truncate block">
-                          {trackedOrder.driveLink || trackedOrder.assetVaultLink || 'Pending engineering upload'}
+                          {trackedOrder.driveLink || trackedOrder.assetVaultLink || 'Pending upload'}
                         </span>
                       </div>
                       {(trackedOrder.driveLink || trackedOrder.assetVaultLink) ? (
@@ -591,7 +665,7 @@ export default function TrackOrder() {
                           href={trackedOrder.driveLink || trackedOrder.assetVaultLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] shrink-0 inline-flex items-center gap-1"
+                          className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] shrink-0 inline-flex items-center gap-1 shadow-xs"
                         >
                           <span>Open</span>
                           <ExternalLink className="w-3 h-3" />
@@ -606,9 +680,9 @@ export default function TrackOrder() {
                     {/* Official Quoted Amount */}
                     <div className="p-3 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <div>
-                        <span className="font-bold text-slate-900 dark:text-white block">Official Quoted Investment</span>
+                        <span className="font-bold text-slate-900 dark:text-white block">Quoted Investment</span>
                         <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
-                          {trackedOrder.quotedAmount || 'Pending Review'}
+                          {trackedOrder.quotedAmount || (trackedOrder.totalApproxPrice ? `₹${Number(trackedOrder.totalApproxPrice).toLocaleString('en-IN')}` : 'Pending Review')}
                         </span>
                       </div>
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">

@@ -46,6 +46,7 @@ import AshokaChakra from '../../components/common/AshokaChakra';
 import { toast } from 'react-toastify';
 import DashboardLoader from '../../components/common/DashboardLoader';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
+import { uploadWithToast } from '../../utils/toastUpload';
 
 const STATUS_COLORS = {
   'Draft': 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300',
@@ -389,6 +390,8 @@ export default function AdminRequirements() {
   const [editNotes, setEditNotes] = useState('');
   const [editQuotedAmount, setEditQuotedAmount] = useState('');
   const [editDrivePdfLink, setEditDrivePdfLink] = useState('');
+  const [editDriveLink, setEditDriveLink] = useState('');
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const fetchRequirements = async (silent = false) => {
     try {
@@ -438,9 +441,10 @@ export default function AdminRequirements() {
   const handleOpenDetail = async (req) => {
     setSelectedReq(req);
     setEditStatus(req.status || 'Submitted');
-    setEditNotes(req.internalNotes || '');
+    setEditNotes(req.internalNotes || req.statusNotes || '');
     setEditQuotedAmount(req.quotedAmount || '');
-    setEditDrivePdfLink(req.drivePdfLink || req.pdfUrl || '');
+    setEditDrivePdfLink(req.drivePdfLink || req.pdfUrl || req.documentUrl || '');
+    setEditDriveLink(req.driveLink || req.assetVaultLink || '');
     setActiveInspectTab('all_steps');
 
     try {
@@ -451,13 +455,40 @@ export default function AdminRequirements() {
         if (fullDoc && (fullDoc.requirementId || fullDoc._id)) {
           setSelectedReq(fullDoc);
           setEditStatus(fullDoc.status || req.status || 'Submitted');
-          setEditNotes(fullDoc.internalNotes || req.internalNotes || '');
+          setEditNotes(fullDoc.internalNotes || fullDoc.statusNotes || req.internalNotes || req.statusNotes || '');
           setEditQuotedAmount(fullDoc.quotedAmount || req.quotedAmount || '');
-          setEditDrivePdfLink(fullDoc.drivePdfLink || fullDoc.pdfUrl || req.drivePdfLink || req.pdfUrl || '');
+          setEditDrivePdfLink(fullDoc.drivePdfLink || fullDoc.pdfUrl || fullDoc.documentUrl || req.drivePdfLink || req.pdfUrl || '');
+          setEditDriveLink(fullDoc.driveLink || fullDoc.assetVaultLink || req.driveLink || req.assetVaultLink || '');
         }
       }
     } catch (err) {
       console.warn('Could not fetch full requirement doc:', err);
+    }
+  };
+
+  const handlePdfFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingPdf(true);
+      const res = await uploadWithToast({
+        file,
+        folder: 'documents',
+        toastMessages: {
+          loading: `Uploading document "${file.name}"...`,
+          success: `Uploaded "${file.name}" successfully!`,
+          error: `Failed to upload "${file.name}".`
+        }
+      });
+      const uploadedUrl = res?.secure_url || res?.url || res?.data?.url;
+      if (uploadedUrl) {
+        setEditDrivePdfLink(uploadedUrl);
+      }
+    } catch (err) {
+      console.error('PDF upload error:', err);
+    } finally {
+      setUploadingPdf(false);
+      e.target.value = '';
     }
   };
 
@@ -515,13 +546,17 @@ export default function AdminRequirements() {
       const res = await api.patch(`/requirements/admin/${selectedReq.requirementId || selectedReq._id}/status`, {
         status: editStatus,
         internalNotes: editNotes,
+        statusNotes: editNotes,
         quotedAmount: editQuotedAmount,
         drivePdfLink: editDrivePdfLink,
-        pdfUrl: editDrivePdfLink
+        pdfUrl: editDrivePdfLink,
+        documentUrl: editDrivePdfLink,
+        driveLink: editDriveLink,
+        assetVaultLink: editDriveLink
       });
       if (res.success) {
         setSelectedReq(res.requirement);
-        toast.success(`Status updated to "${editStatus}"! Notification email sent.`);
+        toast.success(`Status updated to "${editStatus}"! Notification email & in-app alerts dispatched.`);
         fetchRequirements(true);
       }
     } catch (err) {
@@ -1362,13 +1397,13 @@ export default function AdminRequirements() {
                           ))}
                         </select>
                         <span className="text-[10px] text-slate-500 mt-1 block">
-                          Changing status will automatically send a branded roadmap update email to the client.
+                          Changing status will automatically send a branded roadmap update email &amp; in-app alert to the client.
                         </span>
                       </div>
 
                       <div>
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                          Official Quoted Investment
+                          Official Quoted Investment / Final Price
                         </label>
                         <input
                           type="text"
@@ -1378,56 +1413,104 @@ export default function AdminRequirements() {
                           className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-emerald-600 dark:text-emerald-400 focus:outline-purple-500"
                         />
                         <span className="text-[10px] text-slate-500 mt-1 block">
-                          Displays prominently on the client's live Track Order page.
+                          Displays prominently on the client's Dashboard and live Track Order page.
                         </span>
                       </div>
                     </div>
 
+                    {/* PDF Attachment (Upload or Link) */}
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                          <span>📄 Google Drive PDF / Document Link (Optional)</span>
+                          <span>📄 Project Quotation / Deliverables PDF Document</span>
                         </label>
-                        {editDrivePdfLink && (
+                        <div className="flex items-center gap-2">
+                          <label className={`text-[11px] font-bold px-2.5 py-1 rounded-lg bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800 cursor-pointer flex items-center gap-1 transition-all ${uploadingPdf ? 'opacity-50 cursor-wait' : ''}`}>
+                            <Download className="w-3 h-3 rotate-180" />
+                            <span>{uploadingPdf ? 'Uploading PDF...' : 'Upload PDF'}</span>
+                            <input
+                              type="file"
+                              accept=".pdf,application/pdf"
+                              disabled={uploadingPdf}
+                              onChange={handlePdfFileUpload}
+                              className="hidden"
+                            />
+                          </label>
+                          {editDrivePdfLink && (
+                            <a
+                              href={editDrivePdfLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                            >
+                              <span>Preview</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                      <input
+                        type="url"
+                        value={editDrivePdfLink}
+                        onChange={(e) => setEditDrivePdfLink(e.target.value)}
+                        placeholder="https://drive.google.com/file/d/... or uploaded Cloudinary PDF link"
+                        className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-indigo-600 dark:text-indigo-400 font-mono focus:outline-purple-500"
+                      />
+                      <span className="text-[10px] text-slate-500 mt-1 block">
+                        Will appear on the client's Dashboard and Live Track Order page with direct Download/View action.
+                      </span>
+                    </div>
+
+                    {/* Drive Assets Vault Link */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <span>📁 Google Drive Asset Vault / Deliverables Folder (Optional)</span>
+                        </label>
+                        {editDriveLink && (
                           <a
-                            href={editDrivePdfLink}
+                            href={editDriveLink}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
                           >
-                            <span>Open Drive Preview</span>
+                            <span>Open Folder</span>
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         )}
                       </div>
                       <input
                         type="url"
-                        value={editDrivePdfLink}
-                        onChange={(e) => setEditDrivePdfLink(e.target.value)}
-                        placeholder="https://drive.google.com/file/d/... or document PDF link"
+                        value={editDriveLink}
+                        onChange={(e) => setEditDriveLink(e.target.value)}
+                        placeholder="https://drive.google.com/drive/folders/... (Google Drive Folder)"
                         className="w-full p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-indigo-600 dark:text-indigo-400 font-mono focus:outline-purple-500"
                       />
                       <span className="text-[10px] text-slate-500 mt-1 block">
-                        Will be prominently rendered as a high-priority Google Drive PDF attachment button in the client's status email.
+                        Shared folder for source files, high-res assets, UI exports, and project deliverables.
                       </span>
                     </div>
 
+                    {/* Engineering & Client Status Dispatch Notes */}
                     <div>
                       <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                        Private Engineering &amp; Client Status Notes
+                        Engineering Team Dispatch &amp; Client Status Notes
                       </label>
                       <textarea
                         rows={4}
                         value={editNotes}
                         onChange={(e) => setEditNotes(e.target.value)}
-                        placeholder="Add technical sprint notes, Figma design links, staging URLs, or handover instructions..."
+                        placeholder="Add technical sprint updates, design wireframe links, staging URLs, deliverables notes, or client instructions..."
                         className="w-full p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-purple-500 text-slate-900 dark:text-white"
                       />
+                      <span className="text-[10px] text-slate-500 mt-1 block">
+                        These notes will be displayed directly inside the client's Dashboard and live Track Order dispatch box.
+                      </span>
                     </div>
 
                     <button
                       onClick={handleSaveStatus}
-                      disabled={updating}
+                      disabled={updating || uploadingPdf}
                       className="px-6 py-3 rounded-xl l2b-gradient-bg text-white font-bold text-xs hover:opacity-95 shadow-md cursor-pointer transition-all disabled:opacity-50"
                     >
                       {updating ? 'Saving & Dispatching Email...' : 'Save & Dispatch Status Update 🚀'}

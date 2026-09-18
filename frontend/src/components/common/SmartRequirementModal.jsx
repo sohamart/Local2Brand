@@ -40,8 +40,8 @@ import {
   FileText,
   Bookmark,
   Copy,
-  MessageCircle,
-  PhoneCall
+  PhoneCall,
+  Download
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -50,6 +50,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import api from '../../services/api';
 import { uploadWithToast } from '../../utils/toastUpload';
+import { triggerDownloadBlueprintPdf } from '../../utils/blueprintPdfGenerator';
 import AshokaChakra from './AshokaChakra';
 
 // Icon Map for dynamic category render
@@ -831,6 +832,46 @@ export default function SmartRequirementModal() {
                 <button
                   type="button"
                   onClick={() => {
+                    const combinedData = {
+                      fullName: formData.clientInfo?.ownerName || '',
+                      businessName: formData.clientInfo?.businessName || '',
+                      mobileNumber: formData.clientInfo?.mobile || '',
+                      whatsappNumber: formData.clientInfo?.whatsapp || formData.clientInfo?.mobile || '',
+                      emailAddress: formData.clientInfo?.email || '',
+                      country: 'India',
+                      selectedCategory: formData.websiteTypeName || formData.websiteType || 'Custom Website',
+                      appliedTemplateName: formData.websiteTypeName || '',
+                      visualStyle: formData.designStyle || 'Modern Glassmorphic',
+                      colorMode: 'Adaptive Light & Dark',
+                      primaryColor: formData.preferredColors || '#7c3aed',
+                      domainStatus: formData.domainStatus || 'Managed Registration',
+                      backendChoice: formData.adminPanelType || 'Full Dynamic Admin Panel',
+                      whatsappIntegration: formData.whatsappOptions || 'WhatsApp Direct Order Funnel',
+                      expectedLaunchDate: formData.timeline || '48-72h Express Sprint',
+                      couponCode: formData.couponCode || '',
+                      discountPercent: formData.discountPercent || 20,
+                      totalPrice: formData.totalPrice || 9999,
+                      requirementId: submittedData?.requirementId,
+                      additionalRequirements: formData.additionalNotes || '',
+                    };
+                    triggerDownloadBlueprintPdf({
+                      formData: combinedData,
+                      submissionSuccess: {
+                        id: submittedData?.requirementId,
+                        totalApproxPrice: formData.totalPrice || 9999,
+                      },
+                      settings,
+                    });
+                  }}
+                  className="px-5 py-3 rounded-2xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-md flex items-center gap-2 cursor-pointer transition-all hover:scale-102"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Blueprint PDF</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
                     closeOrderModal();
                     navigate('/dashboard');
                   }}
@@ -852,10 +893,10 @@ export default function SmartRequirementModal() {
                       businessName: submittedData.clientInfo?.businessName || ''
                     });
                   }}
-                  className="px-5 py-3 rounded-2xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-md flex items-center gap-2 cursor-pointer transition-all hover:scale-102"
+                  className="px-5 py-3 rounded-2xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 shadow-sm flex items-center gap-2 cursor-pointer transition-all hover:scale-102 border border-slate-200 dark:border-slate-700"
                 >
                   <PhoneCall className="w-3.5 h-3.5" />
-                  <span>Request Priority Callback</span>
+                  <span>Request Callback</span>
                 </button>
 
                 <button

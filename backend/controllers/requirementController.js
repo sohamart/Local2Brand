@@ -629,23 +629,53 @@ export const getAllRequirements = async (req, res) => {
 export const updateRequirementStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, internalNotes, quotedAmount, rejectionReason, reason, clientInfo, formData, answers, drivePdfLink, pdfUrl, documentUrl } = req.body;
-    const finalRejectionReason = rejectionReason || reason || (status === 'Rejected' ? internalNotes : '');
+    const {
+      status,
+      internalNotes,
+      statusNotes,
+      quotedAmount,
+      totalApproxPrice,
+      finalPrice,
+      driveLink,
+      assetVaultLink,
+      timeline,
+      budget,
+      rejectionReason,
+      reason,
+      clientInfo,
+      formData,
+      answers,
+      drivePdfLink,
+      pdfUrl,
+      documentUrl
+    } = req.body;
+    const finalRejectionReason = rejectionReason || reason || (status === 'Rejected' ? (internalNotes || statusNotes) : '');
     const resolvedPdfLink = drivePdfLink || pdfUrl || documentUrl;
+    const finalNotes = internalNotes !== undefined ? internalNotes : (statusNotes !== undefined ? statusNotes : undefined);
 
     const updatePayload = {
       updatedAt: new Date()
     };
 
     if (status !== undefined) updatePayload.status = status;
-    if (internalNotes !== undefined) updatePayload.internalNotes = internalNotes;
+    if (finalNotes !== undefined) {
+      updatePayload.internalNotes = finalNotes;
+      updatePayload.statusNotes = finalNotes;
+    }
     if (quotedAmount !== undefined) updatePayload.quotedAmount = quotedAmount;
+    if (totalApproxPrice !== undefined) updatePayload.totalApproxPrice = totalApproxPrice;
+    if (finalPrice !== undefined) updatePayload.finalPrice = finalPrice;
+    if (driveLink !== undefined) updatePayload.driveLink = driveLink;
+    if (assetVaultLink !== undefined) updatePayload.assetVaultLink = assetVaultLink;
+    if (timeline !== undefined) updatePayload.timeline = timeline;
+    if (budget !== undefined) updatePayload.budget = budget;
     if (clientInfo !== undefined) updatePayload.clientInfo = clientInfo;
     if (formData !== undefined) updatePayload.formData = formData;
     if (answers !== undefined) updatePayload.answers = answers;
     if (resolvedPdfLink !== undefined) {
       updatePayload.drivePdfLink = resolvedPdfLink;
       updatePayload.pdfUrl = resolvedPdfLink;
+      updatePayload.documentUrl = resolvedPdfLink;
     }
 
     if (status === 'Rejected' || status === 'Cancelled') {
