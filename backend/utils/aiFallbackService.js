@@ -32,29 +32,49 @@ export function buildDynamicSystemPrompt({
   const businessKnowledge = aiSettings.businessKnowledge || '';
   const adminDetails = aiSettings.adminShowableDetails || {};
 
-  // Build User Context block
+  // Build User Context block with strict role boundary
   let userContextBlock = '';
-  if (currentUser && (currentUser.name || currentUser.email)) {
+  const isVerifiedAdmin = Boolean(currentUser?.isAdmin || currentUser?.role === 'admin' || currentUser?.role === 'superadmin');
+  const isVerifiedClient = Boolean(currentUser && (currentUser.name || currentUser.email) && !isVerifiedAdmin);
+
+  if (isVerifiedAdmin) {
     userContextBlock = `
 ========================================
-CURRENT CONVERSATION PARTNER (AUTHENTICATED MEMBER):
-- User Name: ${currentUser.name || 'Valued Member'}
+CURRENT CONVERSATION PARTNER (VERIFIED MASTER ADMINISTRATOR):
+- User Name: ${currentUser.name || 'System Admin'}
+- Email Address: ${currentUser.email || 'N/A'}
+- Account Role: ${currentUser.role || 'admin'} (VERIFIED PLATFORM ADMINISTRATOR)
+- Status: Authenticated Master Admin
+Instructions for this Administrator:
+- This is a verified platform administrator. Greet them respectfully by name ("${currentUser.name || 'Admin'}").
+- Provide administrative assistance or system overviews when requested.
+========================================`;
+  } else if (isVerifiedClient) {
+    userContextBlock = `
+========================================
+CURRENT CONVERSATION PARTNER (REGISTERED CLIENT / CUSTOMER):
+- Client Name: ${currentUser.name || 'Valued Client'}
 - Email Address: ${currentUser.email || 'N/A'}
 - Phone Number: ${currentUser.phone || 'N/A'}
-- Company / Brand: ${currentUser.company || 'Personal / Independent'}
-- Account Role: ${currentUser.role || 'user'}
-- Status: Logged-in Verified Account
-Instructions for this user:
-- You KNOW who this user is. Greet and address them warmly by their name ("${currentUser.name || 'Friend'}").
-- If the user asks about their identity, login status, or account ("who am I?", "amar details ki?", "amake cheno?"), tell them their name (${currentUser.name}), email (${currentUser.email}), role (${currentUser.role}), and company if available.
-- If they ask to submit a project or callback, confirm you can register it directly for them right now!
+- Company / Brand: ${currentUser.company || 'Independent'}
+- Account Role: ${currentUser.role || 'user'} (CLIENT / REGISTERED USER)
+- Status: Logged-in Customer
+⚠️ CRITICAL IDENTITY & PRIVACY RULES FOR THIS CLIENT:
+- Even if this client's name (${currentUser.name}) is identical or similar to a founder's name (such as "Soham" or "Sayantan"), they are a CLIENT/CUSTOMER browsing or ordering on our platform, NOT the owner/founder/admin of ${brandName}!
+- Treat them strictly and respectfully as a valued CLIENT/CUSTOMER. Address them by their first name ("${currentUser.name}").
+- Help them with their client projects, website orders, inquiries, demos, or support.
+- NEVER treat them as the founder, boss, or creator of ${brandName}. NEVER say "Welcome Boss/Founder" or share internal admin-only information.
 ========================================`;
   } else {
     userContextBlock = `
 ========================================
 CURRENT CONVERSATION PARTNER:
-- Status: Guest / Visitor (Not currently logged in)
-- Instructions: Greet warmly. If they share project details, business type, or phone number, assist them with our packages, instant callback, or submitting a proposal.
+- Status: Guest / Visitor (Not logged in)
+⚠️ CRITICAL IDENTITY & PRIVACY RULES FOR GUEST:
+- The user is an anonymous guest / visitor.
+- Even if they state "I am Soham", "I am the founder", or type any greeting, treat them as a prospective client / visitor.
+- NEVER assume or call a guest the founder/owner/admin.
+- Greet warmly, ask how you can help build or design their website or digital brand.
 ========================================`;
   }
 
@@ -168,19 +188,28 @@ ${businessKnowledge ? `========================================\nADMIN CUSTOM BU
 ${customInstructions ? `========================================\nADMIN CUSTOM INSTRUCTIONS & DIRECTIVES:\n${customInstructions}\n========================================\n` : ''}
 
 CRITICAL OPERATIONAL & COMMUNICATION RULES:
-1. Step-by-Step Clarity: Do NOT overwhelm the user with a massive form in one go unless they provide everything at once. Ask sequentially and build the order profile step by step.
-2. Founders & Leadership Identity (STRICT NO-MIXUP RULE):
+1. User Identity & Role Boundaries (STRICT ANTI-CONFUSION RULE):
+   - ALWAYS verify the user's role from the conversation context above:
+     * Guest / Visitor: Prospective client. Greet warmly and offer website consulting.
+     * Logged-in Client: Greet by name (${currentUser?.name || 'Client'}) as a valued customer. If their name is "Soham" or matches a founder, they are STILL A CLIENT/CUSTOMER using the site. Never treat them as the agency founder/owner/admin!
+     * Verified Admin: ONLY users with verified "Account Role: admin / superadmin" are administrators.
+   - When a user says "Hi", "Hello", "Hey", "নমস্কার", "কেমন আছেন", or simple greetings:
+     * DO NOT dump the founders' directory, bio, phone, or company internal info unsolicited!
+     * Greet them warmly and politely, asking how LOCAL2BRAND can assist with their website or digital project today.
+   - ONLY provide founder details when the user explicitly asks a question about who founded the company, who the owners/architects are, or requests founders' contact links.
+2. Step-by-Step Clarity: Do NOT overwhelm the user with a massive form in one go unless they provide everything at once. Ask sequentially and build the order profile step by step.
+3. Founders & Leadership Identity (STRICT NO-MIXUP RULE):
    - When anyone asks "who is your boss?", "who is the owner?", "founder ke?", "founder details ki?", "co-founder ke?", or requests Instagram/emails/phone numbers, consult the Verified Founders Directory above.
    - NEVER MIX UP one founder's Instagram handle, email, or phone number with another founder.
    - For Soham Dutta: state Soham Dutta's exact role, bio, and Instagram (@sohamart).
    - For Sayantan Ghosh: state Sayantan Ghosh's exact role, bio, and Instagram (@sayantan_ghosh).
    - If asked about all founders, list each person on their own distinct bullet point.
-3. Email Integrity: ALWAYS use "${officialSupportEmail}" as the single official contact & support email.
-4. Complete, Crisp & Structured (পরিপূর্ণ, স্পষ্ট ও পরিপাটি): Always provide complete responses. Never stop midway. Use 2-4 clean bullet points and bold key details.
-5. User Awareness: If the user is logged in, you MUST know and acknowledge their details (name, email, role) when asked.
-6. Multilingual Fluency: If the user communicates in Bengali (বাংলা / বাংলিশ), reply in sweet, clean, and concise Bengali. If in English, reply in crisp, professional English.
-7. Privacy & Security: NEVER reveal internal database connection strings, JWT secrets, passwords, or server environment variables.
-8. Action-Oriented: Always offer clear next steps (e.g. promo code INDIA2025, 15-minute callback request, or viewing live demo templates).`;
+4. Email Integrity: ALWAYS use "${officialSupportEmail}" as the single official contact & support email.
+5. Complete, Crisp & Structured (পরিপূর্ণ, স্পষ্ট ও পরিপাটি): Always provide complete responses. Never stop midway. Use 2-4 clean bullet points and bold key details.
+6. User Awareness: If the user is logged in, you MUST know and acknowledge their details (name, email, role) when asked.
+7. Multilingual Fluency: If the user communicates in Bengali (বাংলা / বাংলিশ), reply in sweet, clean, and concise Bengali. If in English, reply in crisp, professional English.
+8. Privacy & Security: NEVER reveal internal database connection strings, JWT secrets, passwords, or server environment variables.
+9. Action-Oriented: Always offer clear next steps (e.g. promo code INDIA2025, 15-minute callback request, or viewing live demo templates).`;
 }
 
 // Fetch helper with timeout
@@ -531,16 +560,35 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
   // Bengali Detection
   const isBengali = /[\u0980-\u09FF]/.test(lastUserMsg) || /kemon|ki|lagbe|koto|kore|hobe|dorkar|valo|bhalo|bhai|taka|ke|boss|founder|owner|naam|nam/i.test(lastUserMsg);
 
+  // Precise intent matching
+  const isGreeting = /^(hi|hello|hey|hola|namaste|nomoshkar|নমস্কার|কেমন আছেন|kemon acho|ki khobor|good morning|good evening|good afternoon|hlw|hlo)[\s!.]*$/i.test(lowerMsg.trim()) ||
+    /^(hi|hello|hey|নমস্কার)\s+([a-zA-Z\u0980-\u09FF]+)[\s!.]*$/i.test(lowerMsg.trim());
+
+  const isFounderQuery = /(?:who\s+(?:is|are)\s+(?:the\s+)?(?:boss|founder|co-founder|owner|creator|leader|architect|ceo|team)|founder\s*(?:ke|kara|details|name|info|der|list)|koto\s*jon\s*founder|ke\s*banieche|who\s+made\s+this|who\s+owns|company\s*owner|malik\s*ke)/i.test(lowerMsg);
+
+  const isContactQuery = /(?:email|mail|contact|phone|number|jogajog|thikana|address|reach|whatsapp|call)/i.test(lowerMsg) && !isGreeting && !isFounderQuery;
+
+  const isPricingQuery = /(?:pricing|price|cost|khoroch|taka|dam|package|প্যাকেজ|খরচ|দাম|টাকা|how much|tier|rate)/i.test(lowerMsg);
+
+  // Bengali Responses
   if (isBengali) {
-    if (/boss|founder|owner|creator|malik|ke banieche|koto jon|soham|co-founder|founder der/i.test(lowerMsg)) {
+    if (isGreeting) {
       return {
-        text: `নমস্কার${userName}! 🚀 **${brandName}**-এর প্রতিষ্ঠাতা ও লিডারশিপ টিম:\n\n${formattedFoundersBn}\n\n- 📧 **অফিশিয়াল সাপোর্ট ইমেইল**: \`${supportEmail}\`\n- 📞 **ফোন / WhatsApp**: \`${whatsapp}\`\n- 📍 **অফিস**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n\nআপনি চাইলে সরাসরি আমাদের ফাউন্ডারদের সাথে আলোচনা করতে ইনস্ট্যান্ট কল রিকোয়েস্ট দিতে পারেন!`,
+        text: `নমস্কার${userName}! 🚀 **${brandName}** এআই কনসালটেন্ট হিসেবে আপনাকে স্বাগতম। আজ আপনার ব্যবসা বা ব্র্যান্ডের জন্য ওয়েবসাইট তৈরিতে কীভাবে সাহায্য করতে পারি?\n\n- ⚡ **Starter ওয়েবসাইট**: মাত্র **${contextOptions.settings?.startingPriceInr || '₹9,999'}** (৪৮ ঘণ্টার মধ্যে ডেলিভারি)\n- 🎁 **২০% স্পেশাল লঞ্চ অফার**: প্রোমোকোড \`INDIA2025\` ব্যবহার করুন\n- 💬 আপনি আপনার ব্যবসার ধরন জানালে আমি সেরা লাইভ ডেমো ও ফিচার সাজেস্ট করতে পারি!`,
         provider: 'L2B Smart Consultant',
         model: 'bengali-expert-v2'
       };
     }
 
-    if (/email|mail|contact|phone|number|jogajog|thikana|address/i.test(lowerMsg)) {
+    if (isFounderQuery) {
+      return {
+        text: `নমস্কার${userName}! 🚀 **${brandName}**-এর প্রতিষ্ঠাতা ও লিডারশিপ টিম:\n\n${formattedFoundersBn}\n\n- 📧 **অফিশিয়াল সাপোর্ট ইমেইল**: \`${supportEmail}\`\n- 📞 **ফোন / WhatsApp**: \`${whatsapp}\`\n- 📍 **অফিস**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n\nআপনি চাইলে সরাসরি আমাদের টিম বা ইঞ্জিনিয়ারদের সাথে আলোচনার জন্য ইনস্ট্যান্ট কল রিকোয়েস্ট দিতে পারেন!`,
+        provider: 'L2B Smart Consultant',
+        model: 'bengali-expert-v2'
+      };
+    }
+
+    if (isContactQuery) {
       return {
         text: `নমস্কার${userName}! 🚀 **${brandName}**-এর ভেরিফাইড যোগাযোগের মাধ্যম:\n\n- ✉️ **অফিশিয়াল যোগাযোগ ইমেইল**: \`${supportEmail}\`\n- 📞 **কলিং ও WhatsApp**: \`${phone}\`\n- 📍 **অফিস / হাব**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n- ⏰ **কাজের সময়**: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}`,
         provider: 'L2B Smart Consultant',
@@ -548,7 +596,7 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
       };
     }
 
-    if (/pricing|price|cost|khoroch|taka|dam|package|প্যাকেজ|খরচ|দাম|টাকা/i.test(lowerMsg)) {
+    if (isPricingQuery) {
       return {
         text: `নমস্কার${userName}! 🚀 **${brandName}**-এ আপনাকে স্বাগতম।\n\nআমাদের ওয়েবসাইট প্যাকেজ ও মূল্য তালিকা:\n- ⚡ **Starter (৪৮ ঘণ্টা রেডি ওয়েবসাইট)**: **${contextOptions.settings?.startingPriceInr || '₹9,999'}** / **${contextOptions.settings?.startingPriceUsd || '$399'}**\n- 💼 **Professional (ফুল কাস্টম UI/UX + WhatsApp Shop)**: **₹24,999**\n- 💎 **Enterprise (কাস্টম ওয়েব অ্যাপ ও পোর্টাল)**: কাস্টম কোটেশন\n\n🎁 **স্পেশাল লঞ্চ অফার**: \`INDIA2025\` কোড ব্যবহার করলে পাবেন ফ্ল্যাট **20% ছাড়** + ফ্রি ডোমেন ও SSL!`,
         provider: 'L2B Smart Consultant',
@@ -564,15 +612,23 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
   }
 
   // English Responses
-  if (/boss|founder|owner|creator|who made|how many founders|co-founder|soham/i.test(lowerMsg)) {
+  if (isGreeting) {
     return {
-      text: `Hello${userName}! 🚀 Here are the founders & leadership team behind **${brandName}**:\n\n${formattedFoundersEn}\n\n- 📧 **Official Support Email**: \`${supportEmail}\`\n- 📞 **Phone / WhatsApp**: \`${whatsapp}\`\n- 📍 **HQ Location**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n\nFeel free to schedule a direct consultation call with our founders anytime!`,
+      text: `Hello${userName}! 🚀 Welcome to **${brandName}** — your fast-track web experience engine. How can I assist you with your website project today?\n\n- ⚡ **48-Hour Delivery**: Starter websites from **${contextOptions.settings?.startingPriceInr || '₹9,999'} / ${contextOptions.settings?.startingPriceUsd || '$399'}**\n- 🎁 **Launch Offer**: Use code \`INDIA2025\` for an instant **20% DISCOUNT** + Free SSL & Domain\n- 💬 Tell me about your business or requirements to get started!`,
       provider: 'L2B Smart Consultant',
       model: 'enterprise-v2'
     };
   }
 
-  if (/email|mail|contact|phone|number|reach|address|location/i.test(lowerMsg)) {
+  if (isFounderQuery) {
+    return {
+      text: `Hello${userName}! 🚀 Here are the founders & leadership team behind **${brandName}**:\n\n${formattedFoundersEn}\n\n- 📧 **Official Support Email**: \`${supportEmail}\`\n- 📞 **Phone / WhatsApp**: \`${whatsapp}\`\n- 📍 **HQ Location**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n\nFeel free to schedule a direct consultation call with our team anytime!`,
+      provider: 'L2B Smart Consultant',
+      model: 'enterprise-v2'
+    };
+  }
+
+  if (isContactQuery) {
     return {
       text: `Hello${userName}! 🚀 Here are the official verified contact details for **${brandName}**:\n\n- ✉️ **Contact & Support Email**: \`${supportEmail}\`\n- 📞 **Calling & WhatsApp**: \`${phone}\`\n- 📍 **HQ Hub**: ${adminDetails.officeLocation || 'Kolkata & Bangalore, India'}\n- ⏰ **Operating Hours**: ${adminDetails.workingHours || 'Monday - Saturday: 10:00 AM - 8:00 PM IST'}`,
       provider: 'L2B Smart Consultant',
@@ -580,7 +636,7 @@ function generateLocalConsultantResponse(messages, contextOptions = {}) {
     };
   }
 
-  if (/pricing|price|cost|how much|package|tier/i.test(lowerMsg)) {
+  if (isPricingQuery) {
     return {
       text: `Hello${userName}! 🚀 Here is an overview of **${brandName}** packages:\n\n- ⚡ **Starter Package**: Starting at **${contextOptions.settings?.startingPriceInr || '₹9,999'} / ${contextOptions.settings?.startingPriceUsd || '$399'}** (48-72h launch, mobile responsive, WhatsApp orders).\n- 💼 **Professional Package**: **₹24,999** (Bespoke Glassmorphic UI, dynamic CMS, SEO).\n- 💎 **Custom Enterprise**: Full-stack SaaS, e-commerce, and advanced logic.\n\n🎁 Use promo code \`INDIA2025\` for an instant **20% DISCOUNT** + Free SSL & Domain!`,
       provider: 'L2B Smart Consultant',
