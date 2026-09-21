@@ -121,7 +121,7 @@ export default function AdminReviews() {
 
   return (
     <>
-      <SEO title="Client Reviews Management — Master Admin" description="Moderate, feature, and manage all client testimonials and reviews." />
+      <SEO title="Client Reviews Management — Master Admin" description="Moderate, feature, and manage all client testimonials and reviews." noindex={true} robots="noindex, nofollow" />
 
       <div className="space-y-6">
 

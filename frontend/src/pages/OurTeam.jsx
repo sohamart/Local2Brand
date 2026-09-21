@@ -6,7 +6,7 @@ import { useOrderModal } from '../context/OrderModalContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import FinalCTA from '../components/home/FinalCTA';
 import FounderCard from '../components/common/FounderCard';
-import { SEO_PAGES, BRAND } from '../config/seoConfig';
+import { SEO_PAGES, BRAND, generateOrganizationSchema } from '../config/seoConfig';
 
 export default function OurTeam() {
   const { openOrderModal } = useOrderModal();
@@ -59,6 +59,7 @@ export default function OurTeam() {
     : defaultFounders;
 
   // Generate Person Schema for each team member
+  const organizationSchema = generateOrganizationSchema();
   const teamSchema = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
@@ -66,7 +67,7 @@ export default function OurTeam() {
       '@type': 'Person',
       position: idx + 1,
       name: m.name,
-      jobTitle: m.role,
+      jobTitle: m.role || m.jobTitle,
       worksFor: {
         '@type': 'Organization',
         '@id': `${BRAND.domain}/#organization`,
@@ -82,7 +83,7 @@ export default function OurTeam() {
         title={SEO_PAGES.team.title}
         description={SEO_PAGES.team.description}
         canonical={SEO_PAGES.team.canonical}
-        schema={teamSchema}
+        schema={[organizationSchema, teamSchema]}
         breadcrumbs={[
           { name: 'Our Team', url: '/team' }
         ]}

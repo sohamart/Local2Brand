@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Shield, Lock, Eye, BellRing, Database, UserCheck, ArrowLeft, Mail, Clock, CheckCircle2 } from 'lucide-react';
 import SEO from '../components/common/SEO';
-import { SEO_PAGES } from '../config/seoConfig';
+import { SEO_PAGES, generateOrganizationSchema } from '../config/seoConfig';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 
 export default function Privacy() {
@@ -84,9 +84,9 @@ export default function Privacy() {
         title={SEO_PAGES.privacy.title}
         description={SEO_PAGES.privacy.description}
         canonical={SEO_PAGES.privacy.canonical}
+        schema={generateOrganizationSchema()}
         breadcrumbs={[
-          { name: 'Home', path: '/' },
-          { name: 'Privacy Policy', path: '/privacy' }
+          { name: 'Privacy Policy', url: '/privacy' }
         ]}
       />
 

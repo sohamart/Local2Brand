@@ -88,6 +88,7 @@ import SearchableCombobox from '../components/common/SearchableCombobox';
 import { detectUserLiveLocation, detectCountryFromTimezone } from '../utils/geoDetector';
 import { uploadWithToast } from '../utils/toastUpload';
 import { SEO } from '../components/common/CommonUI';
+import { SEO_PAGES, generateOrganizationSchema } from '../config/seoConfig';
 import { triggerDownloadBlueprintPdf } from '../utils/blueprintPdfGenerator';
 
 // Multilingual dictionary
@@ -2781,9 +2782,10 @@ Highlight key tips for Step ${currentStep} questions and let me know how you can
   return (
     <>
       <SEO
-        title="Get Started — Fast-Track Website Requirement Builder | Weblets"
-        description="Launch your project with our interactive 3-minute website requirement builder. Select your niche, features, and receive an instant blueprint proposal."
-        canonical="https://weblets.bond/get-started"
+        title={SEO_PAGES.getStarted.title}
+        description={SEO_PAGES.getStarted.description}
+        canonical={SEO_PAGES.getStarted.canonical}
+        schema={generateOrganizationSchema()}
         breadcrumbs={[
           { name: 'Get Started', url: '/get-started' }
         ]}

@@ -33,7 +33,7 @@ import { useSiteSettings } from '../context/SiteSettingsContext';
 import { triggerDownloadBlueprintPdf } from '../utils/blueprintPdfGenerator';
 import AshokaChakra from '../components/common/AshokaChakra';
 import { SEO } from '../components/common/CommonUI';
-import { SEO_PAGES } from '../config/seoConfig';
+import { SEO_PAGES, generateOrganizationSchema } from '../config/seoConfig';
 
 const STATUS_BADGES = {
   'Draft': 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700',
@@ -233,9 +233,9 @@ export default function TrackOrder() {
         title={SEO_PAGES.trackOrder.title}
         description={SEO_PAGES.trackOrder.description}
         canonical={SEO_PAGES.trackOrder.canonical}
+        schema={generateOrganizationSchema()}
         breadcrumbs={[
-          { name: 'Home', path: '/' },
-          { name: 'Track Order', path: '/track-order' }
+          { name: 'Track Order', url: '/track-order' }
         ]}
       />
 

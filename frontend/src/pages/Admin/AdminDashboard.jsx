@@ -266,7 +266,7 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <SEO title="Admin Overview — LOCAL2BRAND" description="Platform analytics, project requirements pipeline, and leads management." />
+      <SEO title="Admin Overview — Weblets" description="Platform analytics, project requirements pipeline, and leads management." noindex={true} robots="noindex, nofollow" />
 
       <div className="space-y-8 select-text">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

@@ -13,6 +13,7 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { SEO } from '../components/common/CommonUI';
+import { generateProductSchema } from '../config/seoConfig';
 import DevicePreview from '../components/demos/DevicePreview';
 import ShareDemoModal from '../components/demos/ShareDemoModal';
 import DashboardLoader from '../components/common/DashboardLoader';
@@ -152,7 +153,14 @@ export default function DemoDetails() {
     <>
       <SEO
         title={`${demo.title} — Live Website Template Preview`}
-        description={`Interactive preview of ${demo.title}. Features ${demo.features.slice(0, 2).join(', ')}. Order via WhatsApp with 3 - 7 days turnaround.`}
+        description={demo.description || `Interactive preview of ${demo.title}. Features ${demo.features ? demo.features.slice(0, 2).join(', ') : 'commercial UI'}. Turnkey deployment with WhatsApp ordering.`}
+        canonical={`https://weblets.bond/demos/${slug}`}
+        image={demo.heroImage || demo.thumbnail}
+        schema={generateProductSchema(demo)}
+        breadcrumbs={[
+          { name: 'Templates', url: '/demos' },
+          { name: demo.title, url: `/demos/${slug}` }
+        ]}
       />
 
       <div className="page-header-offset pb-12 sm:pb-16">

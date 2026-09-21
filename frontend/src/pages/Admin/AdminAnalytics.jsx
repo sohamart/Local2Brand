@@ -127,8 +127,10 @@ export default function AdminAnalytics() {
   return (
     <>
       <SEO
-        title="Live Website Analytics — LOCAL2BRAND Admin"
+        title="Live Website Analytics — Weblets Admin"
         description="Comprehensive real-time website traffic metrics, active visitors, 30-day view charts, and page analytics."
+        noindex={true}
+        robots="noindex, nofollow"
       />
 
       <div className="space-y-8 select-text">

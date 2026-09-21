@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, Globe2, ShieldCheck, Zap, Heart, CheckCircle2, ArrowRight, Mail, Users } from 'lucide-react';
 import { SEO } from '../components/common/CommonUI';
-import { SEO_PAGES, BRAND } from '../config/seoConfig';
+import { SEO_PAGES, BRAND, generateOrganizationSchema } from '../config/seoConfig';
 import ProcessTimeline from '../components/home/ProcessTimeline';
 import FinalCTA from '../components/home/FinalCTA';
 import { useOrderModal } from '../context/OrderModalContext';
@@ -43,6 +43,7 @@ export default function About() {
         },
       ];
 
+  const organizationSchema = generateOrganizationSchema();
   const aboutSchema = {
     '@context': 'https://schema.org',
     '@type': 'AboutPage',
@@ -51,14 +52,7 @@ export default function About() {
     url: SEO_PAGES.about.canonical,
     mainEntity: {
       '@type': 'Organization',
-      '@id': `${BRAND.domain}/#organization`,
-      name: BRAND.name,
-      description: BRAND.description,
-      founder: BRAND.founders.map((f) => ({
-        '@type': 'Person',
-        name: f.name,
-        jobTitle: f.jobTitle
-      }))
+      '@id': `${BRAND.domain}/#organization`
     }
   };
 
@@ -68,7 +62,7 @@ export default function About() {
         title={SEO_PAGES.about.title}
         description={SEO_PAGES.about.description}
         canonical={SEO_PAGES.about.canonical}
-        schema={aboutSchema}
+        schema={[organizationSchema, aboutSchema]}
         breadcrumbs={[
           { name: 'About Us', url: '/about' }
         ]}

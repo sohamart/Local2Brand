@@ -7,6 +7,7 @@ import ShareDemoModal from '../components/demos/ShareDemoModal';
 import FinalCTA from '../components/home/FinalCTA';
 import AshokaChakra from '../components/common/AshokaChakra';
 import DashboardLoader from '../components/common/DashboardLoader';
+import { SEO_PAGES, BRAND, generateOrganizationSchema } from '../config/seoConfig';
 import api from '../services/api';
 
 export default function Demos() {
@@ -83,12 +84,13 @@ export default function Demos() {
     });
   }, [demosList, activeCategory, searchQuery]);
 
+  const organizationSchema = generateOrganizationSchema();
   const demosSchema = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Live Website Templates & Interactive Demos | Weblets',
-    description: 'Browse 12+ live working website demos for Restaurants, Cafes, Salons, Gyms, Real Estate, Clinics, and Boutiques with instant 48-hour customization.',
-    url: 'https://weblets.bond/demos',
+    name: SEO_PAGES.demos.title,
+    description: SEO_PAGES.demos.description,
+    url: SEO_PAGES.demos.canonical,
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: demosList.map((demo, idx) => ({
@@ -96,12 +98,17 @@ export default function Demos() {
         position: idx + 1,
         name: demo.title,
         description: demo.description || demo.shortDescription,
-        image: demo.heroImage || demo.thumbnail,
+        image: demo.heroImage || demo.thumbnail || BRAND.logo,
         url: `https://weblets.bond/demos/${demo.slug || demo.id}`,
         offers: {
           '@type': 'Offer',
           price: demo.priceInr ? String(demo.priceInr).replace(/[^0-9]/g, '') : '4999',
-          priceCurrency: 'INR'
+          priceCurrency: 'INR',
+          availability: 'https://schema.org/InStock',
+          seller: {
+            '@type': 'Organization',
+            '@id': `${BRAND.domain}/#organization`
+          }
         }
       }))
     }
@@ -110,10 +117,10 @@ export default function Demos() {
   return (
     <>
       <SEO
-        title="Live Website Templates & Interactive Demos | Weblets"
-        description="Browse 12+ live working website demos for Restaurants, Cafes, Salons, Gyms, Real Estate, Clinics, and Boutiques with instant 48-hour customization."
-        canonical="https://weblets.bond/demos"
-        schema={demosSchema}
+        title={SEO_PAGES.demos.title}
+        description={SEO_PAGES.demos.description}
+        canonical={SEO_PAGES.demos.canonical}
+        schema={[organizationSchema, demosSchema]}
         breadcrumbs={[
           { name: 'Templates', url: '/demos' }
         ]}

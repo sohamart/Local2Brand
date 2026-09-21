@@ -1,27 +1,43 @@
-# weblets agency - lets make website together
-> Premier web design and full-stack development agency specializing in bespoke high-converting websites, e-commerce stores, responsive commercial niche templates, and express 48-hour delivery.
+# Weblets — lets make website together
+> Premier full-stack web development agency specializing in bespoke high-converting websites, e-commerce platforms, commercial niche templates, and express 48-hour turnarounds.
 
-## About Weblets Agency
-- **Brand Name**: weblets agency
-- **Slogan**: lets make website together
-- **Official Domain**: https://weblets.bond
-- **Founders**: Soham Dutta (Lead Architect), Sayantan (Technical Lead), Achinta (Operations Lead)
-- **HQ**: Kolkata & Bangalore, India (Serving Global Clients: India, US, UK, Canada, Australia, UAE, Europe)
-- **Services**:
-  - Custom UI/UX Web Design & Figma Prototyping
-  - Full-Stack Web Development (React, Node.js, Express, MongoDB)
-  - Commercial Niche Demos (Restaurants, Salons, Gyms, Real Estate, Clinics, E-commerce, LMS)
-  - WhatsApp Order & Catalog Integration
-  - Superfast 48-Hour Turnaround & Live Milestone Sprint Tracking
+## Organization & Entity Profile
+- **Official Brand Name**: Weblets (weblets agency)
+- **Legal Entity**: weblets agency - lets make website together
+- **Official Website**: https://weblets.bond
+- **Tagline**: lets make website together
+- **Founders**:
+  - **Soham Dutta**: Lead Architect & Full-Stack Systems (https://linkedin.com/in/soham-dutta)
+  - **Sayantan**: Technical Lead & Frontend Engineering
+  - **Achinta**: Operations & Product Delivery Lead
+- **Headquarters**: Kolkata & Bangalore Hubs, India (Operating Worldwide)
+- **Primary Contact**: contact@weblets.bond | +91 87100 43923
+- **Pricing Spectrum**: Fixed-price packages from ₹4,999 ($149) to ₹49,999 ($1,499) with zero hidden fees and 100% full source code ownership.
+- **Delivery SLAs**: 48 to 72 hours for template customizations; 5 to 7 business days for bespoke web engineering sprints.
 
-## Key Links
-- Home: https://weblets.bond/
-- Website Demos & Templates: https://weblets.bond/demos
-- Services & Solutions: https://weblets.bond/services
+## Core Capabilities & Services
+1. **Bespoke Business Websites**: High-performance digital flagships engineered with React, Vite, and Tailwind CSS.
+2. **High-Converting Landing Pages**: Conversion-rate-optimized sales funnels with interactive lead intake.
+3. **E-Commerce & WhatsApp Ordering**: Instant direct-to-WhatsApp catalog checkout and Razorpay/Stripe integration.
+4. **Live Commercial Niche Demos**: 12+ pre-built, production-ready templates for Restaurants, Salons, Gyms, Clinics, Cafes, Real Estate, and LMS.
+5. **Real-Time Project Sprint Tracking**: Dedicated 6-stage engineering roadmap tracker accessible with Order ID.
+6. **Mobile Applications**: Turnkey PWA and native Android APK support.
+
+## Key Canonical URLs
+- Homepage: https://weblets.bond/
+- Website Templates & Demos: https://weblets.bond/demos
+- Web Development Services: https://weblets.bond/services
 - Pricing Packages: https://weblets.bond/pricing
-- Client Portfolio & Case Studies: https://weblets.bond/portfolio
-- Team & Founders: https://weblets.bond/team
-- Track Live Order Sprint: https://weblets.bond/track-order
-- Contact Agency: https://weblets.bond/contact
+- Client Case Studies & Portfolio: https://weblets.bond/portfolio
+- Founders & Engineering Team: https://weblets.bond/team
+- Interactive Requirement Builder: https://weblets.bond/get-started
+- Live Sprint Tracker: https://weblets.bond/track-order
+- Official Mobile App: https://weblets.bond/app
+- About Agency: https://weblets.bond/about
+- Contact Us: https://weblets.bond/contact
 - Privacy Policy: https://weblets.bond/privacy
-- Terms & Conditions: https://weblets.bond/terms
+- Terms of Service: https://weblets.bond/terms
+
+## Complete AI Documentation
+- Comprehensive Extended Ingest File: https://weblets.bond/llms-full.txt
+- Machine-Readable Sitemap: https://weblets.bond/sitemap.xml

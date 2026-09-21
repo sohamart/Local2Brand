@@ -100,7 +100,7 @@ export default function AdminServices() {
 
   return (
     <>
-      <SEO title="Services CMS — Admin" description="Manage offerings, packages, and pricing cards." />
+      <SEO title="Services CMS — Admin" description="Manage offerings, packages, and pricing cards." noindex={true} robots="noindex, nofollow" />
 
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

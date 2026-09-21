@@ -41,6 +41,7 @@ import telemetryRoutes from './routes/telemetry.js';
 import analyticsRoutes from './routes/analytics.js';
 import mediaRoutes from './routes/media.js';
 import notificationRoutes from './routes/notifications.js';
+import sitemapRoutes from './routes/sitemap.js';
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -200,6 +201,8 @@ app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/sitemap.xml', sitemapRoutes);
+app.use('/sitemap.xml', sitemapRoutes);
 
 
 

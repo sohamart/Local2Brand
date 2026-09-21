@@ -950,7 +950,7 @@ export default function AdminSettings() {
 
   return (
     <>
-      <SEO title="Site Customizer & Environment Settings — Admin" description="Customize website configuration and database settings." />
+      <SEO title="Site Customizer & Environment Settings — Admin" description="Customize website configuration and database settings." noindex={true} robots="noindex, nofollow" />
 
       <div className="space-y-6 max-w-4xl">
         

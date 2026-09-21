@@ -33,7 +33,7 @@ import DashboardLoader from '../../components/common/DashboardLoader';
 import MarqueeTicker from '../../components/common/MarqueeTicker';
 import NotificationBell from '../../components/common/NotificationBell';
 import notificationApi from '../../services/notificationApi';
-
+import SEO from '../../components/common/SEO';
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard, exact: true },
@@ -147,6 +147,7 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-slate-100/70 dark:bg-[#07090e] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+      <SEO title="Admin Control Center — Weblets" description="Weblets Master Admin Control Center" noindex={true} robots="noindex, nofollow" />
       
       {/* Mobile Backdrop Overlay */}
       {mobileSidebarOpen && (

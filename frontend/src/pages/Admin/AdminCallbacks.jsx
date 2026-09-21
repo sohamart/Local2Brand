@@ -130,7 +130,7 @@ export default function AdminCallbacks() {
 
   return (
     <>
-      <SEO title="Callback Requests — Admin" description="Manage real-time client callback requests." />
+      <SEO title="Callback Requests — Admin" description="Manage real-time client callback requests." noindex={true} robots="noindex, nofollow" />
 
       <div className="space-y-6">
         {/* Header */}

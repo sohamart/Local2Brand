@@ -13,79 +13,18 @@ import PricingPreview from '../components/home/PricingPreview';
 import FAQSection from '../components/home/FAQSection';
 import FinalCTA from '../components/home/FinalCTA';
 import { SEO } from '../components/common/CommonUI';
-import { SEO_PAGES, BRAND } from '../config/seoConfig';
+import { 
+  SEO_PAGES, 
+  generateOrganizationSchema, 
+  generateWebSiteSchema, 
+  generateFAQSchema 
+} from '../config/seoConfig';
 import { agencyFaqs } from '../data/faqs';
 
 export default function Home() {
-  // Generate FAQ schema for homepage
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: agencyFaqs.slice(0, 6).map((faq) => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer
-      }
-    }))
-  };
-
-  const organizationSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'ProfessionalService',
-    '@id': `${BRAND.domain}/#organization`,
-    name: BRAND.name,
-    legalName: BRAND.legalName,
-    alternateName: BRAND.alternateNames,
-    url: BRAND.domain,
-    logo: BRAND.logo,
-    image: BRAND.logo,
-    description: BRAND.description,
-    priceRange: BRAND.priceRange,
-    telephone: BRAND.phone,
-    email: BRAND.email,
-    address: {
-      '@type': 'PostalAddress',
-      ...BRAND.address
-    },
-    geo: {
-      '@type': 'GeoCoordinates',
-      latitude: BRAND.geo.latitude,
-      longitude: BRAND.geo.longitude
-    },
-    slogan: 'lets make website together',
-    areaServed: [
-      { '@type': 'Country', name: 'India' },
-      { '@type': 'Country', name: 'United States' },
-      { '@type': 'Country', name: 'United Kingdom' },
-      { '@type': 'Country', name: 'Canada' },
-      { '@type': 'Country', name: 'Australia' },
-      { '@type': 'Country', name: 'United Arab Emirates' }
-    ],
-    knowsAbout: [
-      'Bespoke Web Development',
-      'UI/UX Design',
-      'Custom E-Commerce Stores',
-      'React & Node.js Engineering',
-      'High-Converting Landing Pages',
-      'WhatsApp Order Automation'
-    ],
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.98',
-      reviewCount: '128',
-      bestRating: '5',
-      worstRating: '1'
-    },
-    sameAs: BRAND.socials,
-    founder: BRAND.founders.map((f) => ({
-      '@type': 'Person',
-      name: f.name,
-      jobTitle: f.jobTitle,
-      url: f.url
-    }))
-  };
+  const organizationSchema = generateOrganizationSchema();
+  const webSiteSchema = generateWebSiteSchema();
+  const faqSchema = generateFAQSchema(agencyFaqs.slice(0, 6));
 
   return (
     <>
@@ -93,7 +32,7 @@ export default function Home() {
         title={SEO_PAGES.home.title}
         description={SEO_PAGES.home.description}
         canonical={SEO_PAGES.home.canonical}
-        schema={[organizationSchema, faqSchema]}
+        schema={[organizationSchema, webSiteSchema, faqSchema].filter(Boolean)}
       />
       
       <main>

@@ -9,14 +9,21 @@ import {
   Check,
   ArrowRight,
   Clock,
-  Sparkles
+  Sparkles,
+  HelpCircle
 } from 'lucide-react';
 import { SEO } from '../components/common/CommonUI';
 import { agencyServices } from '../data/services';
 import { useOrderModal } from '../context/OrderModalContext';
 import FinalCTA from '../components/home/FinalCTA';
 import AshokaChakra from '../components/common/AshokaChakra';
-import { SEO_PAGES, BRAND } from '../config/seoConfig';
+import { 
+  SEO_PAGES, 
+  BRAND, 
+  generateServiceSchema, 
+  generateOrganizationSchema,
+  generateFAQSchema 
+} from '../config/seoConfig';
 import api from '../services/api';
 
 const serviceImages = {
@@ -34,6 +41,21 @@ const iconMap = {
   ShoppingBag,
   Code2
 };
+
+const servicesFaqs = [
+  {
+    question: 'What web development services does Weblets provide?',
+    answer: 'Weblets provides custom business websites, high-converting landing pages, e-commerce stores with WhatsApp checkout, portfolio showcases, and bespoke full-stack MERN (MongoDB, Express, React, Node.js) web applications.'
+  },
+  {
+    question: 'How fast can Weblets deliver a website?',
+    answer: 'Ready-made commercial niche templates are delivered within 48 hours. Custom bespoke engineering projects typically launch within 5 to 7 business days with live milestone sprint tracking.'
+  },
+  {
+    question: 'Who owns the website source code upon project completion?',
+    answer: 'You receive 100% full source code ownership upon project completion. There are zero hidden platform lock-ins or mandatory proprietary renewal fees.'
+  }
+];
 
 export default function Services() {
   const { openOrderModal } = useOrderModal();
@@ -77,27 +99,10 @@ export default function Services() {
     fetchServices();
   }, []);
 
-  // Generate Service Schema for Rich Results
-  const servicesSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    itemListElement: servicesList.map((srv, idx) => ({
-      '@type': 'Service',
-      position: idx + 1,
-      name: srv.title,
-      description: srv.description,
-      provider: {
-        '@type': 'Organization',
-        '@id': `${BRAND.domain}/#organization`,
-        name: BRAND.name
-      },
-      offers: {
-        '@type': 'Offer',
-        price: srv.startingPriceInr ? srv.startingPriceInr.replace(/[^0-9]/g, '') : '9999',
-        priceCurrency: 'INR'
-      }
-    }))
-  };
+  // Generate Service Schema and Organization Schema for Rich Results
+  const servicesSchema = generateServiceSchema(servicesList);
+  const organizationSchema = generateOrganizationSchema();
+  const faqSchema = generateFAQSchema(servicesFaqs);
 
   return (
     <>
@@ -105,13 +110,13 @@ export default function Services() {
         title={SEO_PAGES.services.title}
         description={SEO_PAGES.services.description}
         canonical={SEO_PAGES.services.canonical}
-        schema={servicesSchema}
+        schema={[organizationSchema, servicesSchema, faqSchema].filter(Boolean)}
         breadcrumbs={[
           { name: 'Services', url: '/services' }
         ]}
       />
 
-      <div className="page-header-offset pb-20">
+      <main className="page-header-offset pb-20">
 
         {/* Page Hero Header with Single Semantic H1 */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -137,7 +142,7 @@ export default function Services() {
         </div>
 
         {/* Services In-Depth List */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-24 space-y-16 sm:space-y-24">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 sm:mt-24 space-y-16 sm:space-y-24">
           {servicesList.map((service, index) => {
             const Icon = iconMap[service.iconName] || Globe;
             const isReversed = index % 2 !== 0;
@@ -233,6 +238,8 @@ export default function Services() {
                         alt={`${service.title} - Weblets Service Showcase`}
                         className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700 ease-out"
                         loading="lazy"
+                        width="1200"
+                        height="825"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent flex items-end p-6">
                         <div className="text-white">
@@ -251,14 +258,14 @@ export default function Services() {
               </article>
             );
           })}
-        </div>
+        </section>
 
         {/* Global CTA */}
         <div className="mt-24">
           <FinalCTA />
         </div>
 
-      </div>
+      </main>
     </>
   );
 }

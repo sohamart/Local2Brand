@@ -10,6 +10,7 @@ import { useOrderModal } from '../context/OrderModalContext';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import AshokaChakra from '../components/common/AshokaChakra';
 import ComingSoonModal from '../components/common/ComingSoonModal';
+import { SEO_PAGES, generateFAQSchema, generateOrganizationSchema } from '../config/seoConfig';
 
 // Subscription Plans (Marked as Coming Soon)
 const subscriptionPlans = [
@@ -66,44 +67,29 @@ export default function Pricing() {
     ? settings.pricingPlans
     : defaultPricingPlans;
 
-  const pricingFaqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'How long does a website take to build and launch?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Ready-made template customizations are delivered within 48 to 72 hours. For bespoke professional projects, typical delivery is between 5 to 7 business days.'
-        }
-      },
-      {
-        '@type': 'Question',
-        name: 'Are there any hidden renewal fees or platform lock-ins?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Zero hidden fees. You get 100% full source code ownership. Domain and hosting can be connected to your existing accounts for free or configured through optional turnkey addons.'
-        }
-      },
-      {
-        '@type': 'Question',
-        name: 'Do you provide revisions during the development process?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Yes! All packages include revision rounds and 14 to 60 days of post-launch hyper-care support.'
-        }
-      }
-    ]
-  };
+  const pricingFaqSchema = generateFAQSchema([
+    {
+      question: 'How long does a website take to build and launch?',
+      answer: 'Ready-made template customizations are delivered within 48 to 72 hours. For bespoke professional projects, typical delivery is between 5 to 7 business days.'
+    },
+    {
+      question: 'Are there any hidden renewal fees or platform lock-ins?',
+      answer: 'Zero hidden fees. You get 100% full source code ownership. Domain and hosting can be connected to your existing accounts for free or configured through optional turnkey addons.'
+    },
+    {
+      question: 'Do you provide revisions during the development process?',
+      answer: 'Yes! All packages include revision rounds and 14 to 60 days of post-launch hyper-care support.'
+    }
+  ]);
+  const organizationSchema = generateOrganizationSchema();
 
   return (
     <>
       <SEO
-        title="Website Development Packages & Pricing | Weblets"
-        description="Transparent fixed-price website packages from ₹4,999 ($149). Zero hidden fees, GST invoicing, 48-hour delivery, and turnkey hosting options."
-        canonical="https://weblets.bond/pricing"
-        schema={pricingFaqSchema}
+        title={SEO_PAGES.pricing.title}
+        description={SEO_PAGES.pricing.description}
+        canonical={SEO_PAGES.pricing.canonical}
+        schema={[organizationSchema, pricingFaqSchema].filter(Boolean)}
         breadcrumbs={[
           { name: 'Pricing', url: '/pricing' }
         ]}

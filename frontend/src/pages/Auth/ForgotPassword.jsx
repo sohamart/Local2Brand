@@ -140,7 +140,7 @@ export default function ForgotPassword() {
 
   return (
     <>
-      <SEO title="Forgot Password — Weblets" description="Reset your Weblets client account password securely via email verification code." />
+      <SEO title="Forgot Password — Weblets" description="Reset your Weblets client account password securely via email verification code." noindex={true} robots="noindex, nofollow" />
 
       <div className="min-h-screen pt-28 pb-16 px-4 flex items-center justify-center relative">
         <div className="w-full max-w-md">

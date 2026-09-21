@@ -50,7 +50,7 @@ export default function Login() {
 
   return (
     <>
-      <SEO title="Log In — Weblets" description="Access your project dashboard, review website proposals, and manage custom features." />
+      <SEO title="Log In — Weblets" description="Access your project dashboard, review website proposals, and manage custom features." noindex={true} robots="noindex, nofollow" />
 
       <div className="min-h-screen pt-28 pb-16 px-4 flex items-center justify-center relative">
         <div className="w-full max-w-md">

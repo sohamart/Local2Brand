@@ -6,7 +6,7 @@ import { portfolioProjects, projectCategories } from '../data/projects';
 import { useOrderModal } from '../context/OrderModalContext';
 import FinalCTA from '../components/home/FinalCTA';
 import AshokaChakra from '../components/common/AshokaChakra';
-import { SEO_PAGES, BRAND } from '../config/seoConfig';
+import { SEO_PAGES, BRAND, generateOrganizationSchema } from '../config/seoConfig';
 
 export default function Portfolio() {
   const [activeCategory, setActiveCategory] = useState('All');
@@ -16,6 +16,7 @@ export default function Portfolio() {
     ? portfolioProjects
     : portfolioProjects.filter((p) => p.category === activeCategory);
 
+  const organizationSchema = generateOrganizationSchema();
   const portfolioSchema = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -45,7 +46,7 @@ export default function Portfolio() {
         title={SEO_PAGES.portfolio.title}
         description={SEO_PAGES.portfolio.description}
         canonical={SEO_PAGES.portfolio.canonical}
-        schema={portfolioSchema}
+        schema={[organizationSchema, portfolioSchema]}
         breadcrumbs={[
           { name: 'Portfolio', url: '/portfolio' }
         ]}

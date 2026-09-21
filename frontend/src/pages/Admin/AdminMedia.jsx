@@ -301,7 +301,7 @@ export default function AdminMedia() {
 
   return (
     <>
-      <SEO title="Cloudinary Storage & Media Manager — Admin" description="Live cloud storage usage metrics and media manager." />
+      <SEO title="Cloudinary Storage & Media Manager — Admin" description="Live cloud storage usage metrics and media manager." noindex={true} robots="noindex, nofollow" />
 
       <div className="space-y-6">
         

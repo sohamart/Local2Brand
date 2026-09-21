@@ -169,7 +169,7 @@ export default function AdminLeads() {
 
   return (
     <>
-      <SEO title="Project Inquiries & Proposals — Admin" description="Manage incoming website leads and proposals." />
+      <SEO title="Project Inquiries & Proposals — Admin" description="Manage incoming website leads and proposals." noindex={true} robots="noindex, nofollow" />
 
       <div className="space-y-6">
         

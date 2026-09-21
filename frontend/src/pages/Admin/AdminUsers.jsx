@@ -309,7 +309,7 @@ export default function AdminUsers() {
 
   return (
     <>
-      <SEO title="User Directory & Client Verification — Admin" description="Manage platform client accounts, email verification status, and VIP privileges." />
+      <SEO title="User Directory & Client Verification — Admin" description="Manage platform client accounts, email verification status, and VIP privileges." noindex={true} robots="noindex, nofollow" />
 
       <div className="space-y-6">
         {/* Header */}

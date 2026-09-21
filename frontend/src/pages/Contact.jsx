@@ -23,6 +23,8 @@ import { useOrderModal } from '../context/OrderModalContext';
 import api from '../services/api';
 import AshokaChakra from '../components/common/AshokaChakra';
 
+import { SEO_PAGES, BRAND, generateOrganizationSchema } from '../config/seoConfig';
+
 const InstagramIcon = ({ className = 'w-4 h-4' }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
@@ -82,35 +84,26 @@ export default function Contact() {
     }
   };
 
+  const organizationSchema = generateOrganizationSchema();
   const contactSchema = {
     '@context': 'https://schema.org',
     '@type': 'ContactPage',
-    name: 'Contact Weblets | Start Your Web Project',
-    description: 'Get in touch with Weblets. Request an instant 15-minute phone callback, submit project requirements, or connect directly with our engineering team.',
-    url: 'https://weblets.bond/contact',
+    name: SEO_PAGES.contact.title,
+    description: SEO_PAGES.contact.description,
+    url: SEO_PAGES.contact.canonical,
     mainEntity: {
       '@type': 'Organization',
-      '@id': 'https://weblets.bond/#organization',
-      name: 'Weblets',
-      telephone: '+918710043923',
-      email: 'contact@weblets.bond',
-      contactPoint: {
-        '@type': 'ContactPoint',
-        telephone: '+918710043923',
-        contactType: 'customer service',
-        availableLanguage: ['English', 'Hindi', 'Bengali'],
-        areaServed: 'Worldwide'
-      }
+      '@id': `${BRAND.domain}/#organization`
     }
   };
 
   return (
     <>
       <SEO
-        title="Contact Weblets | Start Your Web Project"
-        description="Get in touch with Weblets. Request an instant 15-minute phone callback, submit project requirements, or connect directly with our engineering team."
-        canonical="https://weblets.bond/contact"
-        schema={contactSchema}
+        title={SEO_PAGES.contact.title}
+        description={SEO_PAGES.contact.description}
+        canonical={SEO_PAGES.contact.canonical}
+        schema={[organizationSchema, contactSchema]}
         breadcrumbs={[
           { name: 'Contact Us', url: '/contact' }
         ]}

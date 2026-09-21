@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileText, ShieldCheck, Clock, CheckCircle2, AlertCircle, ArrowLeft, Mail, Phone, ExternalLink } from 'lucide-react';
 import SEO from '../components/common/SEO';
-import { SEO_PAGES } from '../config/seoConfig';
+import { SEO_PAGES, generateOrganizationSchema } from '../config/seoConfig';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import AshokaChakra from '../components/common/AshokaChakra';
 
@@ -59,9 +59,9 @@ export default function Terms() {
         title={SEO_PAGES.terms.title}
         description={SEO_PAGES.terms.description}
         canonical={SEO_PAGES.terms.canonical}
+        schema={generateOrganizationSchema()}
         breadcrumbs={[
-          { name: 'Home', path: '/' },
-          { name: 'Terms and Conditions', path: '/terms' }
+          { name: 'Terms of Service', url: '/terms' }
         ]}
       />
 

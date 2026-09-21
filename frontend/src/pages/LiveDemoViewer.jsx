@@ -33,6 +33,7 @@ import ShareDemoModal from '../components/demos/ShareDemoModal';
 import DashboardLoader from '../components/common/DashboardLoader';
 import { formatPriceByCountry } from '../data/countryThemes';
 import { SEO } from '../components/common/CommonUI';
+import { generateProductSchema } from '../config/seoConfig';
 import api from '../services/api';
 
 // Reliable Built-in Fallbacks for Instant Resilient Load
@@ -361,10 +362,10 @@ export default function LiveDemoViewer() {
         keywords={`${activeDemo.category || 'website'} template, ${activeDemo.title || 'live demo'}, weblets demo, weblets templates, interactive website`}
         image={activeDemo.heroImage || activeDemo.thumbnail || '/logo.png'}
         canonical={`https://weblets.bond/demos/${activeDemo.slug || cleanId}`}
+        schema={generateProductSchema(activeDemo)}
         breadcrumbs={[
-          { name: 'Home', path: '/' },
-          { name: 'Live Demos', path: '/demos' },
-          { name: activeDemo.title || 'Template', path: `/demos/${activeDemo.slug || cleanId}` }
+          { name: 'Templates', url: '/demos' },
+          { name: activeDemo.title || 'Template', url: `/demos/${activeDemo.slug || cleanId}` }
         ]}
       />
       

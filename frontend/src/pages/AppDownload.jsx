@@ -46,7 +46,7 @@ import { toast } from 'react-toastify';
 import { useSiteSettings } from '../context/SiteSettingsContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/common/SEO';
-import { SEO_PAGES } from '../config/seoConfig';
+import { SEO_PAGES, generateSoftwareApplicationSchema, generateOrganizationSchema } from '../config/seoConfig';
 import SectionHeading from '../components/common/SectionHeading';
 import AshokaChakra from '../components/common/AshokaChakra';
 import api from '../services/api';
@@ -567,19 +567,27 @@ export default function AppDownload() {
   const qrTargetUrl = `${currentOrigin}/app`;
   const qrCodeImageUrl = appConfig.qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(qrTargetUrl)}&color=6b21a8&bgcolor=ffffff&qzone=1`;
 
+  const organizationSchema = generateOrganizationSchema();
+  const appSchema = generateSoftwareApplicationSchema({
+    name: 'Weblets Mobile App',
+    version: appConfig.version || 'v2.4.0',
+    fileSize: appConfig.fileSize || '24.8 MB',
+    description: appConfig.appDescription || SEO_PAGES.appDownload.description
+  });
+
   return (
     <>
       <SEO
         title={
           isInsideInstalledApp
-            ? `WEBLETS Web App — Installed & Active (${appConfig.version || 'v2.4.0'})`
+            ? `Weblets Mobile App — Installed & Active (${appConfig.version || 'v2.4.0'})`
             : SEO_PAGES.appDownload.title
         }
         description={appConfig.appDescription || SEO_PAGES.appDownload.description}
         canonical={SEO_PAGES.appDownload.canonical}
+        schema={[organizationSchema, appSchema]}
         breadcrumbs={[
-          { name: 'Home', path: '/' },
-          { name: 'Mobile App', path: '/app' }
+          { name: 'Mobile App', url: '/app' }
         ]}
       />
 

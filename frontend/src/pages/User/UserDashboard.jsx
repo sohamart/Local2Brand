@@ -731,8 +731,10 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-slate-100/70 dark:bg-[#07090e] text-slate-900 dark:text-slate-100 transition-colors duration-200">
       <SEO
-        title="Client Dashboard | WEBLETS"
+        title="Client Dashboard | Weblets"
         description="Access your projects, order roadmap, inbox, and account settings."
+        noindex={true}
+        robots="noindex, nofollow"
       />
 
       {/* Mobile Backdrop Overlay */}

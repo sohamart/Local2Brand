@@ -1,51 +1,114 @@
 # ==============================================================================
-# Weblets — Production Robots.txt
+# Weblets — Production Robots.txt (Search, AEO & GEO Optimized)
 # Official Domain: https://weblets.bond
-# Brand Slogan: Lets make website together
+# Brand Slogan: lets make website together
 # ==============================================================================
 
+# Global Default Directive
 User-agent: *
 Allow: /
 Allow: /assets/
 Allow: /logo.png
-Allow: /favicon.jpg
+Allow: /logo-dark.png
+Allow: /favicon.png
+Allow: /favicon.ico
 Allow: /sitemap.xml
-Disallow: /admin
+Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /admin/
-Disallow: /dashboard
 Disallow: /dashboard/
-Disallow: /api
 Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
 
+# Google Search Crawlers
 User-agent: Googlebot
 Allow: /
 Allow: /assets/
-Disallow: /admin
 Disallow: /admin/
-Disallow: /dashboard
 Disallow: /dashboard/
-Disallow: /api
 Disallow: /api/
 
 User-agent: Googlebot-Image
 Allow: /
 Allow: /assets/
 Allow: /logo.png
-Allow: /favicon.jpg
+Allow: /logo-dark.png
 
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+
+# Bing / Microsoft Crawlers
 User-agent: bingbot
 Allow: /
 Allow: /assets/
-Disallow: /admin
 Disallow: /admin/
-Disallow: /dashboard
 Disallow: /dashboard/
-Disallow: /api
 Disallow: /api/
 
+User-agent: BingPreview
+Allow: /
+
+# OpenAI / ChatGPT Crawlers (AEO & GEO)
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+
+User-agent: ChatGPT-User
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+# Anthropic / Claude Crawlers
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+
+User-agent: Claude-Web
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+# Perplexity AI Crawler
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+
+# Apple Search & Siri Intelligence Crawler
+User-agent: Applebot
+Allow: /
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+
+User-agent: Applebot-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+
+# DuckDuckGo
 User-agent: DuckDuckBot
 Allow: /
 
-# Host & XML Sitemaps
+# Host & Canonical XML Sitemaps
 Host: https://weblets.bond
 Sitemap: https://weblets.bond/sitemap.xml

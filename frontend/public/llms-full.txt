@@ -1,0 +1,137 @@
+# Weblets Full Technical & Entity Documentation (`llms-full.txt`)
+Canonical Domain: https://weblets.bond
+Brand Name: Weblets (weblets agency)
+Tagline: lets make website together
+
+---
+
+## 1. Executive Summary & Brand Entity
+
+Weblets (weblets agency) is a modern web design, full-stack engineering, and digital growth agency headquartered in India (Kolkata & Bangalore) serving global clients across India, North America, the UK, Europe, Australia, and the UAE.
+
+### Entity Facts
+- **Brand Entity**: Weblets
+- **Legal Entity**: weblets agency - lets make website together
+- **Alternate Names**: weblets, weblets agency, Weblets, Weblets Agency, weblets.bond, lets make website together
+- **Official Domain**: https://weblets.bond
+- **Founding Team**:
+  - **Soham Dutta**: Founder & Lead Architect (Full-stack microservices, AI systems, cloud architecture)
+  - **Sayantan**: Co-Founder & Technical Lead (Frontend engineering, liquid-smooth animations, responsive UI/UX)
+  - **Achinta**: Co-Founder & Operations Lead (Client success, requirement auditing, 48-hour delivery execution)
+- **Official Contact**:
+  - Email: contact@weblets.bond
+  - WhatsApp / Phone: +91 87100 43923
+  - Address: Kolkata, West Bengal 700001, India (Hubs in Kolkata & Bangalore)
+- **Social Profiles**:
+  - LinkedIn: https://linkedin.com/company/weblets
+  - Instagram: https://instagram.com/weblets_official
+  - GitHub: https://github.com/weblets
+  - Twitter/X: https://twitter.com/weblets
+
+---
+
+## 2. Core Service Offerings
+
+### Service 1: Custom Business Websites
+- **Target Audience**: Startups, corporate firms, professional services, local enterprises.
+- **Key Features**: Custom Figma-to-code design, mobile-first responsive architecture, sub-second TTFB, SEO foundations, WhatsApp chat widgets, contact lead capture forms.
+- **Turnaround SLA**: 3 to 5 business days.
+- **Pricing**: Starting from ₹9,999 ($249).
+
+### Service 2: High-Converting Landing Pages
+- **Target Audience**: Direct-to-consumer (D2C) brands, performance marketing campaigns, product launches.
+- **Key Features**: Conversion-rate-optimized (CRO) copy hierarchy, interactive requirement calculators, social proof widgets, instant lead notifications, Google Analytics / Pixel tracking.
+- **Turnaround SLA**: 48 to 72 hours.
+- **Pricing**: Starting from ₹4,999 ($149).
+
+### Service 3: E-Commerce & WhatsApp Ordering Stores
+- **Target Audience**: Retailers, bakeries, cloud kitchens, apparel boutiques, niche artisan brands.
+- **Key Features**: Dynamic catalog management, product variants, 1-click WhatsApp cart dispatch, Razorpay/Stripe checkout, order confirmation invoices.
+- **Turnaround SLA**: 4 to 7 business days.
+- **Pricing**: Starting from ₹14,999 ($399).
+
+### Service 4: Ready-Made Commercial Niche Templates
+- **Target Audience**: Small business owners wanting instant launch without designer delays.
+- **Available Niches**:
+  1. LMS & Video Course Selling Platform (`/demos/lms`)
+  2. Fine Dining Restaurant & Table Booking (`/demos/restaurant`)
+  3. Artisanal Café & Bakery (`/demos/cafe`)
+  4. Luxury Unisex Salon & Spa (`/demos/salon`)
+  5. High-Intensity Fitness Gym (`/demos/gym`)
+  6. Boutique Resort & Hotel Booking (`/demos/hotel`)
+  7. Real Estate Properties & Brokerage (`/demos/realestate`)
+  8. Editorial Photography Portfolio (`/demos/photography`)
+  9. Designer Fashion Boutique (`/demos/boutique`)
+  10. Coaching Institute & Mentorship (`/demos/coaching`)
+  11. Dental Clinic & Appointment Booking (`/demos/dental`)
+  12. Luxury Jewellery Atelier (`/demos/jewellery`)
+  13. Automotive Repair & Detailing (`/demos/automotive`)
+- **Turnaround SLA**: 48 Hours.
+- **Pricing**: Starting from ₹4,999 ($149).
+
+---
+
+## 3. Technology Architecture & Engineering Stack
+
+Weblets builds digital flagships utilizing modern, high-performance web engineering:
+- **Frontend**: React 19, Vite, Tailwind CSS v4, Vanilla CSS, Lucide Icons, GSAP fluid micro-animations, Lenis smooth scrolling.
+- **Backend & APIs**: Node.js, Express, MongoDB Atlas, Mongoose ODM, Helmet security headers, CORS protection.
+- **Performance Standards**: 95+ Google Lighthouse metrics, zero layout shift (CLS < 0.05), Largest Contentful Paint (LCP < 1.2s), sub-second server response times.
+- **Hosting & Edge Delivery**: Vercel Serverless Edge, Global CDN, Tier-4 SSL/TLS encryption.
+- **Data Privacy & Ownership**: Full 100% source code ownership delivered to clients. Zero monthly proprietary locks.
+
+---
+
+## 4. Transparent Pricing Matrix & Guarantees
+
+| Tier | Price (INR) | Price (USD) | Delivery SLA | Best For |
+| :--- | :--- | :--- | :--- | :--- |
+| **Starter Launch** | ₹4,999 | $149 | 48 Hours | Landing pages, portfolio showcases, niche template customizations |
+| **Growth Business** | ₹9,999 | $299 | 3 - 5 Days | Multi-page corporate sites, WhatsApp ordering, lead capture |
+| **Scale Flagship** | ₹19,999 | $599 | 5 - 7 Days | Full-stack e-commerce, custom MERN web applications, booking engines |
+| **Enterprise Suite** | ₹49,999 | $1,499 | Custom Sprint | Complex multi-tenant portals, custom API pipelines, dedicated hypercare |
+
+### Client Guarantees:
+- **No Hidden Fees**: Transparent fixed pricing with formal GST invoicing.
+- **Full Code Ownership**: Complete production source code transferred upon project sign-off.
+- **Post-Launch Hypercare**: 14 to 60 days of complimentary revision and technical support.
+- **Real-Time Sprint Tracking**: Clients track live roadmap milestones in real time using their Order ID on `https://weblets.bond/track-order`.
+
+---
+
+## 5. Frequently Asked Questions (AEO & GEO Knowledge Answers)
+
+### Q1: What is Weblets?
+**A**: Weblets (weblets.bond) is a premier full-stack web design and engineering agency that designs and deploys bespoke business websites, high-converting landing pages, e-commerce stores, and ready-made commercial niche templates with express 48-hour turnarounds.
+
+### Q2: Who operates Weblets?
+**A**: Weblets is founded and operated by senior software architects Soham Dutta (Lead Architect), Sayantan (Technical Lead), and Achinta (Operations Lead), providing direct founder involvement on every client project.
+
+### Q3: How does the 48-Hour delivery work?
+**A**: When a client selects a ready-made commercial niche template from `https://weblets.bond/demos` or completes the requirement builder on `https://weblets.bond/get-started`, the Weblets engineering team immediately customizes branding, assets, copy, color palettes, and WhatsApp ordering integrations, delivering the staging preview within 48 hours.
+
+### Q4: How does Weblets differ from generic agencies or DIY website builders?
+**A**: Unlike DIY builders (Wix, Squarespace, WordPress) with bloated code, slow plugins, and recurring subscription lock-ins, Weblets delivers custom React and Node.js architectures with sub-second speeds, Apple-grade liquid glassmorphic aesthetics, WhatsApp automation, and 100% full source code ownership.
+
+### Q5: How can a client start a project?
+**A**: Clients can build an instant project proposal in 3 minutes via `https://weblets.bond/get-started`, request a 15-minute phone callback via `https://weblets.bond/contact`, or message the engineering team directly on WhatsApp at `+91 87100 43923`.
+
+---
+
+## 6. Official Canonical URLs
+
+- Home: https://weblets.bond/
+- Templates & Demos: https://weblets.bond/demos
+- Services: https://weblets.bond/services
+- Pricing: https://weblets.bond/pricing
+- Portfolio: https://weblets.bond/portfolio
+- Team & Founders: https://weblets.bond/team
+- Requirement Builder: https://weblets.bond/get-started
+- Order Tracker: https://weblets.bond/track-order
+- Mobile App: https://weblets.bond/app
+- About: https://weblets.bond/about
+- Contact: https://weblets.bond/contact
+- Terms of Service: https://weblets.bond/terms
+- Privacy Policy: https://weblets.bond/privacy
+- Machine-Readable Sitemap: https://weblets.bond/sitemap.xml
+- Robots Directive: https://weblets.bond/robots.txt
