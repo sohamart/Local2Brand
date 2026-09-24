@@ -139,56 +139,85 @@ export const uploadWithToast = async ({
     }
 
     if (directSig) {
-      // Direct high-speed upload straight from client browser to Cloudinary CDN edge
-      const loadedPerFile = new Array(fileListToUpload.length).fill(0);
-      const directUploadPromises = fileListToUpload.map(async (singleFile, idx) => {
-        const directData = new FormData();
-        directData.append('file', singleFile);
-        directData.append('api_key', directSig.apiKey);
-        directData.append('timestamp', directSig.timestamp);
-        directData.append('signature', directSig.signature);
-        directData.append('folder', directSig.folder || (isVideo ? 'local2brand_videos' : 'local2brand_assets'));
+      try {
+        // Direct high-speed upload straight from client browser to Cloudinary CDN edge
+        const loadedPerFile = new Array(fileListToUpload.length).fill(0);
+        const directUploadPromises = fileListToUpload.map(async (singleFile, idx) => {
+          const isFileVideo = singleFile?.type?.startsWith('video/') || Boolean(singleFile?.name?.match(/\.(mp4|webm|mov|mkv|avi|ogg)$/i));
+          const resourceType = isFileVideo ? 'video' : 'auto';
+          const folder = isFileVideo ? 'local2brand_videos' : (directSig.folder || 'local2brand_assets');
 
-        const targetUrl = `https://api.cloudinary.com/v1_1/${directSig.cloudName}/${isVideo ? 'video' : 'auto'}/upload`;
-        
-        const fileProgressHandler = ({ loaded }) => {
-          loadedPerFile[idx] = loaded;
-          const currentTotalLoaded = loadedPerFile.reduce((acc, curr) => acc + curr, 0);
-          const percent = Math.min(99, Math.round((currentTotalLoaded * 100) / Math.max(1, totalBytes)));
-          progressHandler({
-            loaded: currentTotalLoaded,
-            total: totalBytes,
-            percent,
-          });
-        };
+          const directData = new FormData();
+          directData.append('file', singleFile);
+          directData.append('api_key', directSig.apiKey);
+          directData.append('timestamp', directSig.timestamp);
+          directData.append('signature', directSig.signature);
+          directData.append('folder', folder);
 
-        const cloudData = await api.uploadWithProgress(targetUrl, directData, fileProgressHandler);
-        return cloudData?.secure_url || cloudData?.url;
-      });
+          const targetUrl = `https://api.cloudinary.com/v1_1/${directSig.cloudName}/${resourceType}/upload`;
+          
+          const fileProgressHandler = ({ loaded }) => {
+            loadedPerFile[idx] = loaded;
+            const currentTotalLoaded = loadedPerFile.reduce((acc, curr) => acc + curr, 0);
+            const percent = Math.min(99, Math.round((currentTotalLoaded * 100) / Math.max(1, totalBytes)));
+            progressHandler({
+              loaded: currentTotalLoaded,
+              total: totalBytes,
+              percent,
+            });
+          };
 
-      const uploadedUrls = await Promise.all(directUploadPromises);
-      const validUrls = uploadedUrls.filter(Boolean);
+          const cloudData = await api.uploadWithProgress(targetUrl, directData, fileProgressHandler);
+          return cloudData?.secure_url || cloudData?.url;
+        });
 
-      if (validUrls.length > 0) {
-        uploadResult = {
-          success: true,
-          url: validUrls[0],
-          urls: validUrls,
-          message: `${validUrls.length} file(s) uploaded directly to Cloud CDN`,
-        };
+        const uploadedUrls = await Promise.all(directUploadPromises);
+        const validUrls = uploadedUrls.filter(Boolean);
+
+        if (validUrls.length === fileListToUpload.length && validUrls.every(u => typeof u === 'string' && u.startsWith('http'))) {
+          uploadResult = {
+            success: true,
+            url: validUrls[0],
+            urls: validUrls,
+            message: `${validUrls.length} file(s) uploaded directly to Cloud CDN`,
+          };
+        }
+      } catch (directErr) {
+        console.warn('⚡ Direct Cloudinary client upload notice (falling back to Server Storage Hub):', directErr?.message || directErr);
+        uploadResult = null; // Clean failover to Server Storage Hub
       }
     }
 
     // 2. Fallback to standard server /api/upload if direct upload was skipped or failed
     if (!uploadResult) {
-      const standardFormData = new FormData();
-      if (files && files.length > 0) {
-        Array.from(files).forEach((f) => standardFormData.append('files', f));
-      } else if (file) {
-        standardFormData.append('file', file);
-      }
+      try {
+        const standardFormData = new FormData();
+        if (files && files.length > 0) {
+          Array.from(files).forEach((f) => standardFormData.append('files', f));
+        } else if (file) {
+          standardFormData.append('file', file);
+        }
 
-      uploadResult = await api.uploadWithProgress(endpoint, standardFormData, progressHandler);
+        uploadResult = await api.uploadWithProgress(endpoint, standardFormData, progressHandler);
+      } catch (serverFormErr) {
+        console.warn('Server FormData upload notice, attempting Base64 failover:', serverFormErr?.message);
+        // 3. Fallback to Base64 JSON upload for single file if multipart was interrupted
+        if (file && (file instanceof Blob || file instanceof File) && file.size < 30 * 1024 * 1024) {
+          const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          uploadResult = await api.post(endpoint, {
+            image: base64Data,
+            name: file.name,
+            size: file.size,
+          });
+        } else {
+          throw serverFormErr;
+        }
+      }
     }
 
     isComplete = true;

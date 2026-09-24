@@ -9,7 +9,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇮🇳 Bharat / India Edition',
     flagStripe: 'from-[#FF9933] via-[#FFFFFF] via-[#0072FF] to-[#138808]',
     flagColors: ['#FF9933', '#FFFFFF', '#138808'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-temple-complex-at-sunset-42867-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1600&auto=format&fit=crop&q=85',
     bgGradient: 'from-amber-500/10 via-orange-500/5 to-emerald-500/10 dark:from-amber-950/40 dark:via-slate-950 dark:to-emerald-950/40',
     cardBorder: 'border-orange-500/30 dark:border-orange-500/20 hover:border-orange-500/60',
@@ -34,7 +34,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇧🇩 Sonar Bangla Edition',
     flagStripe: 'from-[#006A4E] via-[#F42A41] to-[#006A4E]',
     flagColors: ['#006A4E', '#F42A41', '#006A4E'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-river-in-a-green-valley-42419-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1608958435020-e8a7109ba809?w=1200&auto=format&fit=crop&q=80',
     bgGradient: 'from-emerald-600/15 via-red-600/10 to-emerald-700/15 dark:from-emerald-950/40 dark:via-red-950/30 dark:to-emerald-950/40',
     cardBorder: 'border-emerald-500/30 dark:border-emerald-500/20 hover:border-emerald-500/60',
@@ -59,7 +59,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇦🇪 UAE Luxury Gold Edition',
     flagStripe: 'from-[#00732F] via-[#FFFFFF] via-[#FF0000] to-[#000000]',
     flagColors: ['#00732F', '#FFFFFF', '#000000', '#FF0000'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-traffic-at-night-in-a-futuristic-city-43187-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1200&auto=format&fit=crop&q=80',
     bgGradient: 'from-amber-500/15 via-emerald-500/10 to-amber-700/15 dark:from-amber-950/40 dark:via-emerald-950/30 dark:to-slate-950',
     cardBorder: 'border-amber-400/40 dark:border-amber-500/30 hover:border-amber-400',
@@ -84,7 +84,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇺🇸 USA Enterprise Edition',
     flagStripe: 'from-[#B22234] via-[#FFFFFF] to-[#3C3B6E]',
     flagColors: ['#B22234', '#FFFFFF', '#3C3B6E'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-aerial-timelapse-of-a-modern-city-at-night-42217-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?w=1200&auto=format&fit=crop&q=80',
     bgGradient: 'from-blue-600/15 via-indigo-500/10 to-rose-600/15 dark:from-blue-950/40 dark:via-slate-950 dark:to-rose-950/40',
     cardBorder: 'border-blue-400/40 dark:border-blue-500/30 hover:border-blue-500',
@@ -109,7 +109,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇬🇧 UK Royal Crown Edition',
     flagStripe: 'from-[#012169] via-[#C8102E] to-[#FFFFFF]',
     flagColors: ['#012169', '#FFFFFF', '#C8102E'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-london-city-traffic-and-big-ben-at-night-42220-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1200&auto=format&fit=crop&q=80',
     bgGradient: 'from-red-600/15 via-blue-900/10 to-amber-500/10 dark:from-red-950/40 dark:via-slate-950 dark:to-amber-950/30',
     cardBorder: 'border-red-400/40 dark:border-red-500/30 hover:border-blue-400',
@@ -134,7 +134,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇨🇦 Canada Aurora Edition',
     flagStripe: 'from-[#FF0000] via-[#FFFFFF] to-[#FF0000]',
     flagColors: ['#FF0000', '#FFFFFF', '#FF0000'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-snow-falling-over-a-pine-forest-42352-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=1200&auto=format&fit=crop&q=80',
     bgGradient: 'from-red-600/15 via-rose-500/10 to-teal-500/15 dark:from-red-950/40 dark:via-slate-950 dark:to-teal-950/40',
     cardBorder: 'border-red-400/40 dark:border-red-500/30 hover:border-red-400',
@@ -159,7 +159,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇦🇺 Aussie Pacific Edition',
     flagStripe: 'from-[#00008B] via-[#FFD700] to-[#008000]',
     flagColors: ['#00008B', '#FFD700', '#008000'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1200&auto=format&fit=crop&q=80',
     bgGradient: 'from-amber-500/15 via-teal-500/10 to-emerald-600/15 dark:from-amber-950/40 dark:via-slate-950 dark:to-emerald-950/40',
     cardBorder: 'border-teal-400/40 dark:border-teal-500/30 hover:border-amber-400',
@@ -184,7 +184,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇸🇬 Singapore Smart Edition',
     flagStripe: 'from-[#ED2939] via-[#FFFFFF] to-[#ED2939]',
     flagColors: ['#ED2939', '#FFFFFF', '#ED2939'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-traffic-at-night-in-a-futuristic-city-43187-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1200&auto=format&fit=crop&q=80',
     bgGradient: 'from-red-500/15 via-purple-500/10 to-emerald-500/15 dark:from-red-950/40 dark:via-slate-950 dark:to-purple-950/40',
     cardBorder: 'border-red-400/40 dark:border-red-500/30 hover:border-purple-400',
@@ -209,7 +209,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🇩🇪 German Precision Edition',
     flagStripe: 'from-[#000000] via-[#DD0000] to-[#FFCE00]',
     flagColors: ['#000000', '#DD0000', '#FFCE00'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-modern-architecture-building-42526-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=1200&auto=format&fit=crop&q=80',
     bgGradient: 'from-amber-500/15 via-red-500/10 to-slate-900/15 dark:from-amber-950/40 dark:via-red-950/30 dark:to-slate-950',
     cardBorder: 'border-amber-400/40 dark:border-amber-500/30 hover:border-red-500',
@@ -234,7 +234,7 @@ export const COUNTRY_CULTURAL_THEMES = {
     badge: '🌐 Global Universe Edition',
     flagStripe: 'from-purple-600 via-indigo-600 to-pink-600',
     flagColors: ['#9333ea', '#4f46e5', '#db2777'],
-    videoBg: 'https://assets.mixkit.co/videos/preview/mixkit-digital-network-connections-tunnel-42777-large.mp4',
+    videoBg: '',
     videoPoster: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
     bgGradient: 'from-purple-600/15 via-indigo-600/10 to-pink-600/15 dark:from-purple-950/40 dark:via-slate-950 dark:to-pink-950/40',
     cardBorder: 'border-purple-400/40 dark:border-purple-500/30 hover:border-indigo-400',
@@ -326,11 +326,14 @@ export const getEffectiveCountryTheme = (countryName, dynamicSettings = null) =>
     }
 
     if (override) {
+      const isValidVideo = override.videoBg && !override.videoBg.includes('tm2pwzjj');
+      const isValidPoster = override.videoPoster && !override.videoPoster.includes('tm2pwzjj');
+
       return {
         ...base,
         ...override,
-        videoBg: override.videoBg || base.videoBg,
-        videoPoster: override.videoPoster || base.videoPoster,
+        videoBg: isValidVideo ? override.videoBg : base.videoBg,
+        videoPoster: isValidPoster ? override.videoPoster : base.videoPoster,
       };
     }
   } catch (err) {}

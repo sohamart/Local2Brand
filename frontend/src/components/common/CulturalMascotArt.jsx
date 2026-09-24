@@ -87,13 +87,18 @@ function CulturalMascotArt({ country = 'India', lang = 'en' }) {
 
   const theme = getEffectiveCountryTheme(country, dynamicThemes);
   
-  let rawVideoSrc = theme?.videoBg || 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-temple-complex-at-sunset-42867-large.mp4';
-  if (rawVideoSrc === '/india.mp4') {
-    rawVideoSrc = 'https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-temple-complex-at-sunset-42867-large.mp4';
+  let rawVideoSrc = theme?.videoBg || '';
+  if (
+    rawVideoSrc === '/india.mp4' || 
+    rawVideoSrc.includes('mixkit.co') || 
+    rawVideoSrc.includes('googleapis.com') ||
+    rawVideoSrc.includes('tm2pwzjj')
+  ) {
+    rawVideoSrc = '';
   }
-  const videoSrc = getOptimizedVideoUrl(rawVideoSrc);
+  const videoSrc = rawVideoSrc ? getOptimizedVideoUrl(rawVideoSrc) : '';
   const videoPoster = theme?.videoPoster || 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1600&auto=format&fit=crop&q=85';
-  const youtubeId = extractYouTubeId(videoSrc);
+  const youtubeId = videoSrc ? extractYouTubeId(videoSrc) : null;
 
   const flagCode = theme?.code || 'IN';
   const flagUrl = getCountryFlagUrl(flagCode);

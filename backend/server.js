@@ -9,8 +9,17 @@ import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import mongoose from 'mongoose';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Load environment variables immediately before any route modules
-dotenv.config(); // High-speed Cloudinary 2GB Video & Media Engine active
+dotenv.config();
+if (!process.env.MONGODB_URI) {
+  dotenv.config({ path: path.join(__dirname, '.env') });
+}
+if (!process.env.MONGODB_URI) {
+  dotenv.config({ path: path.join(__dirname, '..', '.env') });
+}
 
 // Protect process from uncaught rejections
 process.on('uncaughtException', (err) => {
@@ -42,10 +51,7 @@ import analyticsRoutes from './routes/analytics.js';
 import mediaRoutes from './routes/media.js';
 import notificationRoutes from './routes/notifications.js';
 import sitemapRoutes from './routes/sitemap.js';
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { storageHealth } from './services/storage/storageHealth.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -78,9 +84,11 @@ const rawAllowedOrigins = [
   'https://www.local2brand.com',
   'https://local2brand.com',
   'http://localhost:5173',
-  'http://localhost:3000',
+  'http://localhost:5001',
   'http://localhost:5000',
+  'http://localhost:3000',
   'http://127.0.0.1:5173',
+  'http://127.0.0.1:5001',
 ].filter(Boolean);
 
 const allowedOrigins = [...new Set(rawAllowedOrigins)];
@@ -186,6 +194,7 @@ app.get('/api/health', (req, res) => {
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/admin/settings', settingsRoutes);
 app.use('/api/queries', queryRoutes);
 app.use('/api/callbacks', callbackRoutes);
 app.use('/api/admin/callbacks', callbackRoutes);
@@ -224,13 +233,16 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server locally if not running on Vercel Serverless
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+if (!process.env.VERCEL && !process.env.NOW_REGION) {
   const startServer = async () => {
     try {
       await connectDB();
       await dataStore.seedDefaultAdmin();
       await dataStore.getSettings();
       dbSeeded = true;
+
+      // Start Multi-Cloud Storage Health Monitor
+      storageHealth.start();
 
 
       const server = app.listen(PORT, () => {
