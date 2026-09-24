@@ -19,7 +19,7 @@ const formatBytes = (bytes = 0, decimals = 2) => {
 export const getCloudinaryUsage = async (req, res) => {
   try {
     const hubTelemetry = await storageHub.getAllProviderUsage();
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'tm2pwzjj';
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || 'rqfwenpk';
 
     // Find primary (Cloudinary) usage or first available
     const cloudinaryInfo = hubTelemetry.providers.find((p) => p.name === 'cloudinary') || {};
@@ -63,7 +63,7 @@ export const getCloudinaryUsage = async (req, res) => {
       configured: true,
       error: error.message,
       usage: {
-        cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'tm2pwzjj',
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME || 'rqfwenpk',
         plan: 'Multi-Cloud Standby Mode',
         storage: { used: '0 MB', limit: '25 GB', percent: 0 },
       },

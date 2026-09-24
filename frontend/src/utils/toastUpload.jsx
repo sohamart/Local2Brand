@@ -131,7 +131,7 @@ export const uploadWithToast = async ({
     let directSig = null;
     try {
       const sigRes = await api.get(`/upload/signature?resource_type=${isVideo ? 'video' : 'auto'}`);
-      if (sigRes?.directUpload && sigRes?.signature && sigRes?.cloudName && sigRes?.apiKey) {
+      if (sigRes?.directUpload && sigRes?.signature && sigRes?.cloudName && sigRes?.apiKey && sigRes.cloudName !== 'tm2pwzjj') {
         directSig = sigRes;
       }
     } catch (sigErr) {

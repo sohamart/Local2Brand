@@ -495,7 +495,7 @@ export default function AdminMedia() {
               </div>
               <div>
                 <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-mono truncate">
-                  {usage.cloudName || 'tm2pwzjj'}
+                  {usage.cloudName || 'rqfwenpk'}
                 </div>
                 <div className="text-[11px] text-slate-500">
                   {usage.plan || 'Free Tier Plan'}

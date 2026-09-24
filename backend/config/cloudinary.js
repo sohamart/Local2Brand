@@ -20,6 +20,7 @@ const isCloudinaryConfigured =
   apiKey &&
   apiSecret &&
   cloudName !== 'local2brand-demo' &&
+  cloudName !== 'tm2pwzjj' &&
   apiSecret !== 'local2brand_mock_secret';
 
 if (isCloudinaryConfigured) {
